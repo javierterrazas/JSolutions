@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  /* Tema CLARO de alto contraste: la app se usa a las 4 pm con sol directo.
+     No cambiar a oscuro sin probarlo afuera. */
+  :root{
+    --bg:#ffffff; --panel:#f4f6f8; --line:#c9d2da; --line2:#8a97a3;
+    --tx:#10171d; --tx2:#4d5b68;
+    --acc:#0b57d0; --accbg:#e8f0fe;
+    --ok:#0f7b32; --okbg:#e3f5e9;
+    --warn:#9a6100; --warnbg:#fdf2dc;
+    --bad:#b3261e; --badbg:#fceceb;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--tx)}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       font-size:16px;line-height:1.45;padding-bottom:96px;-webkit-text-size-adjust:100%}
+  header{position:sticky;top:0;z-index:30;background:var(--bg);
+         padding:14px 16px 12px;border-bottom:2px solid var(--line)}
+  h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.2px}
+  .sub{font-size:13px;color:var(--tx2);margin-top:2px}
+  main{padding:16px}
+
+  .card{background:var(--bg);border:2px solid var(--line);border-radius:14px;
+        padding:16px;margin-bottom:14px}
+  .card.flat{background:var(--panel);border-color:transparent}
+  .card h3{margin:0 0 4px;font-size:17px;font-weight:700}
+  .meta{font-size:13.5px;color:var(--tx2)}
+  .big{font-size:22px;font-weight:700;letter-spacing:-.3px}
+
+  label.f{display:block;font-size:13px;color:var(--tx2);margin:18px 0 7px;font-weight:700}
+  input,select,textarea{width:100%;background:var(--bg);border:2px solid var(--line);
+        color:var(--tx);border-radius:11px;padding:14px;font-size:17px;font-family:inherit}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+  textarea{min-height:88px;resize:vertical}
+
+  button{width:100%;background:var(--acc);color:#fff;border:0;border-radius:12px;
+         padding:17px;font-size:17px;font-weight:700;font-family:inherit;margin-top:16px}
+  button:active{opacity:.85}
+  button:disabled{opacity:.55}
+  button.sec{background:var(--bg);border:2px solid var(--line2);color:var(--tx);
+             padding:13px;font-size:15px;margin-top:10px}
+  button.ok{background:var(--ok)} button.bad{background:var(--bad)}
+
+  /* fila tocable completa, no solo la casilla */
+  .opt{display:flex;align-items:center;gap:14px;background:var(--bg);
+       border:2px solid var(--line);border-radius:12px;padding:15px;margin-bottom:9px;
+       min-height:58px;cursor:pointer;user-select:none}
+  .opt[data-on="1"]{border-color:var(--acc);background:var(--accbg)}
+  .box{width:26px;height:26px;flex:0 0 26px;border:2.5px solid var(--line2);border-radius:7px;
+       display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:700}
+  .opt[data-on="1"] .box{background:var(--acc);border-color:var(--acc)}
+  .opt .t{flex:1;font-size:16px;font-weight:600;line-height:1.3}
+  .opt .na{flex:0 0 auto;width:auto;margin:0;padding:8px 10px;font-size:12.5px;font-weight:700;
+           border-radius:8px;background:transparent;border:2px solid var(--line2);color:var(--tx2)}
+  .opt[data-na="1"]{opacity:.6;border-style:dashed}
+  .opt[data-na="1"] .t{text-decoration:line-through}
+  .opt[data-na="1"] .na{background:var(--tx2);border-color:var(--tx2);color:var(--panel)}
+  .opt .t small{display:block;font-size:12.5px;color:var(--tx2);font-weight:500;margin-top:2px}
+  .opt .hrs{width:64px;flex:0 0 64px;text-align:center;padding:11px 4px;font-size:17px;font-weight:700}
+  .opt .hwrap{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+  .opt .hwrap .u{font-size:15px;font-weight:700;color:var(--tx2)}
+  .opt .dias{display:flex;gap:6px;flex:0 0 auto}
+  .opt .dias button{width:auto;margin:0;padding:9px 10px;font-size:13px;font-weight:700;border-radius:9px;
+        background:transparent;border:2px solid var(--line2);color:var(--tx2)}
+  .opt .dias button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  .fin{flex:0 0 auto;border:2px solid var(--line2);border-radius:9px;padding:9px 11px;
+       font-size:12.5px;font-weight:700;color:var(--tx2)}
+  .fin[data-on="1"]{background:var(--ok);border-color:var(--ok);color:#fff}
+
+  .seg{display:flex;gap:10px;margin-top:11px}
+  .seg button{flex:1;margin:0;padding:15px;font-size:15px;background:var(--bg);
+              border:2px solid var(--line2);color:var(--tx2)}
+  .seg button[data-on="1"]{background:var(--ok);border-color:var(--ok);color:#fff}
+  .seg button.no[data-on="1"]{background:var(--bad);border-color:var(--bad)}
+
+  .tabs2{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 16px}
+  .tabs2 button{flex:1 1 30%;margin:0;padding:12px 4px;font-size:14px;background:var(--panel);
+                border:2px solid transparent;color:var(--tx2);font-weight:700}
+  .tabs2 button.on{background:var(--acc);color:#fff}
+
+  .pill{display:inline-block;font-size:12px;padding:5px 11px;border-radius:20px;font-weight:700;
+        background:var(--panel);color:var(--tx2);margin:0 6px 5px 0}
+  .pill.ok{background:var(--okbg);color:var(--ok)}
+  .pill.warn{background:var(--warnbg);color:var(--warn)}
+  .pill.bad{background:var(--badbg);color:var(--bad)}
+
+  .bar{height:10px;background:var(--panel);border-radius:6px;margin:12px 0 7px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--ok)}
+
+  .stats{display:flex;gap:10px;margin-bottom:14px}
+  .stats>div{flex:1;background:var(--panel);border-radius:13px;padding:14px 8px;text-align:center}
+  .stats b{display:block;font-size:27px;font-weight:800;line-height:1.1;letter-spacing:-.5px}
+  .stats span{font-size:11.5px;color:var(--tx2);line-height:1.25;display:block;margin-top:5px}
+
+  /* botón de cámara: el nativo es gris, chico y dice "Choose File" */
+  .cam{position:relative;display:block;border:2.5px dashed var(--line2);border-radius:13px;
+       padding:22px 16px;text-align:center;background:var(--panel);margin-top:4px}
+  .cam[data-on="1"]{border-style:solid;border-color:var(--ok);background:var(--okbg)}
+  .cam input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+  .cam .n{font-size:16px;font-weight:700;margin-top:8px}
+  .cam .s{font-size:13px;color:var(--tx2)}
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .thumbs img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:2px solid var(--line)}
+
+  nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:2px solid var(--line);
+      display:flex;padding:6px 0 max(6px,env(safe-area-inset-bottom));z-index:30}
+  nav a{flex:1;text-align:center;font-size:11.5px;font-weight:700;color:var(--tx2);
+        text-decoration:none;padding:7px 0 4px;position:relative}
+  nav a.on{color:var(--acc)}
+  nav a svg{display:block;margin:0 auto 3px;width:25px;height:25px;
+            fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  nav a i{position:absolute;top:4px;right:calc(50% - 20px);min-width:9px;height:9px;
+          border-radius:5px;background:var(--bad)}
+
+  .banner{position:sticky;top:0;z-index:40;background:var(--warnbg);color:var(--warn);
+          border-bottom:2px solid var(--warn);padding:13px 16px;font-size:14px;font-weight:700;
+          display:flex;align-items:center;gap:12px}
+  .banner button{width:auto;margin:0;padding:9px 14px;font-size:13px;background:var(--warn)}
+
+  .toast{position:fixed;left:14px;right:14px;bottom:104px;background:var(--ok);color:#fff;
+         padding:16px;border-radius:12px;font-weight:700;font-size:15px;z-index:50;display:none;
+         box-shadow:0 6px 22px rgba(0,0,0,.22)}
+  .toast.err{background:var(--bad)}
+  .sticky{position:sticky;bottom:88px;padding-top:6px;background:linear-gradient(transparent,var(--bg) 26%)}
+  .hide{display:none}
+  .empty{text-align:center;color:var(--tx2);font-size:14.5px;padding:44px 14px;line-height:1.7}
+  .sep{font-size:12px;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;
+       margin:26px 0 11px;font-weight:800}
+  .quote{border-left:4px solid var(--acc);padding:2px 0 2px 13px;margin-top:10px;font-size:15px}
+  .step{font-size:12.5px;color:var(--acc);font-weight:800;letter-spacing:.5px;margin:24px 0 8px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:11px}
+  .grid3 a{display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid var(--line);
+           background:var(--panel)}
+  .grid3 img{width:100%;height:100%;object-fit:cover;display:block}
+  .tl{display:flex;justify-content:space-between;align-items:center;padding:13px 0;
+      border-bottom:1px solid var(--line)}
+  .tl:last-child{border-bottom:0}
+  .dias{font-size:17px;font-weight:800;white-space:nowrap;margin-left:14px}
+  a.call{text-decoration:none;display:block}
+  .area{font-size:13px;font-weight:800;color:var(--tx);margin:16px 0 8px;padding-bottom:5px;
+        border-bottom:2px solid var(--line);display:flex;justify-content:space-between}
+  .area small{font-weight:600;color:var(--tx2)}
+  .ctl{border:2px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:9px}
+  .ctl.ok{border-color:var(--ok)} .ctl.bad{border-color:var(--bad)} .ctl.warn{border-color:var(--warn)}
+  .ctl h4{margin:0;font-size:15.5px;font-weight:700;display:flex;justify-content:space-between;gap:8px}
+  .ctl .puntos{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .ctl .puntos div{font-size:13.5px;padding:5px 0 5px 22px;position:relative;line-height:1.35}
+  .ctl .puntos div:before{content:'';position:absolute;left:2px;top:9px;width:11px;height:11px;
+        border:2px solid var(--line2);border-radius:3px}
+  .ctl .puntos small{color:var(--tx2);font-size:11.5px}
+
+  .idioma{position:absolute;top:12px;right:14px;width:auto;margin:0;padding:6px 11px;font-size:12.5px;
+          font-weight:800;letter-spacing:.5px;border-radius:20px;background:transparent;
+          border:2px solid var(--line2, #3d4854);color:var(--tx2, #8b98a5);z-index:5}
+
+  /* Apps Script mete la app dentro de una pagina de Google que tambien se desplaza. Sin esto,
+     al llegar al final el gesto se le pasa a la pagina de afuera, y al regresar el dedo queda
+     "atrapado" ahi. Tambien evita que un jalon hacia abajo recargue la app a media captura. */
+  html,body{overscroll-behavior-y:contain}
+  .pinbox{position:relative}
+  .pinbox .ojo{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;margin:0;
+               padding:10px;background:transparent;border:0;color:var(--tx2, #8b98a5);line-height:0;cursor:pointer}
+
+  label.req::after{content:" *";color:var(--bad);font-weight:700}
+  .falta{border-color:var(--bad)!important;box-shadow:0 0 0 1px var(--bad)}
+
+  /* los campos de numero: solo se escribe el numero, sin las flechitas del navegador */
+  input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
+</style>
+</head>
+<body>
+
+<!-- ------------------------------------------------------------- LOGIN -->
+<div id="login" style="position:relative">
+  <button class="idioma" onclick="cambiarIdioma()">EN</button>
+  <main style="padding-top:64px;max-width:400px;margin:0 auto">
+    <h1 style="font-size:26px;text-align:center;margin-bottom:4px">Bitácora de Campo</h1>
+    <p class="meta" style="text-align:center;margin-bottom:30px" id="lHola">Project Manager</p>
+    <div id="lCorreo">
+      <label class="f">Usuario</label>
+      <input id="lEmail" type="text" autocapitalize="off" autocorrect="off" spellcheck="false"
+             autocomplete="username" placeholder="Nombre">
+    </div>
+    <label class="f">PIN</label>
+    <div class="pinbox">
+      <input id="lPin" type="password" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+             autocomplete="current-password" placeholder="••••"
+             style="font-size:26px;text-align:center;letter-spacing:9px;font-weight:700;padding-right:48px;padding-left:48px">
+      <button type="button" class="ojo" title="Mostrar PIN" style="opacity:.75" onclick="verPin(this)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>
+    <button id="bLogin" onclick="entrar()">Entrar</button>
+    <button class="sec hide" id="bOtro" onclick="otroUsuario()">Entrar con otro usuario</button>
+    <p class="meta" id="lMsg" style="text-align:center;margin-top:16px;color:var(--bad);font-weight:700"></p>
+  </main>
+</div>
+
+<!-- --------------------------------------------------------------- APP -->
+<div id="app" class="hide">
+  <div id="banner"></div>
+  <header style="position:relative"><h1 id="hTit">Hoy</h1><div class="sub" id="hSub"></div>
+    <button class="idioma" onclick="cambiarIdioma()">EN</button></header>
+  <main id="vista"></main>
+  <nav id="nav"></nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/*@@IDIOMA@@*/
+
+var S = { token:null, email:'', d:null, v:'hoy', vo:'resumen', obra:null, insp:null, fotosIn:[], fotoAgua:null, fotoPun:null, corr:null,
+          fotos:[], recibo:null, fotosAviso:[], subs:{}, album:null, albumDe:null,
+          cola:[], sinAlmacen:false, enviando:false };
+
+var ICO = {
+  hoy:'<svg viewBox="0 0 24 24"><path d="M3 5.5h18v15H3z"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8.5 15.5l2 2 4-4"/></svg>',
+  gasto:'<svg viewBox="0 0 24 24"><path d="M5 3.5l2 1.6 2-1.6 2 1.6 2-1.6 2 1.6 2-1.6v17l-2-1.6-2 1.6-2-1.6-2 1.6-2-1.6-2 1.6z"/><path d="M8.5 9h7M8.5 13h7"/></svg>',
+  aviso:'<svg viewBox="0 0 24 24"><path d="M12 3.5L22 20H2z"/><path d="M12 9.5v4.5M12 17h.01"/></svg>',
+  obra:'<svg viewBox="0 0 24 24"><path d="M3 7.5h18M3 12h18M3 16.5h18"/><path d="M3 7.5V20h18V7.5L12 3z"/></svg>'
+};
+
+/*@@COMUN@@*/
+function esc(s){ return String(s==null?'':s).replace(/[<>&"]/g,function(c){
+  return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
+function money(n){ return '$'+(Number(n)||0).toLocaleString('en-US',{maximumFractionDigits:0}); }
+function toast(m,err){
+  var t=$('toast'); t.textContent=m; t.className='toast'+(err?' err':''); t.style.display='block';
+  setTimeout(function(){ t.style.display='none'; }, err?6000:3000);
+}
+function busy(b,t){ if(!b) return; b.disabled=true; b.dataset.t=b.textContent; b.textContent=t||'Guardando…'; }
+function libre(b){ if(!b) return; b.disabled=false; b.textContent=b.dataset.t; }
+function obraActual(){
+  if(!S.d || !S.d.obras.length) return null;
+  return S.d.obras.filter(function(o){return o.id===S.obra;})[0] || S.d.obras[0];
+}
+function guardado(k,v){ try{ localStorage.setItem(k,v); }catch(e){ S.sinAlmacen=true; } }
+function leido(k){ try{ return localStorage.getItem(k); }catch(e){ S.sinAlmacen=true; return null; } }
+
+/* --------------------------------------------- cola: nada se pierde nunca */
+function cargarCola(){
+  try{ S.cola = JSON.parse(leido('ijm_cola')||'[]'); }catch(e){ S.cola=[]; }
+}
+function grabarCola(){
+  try{ localStorage.setItem('ijm_cola', JSON.stringify(S.cola)); }
+  catch(e){ S.sinAlmacen = true; }   // sin cuota o Safari bloqueando: queda en memoria
+}
+function encolar(tipo, payload, etiqueta){
+  S.cola.push({ n:Date.now(), tipo:tipo, payload:payload, etiqueta:etiqueta, intentos:0 });
+  grabarCola(); pintarBanner();
+}
+function pintarBanner(){
+  var b=$('banner'), h='';
+  var soloFotos = S.cola.length && S.cola.every(function(x){ return x.tipo==='foto'; });
+  if(S.sesionVencida){
+    h += '<div class="banner" style="background:var(--badbg);color:var(--bad);border-color:var(--bad)">'+
+      '<span style="flex:1">'+(S.cola.length ? 'Tu sesión expiró. Entra de nuevo para enviar '+S.cola.length+
+      (S.cola.length===1?' registro pendiente.':' registros pendientes.') : 'Tu sesión expiró. Entra de nuevo antes de capturar.')+'</span>'+
+      '<button style="background:var(--bad)" onclick="volverAEntrar()">Entrar</button></div>';
+  } else if(soloFotos && navigator.onLine !== false){
+    h += '<div class="banner"><span style="flex:1">Subiendo fotos del cierre: quedan '+S.cola.length+
+      '<br><span style="font-weight:500">Tu día ya quedó cerrado.</span></span></div>';
+  } else if(S.cola.length){
+    h += '<div class="banner"><span style="flex:1">'+S.cola.length+
+      (S.cola.length===1?' registro sin enviar':' registros sin enviar')+
+      (S.sinAlmacen?'<br><span style="font-weight:500">No cierres la app hasta que se envíe.</span>':
+        '<br><span style="font-weight:500">Se envía solo al volver la señal.</span>')+
+      '</span><button onclick="procesarCola(true)">Reintentar</button></div>';
+  }
+  if(S.vivoMsg){
+    h += '<div class="banner" style="background:var(--accbg);color:var(--acc);border-color:var(--acc)">'+
+      '<span style="flex:1">'+esc(S.vivoMsg)+'</span>'+
+      '<button style="background:var(--acc)" onclick="aplicarPendientes()">Ver</button></div>';
+  }
+  (S.rechazados||[]).forEach(function(x,i){
+    h += '<div class="banner" style="background:var(--badbg);color:var(--bad);border-color:var(--bad)">'+
+      '<span style="flex:1">No se guardó: '+esc(x.etiqueta)+
+      '<br><span style="font-weight:500">'+esc(x.msg)+'</span></span>'+
+      '<button style="background:var(--bad)" onclick="descartarRechazo('+i+')">Entendido</button></div>';
+  });
+  b.innerHTML = h;
+}
+/* ------------------------------------------------------------------ en vivo */
+/*
+ * Cada 30 s, con la app a la vista, se pregunta si hubo cambios (una celda).
+ * Lo importante es la respuesta del administrador a un aviso: que le aparezca
+ * al PM sin recargar, porque ese circuito —reporta, le responden, ve que sirvio—
+ * es el que hace que siga reportando.
+ *
+ * Nunca se le borra lo que esta capturando: el cierre de dia se llena por partes
+ * (partidas, fotos, cuadrilla) y un refresco a medias lo perderia todo.
+ */
+var VIVO = { cargando:false, pendiente:null, activo:true };
+
+
+
+document.addEventListener('input', function(ev){ if(ev.target && ev.target.classList) ev.target.classList.remove('falta'); }, true);
+document.addEventListener('change', function(ev){ if(ev.target && ev.target.classList) ev.target.classList.remove('falta'); }, true);
+
+function hayEdicionAbierta(){
+  var a = document.activeElement;
+  if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return true;
+  if(S.v==='insp') return true;
+  if((S.fotos&&S.fotos.length) || S.recibo || (S.fotosAviso&&S.fotosAviso.length) ||
+     S.fotoPun || S.fotoAgua || (S.fotosIn&&S.fotosIn.length)) return true;
+  if(Object.keys(S.subs||{}).length) return true;
+  if(formularioSucio()) return true;
+  var o = obraActual();
+  if(S.v==='hoy' && o && !o.cerradoHoy){
+    // partidas distintas de las sugeridas, alguna "terminó", o cuadrilla marcada
+    var marc = [].slice.call(document.querySelectorAll('#hPart .opt'))
+      .filter(function(e){return e.dataset.on==='1';}).map(function(e){return e.dataset.p;});
+    var sug = o.sugeridas || [];
+    if(marc.length!==sug.length || marc.some(function(k){return sug.indexOf(k)<0;})) return true;
+    if(document.querySelector('#hPart .fin[data-on="1"]')) return true;
+    if(document.querySelector('#hCuad .opt[data-on="1"]')) return true;
+  }
+  return false;
+}
+function queCambio(a, b){
+  var m = [];
+  if(b.respuestas.length > a.respuestas.length) m.push('Te respondió el administrador');
+  var cuenta = function(d,f){ return d.obras.reduce(function(s,o){ return s + (f(o)||[]).length; }, 0); };
+  if(cuenta(b,function(o){return o.cambios;}) > cuenta(a,function(o){return o.cambios;}))
+    m.push('El cliente autorizó un cambio');
+  if(b.obras.length > a.obras.length) m.push('Te asignaron una obra nueva');
+  var subs = function(d){ return JSON.stringify(d.obras.map(function(o){
+    return [o.id, o.subsHoy.length, o.porConfirmar.length, o.subsActivos.length]; })); };
+  if(subs(a) !== subs(b)) m.push('Cambió la programación de subcontratistas');
+  return m.slice(0,2).join(' · ');
+}
+function revisarCambios(forzar){
+  if(!S.token || !S.d || VIVO.cargando || !VIVO.activo || S.sesionVencida) return;
+  if(document.visibilityState==='hidden' && !forzar) return;
+  google.script.run.withSuccessHandler(function(sello){
+    if(sello && sello !== S.d.sello) traerCambios();
+  }).withFailureHandler(function(e){
+    if(/Sesion expirada/i.test(String((e&&e.message)||e))){ S.sesionVencida = true; pintarBanner(); }
+  }).pmSello(S.token);
+}
+function traerCambios(){
+  VIVO.cargando = true;
+  google.script.run.withSuccessHandler(function(nuevo){
+    VIVO.cargando = false;
+    var msg = queCambio(S.d, nuevo);
+    if(!hayEdicionAbierta()){ aplicarNuevos(nuevo, msg); return; }
+    if(msg){ VIVO.pendiente = nuevo; S.vivoMsg = msg; pintarBanner(); return; }
+    // nada que le importe al PM (otro PM registro algo): solo se da por visto
+    S.d.sello = nuevo.sello;
+  }).withFailureHandler(function(){ VIVO.cargando = false; }).pmDatos(S.token);
+}
+function aplicarNuevos(nuevo, msg){
+  S.d = nuevo; VIVO.pendiente = null; S.vivoMsg = '';
+  if(!S.obra || !nuevo.obras.some(function(o){return o.id===S.obra;}))
+    S.obra = nuevo.obras.length ? nuevo.obras[0].id : null;
+  if(S.v==='obra' && S.vo==='fotos'){ S.album=null; S.albumDe=null; }
+  render(); pintarBanner();
+  if(S.v==='obra' && S.vo==='fotos') cargarAlbum();
+  if(msg) toast(msg);
+}
+function aplicarPendientes(){
+  if(!VIVO.pendiente) return;
+  if(hayEdicionAbierta() && !confirm('Tienes datos sin guardar en esta pantalla. ¿Actualizar de todos modos?')) return;
+  S.fotos=[]; S.recibo=null; S.fotosAviso=[]; S.fotoPun=null; S.subs={};
+  aplicarNuevos(VIVO.pendiente, '');
+}
+setInterval(function(){ revisarCambios(false); }, 30000);
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState==='visible') revisarCambios(true);
+});
+
+/* la sesion vencio al guardar: lo capturado queda en la cola y se envia al volver a entrar */
+function sesionVencidaGuardado(){
+  S.sesionVencida = true; pintarBanner();
+  toast('Tu sesión expiró. Lo guardamos: entra de nuevo y se envía solo.', true);
+}
+function descartarRechazo(i){ S.rechazados.splice(i,1); guardado('ijm_rech', JSON.stringify(S.rechazados)); pintarBanner(); }
+function volverAEntrar(){ $('app').className='hide'; $('login').className=''; initLogin();
+aplicarIdioma(IDIOMA); }
+
+/*
+ * Clasifica una falla: la de RED se reintenta; la de NEGOCIO no se va a arreglar
+ * reintentando (una partida con hito sin inspeccionar sigue sin inspeccion), asi que
+ * sale de la cola y se le avisa al PM. Antes se reintentaba para siempre y todo lo
+ * que venia detras nunca se enviaba.
+ */
+function tipoDeFalla(e){
+  var msg = String((e && e.message) || e || '');
+  if(/Sesion expirada/i.test(msg)) return 'sesion';
+  if(navigator.onLine === false) return 'red';
+  if(/network|http 0|failed to fetch|timeout|timed out|conexi|connection|ocupado|execution time|too many times|service|internal/i.test(msg)) return 'red';
+  return 'negocio';
+}
+function procesarCola(manual){
+  if(S.enviando || !S.cola.length || !S.token || S.sesionVencida) return;
+  if(navigator.onLine === false && !manual) return;
+  S.enviando = true;
+  var it = S.cola[0];
+  var listo = function(){
+    S.cola.shift(); grabarCola(); S.enviando=false; pintarBanner();
+    if(it.tipo!=='foto') S.colaCambio = true;
+    if(S.cola.length) procesarCola(manual);
+    else if(S.colaCambio){ S.colaCambio = false; toast('Todo enviado'); traerCambios(); }   // respeta si estas llenando algo
+    else toast('Fotos del cierre enviadas');                                                // nada visible cambio: no se recarga
+  };
+  var falla = function(e){
+    S.enviando=false;
+    var t = tipoDeFalla(e);
+    if(t==='sesion'){ S.sesionVencida = true; pintarBanner(); return; }
+    if(t==='red'){
+      it.intentos++; grabarCola(); pintarBanner();
+      if(manual) toast('Todavía sin conexión. Lo guardamos.', true);
+      return;
+    }
+    // negocio: sale de la cola, se avisa, y sigue con lo que viene detras
+    S.cola.shift(); grabarCola();
+    S.rechazados = (S.rechazados||[]).concat([{ etiqueta:it.etiqueta, msg:String((e&&e.message)||e) }]);
+    guardado('ijm_rech', JSON.stringify(S.rechazados));
+    pintarBanner();
+    if(S.cola.length) procesarCola(manual); else cargar();
+  };
+  var r = google.script.run.withSuccessHandler(listo).withFailureHandler(falla);
+  if(it.tipo==='dia')    r.pmCerrarDia(S.token, it.payload);
+  else if(it.tipo==='gasto') r.pmGasto(S.token, it.payload);
+  else if(it.tipo==='aviso') r.pmBloqueo(S.token, it.payload);
+  else if(it.tipo==='foto')  r.pmSubirFotoCierre(S.token, it.payload.bitId, it.payload.foto, it.payload.indice);
+  else listo();
+}
+window.addEventListener('online', function(){ procesarCola(); });
+setInterval(function(){ procesarCola(); }, 20000);
+
+/* ------------------------------------------------------------- imágenes */
+/*
+ * Fecha en que se TOMO la foto, leida de los datos EXIF del JPEG (DateTimeOriginal).
+ * Al abrir la galeria, la foto deja de probar sola que es del dia: con esta fecha se
+ * le avisa al PM si eligio una foto de otro dia. Si el archivo no trae fecha
+ * (capturas de pantalla, fotos editadas), no se asume nada.
+ */
+function fechaExif(buf){
+  try{
+    var v=new DataView(buf);
+    if(v.byteLength<4 || v.getUint16(0)!==0xFFD8) return null;       // no es JPEG
+    var off=2;
+    while(off+4<=v.byteLength){
+      var marca=v.getUint16(off);
+      if((marca & 0xFF00)!==0xFF00 || marca===0xFFDA) return null;    // fin de encabezados
+      var tam=v.getUint16(off+2);
+      if(marca===0xFFE1 && v.getUint32(off+4)===0x45786966){          // APP1 "Exif"
+        var tiff=off+10, le=v.getUint16(tiff)===0x4949;
+        var u16=function(o){return v.getUint16(o,le);}, u32=function(o){return v.getUint32(o,le);};
+        var texto=function(o){ var s=''; for(var i=0;i<19 && o+i<v.byteLength;i++){
+          var c=v.getUint8(o+i); if(!c) break; s+=String.fromCharCode(c);} return s; };
+        var ifd0=tiff+u32(tiff+4), exif=0, general=null;
+        for(var i=0;i<u16(ifd0);i++){ var e=ifd0+2+i*12, tag=u16(e);
+          if(tag===0x8769) exif=u32(e+8);                              // puntero al IFD Exif
+          if(tag===0x0132) general=texto(tiff+u32(e+8)); }             // DateTime
+        if(exif){ var ifd=tiff+exif;
+          for(var j=0;j<u16(ifd);j++){ var e2=ifd+2+j*12;
+            if(u16(e2)===0x9003) return textoAFecha(texto(tiff+u32(e2+8))); } }  // DateTimeOriginal
+        return textoAFecha(general);
+      }
+      off+=2+tam;
+    }
+  }catch(err){}
+  return null;
+}
+function textoAFecha(s){
+  var r=/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/.exec(s||'');
+  return r ? new Date(+r[1], +r[2]-1, +r[3], +r[4], +r[5]) : null;
+}
+function leerFotos(input, cb){
+  var files = Array.prototype.slice.call(input.files||[]);
+  if(!files.length){ cb([]); return; }
+  var out=[], n=0;
+  var cam = input.closest('.cam');
+  if(cam) cam.querySelector('.n').textContent = 'Preparando '+files.length+'…';
+  files.forEach(function(f){
+    var fin = function(){ if(++n===files.length) cb(out); };
+    var rx=new FileReader();                       // primero la fecha: solo el encabezado
+    rx.onload=function(ev){
+      var tomada=fechaExif(ev.target.result);
+      var r=new FileReader();
+      r.onload=function(e){
+        var img=new Image();
+        img.onload=function(){
+          var max=1100,w=img.width,h=img.height;
+          if(w>max||h>max){ var k=max/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
+          var c=document.createElement('canvas'); c.width=w; c.height=h;
+          c.getContext('2d').drawImage(img,0,0,w,h);
+          var b64=c.toDataURL('image/jpeg',0.68);
+          out.push({mime:'image/jpeg',data:b64.split(',')[1],prev:b64,
+                    tomada: tomada ? tomada.toISOString() : ''});
+          fin();
+        };
+        img.onerror=fin;
+        img.src=e.target.result;
+      };
+      r.readAsDataURL(f);
+    };
+    rx.onerror=function(){ fin(); };
+    rx.readAsArrayBuffer(f.slice(0, 131072));
+  });
+}
+
+/* Fotos que no son del dia que se esta cerrando. Las que no traen fecha no cuentan. */
+function fotosDeOtroDia(fotos){
+  var hoy=new Date().toDateString(), dias={};
+  fotos.forEach(function(f){
+    if(!f.tomada) return;
+    var d=new Date(f.tomada);
+    if(d.toDateString()!==hoy) dias[d.toLocaleDateString(IDIOMA==='en'?'en-US':'es-MX',{day:'numeric',month:'short'})]=true;
+  });
+  var fechas=Object.keys(dias);
+  var n=fotos.filter(function(f){ return f.tomada && new Date(f.tomada).toDateString()!==hoy; }).length;
+  return n ? { n:n, fechas:fechas.join(', ') } : null;
+}
+function camara(id, texto, sub, multiple, soloCamara){
+  return '<label class="cam" id="cam_'+id+'">'+
+    '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" '+
+      'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity:.75">'+
+      '<path d="M3 7.5h4l1.5-2.5h7L17 7.5h4v12H3z"/><circle cx="12" cy="13" r="3.6"/></svg>'+
+    '<div class="n">'+texto+'</div><div class="s">'+sub+'</div>'+
+    // sin "capture": el telefono ofrece tomar la foto O elegirla de la galeria.
+    // La prueba de inundacion es la excepcion: sus dos fotos son la evidencia de 24 horas.
+    '<input type="file" accept="image/*" '+(multiple?'multiple ':'')+(soloCamara?'capture="environment" ':'')+
+      'onchange="cap_'+id+'(this)"></label>'+
+    '<div class="thumbs" id="th_'+id+'"></div>';
+}
+function pintarFotos(id, arr, texto){
+  var cam=$('cam_'+id);
+  if(cam){ cam.dataset.on = arr.length?'1':'0';
+    cam.querySelector('.n').textContent = arr.length ? arr.length+(arr.length===1?' foto lista':' fotos listas') : texto;
+    cam.querySelector('.s').textContent = arr.length ? 'Toca para agregar más' : ''; }
+  $('th_'+id).innerHTML = arr.map(function(f){ return '<img src="'+f.prev+'">'; }).join('');
+}
+var MAX_FOTOS = 10;
+function cap_dia(i){ leerFotos(i,function(a){
+  S.fotos=S.fotos.concat(a);
+  if(S.fotos.length>MAX_FOTOS){ S.fotos=S.fotos.slice(0,MAX_FOTOS); toast('Máximo '+MAX_FOTOS+' fotos por cierre. Se quedaron las primeras '+MAX_FOTOS+'.', true); }
+  pintarFotos('dia',S.fotos,'Agregar fotos del avance');
+  if(!S.tardio) avisoFechaFotos('dia', S.fotos);
+}); }
+/* se avisa en cuanto elige, no hasta que envia: asi puede cambiar la foto a tiempo */
+function avisoFechaFotos(id, fotos){
+  var o=fotosDeOtroDia(fotos), el=$('th_'+id);
+  if(!el) return;
+  var viejo=document.getElementById('av_'+id); if(viejo && viejo.parentNode) viejo.parentNode.removeChild(viejo);
+  if(o) el.insertAdjacentHTML('afterend','<div id="av_'+id+'" class="meta" style="color:var(--warn);font-weight:700;margin-top:8px">'+
+    (o.n===1?'1 foto es':o.n+' fotos son')+' de otro día ('+esc(o.fechas)+'). Revisa que sean de hoy.</div>');
+}
+function cap_rec(i){ leerFotos(i,function(a){ S.recibo=a[0]||null; pintarFotos('rec',a,'Foto del recibo'); }); }
+function cap_avi(i){ leerFotos(i,function(a){ S.fotosAviso=S.fotosAviso.concat(a); pintarFotos('avi',S.fotosAviso,'Fotos del problema'); }); }
+
+/* --------------------------------------------------------------- login */
+function initLogin(){
+  pinOculto();
+  var m = leido('ijm_email');
+  if(m){
+    S.email = m;
+    $('lCorreo').className='hide';
+    $('bOtro').className='sec';
+    $('lHola').textContent = m;
+    setTimeout(function(){ $('lPin').focus(); }, 250);
+  }
+}
+function otroUsuario(){
+  try{ localStorage.removeItem('ijm_email'); }catch(e){}
+  S.email=''; $('lCorreo').className=''; $('bOtro').className='sec hide';
+  $('lHola').textContent='Project Manager';
+}
+
+
+function alCambiarIdioma(){
+  if(S.token){
+    if(S.d && !hayEdicionAbierta()) render();      // con algo a medio capturar, solo se traducen los textos
+    pintarNav(); pintarBanner();
+    google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){}).pmIdioma(S.token, IDIOMA);
+  }
+}
+function entrar(){
+  var b=$('bLogin'); busy(b,'Entrando…');
+  var mail = S.email || $('lEmail').value;
+  google.script.run.withSuccessHandler(function(r){
+    libre(b);
+    if(!r.ok){ $('lMsg').textContent=r.msg; return; }
+    S.token=r.token; S.email=mail; guardado('ijm_email', mail); S.sesionVencida=false;
+    if(r.idioma && r.idioma!==IDIOMA) aplicarIdioma(r.idioma);
+    try{ S.rechazados = JSON.parse(leido('ijm_rech')||'[]'); }catch(e){ S.rechazados=[]; }
+    $('login').className='hide'; $('app').className='';
+    pintarNav(); cargarCola(); pintarBanner(); cargar();
+    setTimeout(function(){ procesarCola(); }, 1200);
+  }).withFailureHandler(function(e){ libre(b); $('lMsg').textContent=e.message; })
+    .pmLogin(mail, $('lPin').value, IDIOMA);
+}
+
+function pintarNav(){
+  $('nav').innerHTML = [['hoy','Hoy'],['gasto','Gasto'],['aviso','Aviso'],['obra','Obra']]
+    .map(function(t){
+      return '<a href="#" class="'+(S.v===t[0]?'on':'')+'" data-v="'+t[0]+'" '+
+        'onclick="ir(\''+t[0]+'\',event)">'+ICO[t[0]]+t[1]+
+        '<i class="hide" id="pt_'+t[0]+'"></i></a>'; }).join('');
+}
+/* ------------------------------------------------ guardar y ver, en un solo viaje */
+// guarda y trae la app ya actualizada en el mismo viaje (antes: guardar, y luego recargar todo)
+function hacer(fn, args, ok, falla){
+  google.script.run.withSuccessHandler(function(x){
+    if(ok) ok(x ? x.r : null);
+    if(x && x.datos){
+      S.d = x.datos; VIVO.pendiente = null; S.vivoMsg = '';
+      if(!S.obra || !S.d.obras.some(function(o){return o.id===S.obra;})) S.obra = S.d.obras.length ? S.d.obras[0].id : null;
+      render(); pintarBanner();
+    }
+  }).withFailureHandler(falla || function(e){ toast(e.message,true); }).pmHacer(S.token, fn, args);
+}
+function cargar(){
+  if(!S.d) $('vista').innerHTML='<p class="empty">Cargando…</p>';
+  VIVO.cargando = true;
+  google.script.run.withSuccessHandler(function(d){
+    VIVO.cargando = false; VIVO.pendiente = null; S.vivoMsg = '';
+    S.d=d;
+    if(!S.obra && d.obras.length) S.obra=d.obras[0].id;
+    render(); pintarBanner();
+  }).withFailureHandler(function(e){
+    VIVO.cargando = false;
+    if(!S.d) $('vista').innerHTML='<p class="empty">Sin conexión.<br>Lo que registres se guarda y se envía solo.</p>';
+    toast(e.message,true);
+  }).pmDatos(S.token);
+}
+function ir(v,ev){
+  if(ev) ev.preventDefault();
+  S.v=v; pintarNav(); render();
+  if(v==='obra' && S.vo==='fotos') cargarAlbum();
+  window.scrollTo(0,0);
+}
+
+/* -------------------------------------------------------------- render */
+function render(){
+  if(!S.d) return;
+  var d=S.d, v=$('vista'), o=obraActual();
+  var pend = d.obras.filter(function(x){return !x.cerradoHoy;}).length;
+  var p=$('pt_hoy'); if(p) p.className = pend?'':'hide';
+  var pg=$('pt_gasto'); if(pg) pg.className = d.sinRecibo.length?'':'hide';
+  $('hSub').textContent = d.nombre+' · '+d.obras.length+(d.obras.length===1?' obra':' obras')+
+    (pend? ' · '+pend+' sin cerrar' : ' · al corriente');
+  if(S.v==='hoy'){   $('hTit').textContent='Hoy';            v.innerHTML=vHoy(d,o); if(o&&!o.cerradoHoy) pintarCierre(); }
+  if(S.v==='gasto'){ $('hTit').textContent='Gasto';          v.innerHTML=vGasto(d,o); }
+  if(S.v==='aviso'){ $('hTit').textContent='Levantar aviso'; v.innerHTML=vAviso(d,o); }
+  if(S.v==='obra'){  $('hTit').textContent='Obra';           v.innerHTML=vObra(d,o); }
+  if(S.v==='insp'){  $('hTit').textContent='Inspección';     v.innerHTML=vInspeccion(d,o); }
+}
+
+function selectorObra(id,fn){
+  var d=S.d;
+  if(d.obras.length<2){
+    var o=d.obras[0];
+    return o? '<div class="card flat" style="padding:13px;margin-bottom:14px"><b>'+esc(o.cliente)+
+      '</b><div class="meta">'+esc(o.direccion)+'</div></div>' : '';
+  }
+  return '<label class="f" style="margin-top:0">Obra</label><select id="'+id+'" onchange="'+fn+'">'+
+    d.obras.map(function(o){ return '<option value="'+esc(o.id)+'"'+(o.id===S.obra?' selected':'')+
+      '>'+esc(o.cliente)+' · '+esc(o.id)+'</option>'; }).join('')+'</select>';
+}
+function cambiarObra(sel){
+  S.obra=$(sel).value; S.album=null; S.albumDe=null;
+  render(); if(S.v==='obra'&&S.vo==='fotos') cargarAlbum();
+}
+
+/* ------------------------------------------------- HOY: cierre del día */
+function vHoy(d,o){
+  if(!o) return '<p class="empty">No tienes obras asignadas.</p>';
+  S.fotos=[]; S.subs={};
+
+  var buzon = d.respuestas.length ? '<div class="card" style="border-color:var(--acc);background:var(--accbg)">'+
+    '<div class="meta" style="font-weight:700;color:var(--acc)">RESPUESTA DEL ADMINISTRADOR</div>'+
+    '<h3 style="margin-top:4px">'+esc(d.respuestas[0].tipo)+' · '+esc(d.respuestas[0].obra)+'</h3>'+
+    '<div class="quote">'+esc(d.respuestas[0].respuesta)+'</div>'+
+    (d.respuestas.length>1?'<button class="sec" onclick="ir(\'obra\')">Ver las '+
+      d.respuestas.length+' respuestas</button>':'')+'</div>' : '';
+
+  var insp = o.inspecciones.length ? tarjetaInspeccion(o) : '';
+  // dias que se le olvido cerrar: la app se los dice sola al abrir
+  var olvidos = [];
+  d.obras.forEach(function(x,oi){ (x.diasSinCierre||[]).forEach(function(f,fi){ olvidos.push({oi:oi, fi:fi, obra:x, dia:f}); }); });
+  var esTardio = !!(S.tardio && S.tardio.obra===o.id);
+  var dn = ['dom','lun','mar','mié','jue','vie','sáb'];
+  var tarjOlvido = (olvidos.length && !esTardio) ? '<div class="card" style="border-color:var(--warn);background:var(--warnbg)">'+
+    '<div class="meta" style="font-weight:700;color:var(--warn)">TE FALTÓ CERRAR</div>'+
+    olvidos.map(function(x){ return '<div class="tl"><div><b>'+esc(x.obra.cliente||x.obra.id)+'</b><div class="meta">'+
+      esc(x.obra.id)+' · '+dn[x.dia.dow]+' '+esc(x.dia.fecha.slice(0,5))+'</div></div>'+
+      '<button class="sm" style="width:auto;margin:0" onclick="cerrarTardio('+x.oi+','+x.fi+')">Cerrarlo ahora</button></div>'; }).join('')+
+    '<div class="meta" style="margin-top:8px">Se guarda con la fecha de ese día. Puedes usar fotos de hoy que muestren el trabajo.</div></div>' : '';
+  insp = tarjOlvido + insp;
+  if(esTardio) insp = '<div class="card" style="border-color:var(--warn)"><div class="big" style="font-size:19px">Cierre del '+
+    dn[S.tardio.dow]+' '+esc(S.tardio.fecha.slice(0,5))+'</div><div class="meta" style="margin-top:4px">Lo que se hizo ESE día. '+
+    'Queda marcado como cerrado tarde.</div><a href="#" class="meta" onclick="S.tardio=null;render();return false">Cancelar</a></div>' + insp;
+  var nuevos = (o.cambios||[]).filter(function(c){return c.nuevo;});
+  insp = (nuevos.length ? '<div class="card" style="border-color:var(--acc);background:var(--accbg)">'+
+    '<div class="meta" style="font-weight:700;color:var(--acc)">CAMBIO AUTORIZADO POR EL CLIENTE</div>'+
+    nuevos.map(function(c){ return '<div style="margin-top:7px;font-size:15px">'+esc(c.descripcion)+'</div>'+
+      '<div class="meta">'+esc(c.id)+(c.dias?' · agrega '+c.dias+' día'+(c.dias>1?'s':'')+' a la entrega':'')+'</div>';
+    }).join('')+'</div>' : '') + insp;
+
+  if(o.puedeArrancar===false){
+    // la obra existe pero todavia no tiene presupuesto: no se puede registrar su primer dia
+    return buzon+insp+statsPM(d)+'<div class="card" style="border-color:var(--warn);background:var(--warnbg)">'+
+      '<div class="big" style="font-size:19px">Esta obra todavía no puede arrancar</div>'+
+      '<div class="meta" style="margin-top:6px">Falta que el administrador capture su presupuesto por partida. '+
+      'En cuanto lo haga, aquí te aparece el cierre de día.</div></div>';
+  }
+  if(o.cerradoHoy && !esTardio){
+    var faltan = d.obras.filter(function(x){return !x.cerradoHoy;});
+    return buzon+insp+statsPM(d)+
+      '<div class="card" style="border-color:var(--ok);background:var(--okbg)">'+
+      '<h3 style="color:var(--ok)">✓ Día cerrado</h3>'+
+      '<div class="meta">'+esc(o.cliente)+' · reporte de hoy enviado</div>'+
+      '<div class="bar"><i style="width:'+Math.round(o.avance*100)+'%"></i></div>'+
+      '<div class="meta">'+Math.round(o.avance*100)+'% de avance · '+o.horasSemana+' h de cuadrilla esta semana</div>'+
+      (d.respuestaPromedio!==null?'<div class="meta" style="margin-top:9px">Te responden los avisos en '+
+        d.respuestaPromedio+' h en promedio.</div>':'')+
+      '<button class="sec" onclick="reabrir()">Registrar otro movimiento de hoy</button>'+
+      (o.bitacoraHoy?'<button class="sec" onclick="anularCierre(\''+esc(o.bitacoraHoy)+'\')">'+
+        'Me equivoqué de obra, deshacer</button>':'')+'</div>'+
+      (faltan.length? '<div class="sep">Faltan por cerrar</div>'+faltan.map(function(x){
+        return '<div class="card"><h3>'+esc(x.cliente)+'</h3>'+
+          '<div class="meta">'+esc(x.id)+' · último reporte '+(x.ultimoReporte||'nunca')+'</div>'+
+          '<button onclick="S.obra=\''+esc(x.id)+'\';render()">Cerrar esta obra</button></div>'; }).join('') : '');
+  }
+
+  return buzon+insp+
+    selectorObra('hObra','cambiarObra(\'hObra\')')+
+    '<div class="step">1 · ¿EN QUÉ SE TRABAJÓ?</div>'+
+    '<div id="hPart"></div>'+
+    '<div class="step">2 · ¿QUIÉN ESTUVO?</div>'+
+    '<div id="hSubs"></div><div id="hCuad"></div>'+
+    '<div class="step">3 · FOTOS</div>'+
+    camara('dia','Agregar fotos del avance','Tómalas ahora o elígelas de tu galería. Mínimo una.',true)+
+    '<div class="step">4 · ¿ALGO FUERA DE LO NORMAL?</div>'+
+    '<textarea id="hInc" placeholder="Opcional. Si algo te detiene, mejor levanta un aviso."></textarea>'+
+    '<div class="sticky"><button id="bDia" onclick="cerrarDia()">Cerrar el día</button>'+
+      '<button class="sec" onclick="abrirSinTrabajo()">Hoy no hubo trabajo aquí</button></div>'+
+    '<div id="sinTrabajo" class="card hide" style="margin-top:12px">'+
+      '<div class="step" style="margin-top:0">¿POR QUÉ NO HUBO TRABAJO?</div>'+
+      '<select id="stMotivo">'+['Esperando fabricación','Esperando a un sub','Esperando material','Esperando inspección',
+        'Clima','Cliente no disponible','Otro'].map(function(x){return '<option>'+x+'</option>';}).join('')+'</select>'+
+      '<textarea id="stNota" rows="2" placeholder="Opcional: qué se espera y para cuándo"></textarea>'+
+      '<div class="meta">También cuenta como día reportado. Si un sub no llegó, márcalo arriba antes de enviar.</div>'+
+      '<button id="bST" onclick="reportarSinTrabajo()">Reportar día sin trabajo</button></div>'+
+    '<div style="height:12px"></div>';
+}
+function reabrir(){
+  S.d.obras.forEach(function(x){ if(x.id===S.obra) x.cerradoHoy=false; });
+  render(); window.scrollTo(0,0);
+}
+function anularCierre(id){
+  var motivo = prompt('¿Qué pasó? (se guarda el motivo)','Cerré la obra equivocada');
+  if(!motivo) return;
+  hacer('pmAnularCierre', [id,motivo], function(r){
+    toast('Deshecho · '+r.registros+' registros anulados'); ;
+  }, function(e){toast(e.message,true);});
+}
+
+function statsPM(d){
+  return '<div class="stats">'+
+    '<div><b>'+d.racha+'</b><span>días seguidos<br>cerrados</span></div>'+
+    '<div><b>'+d.diasReportados+'</b><span>días<br>reportados</span></div>'+
+    '<div><b>'+d.fotosTotales+'</b><span>fotos<br>subidas</span></div></div>';
+}
+
+function pintarCierre(){
+  var o=obraActual();
+  if(!o||!$('hPart')) return;
+
+  // agrupadas por area; los espacios primero, Generales de obra al final
+  var varias = o.areas.filter(function(a){return !a.generales;}).length > 1;
+  var orden = o.areas.filter(function(a){return !a.generales;})
+                .concat(o.areas.filter(function(a){return a.generales;}));
+  $('hPart').innerHTML = orden.map(function(ar){
+    var ab = o.abiertas.filter(function(x){return x.area===ar.id;});
+    if(!ab.length) return '';
+    var lim = ar.generales ? 4 : 6;
+    return ((varias || ar.generales) ? '<div class="area">'+esc(ar.nombre)+
+        '<small>'+ar.terminadas+' de '+ar.total+'</small></div>' : '')+
+      ab.slice(0,lim).map(function(x){
+        var on = o.sugeridas.indexOf(x.key) >= 0;
+        return '<div class="opt" data-on="'+(on?1:0)+'" data-p="'+esc(x.key)+'" onclick="togglePartida(this)">'+
+          '<span class="box">'+(on?'✓':'')+'</span>'+
+          '<span class="t">'+esc(x.partida)+'</span>'+
+          '<span class="fin" data-on="0" '+(on?'':'style="display:none"')+
+            ' onclick="toggleFin(event,this)">terminó</span></div>';
+      }).join('');
+  }).join('') || '<p class="meta">Todas las partidas están terminadas.</p>';
+
+  $('hSubs').innerHTML = o.subsHoy.map(function(s,i){
+    return '<div class="card" style="padding:14px">'+
+      '<b style="font-size:16px">'+esc(s.nombre)+'</b>'+
+      '<div class="meta">'+esc(s.oficio)+' · arrancaba '+esc(s.inicio)+'</div>'+
+      '<div class="seg">'+
+        '<button data-on="0" onclick="marcarSub(this,'+i+',true)">Llegó</button>'+
+        '<button class="no" data-on="0" onclick="marcarSub(this,'+i+',false)">No llegó</button>'+
+      '</div></div>'; }).join('');
+
+  $('hCuad').innerHTML = S.d.trabajadores.length
+    ? S.d.trabajadores.map(function(t){
+        return '<div class="opt" data-on="0" data-t="'+esc(t.id)+'" onclick="toggleTrab(this)">'+
+          '<span class="box"></span>'+
+          '<span class="t">'+esc(t.nombre)+'<small>'+esc(t.puesto)+(t.porDia?' · por día':'')+'</small></span>'+
+          // por dia: dia completo o medio dia, sin teclear; por hora: la casilla con su "h"
+          (t.porDia
+            ? '<span class="dias" data-dias="1" onclick="event.stopPropagation()">'+
+                '<button type="button" data-v="1" class="on" onclick="elegirDia(this)">Día completo</button>'+
+                '<button type="button" data-v="0.5" onclick="elegirDia(this)">Medio día</button></span>'
+            : '<span class="hwrap" onclick="event.stopPropagation()"><input type="tel" inputmode="decimal" class="hrs" value="8">'+
+                '<span class="u">h</span></span>')+
+          '</div>'; }).join('')
+    : '<p class="meta">Sin cuadrilla dada de alta.</p>';
+}
+function elegirDia(btn){
+  var box=btn.parentNode;
+  [].forEach.call(box.children, function(b){ b.className = b===btn ? 'on' : ''; });
+  box.dataset.dias = btn.dataset.v;
+  var fila = box.parentNode; if(fila.dataset.on!=='1') toggleTrab(fila);   // elegir el tiempo tambien lo marca como presente
+}
+function togglePartida(el){
+  var on = el.dataset.on==='1' ? 0 : 1;
+  el.dataset.on = on;
+  el.querySelector('.box').textContent = on?'✓':'';
+  var f = el.querySelector('.fin');
+  f.style.display = on?'block':'none';
+  if(!on){ f.dataset.on='0'; }
+}
+function toggleFin(ev, el){
+  ev.stopPropagation();
+  el.dataset.on = el.dataset.on==='1' ? '0' : '1';
+}
+function toggleTrab(el){
+  var on = el.dataset.on==='1' ? 0 : 1;
+  el.dataset.on = on;
+  el.querySelector('.box').textContent = on?'✓':'';
+}
+function marcarSub(btn, i, llego){
+  var s = obraActual().subsHoy[i];          // el nombre se busca; nunca viaja dentro del botón
+  [].forEach.call(btn.parentNode.children, function(b){ b.dataset.on='0'; });
+  btn.dataset.on='1';
+  S.subs[s.ot] = { ot:s.ot, nombre:s.nombre, llego:llego };
+}
+
+function cerrarDia(){
+  var filas = [].slice.call(document.querySelectorAll('#hPart .opt'));
+  var part = filas.filter(function(e){return e.dataset.on==='1';}).map(function(e){return e.dataset.p;});
+  if(!part.length){ toast('Marca en qué partida se trabajó.',true); return; }
+  if(!S.fotos.length){ toast('Agrega al menos una foto.',true); return; }
+  var otro = S.tardio ? null : fotosDeOtroDia(S.fotos);     // en un cierre tardio no se revisa la fecha de las fotos
+  if(otro && !confirm((otro.n===1?'1 foto es':otro.n+' fotos son')+' de otro día ('+otro.fechas+
+    '). El cierre es de hoy. ¿Enviar de todos modos?')) return;
+  var fin = filas.filter(function(e){
+    return e.dataset.on==='1' && e.querySelector('.fin').dataset.on==='1'; })
+    .map(function(e){return e.dataset.p;});
+  var cuad = [].slice.call(document.querySelectorAll('#hCuad .opt'))
+    .filter(function(e){return e.dataset.on==='1';})
+    .map(function(e){ return { trabajador:e.dataset.t,
+      horas:(e.querySelector('.hrs') ? e.querySelector('.hrs').value : e.querySelector('.dias').dataset.dias), partida:part[0] }; });
+
+  var payload = { obra:obraActual().id, capturado:new Date().toISOString(), tardio: S.tardio ? S.tardio.iso : '',
+    partidas:part, terminadas:fin, cuadrilla:cuad,
+    subs:Object.keys(S.subs).map(function(k){return S.subs[k];}),
+    incidencia:$('hInc').value,
+    fotos:[], fotosPorSubir:S.fotos.length };
+  // el cierre viaja sin las fotos: se confirma de inmediato y las fotos suben despues, una por una
+  var fotos = S.fotos.map(function(f){ return {mime:f.mime, data:f.data, tomada:f.tomada||''}; });
+  // para la cola sin senal: todo junto, como siempre
+  var completo = JSON.parse(JSON.stringify(payload)); completo.fotos = fotos.map(function(f){ return {mime:f.mime, data:f.data}; }); delete completo.fotosPorSubir;
+
+  var b=$('bDia'); busy(b,'Enviando…');
+  hacer('pmCerrarDia', [payload], function(r){
+    S.tardio=null;
+    libre(b); toast('Día cerrado'+(r.horas?' · '+r.horas+' h de cuadrilla':''));
+    // las fotos entran a la cola: se guarda en el telefono, asi que sobreviven si el PM cierra la app
+    fotos.forEach(function(f, i){ encolar('foto', { bitId:r.id, foto:f, indice:i+1 }, 'Foto '+(i+1)+' del cierre'); });
+    procesarCola();
+  }, function(e){
+    libre(b);
+    var t = tipoDeFalla(e);
+    if(t==='negocio'){ toast(e.message,true); return; }
+    encolar('dia', completo, 'Cierre de día del '+new Date().toLocaleDateString(IDIOMA==='en'?'en-US':'es-MX'));
+    if(t==='sesion'){ sesionVencidaGuardado(); S.d.obras.forEach(function(x){ if(x.id===payload.obra) x.cerradoHoy=true; }); render(); return; }
+    toast('Sin conexión. Guardado, se envía solo.', true);
+    S.d.obras.forEach(function(x){ if(x.id===payload.obra) x.cerradoHoy=true; });
+    render();
+  });
+}
+
+/*
+ * Un dia sin trabajo tambien se reporta (esperando la fabricacion del countertop, un sub
+ * que no llego). Cuenta como cierre en la tasa y el administrador sabe por que se paro.
+ */
+function cerrarTardio(oi, fi){
+  var x = S.d.obras[oi], f = x.diasSinCierre[fi];
+  S.tardio = { obra:x.id, iso:f.iso, fecha:f.fecha, dow:f.dow };
+  S.obra = x.id; S.v='hoy'; render(); window.scrollTo(0,0);
+}
+function abrirSinTrabajo(){ var e=$('sinTrabajo'); e.className = e.className.indexOf('hide')>=0 ? 'card' : 'card hide';
+  if(e.className==='card') e.scrollIntoView({behavior:'smooth'}); }
+function reportarSinTrabajo(){
+  var payload = { obra:obraActual().id, capturado:new Date().toISOString(), sinTrabajo:true, tardio: S.tardio ? S.tardio.iso : '',
+    motivo:$('stMotivo').value, incidencia:$('stNota').value,
+    subs:Object.keys(S.subs).map(function(k){ return S.subs[k]; }) };
+  var b=$('bST'); busy(b,'Enviando…');
+  hacer('pmCerrarDia', [payload], function(){ libre(b); S.tardio=null; toast('Día reportado sin trabajo'); ; }, function(e){
+      libre(b);
+      var t = tipoDeFalla(e);
+      if(t==='negocio'){ toast(e.message,true); return; }
+      encolar('dia', payload, 'Día sin trabajo');
+      if(t==='sesion') sesionVencidaGuardado(); else toast('Sin conexión. Guardado, se envía solo.', true);
+      S.d.obras.forEach(function(x){ if(x.id===payload.obra) x.cerradoHoy=true; }); render();
+    });
+}
+
+/* ------------------------------------------------------------- calidad */
+function areaDe(o, id){ return o.areas.filter(function(a){return a.id===id;})[0] || {}; }
+function tarjetaInspeccion(o){
+  var i = o.inspecciones[0];
+  var esPC3 = /^PC3\b/i.test(i.hito);
+  var pr = areaDe(o, i.area).prueba;
+  var aguaMsg = '';
+  if(esPC3){
+    if(!pr || (pr.resultado!=='En curso' && pr.resultado!=='Sin fugas'))
+      aguaMsg = '<div class="meta" style="margin-top:8px">Este punto necesita la prueba de '+
+        'inundación de 24 horas antes de aprobarse.</div>';
+    else if(pr.enCurso)
+      aguaMsg = '<div class="meta" style="margin-top:8px">Prueba de inundación en curso · '+
+        pr.horasTranscurridas+' h de 24</div>';
+  }
+  return '<div class="card" style="border-color:var(--warn);background:var(--warnbg)">'+
+    '<div class="meta" style="font-weight:700;color:var(--warn)">INSPECCIÓN PENDIENTE</div>'+
+    '<h3 style="margin-top:4px">'+esc(i.hito)+'</h3>'+
+    '<div class="meta">'+esc(i.areaNombre)+' · '+esc(i.partida)+'</div>'+
+    '<div class="meta" style="margin-top:7px">Esta partida no se puede cerrar hasta aprobarla. '+
+    'Lo que se cubre hoy no se vuelve a ver.</div>'+aguaMsg+
+    (o.inspecciones.length>1?'<div class="meta" style="margin-top:6px">y '+(o.inspecciones.length-1)+
+      ' inspección(es) más pendiente(s)</div>':'')+
+    '<button onclick="abrirInspeccion(0)">Hacer la inspección</button>'+
+    '<button class="sec" onclick="S.vo=\'calidad\';ir(\'obra\')">Ver todos los puntos de control</button>'+
+    '</div>';
+}
+
+function abrirInspeccion(n){
+  var i = obraActual().inspecciones[n||0];
+  S.insp = { hito:i.hito, partida:i.partida, area:i.area, areaNombre:i.areaNombre, fallas:[] };
+  S.volver = null;
+  S.fotosIn = [];
+  S.v = 'insp'; pintarNav(); render(); window.scrollTo(0,0);
+}
+function salirInspeccion(){
+  S.insp=null; S.fotosIn=[];
+  if(S.volver==='calidad'){ S.volver=null; S.vo='calidad'; ir('obra'); } else ir('hoy');
+}
+function cerrarInspeccion(){ salirInspeccion(); }
+
+function vInspeccion(d,o){
+  var puntos = d.checklist[S.insp.hito] || [];
+  var esPC3 = /^PC3\b/i.test(S.insp.hito);
+  return '<div class="card flat"><h3>'+esc(S.insp.hito)+'</h3>'+
+      '<div class="meta">'+esc(o.cliente)+' · '+esc(S.insp.areaNombre)+' · '+esc(S.insp.partida)+'</div>'+
+      '<div class="meta" style="margin-top:7px">Marca lo que sí cumple. Si una pregunta no aplica en esta '+
+      'obra, tócale No aplica. Lo que dejes sin marcar se registra como defecto y le llega al administrador.</div></div>'+
+    (esPC3 ? bloqueAgua(areaDe(o, S.insp.area)) : '')+
+    '<div class="step">REVISIÓN</div>'+
+    puntos.map(function(p,i){
+      return '<div class="opt" data-on="0" data-na="0" data-i="'+i+'" onclick="togglePunto(this)">'+
+        '<span class="box"></span>'+
+        '<span class="t">'+esc(p.punto)+(p.foto?'<small>requiere foto</small>':'')+'</span>'+
+        '<button type="button" class="na" onclick="event.stopPropagation();marcarNA(this)">No aplica</button></div>';
+    }).join('')+
+    '<div class="step">FOTOS DE LA INSPECCIÓN</div>'+
+    camara('in','Agregar fotos','Cada muro completo, con cinta métrica donde ayude. Puedes elegirlas de tu galería.',true)+
+    '<div class="sticky">'+
+      '<button id="bIn" onclick="guardarInspeccion()">Guardar inspección</button>'+
+      '<button class="sec" onclick="cerrarInspeccion()">Salir sin guardar</button></div>'+
+    '<div style="height:12px"></div>';
+}
+function cap_in(i){ leerFotos(i,function(a){ S.fotosIn=S.fotosIn.concat(a).slice(0,MAX_FOTOS); avisoFechaFotos('in', S.fotosIn);
+  pintarFotos('in',S.fotosIn,'Agregar fotos'); }); }
+function togglePunto(el){
+  var on = el.dataset.on==='1'?0:1;
+  el.dataset.on=on; el.dataset.na='0'; el.querySelector('.box').textContent = on?'✓':'';
+}
+/* "No aplica": la pregunta sale del total, pero queda registrada con su texto */
+function marcarNA(btn){
+  var el=btn.parentNode, na = el.dataset.na==='1'?'0':'1';
+  el.dataset.na=na; el.dataset.on='0'; el.querySelector('.box').textContent = na==='1'?'—':'';
+}
+function guardarInspeccion(){
+  var filas=[].slice.call(document.querySelectorAll('#vista .opt[data-i]'));
+  var puntos=S.d.checklist[S.insp.hito]||[];
+  var texto=function(e){ return puntos[Number(e.dataset.i)].punto; };
+  var cumple=filas.filter(function(e){return e.dataset.on==='1';}).map(texto);
+  var noAplica=filas.filter(function(e){return e.dataset.na==='1';}).map(texto);
+  var fallas=filas.filter(function(e){return e.dataset.on!=='1' && e.dataset.na!=='1';}).map(texto);
+  var aplican=cumple.length+fallas.length;
+  if(!aplican){ toast('Una inspección necesita al menos un punto que aplique.',true); return; }
+  if(!S.fotosIn.length){ toast('La inspección necesita fotos.',true); return; }
+  var otroIn = fotosDeOtroDia(S.fotosIn);
+  if(otroIn && !confirm((otroIn.n===1?'1 foto es':otroIn.n+' fotos son')+' de otro día ('+otroIn.fechas+
+    '). Una inspección tiene que mostrar el estado de hoy. ¿Guardar de todos modos?')) return;
+  if(fallas.length && !confirm(fallas.length+' punto(s) sin cumplir. Se registra como defecto '+
+     'y le llega al administrador. ¿Guardar así?')) return;
+  var b=$('bIn'); busy(b,'Enviando '+S.fotosIn.length+' fotos…');
+  hacer('pmInspeccion', [{ obra:obraActual().id, hito:S.insp.hito, partida:S.insp.partida,
+      area:S.insp.area,
+      cumple:cumple, noAplica:noAplica,
+      fotos:S.fotosIn.map(function(f){return {mime:f.mime,data:f.data,tomada:f.tomada||''};}) }], function(r){
+    libre(b);
+    toast(r.aprobado?'Inspección aprobada':'Registrada con '+r.defectos+' defecto(s)');
+    salirInspeccion(); ;
+  }, function(e){ libre(b); toast(e.message,true); });
+}
+
+function bloqueAgua(ar){
+  var p=ar.prueba;
+  if(p && p.enCurso){
+    var listo = p.horasTranscurridas>=23;
+    return '<div class="card" style="border-color:'+(listo?'var(--ok)':'var(--warn)')+'">'+
+      '<h3>Prueba de inundación en curso</h3>'+
+      '<div class="meta">Arrancó '+esc(p.inicio)+' · llevan <b>'+p.horasTranscurridas+' h de 24</b></div>'+
+      (listo? camara('ag','Foto del nivel ahora','Con cámara: es la evidencia de las 24 horas.',false,true)+
+        '<button class="ok" onclick="cerrarAgua(\''+esc(p.id)+'\',false)">Sin fugas, cerrar prueba</button>'+
+        '<button class="sec" onclick="cerrarAgua(\''+esc(p.id)+'\',true)">Bajó el nivel: hay fuga</button>'
+        : '<div class="meta" style="margin-top:9px">Vuelve cuando se cumplan las 24 horas. '+
+          'Cerrarla antes no prueba nada.</div>')+
+      '</div>';
+  }
+  if(p && p.resultado==='Sin fugas'){
+    return '<div class="card" style="border-color:var(--ok);background:var(--okbg)">'+
+      '<h3 style="color:var(--ok)">✓ Prueba de inundación aprobada</h3>'+
+      '<div class="meta">'+esc(p.inicio)+' a '+esc(p.fin)+' · '+p.horas+' horas · sin fugas</div></div>';
+  }
+  return '<div class="card" style="border-color:var(--bad)">'+
+    '<h3 style="color:var(--bad)">Falta la prueba de inundación</h3>'+
+    '<div class="meta">Tapa el desagüe, llena la zona húmeda y toma la foto del nivel. '+
+    'Vuelves en 24 horas con otra foto. Es el registro que te defiende de la reclamación de '+
+    'garantía más cara que existe.</div>'+
+    camara('ag','Foto del nivel al llenar','Con cámara: es la evidencia de las 24 horas.',false,true)+
+    '<button onclick="iniciarAgua()">Arrancar la prueba</button></div>';
+}
+function cap_ag(i){ leerFotos(i,function(a){ S.fotoAgua=a[0]||null; pintarFotos('ag',a,'Foto del nivel'); }); }
+function iniciarAgua(){
+  if(!S.fotoAgua){ toast('Toma la foto del nivel primero.',true); return; }
+  hacer('pmPruebaInicio', [obraActual().id, {mime:S.fotoAgua.mime,data:S.fotoAgua.data},
+                    S.insp ? S.insp.area : ''], function(){ toast('Prueba arrancada. Vuelve en 24 horas.');
+    S.fotoAgua=null; ; }, function(e){toast(e.message,true);});
+}
+function cerrarAgua(id, fuga){
+  if(!S.fotoAgua){ toast('Toma la foto del nivel primero.',true); return; }
+  if(fuga && !confirm('¿Registrar fuga? Se le avisa al administrador y la impermeabilización no se aprueba.')) return;
+  hacer('pmPruebaFin', [id, {mime:S.fotoAgua.mime,data:S.fotoAgua.data}, fuga], function(r){
+    toast(r.fuga?'Fuga registrada · avisado al administrador':'Prueba cerrada · '+r.horas+' h sin fugas');
+    S.fotoAgua=null; ;
+  }, function(e){toast(e.message,true);});
+}
+
+/* --------------------------------------------------------------- gasto */
+function vGasto(d,o){
+  S.recibo=null;
+  if(!o) return '<p class="empty">No tienes obras asignadas.</p>';
+  var pend = d.sinRecibo.length ? '<div class="sep">Tus cargos sin recibo</div>'+
+    d.sinRecibo.map(function(g){
+      return '<div class="card" style="border-color:var(--warn)">'+
+        '<h3>'+money(g.monto)+' · '+esc(g.proveedor)+'</h3>'+
+        '<div class="meta">'+esc(g.fecha)+' · '+esc(g.obra)+' · '+esc(g.descripcion)+'</div>'+
+        '<label class="cam" style="padding:15px;margin-top:11px">'+
+        '<div class="n" style="margin:0;font-size:15px">Adjuntar recibo</div>'+
+        '<input type="file" accept="image/*" '+
+        'onchange="subirRec(this,\''+esc(g.id)+'\')"></label></div>'; }).join('') : '';
+  return '<div class="card flat"><div class="meta">Tarjeta de la empresa, siempre. '+
+    'Captúralo en el estacionamiento, no en la noche. Límite sin autorización: '+
+    money(d.limiteCompra)+'.</div></div>'+
+    selectorObra('gObra','cambiarObra(\'gObra\')')+
+    '<label class="f">Monto</label>'+
+    '<input id="gMonto" type="tel" inputmode="decimal" placeholder="0.00" '+
+      'style="font-size:30px;font-weight:800;text-align:center;padding:18px">'+
+    '<label class="f">¿Para qué partida?</label><select id="gPart">'+
+      o.areas.map(function(ar){
+        var ab = o.abiertas.filter(function(x){return x.area===ar.id;});
+        if(!ab.length) return '';
+        return '<optgroup label="'+esc(ar.nombre)+'">'+ab.map(function(x){
+          var sel = o.sugeridas.indexOf(x.key)>=0 ? ' selected' : '';
+          return '<option value="'+esc(x.key)+'"'+sel+'>'+esc(x.partida)+'</option>'; }).join('')+
+          '</optgroup>'; }).join('')+
+      '<option value="">— sin partida (va a Generales de obra) —</option></select>'+
+    '<label class="f">Categoría</label><select id="gCat">'+
+      ['Material','Renta equipo','Herramienta','Permisos','Disposicion','Otro']
+      .map(function(c){return '<option>'+c+'</option>';}).join('')+'</select>'+
+    '<label class="f">Proveedor</label><input id="gProv" placeholder="Home Depot, Ferguson…">'+
+    '<label class="f">Qué compraste</label><input id="gDesc" placeholder="Tile 12x24 + thinset">'+
+    '<label class="f">Recibo</label>'+camara('rec','Foto del recibo','',false)+
+    '<div class="sticky"><button id="bGto" onclick="guardarGasto()">Registrar gasto</button></div>'+
+    pend+
+    '<div class="sep">¿Te equivocaste?</div>'+
+    '<div class="card flat"><div class="meta">Puedes corregir o cancelar lo que capturaste en las '+
+    'últimas 48 horas. Nada se borra: queda el registro de qué cambiaste y por qué.</div>'+
+    '<button class="sec" onclick="verCorregibles()">Ver mis capturas recientes</button></div>'+
+    '<div id="corrLista"></div><div style="height:12px"></div>';
+}
+function subirRec(inp,id){
+  leerFotos(inp,function(a){
+    if(!a.length) return;
+    hacer('pmSubirRecibo', [id,{mime:a[0].mime,data:a[0].data}], function(){ toast('Recibo adjuntado'); ; }, function(e){ toast('Sin conexión. Inténtalo al volver la señal.',true); });
+  });
+}
+function guardarGasto(){
+  var faltaP = marcarFaltantes([['gProv','proveedor']]);
+  if(faltaP.length){ toast('Faltan: '+faltaP.join(', ')+'.', true); return; }
+  var payload = { obra:obraActual().id, capturado:new Date().toISOString(),
+    monto:$('gMonto').value, categoria:$('gCat').value,
+    partida:$('gPart').value, proveedor:$('gProv').value, descripcion:$('gDesc').value,
+    recibo:S.recibo?{mime:S.recibo.mime,data:S.recibo.data}:null };
+  if(!(Number(payload.monto)>0)){ toast('Captura el monto.',true); return; }
+  var b=$('bGto'); busy(b,'Enviando…');
+  google.script.run.withSuccessHandler(function(r){
+    libre(b); toast(r.aviso || (r.sinRecibo?'Gasto registrado · falta el recibo':'Gasto registrado'));
+    ir('hoy');
+  }).withFailureHandler(function(e){
+    libre(b);
+    var t = tipoDeFalla(e);
+    if(t==='negocio'){ toast(e.message,true); return; }
+    encolar('gasto', payload, 'Gasto '+money(payload.monto));
+    if(t==='sesion'){ sesionVencidaGuardado(); ir('hoy'); return; }
+    toast('Sin conexión. Guardado, se envía solo.', true); ir('hoy');
+  }).pmGasto(S.token, payload);
+}
+
+/* ----------------------------------------------------------- correcciones */
+function verCorregibles(){
+  $('corrLista').innerHTML='<p class="empty">Cargando…</p>';
+  google.script.run.withSuccessHandler(function(a){
+    S.corr=a;
+    if(!a.length){ $('corrLista').innerHTML='<p class="empty">Nada capturado en las últimas 48 horas.</p>'; return; }
+    $('corrLista').innerHTML = a.map(function(x,i){
+      return '<div class="card"'+(x.anulado?' style="opacity:.5"':'')+'>'+
+        '<b style="font-size:15px">'+esc(x.titulo)+'</b>'+
+        '<div class="meta">'+esc(x.fecha)+' · '+esc(x.obra)+' · '+esc(x.detalle)+'</div>'+
+        (x.anulado? '<div class="meta" style="margin-top:7px;color:var(--bad);font-weight:700">Cancelado</div>'
+         : (Object.keys(x.campos).length
+             ? '<button class="sec" onclick="formCorregir('+i+')">Corregir</button>' : '')+
+           '<button class="sec" onclick="anularReg('+i+')">Cancelar este registro</button>')+
+        '<div id="fc_'+i+'"></div></div>'; }).join('');
+    $('corrLista').scrollIntoView({behavior:'smooth'});
+  }).withFailureHandler(function(e){toast(e.message,true);}).pmCorregibles(S.token);
+}
+function formCorregir(i){
+  var x=S.corr[i], o=obraActual();
+  var campos = Object.keys(x.campos).map(function(k){
+    if(k==='partida'){
+      return '<label class="f">Partida</label><select class="cc" data-k="partida">'+
+        '<option value="">— sin asignar —</option>'+
+        (o?o.areas.map(function(ar){
+          return '<optgroup label="'+esc(ar.nombre)+'">'+ar.partidas.map(function(p){
+            return '<option value="'+esc(p.key)+'"'+(p.partida===x.campos.partida?' selected':'')+'>'+
+              esc(p.partida)+'</option>'; }).join('')+'</optgroup>';
+        }).join(''):'')+'</select>';
+    }
+    var tipo = (k==='monto'||k==='horas') ? 'tel' : 'text';
+    return '<label class="f">'+k.charAt(0).toUpperCase()+k.slice(1)+'</label>'+
+      '<input class="cc" data-k="'+k+'" type="'+tipo+'"'+
+      (tipo==='tel'?' inputmode="decimal"':'')+' value="'+esc(x.campos[k])+'">';
+  }).join('');
+  $('fc_'+i).innerHTML = campos+
+    '<label class="f">¿Por qué lo cambias?</label>'+
+    '<input class="cm" placeholder="Capturé mal el monto">'+
+    '<button onclick="guardarCorreccion('+i+')">Guardar corrección</button>'+
+    '<button class="sec" onclick="document.getElementById(\'fc_'+i+'\').innerHTML=\'\'">Cancelar</button>';
+}
+function guardarCorreccion(i){
+  var x=S.corr[i], cont=$('fc_'+i), cambios={};
+  [].forEach.call(cont.querySelectorAll('.cc'),function(e){ cambios[e.dataset.k]=e.value; });
+  var motivo=cont.querySelector('.cm').value;
+  hacer('pmCorregir', [x.hoja,x.id,cambios,motivo], function(r){
+    toast(r.cambios+' campo(s) corregido(s)'); ; verCorregibles();
+  }, function(e){toast(e.message,true);});
+}
+function anularReg(i){
+  var x=S.corr[i];
+  var motivo=prompt('¿Por qué lo cancelas? (se guarda el motivo)','Capturado por error');
+  if(!motivo) return;
+  hacer('pmAnular', [x.hoja,x.id,motivo], function(){ toast('Registro cancelado'); ; verCorregibles(); }, function(e){toast(e.message,true);});
+}
+
+/* --------------------------------------------------------------- aviso */
+function vAviso(d,o){
+  S.fotosAviso=[];
+  if(!o) return '<p class="empty">No tienes obras asignadas.</p>';
+  var ab = d.avisosAbiertos.length ? '<div class="sep">Esperando respuesta</div>'+
+    d.avisosAbiertos.map(function(a){
+      return '<div class="card"><h3>'+esc(a.tipo)+' · '+esc(a.obra)+'</h3>'+
+        '<div class="meta">'+esc(a.fecha)+' · '+esc(a.id)+'</div>'+
+        '<div class="meta" style="margin-top:7px">'+esc(a.descripcion)+'</div></div>'; }).join('') : '';
+  return '<div class="card flat"><div class="meta">Si algo detiene el avance, levántalo con foto. '+
+    'Compromiso de respuesta: '+d.slaBloqueo+' horas.</div></div>'+
+    selectorObra('aObra','cambiarObra(\'aObra\')')+
+    '<label class="f">¿Detiene el avance?</label>'+
+    '<div class="seg" id="aDet">'+
+      '<button data-on="1" onclick="setDet(this,1)">Sí, hay gente parada</button>'+
+      '<button data-on="0" onclick="setDet(this,0)">No, puedo seguir</button></div>'+
+    '<label class="f">Tipo</label><select id="aTipo">'+
+      ['Material','Cliente','Sub','Condición oculta','Diseño','Otro']
+      .map(function(t){return '<option>'+t+'</option>';}).join('')+'</select>'+
+    '<label class="f">Qué pasa y qué necesitas</label>'+
+    '<textarea id="aDesc" placeholder="Detrás del muro hay línea de acero galvanizado corroída. '+
+      'Necesito saber si se reemplaza antes de cerrar el muro."></textarea>'+
+    '<label class="f">Fotos</label>'+camara('avi','Fotos del problema','',true)+
+    '<div class="sticky"><button id="bAv" onclick="mandarAviso()">Enviar aviso</button></div>'+
+    ab+'<div style="height:12px"></div>';
+}
+function setDet(btn,v){
+  [].forEach.call(btn.parentNode.children,function(b){ b.dataset.on='0'; });
+  btn.dataset.on='1'; btn.parentNode.dataset.v=v;
+}
+function mandarAviso(){
+  var det = $('aDet').dataset.v;
+  var payload = { obra:obraActual().id, tipo:$('aTipo').value,
+    detiene: det===undefined || det==='1', descripcion:$('aDesc').value,
+    fotos:S.fotosAviso.map(function(f){return {mime:f.mime,data:f.data};}) };
+  if(payload.descripcion.length<10){ toast('Describe el bloqueo con detalle.',true); return; }
+  var b=$('bAv'); busy(b,'Enviando…');
+  google.script.run.withSuccessHandler(function(r){ libre(b); toast('Aviso enviado · '+r.id); ir('hoy'); })
+    .withFailureHandler(function(e){
+      libre(b);
+      var t = tipoDeFalla(e);
+      if(t==='negocio'){ toast(e.message,true); return; }
+      encolar('aviso', payload, 'Aviso');
+      if(t==='sesion'){ sesionVencidaGuardado(); ir('hoy'); return; }
+      toast('Sin conexión. Guardado, se envía solo.', true); ir('hoy');
+    }).pmBloqueo(S.token, payload);
+}
+
+/* ---------------------------------------------------------------- obra */
+function vObra(d,o){
+  if(!o) return '<p class="empty">No tienes obras asignadas.</p>';
+  return selectorObra('oSel','cambiarObra(\'oSel\')')+cabezaObra(o)+
+    '<div class="tabs2">'+['resumen','secuencia','calidad','fotos','entrega'].map(function(t){
+      var ab=o.punch.filter(function(x){return x.estado==='Abierto';}).length;
+      var pend=o.inspecciones.length;
+      var n={resumen:'Cuánto falta',secuencia:'Secuencia',fotos:'Fotos ('+o.fotos+')',
+             entrega:'Entrega'+(ab?' ('+ab+')':''), calidad:'Calidad'+(pend?' ('+pend+')':'')}[t];
+      return '<button class="'+(S.vo===t?'on':'')+'" onclick="verObra(\''+t+'\')">'+n+'</button>';
+    }).join('')+'</div><div id="oCont">'+contenidoObra(d,o)+'</div><div style="height:12px"></div>';
+}
+function cabezaObra(o){
+  var pct=Math.round((o.avance||0)*100), dias=o.diasAEntrega;
+  var col = dias===null?'var(--tx)':(dias<0?'var(--bad)':(dias<=3?'var(--warn)':'var(--ok)'));
+  return '<div class="stats">'+
+    '<div><b>'+o.restantes+'</b><span>partidas<br>por hacer</span></div>'+
+    '<div><b style="color:'+col+'">'+(dias===null?'—':Math.abs(dias))+'</b>'+
+      '<span>'+(dias!==null&&dias<0?'días<br>tarde':'días para<br>entregar')+'</span></div>'+
+    '<div><b>'+pct+'%</b><span>de avance<br>de la obra</span></div></div>'+
+    '<div class="card" style="padding:14px"><h3>'+esc(o.cliente)+'</h3>'+
+    '<div class="meta">'+esc(o.id)+' · '+esc(o.tipo)+' · '+esc(o.direccion)+'</div>'+
+    '<div class="bar"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="meta">entrega '+esc(o.finEst)+(o.diasExtraOC?' · +'+o.diasExtraOC+' días por cambios autorizados':'')+'</div>'+
+    (o.telefono?'<a class="call" href="tel:'+esc(o.telefono)+'"><button class="sec">Llamar al cliente</button></a>':'')+
+    '</div>';
+}
+function verObra(t){ S.vo=t; render(); if(t==='fotos') cargarAlbum(); }
+function contenidoObra(d,o){
+  if(S.vo==='fotos') return vFotos(o);
+  if(S.vo==='secuencia') return vSecuencia(d,o);
+  if(S.vo==='entrega') return vEntrega(d,o);
+  if(S.vo==='calidad') return vCalidad(d,o);
+  return vResumen(d,o);
+}
+
+/* ----------------------------------------------------------------- calidad */
+/*
+ * Todos los puntos de control de la obra, por área. El PM puede leer con
+ * anticipación qué le va a pedir cada uno —para avisarle al plomero que deje
+ * lista la prueba de presión antes de que lleguen los del drywall— y hacer la
+ * inspección desde aquí, no solo cuando aparece la tarjeta en Hoy.
+ */
+function vCalidad(d,o){
+  var todos=[].concat.apply([], o.areas.map(function(a){return a.controles;}));
+  if(!todos.length) return '<p class="empty">Esta obra no tiene puntos de control en su catálogo.</p>';
+  var aprob=todos.filter(function(c){return c.inspeccion==='Aprobado';}).length;
+  var pend=todos.filter(function(c){return c.iniciado && c.inspeccion!=='Aprobado';}).length;
+  // espacios primero, Generales (la inspección final) al último
+  var orden=o.areas.filter(function(a){return !a.generales;}).concat(o.areas.filter(function(a){return a.generales;}));
+  return '<div class="stats">'+
+      '<div><b style="color:var(--ok)">'+aprob+'</b><span>aprobados</span></div>'+
+      '<div><b style="color:'+(pend?'var(--warn)':'var(--tx)')+'">'+pend+'</b><span>por inspeccionar<br>ahora</span></div>'+
+      '<div><b>'+todos.length+'</b><span>puntos de<br>control</span></div></div>'+
+    '<div class="card flat"><div class="meta">Toca <b>Qué se revisa</b> para ver las preguntas de un punto '+
+      'antes de que toque. Así nada te agarra con el muro ya cerrado.</div></div>'+
+    orden.map(function(ar){
+      if(!ar.controles.length) return '';
+      return '<div class="area">'+esc(ar.nombre)+'<small>'+
+          ar.controles.filter(function(c){return c.inspeccion==='Aprobado';}).length+' de '+ar.controles.length+
+          ' aprobados</small></div>'+
+        ar.controles.map(function(c,ci){ return tarjetaControl(d,o,ar,c,ci); }).join('');
+    }).join('')+'<div style="height:12px"></div>';
+}
+function tarjetaControl(d,o,ar,c,ci){
+  var id='ct_'+ar.id+'_'+ci;
+  var cls, pill;
+  if(c.inspeccion==='Aprobado'){ cls='ok'; pill='<span class="pill ok">aprobado</span>'; }
+  else if(c.inspeccion==='Con defectos'){ cls='bad'; pill='<span class="pill bad">con defectos</span>'; }
+  else if(c.iniciado){ cls='warn'; pill='<span class="pill warn">toca ahora</span>'; }
+  else { cls=''; pill='<span class="pill">más adelante</span>'; }
+  var puntos=(d.checklist[c.hito]||[]);
+  var esPC3=/^PC3\b/i.test(c.hito), pr=ar.prueba;
+  var agua='';
+  if(esPC3){
+    if(pr && pr.resultado==='Sin fugas') agua='<div class="meta" style="margin-top:6px;color:var(--ok)">✓ Prueba de inundación: '+pr.horas+' h sin fugas</div>';
+    else if(pr && pr.enCurso) agua='<div class="meta" style="margin-top:6px;color:var(--warn)">Prueba de inundación en curso · '+pr.horasTranscurridas+' h de 24</div>';
+    else if(pr && pr.resultado==='Con fuga') agua='<div class="meta" style="margin-top:6px;color:var(--bad)">La última prueba de inundación marcó fuga</div>';
+    else agua='<div class="meta" style="margin-top:6px">Incluye la prueba de inundación de 24 horas</div>';
+  }
+  return '<div class="ctl '+cls+'">'+
+    '<h4><span>'+esc(c.hito)+'</span>'+pill+'</h4>'+
+    '<div class="meta" style="margin-top:4px">'+esc(c.partidas.join(' · '))+'</div>'+
+    (c.ultima ? '<div class="meta" style="margin-top:6px">Última inspección '+esc(c.ultima.fecha)+' · '+
+        c.ultima.ok+' de '+c.ultima.total+' puntos'+(c.ultima.na?' · '+c.ultima.na+' no aplican':'')+
+        (c.ultima.veces>1?' · '+c.ultima.veces+' inspecciones':'')+'</div>'+
+      (c.ultima.defectos && c.inspeccion!=='Aprobado' ? '<div class="meta" style="margin-top:4px;color:var(--bad)">Falló: '+
+        esc(c.ultima.defectos)+'</div>' : '') : '')+
+    agua+
+    '<div class="puntos hide" id="'+id+'">'+puntos.map(function(p){
+      return '<div>'+esc(p.punto)+(p.foto?' <small>· requiere foto</small>':'')+'</div>'; }).join('')+
+      (puntos.length?'':'<div class="meta">Sin puntos definidos. Pídele al administrador que los agregue.</div>')+'</div>'+
+    '<button class="sec" data-n="'+puntos.length+'" onclick="verPuntos(\''+id+'\',this)">Qué se revisa ('+puntos.length+')</button>'+
+    // se puede inspeccionar todo lo que no esta aprobado: lo iniciado o ya inspeccionado con boton
+    // principal, y lo de "mas adelante" con uno secundario (una demolicion de un dia nunca llega a
+    // marcarse "en progreso", y sin esto el PM quedaba atorado)
+    (c.inspeccion==='Aprobado' ? '' :
+      ((c.iniciado || c.ultima)
+        ? '<button onclick="abrirInspeccionDe(\''+esc(ar.id)+'\','+ci+')">'+
+          (c.inspeccion==='Con defectos'?'Reinspeccionar':'Hacer la inspección')+'</button>'
+        : '<button class="sec" onclick="abrirInspeccionDe(\''+esc(ar.id)+'\','+ci+')">Ya se hizo el trabajo: inspeccionar</button>'))+
+  '</div>';
+}
+function verPuntos(id, btn){
+  var el=$(id), abierto=el.className.indexOf('hide')<0;
+  el.className = abierto ? 'puntos hide' : 'puntos';
+  btn.textContent = abierto ? 'Qué se revisa ('+btn.dataset.n+')' : 'Ocultar';
+}
+function abrirInspeccionDe(areaId, ci){
+  var o=obraActual();
+  var ar=o.areas.filter(function(a){return a.id===areaId;})[0];
+  var c=ar.controles[ci];
+  S.insp={ hito:c.hito, partida:c.partidas[0], area:ar.id, areaNombre:ar.nombre, fallas:[] };
+  S.fotosIn=[]; S.volver='calidad';
+  S.v='insp'; pintarNav(); render(); window.scrollTo(0,0);
+}
+
+/* --------------------------------------------------- entrega y punch list */
+function vEntrega(d,o){
+  S.fotoPun=null;
+  var ab=o.punch.filter(function(x){return x.estado==='Abierto';});
+  var ce=o.punch.filter(function(x){return x.estado==='Cerrado';});
+  var venc=ab.filter(function(x){return x.vencido;}).length;
+
+  var cab = o.entregada
+    ? '<div class="card" style="border-color:var(--ok);background:var(--okbg)">'+
+      '<h3 style="color:var(--ok)">✓ Entregada '+esc(o.fechaEntrega)+'</h3>'+
+      '<div class="meta">Cierra los pendientes que queden y listo.</div></div>'
+    : '<div class="card flat"><h3>Recorrido de entrega</h3>'+
+      '<div class="meta">Anota <b>todo</b> lo que señale el cliente, sin discutir nada en el momento. '+
+      'La clasificación se hace después, no enfrente de él.</div></div>';
+
+  var alerta = venc ? '<div class="card" style="border-color:var(--bad);background:var(--badbg)">'+
+    '<h3 style="color:var(--bad)">'+venc+' pendiente'+(venc>1?'s':'')+' fuera de los 7 días</h3>'+
+    '<div class="meta">Agrúpalos y ve una sola vez, no cinco viajes.</div></div>' : '';
+
+  var form = '<div class="step">AGREGAR DETALLE</div>'+
+    '<textarea id="pItem" placeholder="Silicón disparejo en la unión del vanity con el muro"></textarea>'+
+    '<label class="f">¿Qué es?</label>'+
+    '<div class="seg" id="pOrig">'+
+      '<button data-on="1" onclick="setOrigen(this,\'Defecto\')">Defecto</button>'+
+      '<button data-on="0" onclick="setOrigen(this,\'Cambio de alcance\')">Cambio</button>'+
+      '<button data-on="0" onclick="setOrigen(this,\'Expectativa\')">Expectativa</button></div>'+
+    '<label class="f">¿Quién lo corrige?</label>'+
+    '<input id="pResp" placeholder="Cuadrilla, Magaña Tile, yo…">'+
+    camara('pun','Foto del detalle','Opcional pero ayuda a quien lo va a corregir.',false)+
+    '<button id="bPun" onclick="agregarPunch()">Agregar a la lista</button>';
+
+  var lista = ab.length ? '<div class="sep">Pendientes ('+ab.length+')</div>'+
+    ab.map(function(x){
+      return '<div class="card"'+(x.vencido?' style="border-color:var(--bad)"':'')+'>'+
+        '<b style="font-size:15px">'+esc(x.item)+'</b>'+
+        '<div class="meta" style="margin-top:5px">'+esc(x.origen)+
+          (x.responsable?' · '+esc(x.responsable):'')+' · antes del '+esc(x.compromiso)+
+          (x.vencido?' <span style="color:var(--bad);font-weight:700">vencido</span>':'')+'</div>'+
+        '<button class="sec" onclick="cerrarPunch(\''+esc(x.id)+'\')">Marcar corregido</button></div>';
+    }).join('') : '';
+
+  var hechos = ce.length ? '<div class="sep">Corregidos ('+ce.length+')</div>'+
+    '<div class="card">'+ce.map(function(x){
+      return '<div class="tl"><div><b>'+esc(x.item)+'</b>'+
+        '<div class="meta">'+esc(x.origen)+'</div></div>'+
+        '<span class="pill ok" style="margin:0">listo</span></div>'; }).join('')+'</div>' : '';
+
+  return cab+alerta+form+lista+hechos+'<div style="height:12px"></div>';
+}
+function cap_pun(i){ leerFotos(i,function(a){ S.fotoPun=a[0]||null; pintarFotos('pun',a,'Foto del detalle'); }); }
+function setOrigen(btn,v){
+  [].forEach.call(btn.parentNode.children,function(b){ b.dataset.on='0'; });
+  btn.dataset.on='1'; btn.parentNode.dataset.v=v;
+}
+function agregarPunch(){
+  var item=$('pItem').value;
+  if(item.length<4){ toast('Escribe qué señaló el cliente.',true); return; }
+  var b=$('bPun'); busy(b,'Guardando…');
+  hacer('pmPunch', [{ obra:obraActual().id, item:item,
+      origen:$('pOrig').dataset.v||'Defecto', responsable:$('pResp').value,
+      foto:S.fotoPun?{mime:S.fotoPun.mime,data:S.fotoPun.data}:null }], function(){ libre(b); toast('Agregado a la lista'); ; }, function(e){ libre(b); toast(e.message,true); });
+}
+function cerrarPunch(id){
+  if(!confirm('¿Ya quedó corregido?')) return;
+  hacer('pmCerrarPunch', [id,null], function(){ toast('Cerrado'); ; }, function(e){toast(e.message,true);});
+}
+function vResumen(d,o){
+  var sig = o.siguiente
+    ? '<div class="card" style="border-color:var(--acc)"><div class="meta" '+
+      'style="font-weight:700;color:var(--acc)">LO QUE SIGUE</div>'+
+      '<div class="big" style="margin:6px 0">'+esc(o.siguiente.partida)+'</div>'+
+      (o.areas.length>2?'<div class="meta" style="margin-bottom:6px">'+esc(o.siguiente.area)+'</div>':'')+
+      (o.siguiente.hito?'<span class="pill warn">'+esc(o.siguiente.hito)+'</span>':'')+
+      (o.siguiente.sub?'<div class="meta" style="margin-top:8px">Sub: '+esc(o.siguiente.sub)+
+        (o.siguiente.subInicio?' · arranca '+esc(o.siguiente.subInicio):'')+'</div>'
+        :'<div class="meta" style="margin-top:8px">Sin sub asignado a esta partida.</div>')+'</div>'
+    : '<div class="card"><h3>Lo que sigue</h3><div class="meta">No queda partida pendiente.</div></div>';
+  var medida = o.areas.filter(function(a){return !a.generales;}).map(function(ar){
+    return '<div class="card"'+(ar.pies2?'':' style="border-color:var(--warn)"')+'>'+
+      '<h3>'+esc(ar.nombre)+(ar.pies2?'':' · falta la medida')+'</h3>'+
+      '<div class="meta">'+(ar.pies2 ? ar.pies2+' pies²'+(ar.lineales?' · '+ar.lineales+' pies lineales':'')
+        : 'Mídela en la visita de verificación. Es lo que convierte los costos en costo por pie².')+'</div>'+
+      '<div class="row" style="margin-top:8px">'+
+        '<div><label class="f" style="margin-top:0">Pies²</label>'+
+          '<input id="mP2_'+esc(ar.id)+'" type="tel" inputmode="decimal" value="'+(ar.pies2||'')+'"></div>'+
+        '<div><label class="f" style="margin-top:0">Pies lineales</label>'+
+          '<input id="mPL_'+esc(ar.id)+'" type="tel" inputmode="decimal" value="'+(ar.lineales||'')+'"></div></div>'+
+      '<button class="sec" onclick="guardarMedida(\''+esc(ar.id)+'\')">Guardar medida</button></div>';
+  }).join('');
+
+  var camb = (o.cambios||[]).length ? '<div class="sep">Cambios autorizados</div>'+
+    '<div class="card">'+o.cambios.map(function(c){
+      return '<div class="tl"><div><b>'+esc(c.descripcion)+'</b>'+
+        '<div class="meta">'+esc(c.id)+' · autorizado '+esc(c.autorizada)+'</div></div>'+
+        (c.dias?'<span class="dias">+'+c.dias+' d</span>':'')+'</div>'; }).join('')+
+    '<div class="meta" style="margin-top:10px">Trabajo que el cliente ya firmó. Forma parte de la obra.</div></div>' : '';
+
+  var conf = o.porConfirmar.length ? '<div class="sep">Falta que confirmen</div>'+
+    o.porConfirmar.map(function(s){
+      return '<div class="card" style="border-color:var(--warn)"><h3>'+esc(s.nombre)+'</h3>'+
+        '<div class="meta">'+esc(s.oficio)+' · arranca '+esc(s.inicio)+'</div>'+
+        (s.tel?'<a class="call" href="tel:'+esc(s.tel)+'"><button>Llamar</button></a>':'')+
+        '<button class="sec" onclick="confirmarOT(\''+esc(s.ot)+'\')">Confirmó por escrito</button></div>';
+    }).join('') : '';
+  var apr = o.subsActivos.length ? '<div class="sep">Subs en obra</div>'+
+    o.subsActivos.map(function(s){
+      return '<div class="card"><h3>'+esc(s.nombre)+'</h3>'+
+        '<div class="meta">'+esc(s.oficio)+' · '+esc(s.partida||'')+'</div>'+
+        '<div class="meta" style="margin-top:7px">'+esc(s.alcance)+'</div>'+
+        '<button class="sec" onclick="aprobarOT(\''+esc(s.ot)+'\')">Aprobar trabajo</button></div>';
+    }).join('') : '';
+  var t = o.tiempos.length ? '<div class="sep">Lo que tardó cada partida</div><div class="card">'+
+    o.tiempos.map(function(x){
+      return '<div class="tl"><div><b>'+esc(x.partida)+'</b>'+
+        '<div class="meta">'+(o.areas.length>2?esc(x.area)+' · ':'')+esc(x.inicio)+' a '+esc(x.fin)+'</div></div>'+
+        '<span class="dias">'+x.dias+(x.dias===1?' día':' días')+'</span></div>'; }).join('')+
+    '<div class="meta" style="margin-top:12px">Tu registro, para planear la próxima y para defender '+
+    'el tiempo cuando alguien diga que debió tardar menos.</div></div>' : '';
+  var buzon = d.respuestas.length ? '<div class="sep">Respuestas del administrador</div>'+
+    d.respuestas.map(function(r){
+      return '<div class="card"><h3>'+esc(r.tipo)+' · '+esc(r.obra)+'</h3>'+
+        '<div class="meta">'+esc(r.id)+' · '+esc(r.fecha)+'</div>'+
+        '<div class="meta" style="margin-top:8px;opacity:.85">'+esc(r.descripcion)+'</div>'+
+        '<div class="quote">'+esc(r.respuesta)+'</div></div>'; }).join('') : '';
+  var dn=['dom','lun','mar','mié','jue','vie','sáb'];
+  var sem = o.semana ? '<div class="sep">Esta semana</div><div class="card">'+
+    o.semana.dias.map(function(x){
+      return '<div class="tl"><div><b>'+dn[x.dow]+' '+esc(x.fecha.slice(0,5))+'</b><div class="meta">'+
+        (x.items.length ? x.items.map(function(it){ return esc(it.partida)+(o.areas.length>2?' · '+esc(it.area):''); }).join('<br>') : 'Nada previsto')+
+        '</div>'+(x.llegan.length ? '<div class="meta" style="color:var(--acc);font-weight:700">Llega: '+x.llegan.map(esc).join(', ')+'</div>' : '')+
+        '</div></div>';
+    }).join('')+
+    '<div class="meta" style="margin-top:8px">Entrega prevista: '+esc(o.semana.prevFin)+'</div></div>' : '';
+  return sig+sem+camb+medida+conf+apr+t+buzon;
+}
+function guardarMedida(areaId){
+  hacer('pmMedida', [areaId, $('mP2_'+areaId).value, $('mPL_'+areaId).value], function(r){ toast('Medida guardada · obra '+r.total+' pies²'); ; }, function(e){toast(e.message,true);});
+}
+
+function vSecuencia(d,o){
+  var varias = o.areas.length > 2;
+  return o.areas.map(function(ar){
+    return '<div class="area">'+esc(ar.nombre)+'<small>'+Math.round((ar.avance||0)*100)+'% de avance</small></div>'+
+      ar.partidas.map(filaSecuencia(o)).join('');
+  }).join('');
+}
+function filaSecuencia(o){ return function(p){
+    var c=p.estado==='Terminada'?'ok':(p.estado==='En progreso'?'warn':'');
+    var t=o.tiempos.filter(function(x){return x.partida===p.partida && x.area===p.areaNombre;})[0];
+    return '<div class="opt" style="cursor:default;opacity:'+(p.estado==='Sin iniciar'?'.6':'1')+'">'+
+      '<span class="t">'+esc(p.partida)+
+        (p.hito?'<small>'+esc(p.hito)+
+          (p.inspeccion==='Aprobado'?' · inspección aprobada'
+           :(p.inspeccion==='Con defectos'?' · con defectos':' · sin inspeccionar'))+'</small>':'')+
+        (t?'<small>'+t.dias+(t.dias===1?' día':' días')+'</small>':'')+'</span>'+
+      '<span class="pill '+c+'" style="margin:0">'+p.estado+'</span></div>'; };
+}
+function idDrive(u){ var m=String(u).match(/[-\w]{25,}/); return m?m[0]:''; }
+function vFotos(o){
+  if(S.albumDe!==o.id || S.album===null) return '<p class="empty">Cargando fotos…</p>';
+  if(!S.album.length) return '<p class="empty">Todavía no hay fotos de esta obra.<br>'+
+    'Las que subas en el cierre de día aparecen aquí.</p>';
+  return S.album.map(function(g){
+    return '<div class="card"><h3>'+esc(g.fecha)+
+      (g.tipo==='aviso'?' <span class="pill bad">aviso</span>':'')+'</h3>'+
+      '<div class="meta">'+esc(g.titulo)+'</div>'+
+      (g.nota?'<div class="meta" style="margin-top:5px;opacity:.85">'+esc(g.nota)+'</div>':'')+
+      '<div class="grid3">'+g.fotos.map(function(f){
+        var id=idDrive(f);
+        return '<a href="'+esc(f)+'" target="_blank">'+
+          (id?'<img loading="lazy" src="https://drive.google.com/thumbnail?id='+id+'&sz=w400">':'')+
+          '</a>'; }).join('')+'</div></div>'; }).join('');
+}
+function cargarAlbum(){
+  var o=obraActual(); if(!o) return;
+  if(S.albumDe===o.id && S.album) return;
+  S.album=null; S.albumDe=o.id;
+  google.script.run.withSuccessHandler(function(a){
+    S.album=a;
+    if(S.v==='obra'&&S.vo==='fotos') $('oCont').innerHTML=vFotos(obraActual());
+  }).withFailureHandler(function(e){ toast(e.message,true); }).pmAlbum(S.token,o.id);
+}
+function confirmarOT(id){
+  hacer('pmConfirmarOT', [id], function(){ toast('Confirmación registrada'); ; }, function(e){toast(e.message,true);});
+}
+function aprobarOT(id){
+  if(!confirm('¿Aprobar el trabajo? El sub podrá cobrar. Solo apruebas lo que ya caminaste con él.')) return;
+  hacer('pmAprobarOT', [id], function(){ toast('Trabajo aprobado'); ; }, function(e){toast(e.message,true);});
+}
+
+initLogin();
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter' && $('login').className===''){ entrar(); }
+});
+</script>
+</body>
+</html>

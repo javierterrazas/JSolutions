@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env*
+!.env.example
+.vercel/
+supabase/.temp/
+coverage/
+legacy/.trabajo/
+__pycache__/

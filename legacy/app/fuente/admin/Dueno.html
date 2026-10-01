@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root{
+    --bg:#0d1117; --card:#161b22; --card2:#1f262e; --line:#2b333c; --line2:#3d4854;
+    --tx:#e6edf3; --tx2:#8b98a5;
+    --ok:#3fb950; --okbg:#0d2b16; --warn:#d29922; --warnbg:#2b2210;
+    --bad:#f85149; --badbg:#2d1412; --acc:#4493f8; --accbg:#0d2444;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-size:14.5px;line-height:1.5;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+         padding:13px 18px 0}
+  .brand{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px;
+         flex-wrap:wrap;gap:8px}
+  .brand h1{font-size:18px;margin:0;font-weight:700;letter-spacing:-.2px}
+  .brand span{font-size:12.5px;color:var(--tx2)}
+  .tabs{display:flex;flex-wrap:wrap;gap:2px}          /* envuelve: nada queda escondido */
+  .tabs a{padding:10px 15px;font-size:13.5px;color:var(--tx2);text-decoration:none;
+          border-bottom:2px solid transparent;white-space:nowrap;font-weight:600}
+  .tabs a.on{color:var(--tx);border-bottom-color:var(--acc)}
+  .tabs a b{color:var(--bad);font-weight:700}
+  main{padding:20px 18px 40px;max-width:1120px;margin:0 auto}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:11px;
+        padding:16px;margin-bottom:13px}
+  .card h3{margin:0 0 4px;font-size:15.5px;font-weight:700}
+  .meta{font-size:12.5px;color:var(--tx2)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:13px}
+
+  /* acciones pendientes: lo primero que ve al abrir */
+  .act{display:flex;align-items:center;gap:15px;background:var(--card);border:1px solid var(--line);
+       border-left-width:4px;border-radius:11px;padding:15px 17px;margin-bottom:10px;cursor:pointer}
+  .act:hover{border-color:var(--line2)}
+  .act .n{font-size:30px;font-weight:800;min-width:52px;text-align:center;letter-spacing:-1px}
+  .act .t{flex:1}
+  .act .t b{display:block;font-size:15px;font-weight:700}
+  .act .t span{font-size:12.5px;color:var(--tx2)}
+  .act .go{color:var(--tx2);font-size:20px}
+
+  .kpi{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+       background:var(--card);border:1px solid var(--line);border-radius:11px;
+       padding:14px 16px;margin-bottom:9px}
+  .kpi .v{font-size:23px;font-weight:800;text-align:right;letter-spacing:-.5px}
+  .kpi .n{font-size:14px;font-weight:700}
+  .VERDE{color:var(--ok)} .AMBAR{color:var(--warn)} .ROJO{color:var(--bad)} .INFO{color:var(--tx2)}
+  .bdr-VERDE{border-left:4px solid var(--ok)} .bdr-AMBAR{border-left:4px solid var(--warn)}
+  .bdr-ROJO{border-left:4px solid var(--bad)} .bdr-INFO{border-left:4px solid var(--line2)}
+
+  .pill{display:inline-block;font-size:11.5px;padding:4px 10px;border-radius:20px;font-weight:700;
+        background:var(--card2);color:var(--tx2);margin:0 6px 5px 0}
+  .pill.ok{background:var(--okbg);color:var(--ok)}
+  .pill.warn{background:var(--warnbg);color:var(--warn)}
+  .pill.bad{background:var(--badbg);color:var(--bad)}
+
+  label{display:block;font-size:11.5px;color:var(--tx2);margin:13px 0 5px;font-weight:700;
+        text-transform:uppercase;letter-spacing:.4px}
+  input,select,textarea{width:100%;background:var(--card2);border:1px solid var(--line);
+        color:var(--tx);border-radius:9px;padding:11px;font-size:14.5px;font-family:inherit}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+  textarea{min-height:84px;resize:vertical}
+  button{background:var(--acc);color:#04152b;border:0;border-radius:9px;padding:11px 18px;
+         font-size:14px;font-weight:700;font-family:inherit;margin-top:13px}
+  button.sec{background:var(--card2);border:1px solid var(--line2);color:var(--tx)}
+  button.ok{background:var(--ok);color:#052e12} button.bad{background:var(--bad);color:#fff}
+  button.sm{padding:8px 13px;font-size:13px;margin:9px 9px 0 0}
+  button:disabled{opacity:.5}
+  .row{display:flex;gap:11px;flex-wrap:wrap}.row>*{flex:1;min-width:130px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--tx2);font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+     padding:8px 9px;border-bottom:1px solid var(--line);font-weight:700}
+  td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+
+  /* el margen es el número que importa: que se vea como tal */
+  .margen{display:flex;align-items:baseline;gap:9px;margin:13px 0 4px}
+  .margen b{font-size:34px;font-weight:800;letter-spacing:-1.2px;line-height:1}
+  .margen span{font-size:12.5px;color:var(--tx2)}
+
+  #hVivo{font-size:12px;color:var(--tx2)} #hVivo.off{color:var(--bad)}
+  .vivo{display:flex;align-items:center;gap:12px;background:var(--accbg);color:var(--acc);
+        border:1px solid var(--acc);border-radius:9px;padding:9px 12px;margin:10px 0 12px;font-size:13px;font-weight:600}
+  .vivo span{flex:1} .vivo button{margin:0;padding:7px 13px;font-size:12.5px}
+  .toast{position:fixed;right:18px;bottom:18px;background:var(--ok);color:#052e12;padding:14px 18px;
+         border-radius:10px;font-weight:700;z-index:60;display:none;max-width:420px;
+         box-shadow:0 8px 28px rgba(0,0,0,.45)}
+  .toast.err{background:var(--bad);color:#fff}
+  .hide{display:none}
+  .empty{text-align:center;color:var(--tx2);padding:48px;line-height:1.8}
+  .sep{font-size:11.5px;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;
+       margin:26px 0 11px;font-weight:800}
+  pre{background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:15px;
+      white-space:pre-wrap;font-size:12.5px;line-height:1.6;font-family:ui-monospace,Menlo,monospace}
+  .quote{border-left:3px solid var(--acc);padding-left:13px;margin-top:9px;font-size:14px}
+  .bar{height:7px;background:var(--card2);border-radius:4px;margin:10px 0 5px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--ok)}
+  .avance{display:flex;align-items:baseline;gap:10px;margin:12px 0 0}
+  .avance b{font-size:38px;font-weight:800;letter-spacing:-1.3px;line-height:1}
+  .avance span{font-size:12.5px;color:var(--tx2);line-height:1.3}
+  .pila{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--card2);margin:11px 0 14px}
+  .pila i{display:block;height:100%}
+  .comp{font-size:12.5px;margin-bottom:9px}
+  .comp .l{display:flex;justify-content:space-between;margin-bottom:3px}
+  .comp .l span{color:var(--tx2)}
+  .comp .t{height:6px;border-radius:3px;background:var(--card2)}
+  .comp .t i{display:block;height:6px;border-radius:3px}
+  .senal{border-radius:8px;padding:8px 10px;font-size:12.5px;margin:0 0 6px}
+  .senal.bad{background:var(--badbg);color:var(--bad)}
+  .senal.warn{background:var(--warnbg);color:var(--warn)}
+  .senal.info{background:var(--card2);color:var(--tx2)}
+
+  .idioma{position:absolute;top:12px;right:14px;width:auto;margin:0;padding:6px 11px;font-size:12.5px;
+          font-weight:800;letter-spacing:.5px;border-radius:20px;background:transparent;
+          border:2px solid var(--line2, #3d4854);color:var(--tx2, #8b98a5);z-index:5}
+
+  /* Apps Script mete la app dentro de una pagina de Google que tambien se desplaza. Sin esto,
+     al llegar al final el gesto se le pasa a la pagina de afuera, y al regresar el dedo queda
+     "atrapado" ahi. Tambien evita que un jalon hacia abajo recargue la app a media captura. */
+  html,body{overscroll-behavior-y:contain}
+  .pinbox{position:relative}
+  .pinbox .ojo{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;margin:0;
+               padding:10px;background:transparent;border:0;color:var(--tx2, #8b98a5);line-height:0;cursor:pointer}
+
+  label.req::after{content:" *";color:var(--bad);font-weight:700}
+  .falta{border-color:var(--bad)!important;box-shadow:0 0 0 1px var(--bad)}
+
+  /* los campos de numero: solo se escribe el numero, sin las flechitas del navegador */
+  input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
+</style>
+</head>
+<body>
+
+<div id="login" style="position:relative">
+  <button class="idioma" onclick="cambiarIdioma()">EN</button>
+  <main style="max-width:370px;padding-top:90px">
+    <h1 style="font-size:24px;text-align:center;margin-bottom:4px">Control de Obra</h1>
+    <p class="meta" style="text-align:center;margin-bottom:26px">Acceso de administrador</p>
+    <label>Usuario</label><input id="lEmail" type="text" autocapitalize="off" autocorrect="off"
+      spellcheck="false" autocomplete="username" placeholder="Nombre">
+    <label>PIN</label>
+    <div class="pinbox"><input id="lPin" type="password" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+      autocomplete="current-password" style="padding-right:46px">
+      <button type="button" class="ojo" title="Mostrar PIN" style="opacity:.75" onclick="verPin(this)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+    <button id="bLogin" style="width:100%" onclick="entrar()">Entrar</button>
+    <p class="meta" id="lMsg" style="text-align:center;margin-top:14px;color:var(--bad)"></p>
+  </main>
+</div>
+
+<div id="app" class="hide">
+  <header style="position:relative">
+    <button class="idioma" style="top:10px;right:18px" onclick="cambiarIdioma()">EN</button>
+    <div class="brand" style="padding-right:56px"><h1>Control de Obra</h1><span><span id="hSub"></span> <span id="hVivo"></span></span></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="vivoBar"></div>
+  </header>
+  <main id="vista"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/*@@IDIOMA@@*/
+
+var S = { token:null, d:null, v:'inicio', todos:false, verTarjeta:false };
+
+/*@@COMUN@@*/
+function esc(s){ return String(s==null?'':s).replace(/[<>&"]/g,function(c){
+  return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
+function money(n){ return '$'+(Number(n)||0).toLocaleString('en-US',{maximumFractionDigits:0}); }
+function pct(n){ return (Number(n)*100).toFixed(1)+'%'; }
+function toast(m,err){
+  var t=$('toast'); t.textContent=m; t.className='toast'+(err?' err':''); t.style.display='block';
+  setTimeout(function(){ t.style.display='none'; }, err?6000:3000);
+}
+function busy(b,t){ b.disabled=true; b.dataset.t=b.textContent; b.textContent=t||'Guardando…'; }
+function libre(b){ b.disabled=false; b.textContent=b.dataset.t; }
+
+
+
+function alCambiarIdioma(){
+  if(S.token){
+    if(S.d && !hayEdicionAbierta()){ var det=(S.v==='obras' && S.det) ? S.det.id : null; render(); if(det) detalle(det,true); }
+    google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){}).duIdioma(S.token, IDIOMA);
+  }
+}
+function entrar(){
+  var b=$('bLogin'); busy(b,'Entrando…');
+  google.script.run.withSuccessHandler(function(r){
+    libre(b);
+    if(!r.ok){ $('lMsg').textContent=r.msg; return; }
+    S.token=r.token; if(r.idioma && r.idioma!==IDIOMA) aplicarIdioma(r.idioma);
+    $('login').className='hide'; $('app').className=''; cargar();
+  }).withFailureHandler(function(e){ libre(b); $('lMsg').textContent=e.message; })
+    .duLogin($('lEmail').value, $('lPin').value, IDIOMA);
+}
+function cargar(){
+  VIVO.cargando = true;
+  google.script.run.withSuccessHandler(function(d){
+    VIVO.cargando = false; S.d = d; VIVO.ultimo = Date.now(); VIVO.pendiente = null;
+    pintarBarraVivo(''); render(); pintarVivo();
+  }).withFailureHandler(function(e){ VIVO.cargando = false; toast(e.message,true); }).duDatos(S.token);
+}
+
+/* ------------------------------------------------------------------ en vivo */
+/*
+ * Cada 30 s, y solo con la pestaña a la vista, se pregunta por UNA celda: ¿hubo
+ * cambios? Solo si los hubo se descargan los datos completos. Si estás escribiendo
+ * —una respuesta a un aviso, un formulario abierto— no se te borra nada: aparece
+ * una barra para actualizar cuando termines.
+ */
+var VIVO = { ultimo:0, cargando:false, pendiente:null, activo:true };
+
+
+
+document.addEventListener('input', function(ev){ if(ev.target && ev.target.classList) ev.target.classList.remove('falta'); }, true);
+document.addEventListener('change', function(ev){ if(ev.target && ev.target.classList) ev.target.classList.remove('falta'); }, true);
+
+function hayEdicionAbierta(){
+  var a = document.activeElement;
+  if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return true;
+  var abiertos = ['formCat','formOC','formNC','formSub','accObra','formGar','formOlvido'];
+  for(var i=0;i<abiertos.length;i++){ var e=$(abiertos[i]); if(e && e.innerHTML.trim()) return true; }
+  var pagos = document.querySelectorAll('[id^="pago_"]');
+  for(var j=0;j<pagos.length;j++) if(pagos[j].innerHTML.trim()) return true;
+  // cualquier campo que ya no tiene su valor original: alguien lo esta llenando
+  return formularioSucio();
+}
+function queCambio(a, b){
+  var m = [];
+  if(b.bloqueos.length > a.bloqueos.length) m.push('Nuevo aviso de obra');
+  if((b.calidadPendiente||[]).length > (a.calidadPendiente||[]).length) m.push('Defectos en un punto de control');
+  var ant = {}; a.tablero.forEach(function(t){ ant[t.id]=t; });
+  b.tablero.forEach(function(t){
+    var v = ant[t.id];
+    if(!v){ m.push('Obra nueva · '+t.cliente); return; }
+    if(t.ultimoReporte !== v.ultimoReporte) m.push('Cierre de día · '+t.cliente);
+    else if(t.materiales > v.materiales) m.push('Gasto nuevo · '+t.cliente);
+    else if(t.avance && v.avance && t.avance.pct !== v.avance.pct) m.push('Avance · '+t.cliente);
+    else if(t.horasCuadrilla !== v.horasCuadrilla) m.push('Horas de cuadrilla · '+t.cliente);
+  });
+  if(b.sinRecibo.length > a.sinRecibo.length) m.push('Cargo sin recibo');
+  return m.slice(0,2).join(' · ');
+}
+function revisarCambios(forzar){
+  if(!S.token || !S.d || VIVO.cargando || !VIVO.activo) return;
+  if(document.visibilityState==='hidden' && !forzar) return;
+  google.script.run.withSuccessHandler(function(sello){
+    VIVO.ultimo = Date.now(); pintarVivo();
+    if(sello && sello !== S.d.sello) traerCambios();
+  }).withFailureHandler(function(e){
+    if(/Sesion expirada/i.test(String((e&&e.message)||e))){
+      VIVO.activo = false; $('hVivo').className='off';
+      $('hVivo').textContent = '· sesión expirada, recarga la página';
+    }                                      // si es la red, se reintenta en el siguiente ciclo
+  }).duSello(S.token);
+}
+function traerCambios(){
+  VIVO.cargando = true;
+  google.script.run.withSuccessHandler(function(nuevo){
+    VIVO.cargando = false;
+    var msg = queCambio(S.d, nuevo);
+    if(hayEdicionAbierta()){
+      VIVO.pendiente = nuevo; pintarBarraVivo(msg || 'Hay datos nuevos'); return;
+    }
+    aplicarNuevos(nuevo, msg);
+  }).withFailureHandler(function(){ VIVO.cargando = false; }).duDatos(S.token);
+}
+function aplicarNuevos(nuevo, msg){
+  var det = $('detObra');
+  var detAbierto = (S.v==='obras' && S.det && det && det.innerHTML.trim()) ? S.det.id : null;
+  S.d = nuevo; VIVO.pendiente = null; pintarBarraVivo('');
+  if(S.v !== 'historico') render();        // el historico son obras cerradas: no cambia con el campo
+  if(detAbierto) detalle(detAbierto, true); // se vuelve a abrir la obra que estabas viendo, sin saltar
+  if(msg) toast(msg);
+}
+function aplicarPendientes(){ if(VIVO.pendiente) aplicarNuevos(VIVO.pendiente, ''); }
+function pintarBarraVivo(msg){
+  $('vivoBar').innerHTML = msg ? '<div class="vivo"><span>'+esc(msg)+'</span>'+
+    '<button onclick="aplicarPendientes()">Actualizar</button></div>' : '';
+}
+function pintarVivo(){
+  if(!VIVO.activo || !VIVO.ultimo) return;
+  var s = Math.round((Date.now()-VIVO.ultimo)/1000);
+  $('hVivo').className = '';
+  $('hVivo').textContent = '· al día '+(s<10?'ahora':'hace '+(s<60?s+' s':Math.round(s/60)+' min'));
+}
+setInterval(function(){ revisarCambios(false); }, 30000);
+setInterval(pintarVivo, 10000);
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState==='visible') revisarCambios(true);   // al volver a la pestaña, de inmediato
+});
+function ir(v,ev){ if(ev) ev.preventDefault(); S.v=v; render(); window.scrollTo(0,0); }
+
+var TABS = [['inicio','Inicio'],['obras','Obras'],['avisos','Avisos'],
+            ['cambios','Cambios'],['subs','Subcontratos'],['historico','Histórico'],
+            ['catalogo','Catálogo']];
+
+function pendientes(d){
+  return {
+    avisos: d.bloqueos.length,
+    avisosSLA: d.bloqueos.filter(function(b){return b.fueraSLA;}).length,
+    oc: d.oc.filter(function(o){return o.estado==='Propuesta';}).length,
+    ocSLA: d.oc.filter(function(o){return o.estado==='Propuesta'&&o.horasDesdeEmision>48;}).length,
+    recibos: d.sinRecibo.length,
+    sinReporte: d.tablero.filter(function(t){return t.diasSinReporte!==null&&t.diasSinReporte>2;}).length,
+    pagos: d.ordenes.filter(function(o){return o.saldo>0&&o.aprobada;}).length,
+    calidad: d.calidadPendiente.length,
+    punch: d.punchVencido.length,
+    garantia: d.garantiaAbierta.length,
+    cosecha: d.cosecha.length,
+    rojos: d.kpis.filter(function(k){return k.sem==='ROJO';}).length
+  };
+}
+
+function render(){
+  if(!S.d) return;
+  var d=S.d, p=pendientes(d);
+  $('tabs').innerHTML = TABS.map(function(t){
+    var n = {avisos:p.avisos, cambios:p.oc, subs:p.pagos, inicio:0, obras:0, catalogo:0}[t[0]];
+    return '<a href="#" class="'+(S.v===t[0]?'on':'')+'" onclick="ir(\''+t[0]+'\',event)">'+
+      t[1]+(n?' <b>'+n+'</b>':'')+'</a>'; }).join('');
+  $('hSub').textContent = d.tablero.length+' obras activas · '+p.rojos+' KPIs en rojo';
+  var v=$('vista');
+  if(S.v==='inicio')   v.innerHTML=vInicio(d,p);
+  if(S.v==='obras')    v.innerHTML=vObras(d);
+  if(S.v==='avisos')   v.innerHTML=vAvisos(d);
+  if(S.v==='cambios')  v.innerHTML=vCambios(d);
+  if(S.v==='subs')     v.innerHTML=vSubs(d);
+  if(S.v==='catalogo'){ v.innerHTML='<div class="card" id="sistema"><h3>Sistema</h3><div class="meta">Cargando…</div></div>'+vCatalogo(d); cargarSistema(); }
+  if(S.v==='historico'){ v.innerHTML='<p class="empty">Cargando histórico…</p>'; cargarHist(); }
+}
+
+/* --------------------------------------------------------------- inicio */
+function accion(n, titulo, sub, color, destino){
+  return '<div class="act bdr-'+color+'" onclick="ir(\''+destino+'\')">'+
+    '<div class="n '+color+'">'+n+'</div>'+
+    '<div class="t"><b>'+titulo+'</b><span>'+sub+'</span></div>'+
+    '<div class="go">›</div></div>';
+}
+function vInicio(d,p){
+  var acts = [];
+  if(p.avisos) acts.push(accion(p.avisos, 'Avisos por responder',
+    p.avisosSLA? p.avisosSLA+' pasaron las 24 horas. El PM está esperando.' :
+    'Responde hoy: es lo que sostiene que el PM siga reportando.',
+    p.avisosSLA?'ROJO':'AMBAR', 'avisos'));
+  if(p.oc) acts.push(accion(p.oc, 'Órdenes de cambio sin autorizar',
+    p.ocSLA? p.ocSLA+' llevan más de 48 horas esperando firma.' : 'Perseguir la firma del cliente.',
+    p.ocSLA?'ROJO':'AMBAR', 'cambios'));
+  if(p.sinReporte) acts.push(accion(p.sinReporte, 'Obras sin reporte',
+    'Más de dos días sin bitácora. Llamada al PM, no mensaje.', 'ROJO', 'obras'));
+  if(p.pagos) acts.push(accion(p.pagos, 'Subs con trabajo aprobado por pagar',
+    'Aprobados por el PM y con saldo abierto.', 'AMBAR', 'subs'));
+  if(p.calidad) acts.push(accion(p.calidad, 'Puntos de control con defectos',
+    'El PM encontró defectos antes de cubrir. Decide quién los corrige y quién los paga.',
+    'ROJO', 'obras'));
+  if(p.garantia) acts.push(accion(p.garantia, 'Reclamos de garantía abiertos',
+    'Respuesta en 48 horas, visita de diagnóstico en 5 días.', 'ROJO', 'historico'));
+  if(p.punch) acts.push(accion(p.punch, 'Pendientes de entrega vencidos',
+    'Pasaron los 7 días hábiles. Agrupa y ve una sola vez.', 'ROJO', 'obras'));
+  if(p.cosecha) acts.push(accion(p.cosecha, 'Reseñas y visitas de garantía pendientes',
+    'Clientes recién entregados sin reseña, o garantías por vencer.', 'AMBAR', 'historico'));
+  if(p.recibos) acts.push('<div class="act bdr-AMBAR" onclick="verTarjeta()">'+
+    '<div class="n AMBAR">'+p.recibos+'</div><div class="t"><b>Cargos sin recibo</b>'+
+    '<span>Sin foto de recibo. El PM los adjunta desde su app.</span></div>'+
+    '<div class="go">›</div></div>');
+
+  if(d.sinCorreoAvisos) acts.unshift('<div class="act bdr-ROJO" onclick="ir(\'catalogo\')">'+
+    '<div class="n ROJO">!</div><div class="t"><b>Los avisos por correo no te están llegando</b>'+
+    '<span>Falta tu correo en la columna correo_avisos de la hoja Usuarios. Sin eso no te enteras '+
+    'de bloqueos, defectos de calidad ni fugas hasta que abras la app.</span></div>'+
+    '<div class="go">›</div></div>');
+
+  // tu revision de la tarde: quien no ha cerrado hoy, para llamarle antes de que acabe el dia
+  if(new Date().getHours()>=15 && (d.sinCierreHoy||[]).length) extra += '<div class="card"><h3>Sin cierre hoy</h3>'+
+    '<div class="meta">Obras en curso que todavía no cierran el día. Una llamada ahora evita un día perdido.</div>'+
+    d.sinCierreHoy.map(function(x){ return '<div class="meta" style="margin-top:6px"><b>'+esc(x.obra)+'</b> '+esc(x.cliente)+' · '+esc(x.pm)+'</div>'; }).join('')+'</div>';
+  var sinPre = d.tablero.filter(function(t){ return t.estado==='Sin presupuesto'; });
+  // el sistema solo aparece en Inicio si hay algo que atender
+  var si = d.sistema;
+  if(si){
+    if(si.errores && si.errores.length) acts.unshift(accion(si.errores.length, 'Errores del sistema', 'En los últimos 7 días. Si se repiten, pide que los revisen: están en Catálogo → Sistema.', 'ROJO', 'catalogo'));
+    if(si.salud && si.salud.problemas.length) acts.unshift(accion(si.salud.problemas.length, 'Problemas en el libro', 'Columnas movidas, filas vacías o IDs repetidos: revísalos en Catálogo → Sistema.', 'ROJO', 'catalogo'));
+    if(si.respaldoActivo===false) acts.push(accion('!', 'Respaldo semanal sin activar', 'Actívalo en Catálogo → Sistema: una copia del libro cada domingo.', 'AMBAR', 'catalogo'));
+    else if(si.diasRespaldo!==null && si.diasRespaldo>8) acts.push(accion(si.diasRespaldo, 'Días sin respaldo', 'El respaldo de cada domingo no ha corrido. Revísalo en Catálogo → Sistema.', 'AMBAR', 'catalogo'));
+  }
+  if(sinPre.length) acts.unshift(accion(sinPre.length, 'Obras que no pueden arrancar', 'Falta su presupuesto por etapa: '+
+    sinPre.map(function(t){ return t.cliente+' ('+t.id+')'; }).join(', ')+'. El PM no puede registrar su primer día hasta que lo captures.', 'ROJO', 'obras'));
+  var atr = d.tablero.filter(function(t){ return t.atraso>0; });
+  if(atr.length) acts.push(accion(atr.length, 'Obras atrasadas', 'Pasaron su fecha de entrega: '+
+    atr.map(function(t){ return t.cliente+' ('+t.atraso+' d)'; }).join(', ')+'.', 'ROJO', 'obras'));
+  var extra = '', sem = d.semana || {porProgramar:[],sinConfirmar:[],choques:[]};
+  if(sem.porProgramar.length || sem.sinConfirmar.length || sem.choques.length) extra += '<div class="card"><h3>Esta semana</h3>'+
+    (sem.porProgramar.length ? '<div class="meta">Subs por programar en los próximos 5 días hábiles, sin orden de trabajo.</div>'+
+      '<table style="margin-top:8px">'+sem.porProgramar.map(function(x,i){
+        return '<tr><td>'+esc(x.partida)+'<div class="meta">'+esc(x.obra)+' '+esc(x.cliente)+' · arranca '+esc(x.inicio)+' · '+esc(x.quien)+'</div></td>'+
+          '<td class="num"><button class="sm" style="margin:0" onclick="emitirDesdeSemana('+i+')">Emitir orden</button></td></tr>';
+      }).join('')+'</table>' : '')+
+    sem.choques.map(function(c){ return '<div class="senal warn" style="margin-top:8px">'+esc(c.sub)+' quedaría en dos obras ('+esc(c.obras)+') el '+esc(c.dia)+'</div>'; }).join('')+
+    sem.sinConfirmar.map(function(c){ return '<div class="senal info" style="margin-top:6px">Falta confirmación escrita: '+esc(c.sub)+' en '+esc(c.obra)+', llega el '+esc(c.inicio)+'</div>'; }).join('')+
+    '</div>';
+  if((d.comprasLimite||[]).length) extra += '<div class="card"><h3>Compras arriba del límite</h3>'+
+    '<div class="meta">El PM compró más de lo que puede sin autorización. Revísalas y márcalas.</div>'+
+    '<table style="margin-top:8px">'+d.comprasLimite.map(function(g,i){
+      return '<tr><td class="meta">'+esc(g.fecha)+'</td><td>'+esc(g.proveedor)+'<div class="meta">'+esc(g.obra)+' · '+
+        esc(g.usuario)+' · '+esc(g.descripcion)+'</div></td><td class="num">'+money(g.monto)+'</td>'+
+        '<td class="num"><button class="sec sm" style="margin:0" onclick="revisarCompra('+i+')">Revisada</button></td></tr>';
+    }).join('')+'</table></div>';
+  if((d.subsNoLlegaron||[]).length) extra += '<div class="card"><h3>Subs que no llegaron</h3>'+
+    '<div class="meta">Reprograma la orden: la falta queda contada y el PM marca cuando sí llegue.</div>'+
+    '<table style="margin-top:8px">'+d.subsNoLlegaron.map(function(o,i){
+      return '<tr><td>'+esc(o.sub)+'<div class="meta">'+esc(o.obra)+' · '+esc(o.partida)+' · era el '+esc(o.inicio)+'</div></td>'+
+        '<td class="num"><button class="sm" style="margin:0" onclick="reprogramarDesdeInicio('+i+')">Reprogramar</button></td></tr>';
+    }).join('')+'</table><div id="repInicio"></div></div>';
+  var hoy = acts.length
+    ? '<div class="sep">Lo que te toca hoy</div>'+acts.join('')
+    : '<div class="card" style="border-color:var(--ok)"><h3 class="VERDE">Nada pendiente</h3>'+
+      '<div class="meta">Sin avisos abiertos, sin OC esperando firma y todas las obras reportaron. '+
+      'Buen momento para el bloque mensual: costear las obras cerradas.</div></div>';
+
+  var tarj = S.verTarjeta ? '<div class="sep">Cargos sin recibo</div>'+bloqueTarjeta(d) : '';
+
+  var top = d.kpis.filter(function(k){return k.top;});
+  var resto = d.kpis.filter(function(k){return !k.top;});
+  return hoy+extra+tarj+
+    '<div class="sep">Los seis de cada lunes</div>'+top.map(tarjetaKpi).join('')+
+    '<button class="sec" style="width:100%" onclick="S.todos=!S.todos;render()">'+
+      (S.todos?'Ocultar los otros '+resto.length:'Ver los otros '+resto.length+' indicadores')+'</button>'+
+    (S.todos? '<div class="sep">Proceso 3 · Control diario</div>'+
+      resto.filter(function(k){return k.proc==='P3';}).map(tarjetaKpi).join('')+
+      '<div class="sep">Proceso 4 · Control de cambios</div>'+
+      resto.filter(function(k){return k.proc==='P4';}).map(tarjetaKpi).join('')+
+      '<div class="sep">Proceso 5 · Calidad</div>'+
+      resto.filter(function(k){return k.proc==='P5';}).map(tarjetaKpi).join('')+
+      '<div class="sep">Proceso 6 · Entrega y postventa</div>'+
+      resto.filter(function(k){return k.proc==='P6';}).map(tarjetaKpi).join('') : '');
+}
+function verTarjeta(){ S.verTarjeta=!S.verTarjeta; render(); }
+function tarjetaKpi(k){
+  var val = k.fmt==='pct'?pct(k.real):(k.fmt==='money'?money(k.real):
+            (k.fmt==='num1'?(Math.round(k.real*10)/10):Math.round(k.real)));
+  var meta = k.fmt==='pct'?pct(k.meta):(Math.round(k.meta*10)/10);
+  return '<div class="kpi bdr-'+k.sem+'"><div><div class="n">'+esc(k.nombre)+'</div>'+
+    '<div class="meta">'+esc(k.revela)+(k.sem==='INFO'?'':' · meta '+meta)+'</div></div>'+
+    '<div class="v '+k.sem+'">'+val+'</div></div>';
+}
+function bloqueTarjeta(d){
+  if(!d.sinRecibo.length) return '<div class="card"><div class="meta">Todos los cargos tienen recibo.</div></div>';
+  var total=d.sinRecibo.reduce(function(a,g){return a+g.monto;},0);
+  return '<div class="card"><h3>'+d.sinRecibo.length+' cargos · '+money(total)+'</h3>'+
+    '<div class="meta">Más de '+(d.cfg.HORAS_SIN_RECIBO||72)+' horas sin recibo es KPI rojo.</div>'+
+    '<table style="margin-top:11px"><tr><th>Fecha</th><th>Obra</th><th>Proveedor</th>'+
+    '<th>Descripción</th><th>PM</th><th>Tarjeta</th><th class="num">Horas</th><th class="num">Monto</th></tr>'+
+    d.sinRecibo.map(function(g){
+      var tarde=g.horas>(d.cfg.HORAS_SIN_RECIBO||72);
+      return '<tr><td>'+esc(g.fecha)+'</td><td>'+esc(g.obra)+'</td><td>'+esc(g.proveedor)+'</td>'+
+        '<td>'+esc(g.descripcion)+'</td><td>'+esc(g.pm)+'</td><td>····'+esc(g.tarjeta)+'</td>'+
+        '<td class="num '+(tarde?'ROJO':'')+'">'+g.horas+'</td>'+
+        '<td class="num">'+money(g.monto)+'</td></tr>'; }).join('')+'</table></div>';
+}
+
+/* --------------------------------------------------- avance ponderado */
+function pct0(n){ return Math.round((Number(n)||0)*100)+'%'; }
+function bloqueAvance(av){
+  var p=av.pct||0, c=av.curso||0;
+  return '<div class="avance"><b>'+pct0(p)+'</b><span>de avance'+
+      (c>0.005?'<br>+'+pct0(c)+' en curso':'')+'</span></div>'+
+    '<div class="pila"><i style="width:'+(p*100)+'%;background:var(--ok)"></i>'+
+      '<i style="width:'+(c*100)+'%;background:var(--ok);opacity:.35"></i></div>';
+}
+function barraComp(etq, val, color){
+  var w=Math.max(0,Math.min(100,(val||0)*100));
+  return '<div class="comp"><div class="l"><span>'+etq+'</span><b style="color:'+color+'">'+pct0(val)+
+    '</b></div><div class="t"><i style="width:'+w+'%;background:'+color+'"></i></div></div>';
+}
+/**
+ * Avance, costo y cobrado lado a lado. La senal esta en la diferencia:
+ * costo por delante del avance = sobrecosto; cobrado por detras = financias al cliente.
+ */
+function comparacion(av, pctCosto, pctCobrado){
+  var a=av.pct||0, out='';
+  out += barraComp('Avance', a, 'var(--ok)');
+  if(pctCosto!==null && pctCosto!==undefined){
+    out += barraComp('Costo del presupuesto', pctCosto, pctCosto-a>0.10?'var(--bad)':'var(--tx)');
+  }
+  out += barraComp('Cobrado del contrato', pctCobrado, a-pctCobrado>0.15?'var(--warn)':'var(--tx)');
+  var s='';
+  if(pctCosto!==null && pctCosto!==undefined && pctCosto-a>0.10)
+    s+='<div class="senal bad">El costo va '+Math.round((pctCosto-a)*100)+' puntos por delante del avance</div>';
+  if(a-pctCobrado>0.15)
+    s+='<div class="senal warn">Estás financiando al cliente: '+Math.round((a-pctCobrado)*100)+' puntos de avance sin cobrar</div>';
+  if(pctCosto===null || pctCosto===undefined)
+    s+='<div class="senal info">Captura el presupuesto para comparar el costo contra el avance</div>';
+  return out+s;
+}
+
+/* ---------------------------------------------------------------- obras */
+function vObras(d){
+  if(!d.tablero.length) return '<p class="empty">No hay obras activas.</p>'+formNuevaObra(d);
+  return '<div class="grid">'+d.tablero.map(function(t){
+    var cls = t.alerta==='OK'?'VERDE':((t.alerta.indexOf('SLA')>=0 || t.alerta==='Falta presupuesto')?'ROJO':'AMBAR');
+    var m = t.contratoActual? 1-t.gastado/t.contratoActual : 0;
+    return '<div class="card bdr-'+cls+'">'+
+      '<h3>'+esc(t.cliente)+'</h3>'+
+      '<div class="meta">'+esc(t.id)+' · '+esc(t.tipo)+' · PM '+esc(t.pm)+'</div>'+
+      bloqueAvance(t.avance)+
+      comparacion(t.avance, t.pctCosto, t.pctCobrado)+
+      (t.atraso>0 ? '<div class="senal bad">Atrasada '+t.atraso+' días hábiles: la entrega era el '+esc(t.compromiso)+'</div>'
+        : (t.atrasoPrevisto>0 ? '<div class="senal warn">Va a entregar el '+esc(t.prevFin)+': '+t.atrasoPrevisto+
+            ' días hábiles después de lo comprometido</div>' : ''))+
+      (t.ppc ? '<div class="meta" style="margin:2px 0 6px">Cumplimiento del plan la semana pasada: '+pct0(t.ppc.ppc)+
+        ' ('+t.ppc.hecho+' de '+t.ppc.plan+')</div>' : '')+
+      '<div style="margin:10px 0 4px">'+
+        '<span class="pill '+(cls==='VERDE'?'ok':(cls==='ROJO'?'bad':'warn'))+'">'+esc(t.alerta)+'</span>'+
+        (t.diasSinReporte!==null?'<span class="pill">reporte hace '+t.diasSinReporte+' d</span>'
+          :'<span class="pill bad">sin bitácora</span>')+'</div>'+
+      '<table><tr><td class="meta">Contrato</td><td class="num">'+money(t.contratoOriginal)+'</td></tr>'+
+      '<tr><td class="meta">Órdenes de cambio'+(t.nOC?' ('+t.nOC+')':'')+'</td><td class="num">'+money(t.montoOC)+'</td></tr>'+
+      '<tr><td class="meta">Costo comprometido</td><td class="num">'+money(t.gastado)+'</td></tr>'+
+      '<tr><td class="meta">Margen corriente</td><td class="num '+(m<0.25?'ROJO':(m<0.35?'AMBAR':'VERDE'))+'">'+pct(m)+'</td></tr>'+
+      (t.porCobrar>0?'<tr><td class="meta">Por cobrar</td><td class="num">'+money(t.porCobrar)+'</td></tr>':'')+
+      (t.saldoSub>0?'<tr><td class="meta">Falta pagar a subs</td><td class="num">'+money(t.saldoSub)+'</td></tr>':'')+
+      '</table>'+
+      '<div class="meta" style="margin-top:10px">'+t.diasEnObra+' días en obra · entrega '+esc(t.finEst)+'</div>'+
+      (t.estado==='Sin presupuesto' ? '<button class="sm" onclick="capturarPresupuesto(&quot;'+t.id+'&quot;)">Capturar presupuesto</button>' : '')+
+      '<button class="sec sm" onclick="detalle(&quot;'+t.id+'&quot;)">Ver obra</button>'+
+      '<button class="sm" onclick="formOC(&quot;'+t.id+'&quot;)">Nueva OC</button>'+
+    '</div>'; }).join('')+'</div><div id="detObra"></div>'+formNuevaObra(d);
+}
+function formNuevaObra(d){
+  var hoy=new Date().toISOString().slice(0,10);
+  S.nuevasAreas = S.nuevasAreas || [{ tipo:(d.tiposArea[0]||'Baño'), nombre:'', pies2:'', lineales:'' }];
+  return '<div class="sep">Alta de obra</div><div class="card">'+
+    '<div class="row"><div><label class="req">Cliente</label><input id="bCli"></div>'+
+    '<div><label class="req">Teléfono</label><input id="bTel"></div>'+
+    '<div><label class="req">PM</label><select id="bPM">'+
+      d.pms.map(function(x){return '<option value="'+esc(x.email)+'">'+esc(x.nombre)+'</option>';}).join('')+
+      '</select></div></div>'+
+    '<label class="req">Dirección</label><input id="bDir">'+
+    '<label>Espacios que se van a remodelar</label>'+
+    '<div class="meta" style="margin-bottom:8px">Generales de obra (permisos, contenedor, protección, '+
+      'limpieza final) se crea sola. Aquí van los espacios: un baño, dos baños, baño y cocina…</div>'+
+    '<div id="bAreas">'+pintarAreasNuevas(d)+'</div>'+
+    '<button class="sec sm" onclick="agregarAreaNueva()">+ Agregar espacio</button>'+
+    '<div class="row"><div><label class="req">Contrato total</label><input id="bMonto" type="number"></div>'+
+    '<div><label class="req">Fecha de inicio</label><input id="bIni" type="date" value="'+hoy+'" onchange="proponerEntrega()"></div>'+
+    '<div><label class="req">Entrega estimada</label><input id="bFin" type="date" value="'+hoy+'" oninput="avisoFecha()"></div></div>'+
+    '<div class="meta" id="bProp"></div>'+
+    '<button onclick="guardarObra()">Crear obra</button></div>';
+}
+function proponerEntrega(){
+  var tipos=(S.nuevasAreas||[]).map(function(a){return a.tipo;}).filter(Boolean);
+  if(!$('bIni') || !$('bIni').value || !tipos.length) return;
+  google.script.run.withSuccessHandler(function(r){
+    if(!r) return; S.propuesta=r; $('bFin').value=r.fecha; avisoFecha();
+  }).duProponerEntrega(S.token, $('bIni').value, tipos);
+}
+function avisoFecha(){
+  var r=S.propuesta; if(!r || !$('bProp')) return;
+  var corta=$('bFin').value && $('bFin').value<r.fecha;
+  $('bProp').style.color = corta ? 'var(--bad)' : '';
+  $('bProp').textContent = corta ? 'Más corta que lo que da la plantilla: '+r.dias+' días hábiles, entrega el '+r.fecha+'.'
+    : 'Propuesta según la plantilla: '+r.dias+' días hábiles.';
+}
+function pintarAreasNuevas(d){
+  return S.nuevasAreas.map(function(a,i){
+    return '<div class="row" style="align-items:flex-end;margin-bottom:6px">'+
+      '<div style="flex:0 0 130px"><label class="req">Tipo</label><select onchange="S.nuevasAreas['+i+'].tipo=this.value;proponerEntrega()">'+
+        d.tiposArea.map(function(t){return '<option'+(t===a.tipo?' selected':'')+'>'+esc(t)+'</option>';}).join('')+
+      '</select></div>'+
+      '<div><label>Nombre</label><input value="'+esc(a.nombre)+'" placeholder="Baño principal" '+
+        'oninput="S.nuevasAreas['+i+'].nombre=this.value"></div>'+
+      '<div style="flex:0 0 95px"><label class="req">Pies²</label><input data-pies="'+i+'" type="number" value="'+esc(a.pies2)+'" '+
+        'oninput="S.nuevasAreas['+i+'].pies2=this.value"></div>'+
+      '<div style="flex:0 0 110px"><label>Pies lineales</label><input type="number" value="'+esc(a.lineales)+'" '+
+        'oninput="S.nuevasAreas['+i+'].lineales=this.value"></div>'+
+      (S.nuevasAreas.length>1?'<div style="flex:0 0 auto"><button class="sec sm" style="margin:0 0 2px" '+
+        'onclick="quitarAreaNueva('+i+')">Quitar</button></div>':'')+
+    '</div>'; }).join('');
+}
+function agregarAreaNueva(){
+  S.nuevasAreas.push({ tipo:(S.d.tiposArea[0]||'Baño'), nombre:'', pies2:'', lineales:'' });
+  $('bAreas').innerHTML = pintarAreasNuevas(S.d);
+}
+function quitarAreaNueva(i){ S.nuevasAreas.splice(i,1); $('bAreas').innerHTML = pintarAreasNuevas(S.d); }
+function guardarObra(conf){
+  var faltan = marcarFaltantes([['bCli','cliente'],['bTel','teléfono del cliente','tel'],['bPM','PM'],['bDir','dirección'],
+    ['bMonto','monto del contrato','num'],['bIni','fecha de inicio'],['bFin','fecha de entrega']]);
+  var areas = S.nuevasAreas||[];
+  if(!areas.length) faltan.push('al menos un espacio');
+  areas.forEach(function(a,i){ if(!(Number(a.pies2)>0)){ faltan.push('pies² de '+(a.nombre||a.tipo||('espacio '+(i+1))));
+    var e=document.querySelector('[data-pies="'+i+'"]'); if(e) e.classList.add('falta'); } });
+  if(faltan.length){ toast('Faltan: '+faltan.join(', ')+'.', true); return; }
+  var btn=document.querySelector('[onclick^="guardarObra"]'); if(btn) btn.disabled=true;
+  google.script.run.withSuccessHandler(function(r){
+    if(btn) btn.disabled=false;
+    if(r && r.confirmar){ if(confirm(tr(r.msg))) guardarObra((conf||[]).concat([r.codigo])); return; }
+    toast('Obra '+r.id+' creada. Siguiente paso: su presupuesto por etapa');
+    S.nuevasAreas=null; cargar();
+    setTimeout(function(){ detalle(r.id); setTimeout(function(){ formPresupuesto(r.id); }, 700); }, 400); })
+    .withFailureHandler(function(e){ if(btn) btn.disabled=false; toast(e.message,true); })
+    .duNuevaObra(S.token,{ confirmado:conf||[], cliente:$('bCli').value, telefono:$('bTel').value,
+      pm:$('bPM').value, direccion:$('bDir').value, contrato:$('bMonto').value,
+      areas:S.nuevasAreas, inicio:$('bIni').value, finEst:$('bFin').value });
+}
+/* ------------------------------------------------ guardar y ver, en un solo viaje */
+// guarda y trae, en el mismo viaje, la obra que estas viendo; tu Inicio se pone al dia despues, sin esperarlo
+function enObra(fn, args, obraId, ok, falla){
+  google.script.run.withSuccessHandler(function(x){
+    if(ok) ok(x ? x.r : null);
+    if(x && x.det){ S.det = x.det; if($('detObra') && S.v==='obras') mostrarDetalle(x.det, true); }
+    ponerAlDia();
+  }).withFailureHandler(falla || function(e){ toast(e.message,true); }).duHacer(S.token, fn, args, obraId, false);
+}
+// guarda y trae tu Inicio actualizado en el mismo viaje
+function enInicio(fn, args, ok, falla){
+  google.script.run.withSuccessHandler(function(x){
+    if(ok) ok(x ? x.r : null);
+    if(x && x.d){ S.d = x.d; VIVO.ultimo = Date.now(); VIVO.pendiente = null; pintarBarraVivo(''); render(); pintarVivo(); }
+  }).withFailureHandler(falla || function(e){ toast(e.message,true); }).duHacer(S.token, fn, args, null, true);
+}
+// pone al dia tu Inicio por detras: no se espera, y si estas llenando algo, espera a que termines
+function ponerAlDia(){
+  if(VIVO.cargando) return;
+  VIVO.cargando = true;
+  google.script.run.withSuccessHandler(function(nuevo){
+    VIVO.cargando = false;
+    if(hayEdicionAbierta()){ VIVO.pendiente = nuevo; pintarBarraVivo('Hay datos nuevos'); return; }
+    var det = (S.v==='obras' && S.det && $('detObra') && $('detObra').innerHTML.trim()) ? S.det : null;
+    S.d = nuevo; VIVO.ultimo = Date.now(); VIVO.pendiente = null; pintarBarraVivo('');
+    if(S.v !== 'historico') render();
+    if(det) mostrarDetalle(det, true);        // la obra ya viene fresca de "guardar y ver": no se vuelve a pedir
+    pintarVivo();
+  }).withFailureHandler(function(){ VIVO.cargando = false; }).duDatos(S.token);
+}
+function detalle(id, silencioso){
+  google.script.run.withSuccessHandler(function(o){ mostrarDetalle(o, silencioso); }).withFailureHandler(function(e){toast(e.message,true);}).duDetalleObra(S.token,id);
+}
+function mostrarDetalle(o, silencioso){
+  var id = o.id;
+    S.det = o;
+    var p = o.partidas.length
+      ? Math.round(o.partidas.filter(function(x){return x.estado==='Terminada';}).length/o.partidas.length*100):0;
+    var m = o.margenActual, mc = m<0.25?'ROJO':(m<0.35?'AMBAR':'VERDE');
+    var esp = o.avance.porArea.filter(function(a){return !a.generales;});
+    $('detObra').innerHTML = '<div class="sep">'+esc(o.id)+' · '+esc(o.cliente)+'</div>'+
+      vCronograma(o)+
+      '<div class="card">'+bloqueAvance(o.avance)+
+        (o.avance.porArea.length>2 ? o.avance.porArea.map(function(a){
+          return barraComp(esc(a.nombre), a.pct, 'var(--ok)'); }).join('') : '')+
+        '<div class="meta" style="margin-top:8px">Margen corriente <b class="'+mc+'">'+pct(m)+'</b> · contrato '+
+        money(o.contratoOriginal)+' · órdenes de cambio '+money(o.montoOC)+' · costo '+money(o.gastado)+
+        ' · +'+o.diasExtraOC+' días por OC</div></div>'+
+      '<div class="card"><div class="row">'+
+        '<div><label>Cobrado al cliente</label><div class="margen" style="margin:0">'+
+          '<b class="'+(o.cobrado/Math.max(1,o.contratoActual)<0.5?'ROJO':'VERDE')+'">'+
+          pct(o.cobrado/Math.max(1,o.contratoActual))+'</b>'+
+          '<span>'+money(o.cobrado)+' de '+money(o.contratoActual)+'</span></div></div>'+
+        '<div><label>Presupuestado por partida</label><div class="margen" style="margin:0">'+
+          '<b class="'+(o.presupuestado?'':'ROJO')+'">'+(o.presupuestado?money(o.presupuestado):'—')+'</b>'+
+          '<span>'+(o.presupuestado?'costo real '+money(o.gastado):'sin capturar: no se puede medir precisión')+
+          '</span></div></div></div>'+
+        '<button class="sm" onclick="formPresupuesto(&quot;'+o.id+'&quot;)">Capturar presupuesto</button>'+
+        '<button class="sm sec" onclick="formCobro(&quot;'+o.id+'&quot;)">Registrar cobro</button>'+
+        '<button class="sm ok" onclick="preCierre(&quot;'+o.id+'&quot;)">Cerrar obra</button>'+
+        '<div id="accObra"></div></div>'+
+      '<div class="card"><h3>Presupuesto contra real, por etapa</h3>'+
+        '<div class="meta">El costo real de cada etapa suma lo que se registró en sus partidas. El desvío de cada etapa es lo que corrige tu próxima cotización.</div>'+
+        '<table style="margin-top:10px"><tr><th>Etapa</th><th class="num">Presupuesto</th><th class="num">Real</th>'+
+        '<th class="num">Desvío</th><th class="num">Por pie²</th></tr>'+
+        (o.costoPorEtapa||[]).map(function(x,i,arr){
+          var cab=(i===0||arr[i-1].area!==x.area)?'<tr><td colspan="5" class="meta" style="font-weight:700;padding-top:10px">'+esc(x.area)+'</td></tr>':'';
+          var dv = x.desvio===null?'—':((x.desvio>0?'+':'')+pct(x.desvio));
+          var dc = x.desvio===null?'meta':(x.desvio>0.1?'ROJO':(x.desvio<-0.05?'VERDE':'AMBAR'));
+          return cab+'<tr><td>'+esc(x.etapa)+(x.partidas.length?'<div class="meta">'+x.partidas.map(function(p){
+              return '<span>'+esc(p.partida)+'</span> '+money(p.total); }).join(' · ')+'</div>':'')+'</td>'+
+            '<td class="num meta">'+(x.presupuesto?money(x.presupuesto):'—')+'</td>'+
+            '<td class="num"><b>'+money(x.total)+'</b><div class="meta"><span>Materiales</span> '+money(x.material)+
+              ' · <span>Cuadrilla</span> '+money(x.cuadrilla)+' · <span>Subs</span> '+money(x.sub)+'</div></td>'+
+            '<td class="num '+dc+'">'+dv+'</td>'+
+            '<td class="num">'+(x.unitario?'<b>'+money(x.unitario)+'</b>'+
+              (x.unitarioPresu?'<div class="meta"><span>cotizado</span> '+money(x.unitarioPresu)+'</div>':''):'—')+'</td></tr>'; }).join('')+
+        '</table></div>'+
+      bloqueAreas(o)+
+      bloqueEntrega(o)+
+      '<div class="card"><h3>Puntos de control</h3>'+
+        (o.calidad.length? '<table style="margin-top:9px"><tr><th>Fecha</th><th>Hito</th>'+
+          '<th class="num">Puntos</th><th>Resultado</th><th>Defectos</th><th></th></tr>'+
+          o.calidad.map(function(c){
+            var ok = c.resultado==='Aprobado';
+            var na = String(c.noAplica||'').split(' | ').filter(Boolean);
+            return '<tr><td class="meta">'+esc(c.fecha)+'</td><td>'+esc(c.hito)+
+              '<div class="meta">'+esc(c.area?c.area+' · ':'')+esc(c.partida)+'</div></td>'+
+              '<td class="num">'+c.ok+'/'+c.total+
+                (na.length?'<div class="meta '+(na.length>c.total?'AMBAR':'')+'">+'+na.length+' no aplican</div>':'')+'</td>'+
+              '<td><span class="pill '+(ok?'ok':'bad')+'">'+esc(c.resultado)+'</span></td>'+
+              '<td><div class="'+(c.defectos?'ROJO':'meta')+'">'+esc(c.defectos||'—')+'</div>'+
+                (na.length?'<div class="meta" style="margin-top:4px">No aplican: '+esc(na.join(' · '))+'</div>':'')+'</td>'+
+              '<td>'+(c.fotos?'<a class="meta" href="'+esc(String(c.fotos).split(" | ")[0])+
+                '" target="_blank">fotos</a>':'')+'</td></tr>'; }).join('')+'</table>'
+          : '<div class="meta">Sin inspecciones registradas todavía.</div>')+
+        (o.pruebas.length? '<div class="sep" style="margin:18px 0 8px">Prueba de inundación</div>'+
+          o.pruebas.map(function(a){
+            var ok = a.resultado==='Sin fugas';
+            return '<div class="kpi bdr-'+(ok?'VERDE':(a.resultado==='Con fuga'?'ROJO':'AMBAR'))+'">'+
+              '<div><div class="n">'+(a.area?esc(a.area)+' · ':'')+esc(a.inicio)+(a.fin?' a '+esc(a.fin):' · en curso')+'</div>'+
+              '<div class="meta">'+(a.horas?a.horas+' horas · ':'')+esc(a.resultado)+
+              (a.fotoInicio?' · <a href="'+esc(String(a.fotoInicio).split(" | ")[0])+
+                '" target="_blank">foto inicio</a>':'')+
+              (a.fotoFin?' · <a href="'+esc(String(a.fotoFin).split(" | ")[0])+
+                '" target="_blank">foto fin</a>':'')+'</div></div>'+
+              '<div class="v '+(ok?'VERDE':'ROJO')+'">'+(ok?'✓':'!')+'</div></div>'; }).join('')
+          : (esBano(o.tipo)?'<div class="kpi bdr-ROJO" style="grid-template-columns:1fr;margin-top:14px">'+
+             '<div class="n ROJO">Sin prueba de inundación documentada</div></div>':''))+
+        '</div>'+
+      '<div class="grid">'+
+        '<div class="card"><h3>Avance por partida</h3><table>'+o.partidas.map(function(x,i,arr){
+          var c=x.estado==='Terminada'?'ok':(x.estado==='En progreso'?'warn':'');
+          var cab=(i===0||arr[i-1].area!==x.area)?'<tr><td class="meta" style="font-weight:700;padding-top:12px">'+
+            esc(x.area)+'</td><td colspan="2" class="num" style="padding-top:12px"><a href="#" class="meta" '+
+            'onclick="agregarPartidaObra('+i+');return false">+ agregar</a></td></tr>':'';
+          return cab+'<tr><td>'+esc(x.partida)+(x.hito?'<div class="meta">'+esc(x.hito)+'</div>':'')+
+            '</td><td class="num"><span class="pill '+c+'">'+x.estado+'</span></td>'+
+            '<td class="num">'+(x.estado==='Sin iniciar'?'<a href="#" class="meta" onclick="quitarPartidaObra('+i+');return false">quitar</a>':'')+
+            '</td></tr>'; }).join('')+'</table>'+
+          '<div class="meta" style="margin-top:8px">¿Algo del catálogo no se hace en esta obra? Quítalo aquí: solo cambia esta obra.</div></div>'+
+        '<div class="card"><h3>Bitácora reciente</h3>'+
+          '<button class="sec sm" style="margin:0 0 8px" onclick="formDiaOlvidado()">+ Registrar día olvidado</button><div id="formOlvido"></div>'+
+          (o.bitacora.length?o.bitacora.map(function(b){
+          return '<div style="border-bottom:1px solid var(--line);padding:10px 0">'+
+            '<b>'+esc(b.fecha)+'</b>'+(b.tardio?' <span class="pill warn">cerrado tarde · enviado el '+esc(b.enviado)+'</span>':'')+(b.subs?' · '+esc(b.subs):'')+
+            '<div class="meta">'+esc(b.partidas)+'</div>'+
+            (b.incidencia?'<div class="meta ROJO">'+esc(b.incidencia)+'</div>':'')+
+            (b.fotos?'<a class="meta" href="'+esc(String(b.fotos).split(' | ')[0])+'" target="_blank">ver fotos</a>':'')+
+            (b.fotosPendientes?' <span class="pill warn">subiendo '+b.fotosPendientes+' foto(s)</span>':'')+
+          '</div>'; }).join(''):'<p class="meta">Sin bitácora.</p>')+'</div>'+
+        '<div class="card"><h3>Gastos capturados</h3>'+
+          '<button class="sec sm" style="margin:0 0 10px" onclick="formGastoOficina()">+ Compra de la oficina</button><div id="formGasto"></div>'+
+          (o.gastos.length?
+          '<table><tr><th>Fecha</th><th>Proveedor</th><th class="num">Monto</th><th></th></tr>'+
+          o.gastos.map(function(g){
+            return '<tr><td class="meta">'+esc(g.fecha)+'</td>'+
+              '<td>'+esc(g.proveedor)+'<div class="meta">'+esc(g.partida||g.categoria)+'</div></td>'+
+              '<td class="num">'+money(g.monto)+'</td>'+
+              '<td class="num"><button class="bad sm" style="margin:0" onclick="anularDu(&quot;Gastos&quot;,&quot;'+
+                g.id+'&quot;,&quot;'+o.id+'&quot;)">Anular</button></td></tr>'; }).join('')+'</table>'
+          :'<p class="meta">Sin gastos.</p>')+'</div>'+
+        '<div class="card"><h3>Cobros del cliente</h3>'+(o.cobros.length?
+          '<table><tr><th>Fecha</th><th>Concepto</th><th class="num">Monto</th><th></th></tr>'+
+          o.cobros.map(function(c){
+            return '<tr><td class="meta">'+esc(c.fecha)+'</td><td>'+esc(c.concepto)+
+              '<div class="meta">'+esc(c.referencia||c.metodo)+'</div></td>'+
+              '<td class="num">'+money(c.monto)+'</td>'+
+              '<td class="num"><button class="bad sm" style="margin:0" onclick="anularDu(&quot;Cobros&quot;,&quot;'+
+                c.id+'&quot;,&quot;'+o.id+'&quot;)">Anular</button></td></tr>'; }).join('')+'</table>'
+          :'<p class="meta">Sin cobros registrados.</p>')+'</div>'+
+        '<div class="card"><h3>Cuadrilla propia</h3>'+(o.cuadrillaPorTrabajador.length?
+          '<table><tr><th>Trabajador</th><th class="num">Tiempo</th><th class="num">Costo</th></tr>'+
+          o.cuadrillaPorTrabajador.map(function(t){
+            return '<tr><td>'+esc(t.nombre)+'<div class="meta">'+esc(t.puesto)+'</div></td>'+
+              '<td class="num">'+t.horas+' '+t.unidad+'</td><td class="num">'+money(t.costo)+'</td></tr>'; }).join('')+
+          '</table>':'<p class="meta">Sin horas registradas.</p>')+'</div>'+
+      '</div>';
+    if(!silencioso) $('detObra').scrollIntoView({behavior:'smooth'});
+  }
+
+/* ------------------------------------------ presupuesto, cobro y cierre */
+function formPresupuesto(obraId){
+  google.script.run.withSuccessHandler(function(p){
+    $('accObra').innerHTML = '<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">'+
+      '<h3>Presupuesto por etapa · '+esc(p.cliente)+'</h3>'+
+      '<div class="meta">Captura el <b>costo</b> que esperas en cada etapa: lo que vas a gastar en materiales, cuadrilla y subs, '+
+        'no lo que le cobras al cliente. Cotiza como siempre lo haces y aquí solo pon un monto por etapa.</div>'+
+      p.areas.map(function(ar){
+        return '<div class="sep" style="margin:18px 0 6px">'+esc(ar.nombre)+
+          (ar.pies2?' <span class="meta">· '+ar.pies2+' pies²</span>':'')+
+          (ar.generales?' <span class="meta">· costos fijos del proyecto</span>':'')+'</div>'+
+          '<table>'+ar.etapas.map(function(e){
+            return '<tr><td><b>'+esc(e.etapa)+'</b><div class="meta">'+e.partidas.map(function(x){return '<span>'+esc(x)+'</span>';}).join(' · ')+'</div>'+
+              (e.historico?'<div class="meta"><span>tu promedio:</span> '+money(e.historico.unitario)+' <span>por pie²</span> · '+
+                '<span>sugerido</span> '+money(e.historico.sugerido)+'</div>':'')+'</td>'+
+              '<td class="num" style="width:130px"><input type="number" min="0" class="pl" data-a="'+esc(ar.id)+'" data-e="'+esc(e.etapa)+
+                '" value="'+(e.monto||'')+'" style="text-align:right" oninput="sumaPre()"'+
+                (e.historico && !e.monto ? ' placeholder="'+e.historico.sugerido+'"' : '')+'></td></tr>';
+          }).join('')+'</table>';
+      }).join('')+
+      '<div class="margen"><b id="preTot">'+money(p.total)+'</b><span><span>costo esperado</span> · <span>contrato</span> '+money(p.contrato)+
+        '<br><span id="preMar"></span></span></div>'+
+      '<button onclick="guardarPre(&quot;'+obraId+'&quot;)">Guardar presupuesto</button>'+
+      '<button class="sec" onclick="document.getElementById(\'accObra\').innerHTML=\'\'">Cancelar</button></div>';
+    S.contratoPre = p.contrato; sumaPre();
+  }).withFailureHandler(function(e){toast(e.message,true);}).duPresupuesto(S.token, obraId);
+}
+
+function sumaPre(){
+  var tot=0; [].forEach.call(document.querySelectorAll('#accObra .pl'), function(e){ tot += Number(e.value)||0; });
+  if($('preTot')) $('preTot').textContent = money(tot);
+  var c=S.contratoPre||0, el=$('preMar'); if(!el) return;
+  if(!tot || !c){ el.innerHTML=''; el.className=''; return; }
+  // el riesgo mas serio: capturar precios en lugar de costos; el margen esperado lo delata
+  var m=(c-tot)/c, aviso = m<0.10 ? 'muy bajo: ¿capturaste precios en lugar de costos?' : (m>0.70 ? 'muy alto: revisa que no falte alguna etapa' : '');
+  el.innerHTML = '<span>Margen esperado:</span> '+pct0(m)+(aviso?' · <span>'+aviso+'</span>':'');
+  el.className = aviso ? 'ROJO' : (m<0.30 ? 'AMBAR' : 'VERDE');
+}
+
+function guardarPre(obraId){
+  var lineas=[];
+  [].forEach.call(document.querySelectorAll('#accObra .pl'), function(e){ var v=Number(e.value)||0;
+    if(v) lineas.push({ area:e.dataset.a, etapa:e.dataset.e, monto:v }); });
+  enObra('duGuardarPresupuesto', [obraId, lineas], obraId, function(r){
+    toast(r.completo ? r.n+' etapas presupuestadas · '+money(r.total)+' · la obra ya puede arrancar'
+      : 'Guardado, pero falta presupuesto en: '+r.faltan.join(', ')+'. La obra no puede arrancar todavía.', !r.completo);
+    $('accObra').innerHTML=''; ; ;
+  }, function(e){toast(e.message,true);});
+}
+
+function formCobro(obraId){
+  $('accObra').innerHTML='<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">'+
+    '<h3>Registrar cobro</h3>'+
+    '<div class="row"><div><label>Concepto</label><select id="cCon">'+
+      ['Deposito','Hito','Orden de cambio','Liquidacion','Otro']
+      .map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></div>'+
+    '<div><label>Monto</label><input id="cMonto" type="number"></div>'+
+    '<div><label>Método</label><select id="cMet">'+
+      ['Transferencia','Cheque','Zelle','Efectivo','Tarjeta']
+      .map(function(m){return '<option>'+m+'</option>';}).join('')+'</select></div>'+
+    '<div><label>Referencia</label><input id="cRef" placeholder="Ck 3341, ACH…"></div></div>'+
+    '<button onclick="guardarCobro(&quot;'+obraId+'&quot;)">Registrar</button>'+
+    '<button class="sec" onclick="document.getElementById(\'accObra\').innerHTML=\'\'">Cancelar</button></div>';
+}
+function guardarCobro(obraId){
+  enObra('duCobro', [{ obra:obraId, concepto:$('cCon').value, monto:$('cMonto').value,
+      metodo:$('cMet').value, referencia:$('cRef').value }], obraId, function(){
+    toast('Cobro registrado'); $('accObra').innerHTML=''; ; ;
+  }, function(e){toast(e.message,true);});
+}
+
+function preCierre(obraId){
+  google.script.run.withSuccessHandler(function(r){
+    S.pc = r;
+    var hoy=new Date().toISOString().slice(0,10);
+    var col = {alto:'ROJO',medio:'AMBAR',bajo:'INFO'};
+    $('accObra').innerHTML='<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">'+
+      '<h3>Cerrar '+esc(r.obra)+' · '+esc(r.cliente)+'</h3>'+
+      '<div class="meta">Al cerrar se congela la foto de esta obra en el histórico y sale del tablero.</div>'+
+      (r.avisos.length? '<div style="margin-top:12px">'+r.avisos.map(function(a){
+          return '<div class="kpi bdr-'+col[a.g]+'" style="grid-template-columns:1fr">'+
+            '<div class="n '+col[a.g]+'">'+esc(a.t)+'</div></div>'; }).join('')+'</div>'
+        : '<div class="kpi bdr-VERDE" style="grid-template-columns:1fr;margin-top:12px">'+
+          '<div class="n VERDE">Todo en orden. Nada pendiente.</div></div>')+
+      '<table style="margin-top:14px">'+
+        '<tr><td class="meta">Contrato final</td><td class="num">'+money(r.contratoFinal)+'</td>'+
+        '<td class="meta">Cobrado</td><td class="num">'+money(r.cobrado)+'</td></tr>'+
+        '<tr><td class="meta">Presupuestado</td><td class="num">'+(r.presupuestado?money(r.presupuestado):'—')+'</td>'+
+        '<td class="meta">Costo real</td><td class="num">'+money(r.costo)+'</td></tr>'+
+        '<tr><td class="meta">Margen bruto</td><td class="num '+(r.margen<0.3?'ROJO':'VERDE')+'"><b>'+pct(r.margen)+'</b></td>'+
+        '<td class="meta">Desvío de estimación</td><td class="num '+
+          (r.desviacion===null?'meta':(r.desviacion>0.1?'ROJO':'VERDE'))+'"><b>'+
+          (r.desviacion===null?'—':(r.desviacion>0?'+':'')+pct(r.desviacion))+'</b></td></tr>'+
+        '<tr><td class="meta">Días de obra</td><td class="num">'+r.dias+'</td>'+
+        '<td class="meta">Costo de no calidad</td><td class="num">'+money(r.noCalidad)+'</td></tr>'+
+      '</table>'+
+      '<label>Fecha de entrega</label><input id="cFin" type="date" value="'+hoy+'">'+
+      '<button class="ok" onclick="cerrarObra(&quot;'+obraId+'&quot;,'+r.avisos.filter(function(a){return a.g==='alto';}).length+')">Cerrar obra</button>'+
+      '<button class="sec" onclick="document.getElementById(\'accObra\').innerHTML=\'\'">Todavía no</button></div>';
+    $('accObra').scrollIntoView({behavior:'smooth'});
+  }).withFailureHandler(function(e){toast(e.message,true);}).duPreCierre(S.token, obraId);
+}
+function cerrarObra(obraId, altos){
+  if(S.pc && S.pc.sinTerminar && S.pc.sinTerminar.length && !confirm('La obra va en '+pct0(S.pc.avance)+': '+
+     S.pc.sinTerminar.length+' partida(s) sin terminar. ¿Cerrar de todos modos?')) return;
+  if(altos && !confirm('Hay '+altos+' pendiente(s) de dinero en esta obra. '+
+     'Si la cierras así, ese dinero queda sin cobrar. ¿Cerrar de todos modos?')) return;
+  enInicio('duCerrarObra', [obraId, $('cFin').value], function(r){
+    toast('Obra cerrada · margen '+pct(r.margen)+' · '+r.dias+' días');
+    $('accObra').innerHTML=''; $('detObra').innerHTML=''; ;
+  }, function(e){toast(e.message,true);});
+}
+
+/* ------------------------------------------------------------- histórico */
+function cargarHist(){
+  google.script.run.withSuccessHandler(function(h){ S.hist=h;
+    if(S.v==='historico') $('vista').innerHTML=vHistorico(h);
+  }).withFailureHandler(function(e){toast(e.message,true);}).duHistorico(S.token);
+}
+function flecha(d, inverso){
+  if(d===null) return '';
+  var bueno = inverso ? d<0 : d>0;
+  if(Math.abs(d)<0.001) return ' <span class="meta">igual</span>';
+  return ' <span class="'+(bueno?'VERDE':'ROJO')+'" style="font-size:13px">'+
+    (d>0?'▲':'▼')+'</span>';
+}
+function vHistorico(h){
+  if(!h.total) return '<p class="empty">Todavía no has cerrado ninguna obra.<br>'+
+    '<span class="meta">Cuando cierres la primera desde el detalle de obra, aquí empieza tu histórico. '+
+    'Es lo único que te dice si el negocio está mejorando.</span></p>';
+  var r=h.resumen;
+  var cab = '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr))">'+
+    '<div class="card"><div class="margen"><b class="'+
+      (r.desviacion===null?'INFO':(r.desviacion>0.05?'ROJO':'VERDE'))+'">'+
+      (r.desviacion===null?'—':(r.desviacion>0?'+':'')+pct(r.desviacion))+
+      '</b></div><span class="meta">Desvío de estimación'+flecha(r.dDesviacion,true)+
+      '<br>meta: menos de 5%</span></div>'+
+    '<div class="card"><div class="margen"><b class="'+(r.margen<0.35?'AMBAR':'VERDE')+'">'+
+      pct(r.margen)+'</b></div><span class="meta">Margen bruto promedio'+flecha(r.dMargen)+
+      '<br>meta: 35 a 45%</span></div>'+
+    '<div class="card"><div class="margen"><b>'+Math.round(r.dias)+'</b></div>'+
+      '<span class="meta">Días de ciclo promedio'+flecha(r.dDias,true)+'</span></div>'+
+    '<div class="card"><div class="margen"><b class="'+
+      (r.contrato&&r.noCalidad/r.contrato>0.02?'ROJO':'VERDE')+'">'+
+      pct(r.contrato?r.noCalidad/r.contrato:0)+'</b></div>'+
+      '<span class="meta">Costo de no calidad<br>meta: menos de 2%</span></div>'+
+    '<div class="card"><div class="margen"><b class="'+
+      (r.cobrado<r.contrato-1?'ROJO':'VERDE')+'">'+pct(r.contrato?r.cobrado/r.contrato:0)+'</b></div>'+
+      '<span class="meta">Cobrado de lo entregado<br>'+money(r.contrato-r.cobrado)+' sin cobrar</span></div>'+
+    '<div class="card"><div class="margen"><b>'+(r.costoPie?money(r.costoPie):'—')+'</b></div>'+
+      '<span class="meta">costo por pie²<br>venta '+(r.ventaPie?money(r.ventaPie):'—')+'/pie²</span></div>'+
+    '<div class="card"><div class="margen"><b>'+h.total+'</b></div>'+
+      '<span class="meta">obras cerradas<br>'+money(r.contrato)+' facturado</span></div>'+
+    '</div>'+
+    '<div class="meta" style="margin-top:6px">Las flechas comparan tus últimas 3 obras contra las 3 anteriores.</div>';
+
+  var tipos = '<div class="sep">Por tipo de obra</div><div class="card"><table>'+
+    '<tr><th>Tipo</th><th class="num">Obras</th><th class="num">Facturado</th>'+
+    '<th class="num">Margen</th><th class="num">Desvío</th><th class="num">Días</th>'+
+    '<th class="num">Venta/pie²</th><th class="num">Costo/pie²</th></tr>'+
+    h.tipos.map(function(t){
+      return '<tr><td><b>'+esc(t.k)+'</b></td><td class="num">'+t.n+'</td>'+
+        '<td class="num">'+money(t.contrato)+'</td>'+
+        '<td class="num '+(t.margen<0.35?'AMBAR':'VERDE')+'"><b>'+pct(t.margen)+'</b></td>'+
+        '<td class="num '+(t.desviacion===null?'meta':(t.desviacion>0.05?'ROJO':'VERDE'))+'">'+
+          (t.desviacion===null?'—':(t.desviacion>0?'+':'')+pct(t.desviacion))+'</td>'+
+        '<td class="num">'+Math.round(t.dias)+'</td>'+
+        '<td class="num">'+(t.ventaPie?money(t.ventaPie):'—')+'</td>'+
+        '<td class="num">'+(t.costoPie?money(t.costoPie):'—')+'</td></tr>'; }).join('')+
+    '</table><div class="meta" style="margin-top:10px">Si un tipo deja mucho menos que otro, '+
+    'el problema no es la obra: es qué estás vendiendo.</div></div>';
+
+  var meses = '<div class="sep">Mes a mes</div><div class="card"><table>'+
+    '<tr><th>Mes</th><th class="num">Obras</th><th class="num">Facturado</th>'+
+    '<th class="num">Margen</th><th class="num">Desvío</th><th class="num">Días</th></tr>'+
+    h.meses.slice().reverse().map(function(m){
+      return '<tr><td>'+esc(m.k)+'</td><td class="num">'+m.n+'</td>'+
+        '<td class="num">'+money(m.contrato)+'</td>'+
+        '<td class="num '+(m.margen<0.35?'AMBAR':'VERDE')+'">'+pct(m.margen)+'</td>'+
+        '<td class="num '+(m.desviacion===null?'meta':(m.desviacion>0.05?'ROJO':'VERDE'))+'">'+
+          (m.desviacion===null?'—':(m.desviacion>0?'+':'')+pct(m.desviacion))+'</td>'+
+        '<td class="num">'+Math.round(m.dias)+'</td></tr>'; }).join('')+'</table></div>';
+
+  var r2=h.resumen2;
+  var post = '<div class="sep">Postventa</div>'+
+    (h.garantiaAbierta.length? h.garantiaAbierta.map(function(g){
+      return '<div class="card bdr-ROJO"><h3>'+esc(g.obra)+' · '+esc(g.causa)+'</h3>'+
+        '<div class="meta">'+esc(g.fecha)+' · abierto hace '+g.dias+' días</div>'+
+        '<div class="quote">'+esc(g.descripcion)+'</div>'+
+        '<button class="ok sm" onclick="cerrarGarantia(&quot;'+g.id+'&quot;,null)">Cerrar reclamo</button>'+
+        '</div>'; }).join('')
+      : '<div class="card bdr-VERDE"><div class="meta">Sin reclamos de garantía abiertos.</div></div>')+
+    '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr))">'+
+    '<div class="card"><div class="margen"><b class="'+
+      (r2.entregas&&r2.reclamos/r2.entregas>1?'ROJO':'VERDE')+'">'+
+      (r2.entregas?(r2.reclamos/r2.entregas).toFixed(1):'0')+'</b></div>'+
+      '<span class="meta">reclamos por obra entregada<br>meta: menos de 1</span></div>'+
+    '<div class="card"><div class="margen"><b>'+money(r2.costoGarantia)+'</b></div>'+
+      '<span class="meta">costo de garantía acumulado</span></div>'+
+    '<div class="card"><div class="margen"><b class="'+
+      (r2.entregas&&r2.resenas/r2.entregas>=0.6?'VERDE':'AMBAR')+'">'+
+      pct(r2.entregas?r2.resenas/r2.entregas:0)+'</b></div>'+
+      '<span class="meta">reseñas obtenidas<br>meta: más de 60%</span></div></div>';
+
+  var lista = '<div class="sep">Obras cerradas</div><div class="card"><table>'+
+    '<tr><th>Obra</th><th>Cliente</th><th>Tipo</th><th>Entregada</th><th class="num">Contrato</th>'+
+    '<th class="num">Costo</th><th class="num">Margen</th><th class="num">Desvío</th>'+
+    '<th class="num">Días</th></tr>'+
+    h.obras.map(function(o){
+      return '<tr><td>'+esc(o.obra)+'</td><td>'+esc(o.cliente)+'</td>'+
+        '<td class="meta">'+esc(o.tipo)+'</td><td class="meta">'+esc(o.fin)+'</td>'+
+        '<td class="num">'+money(o.contrato)+'</td><td class="num">'+money(o.costo)+'</td>'+
+        '<td class="num '+(o.margen<0.3?'ROJO':'VERDE')+'"><b>'+pct(o.margen)+'</b></td>'+
+        '<td class="num '+(o.desviacion===null?'meta':(o.desviacion>0.1?'ROJO':'VERDE'))+'">'+
+          (o.desviacion===null?'—':(o.desviacion>0?'+':'')+pct(o.desviacion))+'</td>'+
+        '<td class="num">'+o.dias+'</td></tr>'; }).join('')+'</table></div>';
+
+  return cab+tipos+meses+lista;
+}
+
+/* ----------------------------------------------------------------- áreas */
+function bloqueAreas(o){
+  var esp = o.areas.filter(function(a){return !a.generales;});
+  return '<div class="card"><h3>Espacios de la obra</h3>'+
+    '<table style="margin-top:8px"><tr><th>Espacio</th><th>Tipo</th><th class="num">Pies²</th>'+
+    '<th class="num">Pies lineales</th></tr>'+
+    o.areas.map(function(a){
+      return '<tr><td>'+esc(a.nombre)+'</td><td class="meta">'+esc(a.tipo)+'</td>'+
+        '<td class="num">'+(a.generales?'—':(a.pies2||'<span class="ROJO">falta</span>'))+'</td>'+
+        '<td class="num">'+(a.generales?'—':(a.lineales||'—'))+'</td></tr>'; }).join('')+
+    '</table>'+
+    '<div class="row" style="align-items:flex-end;margin-top:6px">'+
+      '<div style="flex:0 0 130px"><label>Tipo</label><select id="nuTipo">'+
+        S.d.tiposArea.map(function(t){return '<option>'+esc(t)+'</option>';}).join('')+'</select></div>'+
+      '<div><label>Nombre</label><input id="nuNom" placeholder="Closet principal"></div>'+
+      '<div style="flex:0 0 90px"><label>Pies²</label><input id="nuP2" type="number"></div>'+
+      '<div style="flex:0 0 auto"><button class="sm" style="margin:0 0 2px" '+
+        'onclick="agregarArea(&quot;'+o.id+'&quot;)">+ Agregar espacio</button></div></div>'+
+    '<div class="meta" style="margin-top:8px">Si el cliente suma un espacio a media obra, agrégalo aquí '+
+      'y cóbralo con una orden de cambio.</div></div>';
+}
+function agregarArea(obraId){
+  enObra('duAgregarArea', [obraId, { tipo:$('nuTipo').value, nombre:$('nuNom').value, pies2:$('nuP2').value }], obraId, function(){ toast('Espacio agregado'); ; ; }, function(e){toast(e.message,true);});
+}
+
+/* --------------------------------------------- entrega, punch y garantía */
+function bloqueEntrega(o){
+  var ab=o.punch.filter(function(x){return x.estado==='Abierto';});
+  var hoy=new Date().toISOString().slice(0,10);
+  var e=o.entrega;
+
+  var acta = e
+    ? '<div class="card bdr-VERDE"><h3>Entregada '+esc(e.fecha)+'</h3>'+
+      '<div class="meta">Garantía de '+e.meses+' meses, vence '+esc(e.vence)+
+      ' · fotos '+(e.fotos?'autorizadas':'no autorizadas')+'</div>'+
+      '<div class="sep" style="margin:14px 0 8px">Cosecha comercial</div>'+
+      [['resenaPedida','Reseña pedida (día 3)'],['resena','Reseña recibida'],
+       ['referido','Referido pedido (día 7)'],['visita','Visita de los 11 meses']]
+      .map(function(c){
+        return '<div class="kpi bdr-'+(e[c[0]]?'VERDE':'INFO')+'" style="grid-template-columns:1fr auto">'+
+          '<div class="n">'+c[1]+'</div>'+
+          '<div><button class="'+(e[c[0]]?'sec':'ok')+' sm" style="margin:0" onclick="cosecha(&quot;'+
+            o.id+'&quot;,&quot;'+c[0]+'&quot;,'+(e[c[0]]?'false':'true')+')">'+
+            (e[c[0]]?'hecho':'marcar')+'</button></div></div>'; }).join('')+
+      '<button class="sm" onclick="formGarantia(&quot;'+o.id+'&quot;)">Registrar reclamo de garantía</button>'+
+      '<div id="formGar"></div></div>'
+    : '<div class="card bdr-AMBAR"><h3>Entrega sin registrar</h3>'+
+      '<div class="meta">El acta arranca el reloj de la garantía y la secuencia de reseña y referido. '+
+      'Regístrala el mismo día del recorrido con el cliente.</div>'+
+      '<div class="row"><div><label>Fecha de entrega</label><input id="eFecha" type="date" value="'+hoy+'"></div>'+
+      '<div><label>Garantía en meses</label><input id="eMeses" type="number" value="12"></div>'+
+      '<div><label>¿Autoriza fotos?</label><select id="eFotos">'+
+        '<option value="1">Sí</option><option value="0">No</option></select></div></div>'+
+      '<label>Notas del acta</label><input id="eNotas" placeholder="Pendientes acordados, condiciones…">'+
+      '<button onclick="registrarEntrega(&quot;'+o.id+'&quot;)">Registrar entrega</button></div>';
+
+  var punch = o.punch.length
+    ? '<div class="card"><h3>Punch list del cliente <span class="meta">· '+ab.length+
+      ' abiertos de '+o.punch.length+'</span></h3>'+
+      '<table style="margin-top:9px"><tr><th>Detalle</th><th>Qué es</th><th>Responsable</th>'+
+      '<th>Compromiso</th><th>Estado</th><th></th></tr>'+
+      o.punch.map(function(x,i){
+        return '<tr><td>'+esc(x.item)+'</td>'+
+          '<td><span class="pill '+(x.origen==='Defecto'?'bad':'warn')+'">'+esc(x.origen)+'</span></td>'+
+          '<td class="meta">'+esc(x.responsable||'—')+'</td>'+
+          '<td class="'+(x.vencido?'ROJO':'meta')+'">'+esc(x.compromiso)+'</td>'+
+          '<td><span class="pill '+(x.estado==='Cerrado'?'ok':'warn')+'">'+esc(x.estado)+'</span></td>'+
+          '<td class="num">'+(x.origen==='Cambio de alcance'&&x.estado==='Abierto'
+            ? '<button class="sm" style="margin:0" onclick="cobrarPunch('+i+')">Cobrar</button>':'')+'</td></tr>'; }).join('')+
+      '</table><div class="meta" style="margin-top:10px">Lo marcado como <b>Cambio de alcance</b> '+
+      'no se regala: se cobra por orden de cambio.</div></div>'
+    : '';
+
+  var gar = o.garantia.length
+    ? '<div class="card"><h3>Reclamos de garantía</h3><table style="margin-top:9px">'+
+      '<tr><th>Fecha</th><th>Causa</th><th>Descripción</th><th class="num">Costo</th>'+
+      '<th>Estado</th><th></th></tr>'+
+      o.garantia.map(function(g){
+        return '<tr><td class="meta">'+esc(g.fecha)+'</td><td>'+esc(g.causa)+'</td>'+
+          '<td>'+esc(g.descripcion)+'</td><td class="num">'+money(g.costo)+'</td>'+
+          '<td><span class="pill '+(g.estado==='Cerrado'?'ok':'bad')+'">'+esc(g.estado)+'</span></td>'+
+          '<td class="num">'+(g.estado==='Abierto'
+            ? '<button class="ok sm" style="margin:0" onclick="cerrarGarantia(&quot;'+g.id+
+              '&quot;,&quot;'+o.id+'&quot;)">Cerrar</button>':'')+'</td></tr>'; }).join('')+
+      '</table></div>' : '';
+
+  return acta+punch+gar;
+}
+function registrarEntrega(obraId){
+  enObra('duEntrega', [{ obra:obraId, fecha:$('eFecha').value, meses:$('eMeses').value,
+      fotos:$('eFotos').value==='1', notas:$('eNotas').value }], obraId, function(r){
+    toast('Entrega registrada · garantía vence '+r.vence); ; ;
+  }, function(e){toast(e.message,true);});
+}
+function cosecha(obraId, campo, valor){
+  enObra('duCosecha', [obraId, campo, valor], obraId, function(){ ; ; }, function(e){toast(e.message,true);});
+}
+function formGarantia(obraId){
+  $('formGar').innerHTML='<div style="border-top:1px solid var(--line);margin-top:13px;padding-top:6px">'+
+    '<div class="row"><div><label>Causa</label><select id="grCausa">'+
+      ['Error de instalacion','Error de especificacion','Material defectuoso','Falta de supervision']
+      .map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></div>'+
+    '<div><label>Sub responsable</label><select id="grSub"><option value="">— ninguno —</option>'+
+      S.d.subs.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.nombre)+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>Costo estimado</label><input id="grCosto" type="number" value="0"></div></div>'+
+    '<label>Qué reportó el cliente</label><textarea id="grDesc"></textarea>'+
+    '<button onclick="guardarGarantia(&quot;'+obraId+'&quot;)">Registrar reclamo</button>'+
+    '<button class="sec" onclick="document.getElementById(\'formGar\').innerHTML=\'\'">Cancelar</button></div>';
+}
+function guardarGarantia(obraId){
+  enObra('duGarantia', [{ obra:obraId, causa:$('grCausa').value, sub:$('grSub').value,
+      costo:$('grCosto').value, descripcion:$('grDesc').value }], obraId, function(){ toast('Reclamo registrado');
+    $('formGar').innerHTML=''; ; ; }, function(e){toast(e.message,true);});
+}
+function cerrarGarantia(ncId, obraId){
+  var c=prompt('¿Cuánto costó resolverlo? (deja vacío para no cambiarlo)');
+  if(c===null) return;
+  enObra('duCerrarGarantia', [ncId, c], obraId, function(){ toast('Reclamo cerrado');
+    if(obraId) ; ; }, function(e){toast(e.message,true);});
+}
+
+function verUnitarios(){
+  $('unit').innerHTML='<p class="meta" style="padding:14px 0">Calculando…</p>';
+  google.script.run.withSuccessHandler(function(a){
+    if(!a.length){ $('unit').innerHTML='<p class="meta" style="padding:14px 0">Todavía no hay '+
+      'partidas terminadas con cantidad capturada. Necesitas presupuestar con cantidad y unidad, '+
+      'y que la partida esté marcada como terminada.</p>'; return; }
+    var tipos={}; a.forEach(function(x){ (tipos[x.tipo]=tipos[x.tipo]||[]).push(x); });
+    $('unit').innerHTML = Object.keys(tipos).map(function(t){
+      return '<div class="sep">'+esc(t)+'</div><table>'+
+        '<tr><th>Etapa</th><th class="num">Obras</th><th class="num">Tu costo</th>'+
+        '<th class="num">Rango</th><th class="num">Cotizabas</th><th class="num">Diferencia</th></tr>'+
+        tipos[t].map(function(x){
+          var d=x.desvio;
+          return '<tr><td>'+esc(x.partida)+'</td><td class="num">'+x.n+'</td>'+
+            '<td class="num"><b>'+money(x.prom)+'</b><span class="meta">/'+esc(x.unidad)+'</span></td>'+
+            '<td class="num meta">'+money(x.min)+' a '+money(x.max)+'</td>'+
+            '<td class="num meta">'+money(x.promPresupuesto)+'</td>'+
+            '<td class="num '+(d===null?'meta':(d>0.1?'ROJO':(d<-0.05?'VERDE':'AMBAR')))+'">'+
+              (d===null?'—':(d>0?'+':'')+pct(d))+'</td></tr>'; }).join('')+'</table>'; }).join('')+
+      '<div class="meta" style="margin-top:12px">Las etapas en rojo son las que siempre cotizas por debajo. Súbeles el costo en tu próxima cotización.</div>';
+  }).withFailureHandler(function(e){toast(e.message,true);}).duCostosUnitarios(S.token);
+}
+
+/* --------------------------------------------------------------- avisos */
+function vAvisos(d){
+  if(!d.bloqueos.length) return '<p class="empty">No hay avisos abiertos.<br>'+
+    '<span class="meta">Responder en menos de 24 horas es lo que sostiene que el PM siga reportando.</span></p>';
+  return d.bloqueos.map(function(b,i){
+    return '<div class="card bdr-'+(b.fueraSLA?'ROJO':'AMBAR')+'">'+
+      '<h3>'+esc(b.tipo)+' · '+esc(b.obra)+'</h3>'+
+      '<div class="meta">'+esc(b.id)+' · '+esc(b.pm)+' · hace '+b.horas+' h'+
+        (b.detiene?' · <span class="ROJO">detiene el avance</span>':'')+
+        (b.fueraSLA?' · <span class="ROJO">FUERA DE SLA</span>':'')+'</div>'+
+      '<div class="quote">'+esc(b.descripcion)+'</div>'+
+      (b.foto?'<div style="margin-top:9px"><a class="meta" href="'+
+        esc(String(b.foto).split(' | ')[0])+'" target="_blank">ver fotos</a></div>':'')+
+      '<label>Tu respuesta</label>'+
+      '<textarea id="r_'+b.id+'" placeholder="Qué hace el PM, con quién, para cuándo."></textarea>'+
+      '<button class="ok sm" onclick="responder(&quot;'+b.id+'&quot;)">Responder y cerrar</button>'+
+      '<button class="sm" onclick="desdeAviso('+i+')">Convertir en OC</button>'+
+    '</div>'; }).join('');
+}
+function responder(id){
+  enInicio('duResponderBloqueo', [id,$('r_'+id).value], function(r){ toast('Respondido en '+r.horas+' h'); ; }, function(e){toast(e.message,true);});
+}
+
+/* -------------------------------------------------------------- cambios */
+function vCambios(d){
+  var props=d.oc.filter(function(o){return o.estado==='Propuesta';});
+  var resto=d.oc.filter(function(o){return o.estado!=='Propuesta';});
+  return '<button onclick="formOC()">+ Nueva orden de cambio</button>'+
+    '<button class="sec" onclick="formNC()">Registrar costo de no calidad</button>'+
+    '<div id="formOC"></div><div id="formNC"></div>'+
+    (props.length?'<div class="sep">Esperando autorización del cliente</div>'+props.map(tarjetaOC).join(''):'')+
+    (resto.length?'<div class="sep">Historial</div>'+resto.map(tarjetaOC).join(''):'')+
+    (!d.oc.length?'<p class="empty">Sin órdenes de cambio.</p>':'');
+}
+function tarjetaOC(o){
+  var cls = o.estado==='Propuesta'?(o.horasDesdeEmision>48?'ROJO':'AMBAR')
+          :(o.estado==='Rechazada'?'ROJO':'VERDE');
+  return '<div class="card bdr-'+cls+'">'+
+    '<h3>'+esc(o.id)+' · '+esc(o.obra)+' <span class="pill '+
+      (cls==='VERDE'?'ok':(cls==='ROJO'?'bad':'warn'))+'">'+esc(o.estado)+'</span></h3>'+
+    '<div class="meta">'+esc(o.motivo)+' · hallazgo '+esc(o.hallazgo)+
+      (o.emision?' · emitida '+esc(o.emision):'')+
+      (o.estado==='Propuesta'&&o.horasDesdeEmision!==null?' · '+o.horasDesdeEmision+' h esperando':'')+'</div>'+
+    '<div class="quote">'+esc(o.descripcion)+'</div>'+
+    '<table style="margin-top:10px"><tr>'+
+      '<td class="meta">Costo</td><td class="num">'+money(o.costo)+'</td>'+
+      '<td class="meta">Precio</td><td class="num"><b>'+money(o.precio)+'</b></td>'+
+      '<td class="meta">Margen</td><td class="num '+(o.margen<0.35?'ROJO':'VERDE')+'">'+pct(o.margen)+'</td>'+
+      '<td class="meta">Días</td><td class="num">+'+o.dias+'</td></tr></table>'+
+    '<button class="sec sm" onclick="textoOC(&quot;'+o.id+'&quot;)">Texto para el cliente</button>'+
+    (o.estado==='Propuesta'?
+      '<button class="ok sm" onclick="estadoOC(&quot;'+o.id+'&quot;,&quot;Autorizada&quot;)">Cliente autorizó</button>'+
+      '<button class="bad sm" onclick="estadoOC(&quot;'+o.id+'&quot;,&quot;Rechazada&quot;)">Rechazada</button>':'')+
+    (o.estado==='Autorizada'?'<button class="ok sm" onclick="estadoOC(&quot;'+o.id+'&quot;,&quot;Facturada&quot;)">Marcar cobrada</button>':'')+
+    '<div id="txt_'+o.id+'"></div></div>';
+}
+function estadoOC(id,estado){
+  if(estado==='Autorizada' && !confirm('¿Confirmas que tienes la autorización POR ESCRITO del cliente?')) return;
+  enInicio('duEstadoOC', [id,estado], function(){ toast('OC '+estado.toLowerCase()); ; }, function(e){toast(e.message,true);});
+}
+function textoOC(id){
+  google.script.run.withSuccessHandler(function(t){
+    $('txt_'+id).innerHTML='<pre id="pre_'+id+'">'+esc(t)+'</pre>'+
+      '<button class="sec sm" onclick="copiar(&quot;'+id+'&quot;)">Copiar</button>';
+  }).withFailureHandler(function(e){toast(e.message,true);}).duTextoOC(S.token,id,IDIOMA);
+}
+function copiar(id){
+  var r=document.createRange(); r.selectNode($('pre_'+id));
+  window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+  document.execCommand('copy'); window.getSelection().removeAllRanges();
+  toast('Copiado. Pégalo en el correo al cliente.');
+}
+function formOC(obra,bloqueoId,desc){
+  var d=S.d, hoy=new Date().toISOString().slice(0,10);
+  if(S.v!=='cambios'){ ir('cambios'); }
+  setTimeout(function(){
+    $('formOC').innerHTML='<div class="card"><h3>Nueva orden de cambio</h3>'+
+      '<div class="meta">Sin firma no se ejecuta. Cobra tu margen completo.</div>'+
+      '<div class="row"><div><label>Obra</label><select id="oObra">'+
+        d.obras.map(function(o){return '<option value="'+esc(o.id)+'"'+(o.id===obra?' selected':'')+
+          '>'+esc(o.cliente)+' · '+esc(o.id)+'</option>';}).join('')+'</select></div>'+
+      '<div><label>Motivo</label><select id="oMotivo">'+
+        ['Condición oculta','Solicitud del cliente','Cambio de selección']
+        .map(function(m){return '<option>'+m+'</option>';}).join('')+'</select></div>'+
+      '<div><label>Fecha del hallazgo</label><input id="oFecha" type="date" value="'+hoy+'"></div></div>'+
+      '<label>Descripción para el cliente (sin tecnicismos)</label>'+
+      '<textarea id="oDesc">'+esc(desc||'')+'</textarea>'+
+      '<div class="row"><div><label>Tu costo</label><input id="oCosto" type="number"></div>'+
+      '<div><label>Precio al cliente</label><input id="oPrecio" type="number"></div>'+
+      '<div><label>Días de impacto</label><input id="oDias" type="number" value="0"></div>'+
+      '<div><label>Condición de pago</label><select id="oCond">'+
+        ['Al autorizar','50% al autorizar','Al siguiente hito']
+        .map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></div></div>'+
+      '<button onclick="guardarOC(false)">Emitir OC</button>'+
+      '<button class="sec" onclick="document.getElementById(\'formOC\').innerHTML=\'\'">Cancelar</button>'+
+      '<input type="hidden" id="oBlq" value="'+esc(bloqueoId||'')+'"></div>';
+    $('formOC').scrollIntoView({behavior:'smooth'});
+  },60);
+}
+function guardarOC(forzar){
+  enInicio('duCrearOC', [{ obra:$('oObra').value, motivo:$('oMotivo').value, hallazgo:$('oFecha').value,
+      descripcion:$('oDesc').value, costo:$('oCosto').value, precio:$('oPrecio').value,
+      dias:$('oDias').value, condicion:$('oCond').value, bloqueoId:$('oBlq').value, forzar:forzar }], function(r){
+    if(r.confirmar){ if(confirm(r.msg)) guardarOC(true); return; }
+    toast('OC '+r.id+' emitida con '+pct(r.margen)+' de margen');
+    $('formOC').innerHTML=''; ;
+  }, function(e){toast(e.message,true);});
+}
+function formNC(){
+  var d=S.d;
+  $('formNC').innerHTML='<div class="card"><h3>Costo de no calidad</h3>'+
+    '<div class="meta">Un error tuyo NO es orden de cambio. Se absorbe y se registra aquí. '+
+    'Es el dato que te dice qué sub y qué detalle constructivo te está costando dinero.</div>'+
+    '<div class="row"><div><label>Obra</label><select id="nObra">'+
+      d.obras.map(function(o){return '<option value="'+esc(o.id)+'">'+esc(o.cliente)+' · '+esc(o.id)+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>Tipo</label><select id="nTipo"><option>Retrabajo</option>'+
+      '<option>Garantia</option></select></div>'+
+    '<div><label>Causa</label><select id="nCausa">'+
+      ['Error de instalacion','Error de especificacion','Error de estimacion','Material defectuoso','Falta de supervision']
+      .map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></div>'+
+    '<div><label>Sub responsable</label><select id="nSub"><option value="">— ninguno —</option>'+
+      d.subs.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.nombre)+'</option>';}).join('')+
+    '</select></div></div>'+
+    '<div class="row"><div><label>Costo absorbido</label><input id="nCosto" type="number"></div>'+
+    '<div><label>Días perdidos</label><input id="nDias" type="number" value="0"></div></div>'+
+    '<label>Qué pasó</label><textarea id="nDesc"></textarea>'+
+    '<button onclick="guardarNC()">Registrar</button>'+
+    '<button class="sec" onclick="document.getElementById(\'formNC\').innerHTML=\'\'">Cancelar</button></div>';
+  $('formNC').scrollIntoView({behavior:'smooth'});
+}
+function guardarNC(){
+  enInicio('duNoCalidad', [{ obra:$('nObra').value, tipo:$('nTipo').value,
+      causa:$('nCausa').value, sub:$('nSub').value,
+      costo:$('nCosto').value, dias:$('nDias').value, descripcion:$('nDesc').value }], function(r){ toast('Registrado '+r.id);
+    $('formNC').innerHTML=''; ; }, function(e){toast(e.message,true);});
+}
+
+/* ---------------------------------------------------------- subcontratos */
+function vSubs(d){
+  var ab=d.ordenes.filter(function(o){return o.saldo>0 && o.estado!=='Cancelada';});
+  var ce=d.ordenes.filter(function(o){return !(o.saldo>0 && o.estado!=='Cancelada');});
+  var saldo=ab.reduce(function(a,o){return a+o.saldo;},0);
+  return '<div class="card"><div class="margen"><b>'+money(saldo)+'</b>'+
+    '<span>saldo pendiente con subs<br>'+ab.length+' órdenes con saldo abierto</span></div>'+
+    '<div class="meta" style="margin-top:9px">El pago va contra la orden de trabajo, nunca como gasto '+
+    'suelto. El costo se reconoce al emitir la orden, no al pagar.</div>'+
+    '<button onclick="formOT()">+ Nueva orden de trabajo</button></div>'+
+    '<div id="formSub"></div>'+
+    (ab.length?'<div class="sep">Con saldo abierto</div>'+ab.map(tarjetaOT).join(''):'')+
+    (ce.length?'<div class="sep">Liquidadas o canceladas</div>'+ce.map(tarjetaOT).join(''):'')+
+    (!d.ordenes.length?'<p class="empty">Sin órdenes de trabajo.</p>':'');
+}
+function tarjetaOT(o){
+  var ok=!!o.aprobada;
+  var cls=o.saldo<=0?'VERDE':(ok?'AMBAR':'INFO');
+  return '<div class="card bdr-'+cls+'">'+
+    '<h3>'+esc(o.sub)+' <span class="meta">· '+esc(o.oficio)+' · '+esc(o.obra)+'</span> '+
+      '<span class="pill '+(o.saldo<=0?'ok':'warn')+'">'+esc(o.estado)+'</span></h3>'+
+    '<div class="meta">'+esc(o.id)+' · partida: <b>'+esc(o.partida||'sin asignar')+'</b> · '+
+      esc(o.inicio)+' a '+esc(o.fin)+'</div>'+
+    '<div class="quote">'+esc(o.alcance)+'</div>'+
+    '<table style="margin-top:10px"><tr>'+
+      '<td class="meta">Precio cerrado</td><td class="num"><b>'+money(o.precio)+'</b></td>'+
+      '<td class="meta">Pagado</td><td class="num">'+money(o.pagado)+'</td>'+
+      '<td class="meta">Saldo</td><td class="num '+(o.saldo>0?'AMBAR':'VERDE')+'">'+money(o.saldo)+'</td>'+
+      '<td class="meta">Confirmó</td><td>'+(o.confirmada?'<span class="pill ok">sí</span>':'<span class="pill bad">no</span>')+'</td>'+
+      '<td class="meta">PM aprobó</td><td>'+(ok?'<span class="pill ok">sí</span>':'<span class="pill bad">no</span>')+'</td>'+
+    '</tr></table>'+
+    (o.pagos.length?'<table style="margin-top:9px">'+o.pagos.map(function(p){
+      return '<tr><td class="meta">'+esc(p.fecha)+'</td><td>'+esc(p.concepto)+'</td>'+
+        '<td class="meta">'+esc(p.referencia||'')+'</td><td class="num">'+money(p.monto)+'</td>'+
+        '<td class="num"><button class="bad sm" style="margin:0" onclick="anularDu(&quot;Pagos_Sub&quot;,&quot;'+
+          p.id+'&quot;,null)">Anular</button></td></tr>'; }).join('')+'</table>':'')+
+    (o.saldo>0?'<button class="sm" onclick="formPago(&quot;'+o.id+'&quot;)">Registrar pago</button>':'')+
+    (['Aprobada','Pagada','Cancelada'].indexOf(o.estado)<0?'<button class="sec sm" onclick="formReprogramar(&quot;'+o.id+'&quot;,&quot;pago_'+o.id+'&quot;)">Reprogramar</button>':'')+
+    (o.pagado===0 && o.estado!=='Cancelada'?'<button class="bad sm" onclick="cancelarOT(&quot;'+o.id+'&quot;)">Cancelar</button>':'')+
+    '<div id="pago_'+o.id+'"></div></div>';
+}
+function cancelarOT(id){
+  if(!confirm('¿Cancelar la orden? Deja de contar como costo comprometido de la obra.')) return;
+  enInicio('duCancelarOT', [id], function(){ toast('Orden cancelada'); ; }, function(e){toast(e.message,true);});
+}
+function formPago(otId){
+  var o=S.d.ordenes.filter(function(x){return x.id===otId;})[0];
+  $('pago_'+otId).innerHTML='<div style="border-top:1px solid var(--line);margin-top:13px;padding-top:6px">'+
+    '<div class="row"><div><label>Concepto</label><select id="gConcepto">'+
+      ['Anticipo','Parcial','Liquidacion'].map(function(c){return '<option>'+c+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>Monto</label><input id="gMontoP" type="number" value="'+o.saldo+'"></div>'+
+    '<div><label>Método</label><select id="gMetodo">'+
+      ['Transferencia','Cheque','Zelle','Efectivo','Tarjeta'].map(function(m){return '<option>'+m+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>Referencia</label><input id="gRef" placeholder="Ck 1042, ACH…"></div></div>'+
+    '<button onclick="pagarSub(&quot;'+otId+'&quot;,false)">Registrar pago</button>'+
+    '<button class="sec" onclick="document.getElementById(\'pago_'+otId+'\').innerHTML=\'\'">Cancelar</button></div>';
+}
+function pagarSub(otId,confirmados){
+  confirmados = confirmados || [];
+  enInicio('duPagoSub', [{ otId:otId, concepto:$('gConcepto').value, monto:$('gMontoP').value,
+      metodo:$('gMetodo').value, referencia:$('gRef').value, confirmado:confirmados }], function(r){
+    // cada advertencia se confirma una por una; lo confirmado se manda con el siguiente intento
+    if(r.confirmar){ if(confirm(r.msg)) pagarSub(otId, confirmados.concat([r.codigo])); return; }
+    toast('Pago registrado · saldo '+money(r.saldo)); ;
+  }, function(e){toast(e.message,true);});
+}
+/* ------------------------------------------------ cronograma de la obra */
+function vCronograma(o){
+  var c=o.cronograma; if(!c || !c.filas.length) return '';
+  var d0=null, d1=null;
+  c.filas.forEach(function(f){ [f.planIni,f.ini].forEach(function(x){ if(!d0||x<d0) d0=x; }); [f.planFin,f.fin].forEach(function(x){ if(!d1||x>d1) d1=x; }); });
+  var t0=new Date(d0+'T12:00:00').getTime(), span=Math.max(1,(new Date(d1+'T12:00:00').getTime()-t0)/86400000+1);
+  var pos=function(a){ return ((new Date(a+'T12:00:00').getTime()-t0)/86400000)/span*100; };
+  var anc=function(a,b){ return Math.max(1.5,((new Date(b+'T12:00:00').getTime()-new Date(a+'T12:00:00').getTime())/86400000+1)/span*100); };
+  var hoy=new Date(), hoyP=((new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate(),12).getTime()-t0)/86400000)/span*100;
+  var tarde=c.prevFin!==c.planFin;
+  return '<div class="card"><h3>Cronograma</h3>'+
+    '<div class="meta" style="color:'+(tarde?'var(--warn)':'var(--ok)')+'">Entrega prevista '+esc(c.prevFin)+
+      (tarde?' · el plan decía '+esc(c.planFin):' · a tiempo con el plan')+'</div>'+
+    '<div style="position:relative;margin-top:10px">'+
+      (hoyP>=0&&hoyP<=100?'<div style="position:absolute;left:calc(38% + '+(hoyP*0.62)+'%);top:0;bottom:0;border-left:2px solid var(--bad);z-index:1"></div>':'')+
+      c.filas.map(function(f,i,arr){
+        var cab=(i===0||arr[i-1].area!==f.area)?'<div class="meta" style="font-weight:700;margin:8px 0 2px">'+esc(f.area)+'</div>':'';
+        var col=f.estado==='Terminada'?'var(--ok)':(f.fin>f.planFin?'var(--warn)':'var(--acc)');
+        return cab+'<div style="display:flex;align-items:center;height:20px;font-size:12px">'+
+          '<span style="width:38%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--tx2)">'+esc(f.partida)+'</span>'+
+          '<span style="flex:1;position:relative;height:9px">'+
+            '<i style="position:absolute;left:'+pos(f.planIni)+'%;width:'+anc(f.planIni,f.planFin)+'%;height:9px;border:1px dashed var(--tx2);border-radius:3px;box-sizing:border-box"></i>'+
+            '<i style="position:absolute;left:'+pos(f.ini)+'%;width:'+anc(f.ini,f.fin)+'%;height:9px;background:'+col+';border-radius:3px;opacity:.85"></i>'+
+          '</span></div>';
+      }).join('')+
+    '</div><div class="meta" style="margin-top:8px">Punteado: el plan. Relleno: la previsión — verde terminado, ámbar recorrido.</div></div>';
+}
+/* ------------------------------------------------ dia olvidado (respaldo) */
+function formDiaOlvidado(){
+  var o=S.det, ayer=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  var trab=(S.d.trabajadores||[]).filter(function(t){return t.activo;});
+  $('formOlvido').innerHTML='<div class="card" style="border-color:var(--acc);margin:0 0 10px">'+
+    '<div class="meta">Para días más viejos que los 2 que el PM puede cerrar. Queda marcado como cerrado tarde.</div>'+
+    '<label>Día</label><input id="doFecha" type="date" max="'+ayer+'" value="'+ayer+'">'+
+    '<label>¿En qué se trabajó?</label>'+o.partidas.map(function(x,i){
+      return '<div style="display:flex;gap:8px;align-items:center;font-size:13px;margin:4px 0">'+
+        '<input type="checkbox" id="doP'+i+'" style="width:auto;margin:0"><span style="flex:1">'+esc(x.area)+' · '+esc(x.partida)+'</span>'+
+        '<label style="margin:0;font-size:12px;display:flex;gap:4px;align-items:center"><input type="checkbox" id="doT'+i+'" style="width:auto;margin:0">terminó</label></div>'; }).join('')+
+    '<div class="row"><div><label>Trabajador</label><select id="doTrab"><option value="">— nadie de la cuadrilla —</option>'+
+      trab.map(function(t){return '<option value="'+esc(t.id)+'">'+esc(t.nombre)+(t.tipoPago==='Por dia'?' (por día)':'')+'</option>';}).join('')+'</select></div>'+
+    '<div><label>Horas (o días si es por día)</label><input id="doHoras" type="number" step="0.5" value="8"></div></div>'+
+    '<label>Motivo</label><input id="doMot" placeholder="El PM estuvo sin teléfono y me lo dictó">'+
+    '<button onclick="guardarDiaOlvidado()">Registrar</button></div>';
+}
+function guardarDiaOlvidado(){
+  var o=S.det, part=[], term=[];
+  o.partidas.forEach(function(x,i){ var k=x.areaId+'|'+x.partida;
+    if($('doP'+i).checked) part.push(k); if($('doT'+i).checked){ term.push(k); if(part.indexOf(k)<0) part.push(k); } });
+  var cuad = $('doTrab').value ? [{ trabajador:$('doTrab').value, horas:$('doHoras').value, partida:part[0] }] : [];
+  enObra('duCierreTardio', [o.id, { fecha:$('doFecha').value, partidas:part, terminadas:term, cuadrilla:cuad, motivo:$('doMot').value }], o.id, function(){ toast('Día registrado'); ; ; }, function(e){toast(e.message,true);});
+}
+function fotosCriticas(){
+  enInicio('duFotosCriticas', [], function(r){ toast('Foto solo en lo crítico: '+r.criticos+' puntos'); });
+}
+function capturarPresupuesto(id){ detalle(id); setTimeout(function(){ formPresupuesto(id); }, 700); }
+/* ------------------------------------------------ sistema: respaldos, salud, proteccion, errores */
+function cargarSistema(){
+  google.script.run.withSuccessHandler(function(s){
+    if(!$('sistema')) return;
+    var fila=function(t, estado, cls, boton){ return '<div class="tl"><div><b>'+t+'</b><div class="meta '+(cls||'')+'">'+estado+'</div></div>'+(boton||'')+'</div>'; };
+    var btn=function(txt, fn, sec){ return '<button class="'+(sec?'sec ':'')+'sm" style="width:auto;margin:0" onclick="'+fn+'()">'+txt+'</button>'; };
+    var p = s.salud ? s.salud.problemas : null;
+    $('sistema').innerHTML = '<h3>Sistema</h3>'+
+      fila('Respaldo semanal',
+        s.respaldoActivo ? '<span>Activo: cada domingo a las 3 am</span>'+(s.respaldoUltimo?' · <span>último</span> '+esc(s.respaldoUltimo):'')
+          : (s.respaldoActivo===false ? '<span>No activado</span>' : '<span>Sin información</span>'),
+        s.respaldoActivo ? 'VERDE' : 'AMBAR',
+        s.respaldoActivo ? btn('Respaldar ahora','respaldarAhora',true) : btn('Activar respaldo semanal','activarRespaldo'))+
+      fila('Salud del libro',
+        !s.salud ? '<span>Sin revisar todavía</span>' : (p.length ? p.length+' <span>problema(s)</span> · <span>revisado el</span> '+esc(s.salud.fecha)
+          : '<span>Sin problemas</span> · <span>revisado el</span> '+esc(s.salud.fecha)),
+        !s.salud ? 'AMBAR' : (p.length ? 'ROJO' : 'VERDE'), btn('Revisar ahora','revisarLibro',true))+
+      (p && p.length ? '<div class="meta" style="margin:-4px 0 10px">'+p.map(function(x){ return '<div class="ROJO"><b>'+esc(x.hoja)+':</b> <span>'+esc(x.detalle)+'</span></div>'; }).join('')+'</div>' : '')+
+      fila('Protección de hojas',
+        s.protegido ? '<span>Protegidas con advertencia desde el</span> '+esc(s.protegido) : '<span>Sin proteger: una edición a mano puede romper los cálculos</span>',
+        s.protegido ? 'VERDE' : 'AMBAR', btn(s.protegido ? 'Volver a proteger' : 'Proteger hojas','protegerHojas',!!s.protegido))+
+      fila('Errores de los últimos 7 días', s.errores.length ? s.errores.length+' <span>error(es)</span>' : '<span>Ninguno</span>', s.errores.length ? 'ROJO' : 'VERDE', '')+
+      (s.errores.length ? '<div class="meta" style="margin:-4px 0 10px">'+s.errores.map(function(e){ return '<div>'+esc(e.fecha)+' '+esc(e.hora)+' · '+esc(e.app)+' · '+esc(e.funcion)+
+        (e.usuario?' · '+esc(e.usuario):'')+'<div class="ROJO">'+esc(e.mensaje)+'</div></div>'; }).join('')+'</div>' : '')+
+      '<div class="meta" style="margin-top:8px">Las dos apps corren con la cuenta de Google que las implementó. Que sea una cuenta del negocio, con verificación en dos pasos, no tu correo personal.</div>';
+  }).withFailureHandler(function(e){ if($('sistema')) $('sistema').innerHTML='<h3>Sistema</h3><div class="meta ROJO">'+esc(e.message)+'</div>'; }).duSistema(S.token);
+}
+function llamarSistema(fn, ok){
+  google.script.run.withSuccessHandler(function(r){ toast(ok(r)); cargarSistema(); })
+    .withFailureHandler(function(e){ toast(e.message,true); })[fn](S.token);
+}
+function activarRespaldo(){ llamarSistema('duActivarRespaldo', function(r){ return 'Respaldo semanal activado. Primera copia: '+r.nombre; }); }
+function respaldarAhora(){ llamarSistema('duRespaldarAhora', function(r){ return 'Copia guardada: '+r.nombre; }); }
+function revisarLibro(){ llamarSistema('duRevisarLibro', function(r){ return r.problemas.length ? 'El libro tiene '+r.problemas.length+' problema(s)' : 'El libro está sano'; }); }
+function protegerHojas(){ llamarSistema('duProtegerHojas', function(r){ return r.hojas+' hojas protegidas con advertencia'; }); }
+function emitirDesdeSemana(i){ var x=S.d.semana.porProgramar[i]; S.v='subs'; render(); formOT(x); }
+function formOT(pre){
+  var d=S.d, hoy=new Date().toISOString().slice(0,10);
+  $('formSub').innerHTML='<div class="card"><h3>Nueva orden de trabajo</h3>'+
+    '<div class="meta">Precio cerrado y una partida. Sin eso no puedes costear ni comparar subs.</div>'+
+    '<div class="row"><div><label>Obra</label><select id="wObra" onchange="partidasOT()">'+
+      d.obras.map(function(o){return '<option value="'+esc(o.id)+'">'+esc(o.cliente)+' · '+esc(o.id)+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>Subcontratista</label><select id="wSub" onchange="oficioOT()">'+
+      d.subs.map(function(s){return '<option value="'+esc(s.id)+'" data-of="'+esc(s.oficio)+'">'+
+        esc(s.nombre)+(s.seguroVencido?' ⚠ seguro vencido':'')+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>Oficio</label><input id="wOficio"></div>'+
+    '<div><label>Partida que cubre</label><select id="wPartida"></select></div></div>'+
+    '<label>Alcance (qué incluye y qué no)</label><textarea id="wAlcance" '+
+      'placeholder="Tile de piso y muro, incluye lechada y sellado. No incluye material ni retiro de escombro."></textarea>'+
+    '<div class="row"><div><label>Precio cerrado</label><input id="wPrecio" type="number"></div>'+
+    '<div><label>Fecha de inicio</label><input id="wIni" type="date" value="'+hoy+'"></div>'+
+    '<div><label>Fecha de fin</label><input id="wFin" type="date" value="'+hoy+'"></div></div>'+
+    '<button onclick="guardarOT()">Emitir orden</button>'+
+    '<button class="sec" onclick="document.getElementById(\'formSub\').innerHTML=\'\'">Cancelar</button></div>';
+  if(pre){ $('wObra').value=pre.obra; }
+  partidasOT();
+  if(pre){                                            // llenada con lo que dice el cronograma
+    if(pre.sub) $('wSub').value=pre.sub;
+    $('wPartida').value=pre.areaId+'|'+pre.partida;
+    $('wIni').value=pre.iniISO; $('wFin').value=pre.finISO;
+  }
+  oficioOT(); $('formSub').scrollIntoView({behavior:'smooth'});
+}
+function oficioOT(){
+  var op=$('wSub').options[$('wSub').selectedIndex];
+  if(op) $('wOficio').value=op.getAttribute('data-of')||'';
+}
+function partidasOT(){
+  var areas = (S.d.areasPorObra||{})[$('wObra').value] || [];
+  $('wPartida').innerHTML = areas.map(function(ar){
+    var lista = S.d.partidas.filter(function(p){return p.tipo===ar.tipo;});
+    if(!lista.length) return '';
+    return '<optgroup label="'+esc(ar.nombre)+'">'+lista.map(function(p){
+      return '<option value="'+esc(ar.id+'|'+p.partida)+'">'+esc(p.partida)+'</option>'; }).join('')+
+      '</optgroup>'; }).join('') || '<option value="">— esta obra no tiene áreas —</option>';
+}
+function guardarOT(){
+  enInicio('duCrearOT', [{ obra:$('wObra').value, sub:$('wSub').value, oficio:$('wOficio').value,
+      partida:$('wPartida').value, alcance:$('wAlcance').value, precio:$('wPrecio').value,
+      inicio:$('wIni').value, fin:$('wFin').value }], function(r){ toast('Orden '+r.id+' emitida');
+    $('formSub').innerHTML=''; ; }, function(e){toast(e.message,true);});
+}
+
+/* ----------------------------------------------------------- correcciones */
+function anularDu(hoja, id, obraId){
+  var motivo=prompt('¿Por qué lo anulas? (queda registrado)','Capturado por error');
+  if(!motivo) return;
+  enObra('duAnular', [hoja,id,motivo], obraId, function(){
+    toast('Anulado'); if(obraId) ; ;
+  }, function(e){toast(e.message,true);});
+}
+function verCorrecciones(){
+  google.script.run.withSuccessHandler(function(a){
+    $('formCat').innerHTML='<div class="card"><h3>Registro de correcciones</h3>'+
+      '<div class="meta">Nada se borra del sistema. Esto es lo que se cambió y por qué.</div>'+
+      (a.length? '<table style="margin-top:11px"><tr><th>Cuándo</th><th>Quién</th><th>Qué</th>'+
+        '<th>Cambio</th><th>Motivo</th></tr>'+
+        a.map(function(c){
+          return '<tr><td class="meta">'+esc(c.fecha)+'</td><td class="meta">'+esc(c.usuario)+'</td>'+
+            '<td>'+esc(c.hoja)+' '+esc(c.registro)+'<div class="meta">'+esc(c.accion)+
+              (c.campo?' · '+esc(c.campo):'')+'</div></td>'+
+            '<td class="meta">'+(c.campo?esc(c.antes)+' → '+esc(c.despues):esc(c.despues))+'</td>'+
+            '<td>'+esc(c.motivo)+'</td></tr>'; }).join('')+'</table>'
+        : '<p class="meta">Sin correcciones todavía.</p>')+
+      '<button class="sec" onclick="document.getElementById(\'formCat\').innerHTML=\'\'">Cerrar</button></div>';
+    $('formCat').scrollIntoView({behavior:'smooth'});
+  }).withFailureHandler(function(e){toast(e.message,true);}).duCorrecciones(S.token);
+}
+
+/* ------------------------------------------------------------- catálogo */
+function vCatalogo(d){
+  var act=d.trabajadores.filter(function(t){return t.activo;});
+  var baja=d.trabajadores.filter(function(t){return !t.activo;});
+  var cuadrilla='<div class="card"><h3>Cuadrilla propia</h3>'+
+    '<div class="meta">La tarifa costea la obra y <b>nunca</b> viaja a la app del PM. '+
+    'Un trabajador por día se captura en días, no en horas.</div>'+
+    '<table style="margin-top:11px"><tr><th>Nombre</th><th>Puesto</th><th>Pago</th>'+
+    '<th class="num">Tarifa</th><th></th></tr>'+
+    act.map(function(t){
+      return '<tr><td>'+esc(t.nombre)+'<div class="meta">'+esc(t.id)+'</div></td>'+
+        '<td>'+esc(t.puesto)+'</td><td class="meta">'+esc(t.tipoPago)+'</td>'+
+        '<td class="num">'+money(t.tarifa)+'</td>'+
+        '<td class="num"><button class="sec sm" style="margin:0" onclick="editarTrab('+
+          d.trabajadores.indexOf(t)+')">Editar</button></td></tr>'; }).join('')+
+    '</table>'+(baja.length?'<div class="meta" style="margin-top:10px">Dados de baja: '+
+      baja.map(function(t){return esc(t.nombre);}).join(', ')+'</div>':'')+
+    '<button class="sm" onclick="editarTrab()">+ Agregar trabajador</button></div>';
+
+  var sAct = d.subsCatalogo.filter(function(s){return s.activo;});
+  var sBaja = d.subsCatalogo.filter(function(s){return !s.activo;});
+  var banco='<div class="card"><h3>Banco de subcontratistas</h3>'+
+    '<div class="meta">La calificación no se captura: sale de si llegaron el día que dijeron '+
+    'y de los defectos que te costaron dinero.</div>'+
+    '<table style="margin-top:11px"><tr><th>Sub</th><th class="num">Órdenes</th>'+
+    '<th class="num">Puntualidad</th><th class="num">Defectos</th><th class="num">Te costó</th>'+
+    '<th>Papeles</th><th></th></tr>'+
+    sAct.map(function(s){
+      var i = d.subsCatalogo.indexOf(s);
+      return '<tr><td>'+esc(s.nombre)+'<div class="meta">'+esc(s.oficio)+(s.telefono?' · '+esc(s.telefono):'')+'</div>'+
+          (s.avisos.length?'<div class="ROJO" style="font-size:12px;margin-top:3px">'+
+            s.avisos.map(esc).join('<br>')+'</div>':'')+'</td>'+
+        '<td class="num">'+s.ordenes+'</td>'+
+        '<td class="num '+(s.puntualidad===null?'':(s.puntualidad<0.9?'ROJO':'VERDE'))+'">'+
+          (s.puntualidad===null?'—':pct(s.puntualidad))+'</td>'+
+        '<td class="num '+(s.defectos?'ROJO':'')+'">'+s.defectos+'</td>'+
+        '<td class="num">'+(s.costoDefectos?money(s.costoDefectos):'—')+'</td>'+
+        '<td class="meta">'+(s.avisos.length?'<span class="pill bad">revisar</span>':'<span class="pill ok">al día</span>')+
+          (s.w9?'':'<div style="font-size:11.5px">sin W-9</div>')+'</td>'+
+        '<td class="num"><button class="sec sm" style="margin:0" onclick="editarSub('+i+')">Editar</button></td></tr>';
+    }).join('')+'</table>'+
+    (sBaja.length?'<div class="meta" style="margin-top:10px">Dados de baja: '+sBaja.map(function(s){
+      return esc(s.nombre)+' <a href="#" onclick="activarSub('+d.subsCatalogo.indexOf(s)+',true);return false">reactivar</a>';
+    }).join(' · ')+'</div>':'')+
+    '<button class="sm" onclick="editarSub(-1)">+ Agregar subcontratista</button></div>';
+
+  var porTipo=d.tiposObra.map(function(t){
+    var lista=d.partidas.filter(function(p){return p.tipo===t;});
+    return '<div class="card"><h3>'+esc(t)+' <span class="meta">· '+lista.length+' partidas</span></h3>'+
+      (lista.some(function(p){return ['Roughs','Preparación e impermeabilización','Acabados','Instalaciones finales','Muros y piso','Gabinetes y countertop','Preparación','Sistema e instalación'].indexOf(p.etapa)>=0;}) ?
+        '<div class="senal warn">Tus etapas usan la agrupación anterior, por fase de la obra. '+
+        '<a href="#" onclick="sugerirDuraciones();return false">Cambiarlas a una por tipo de trabajo</a></div>' : '')+
+      (lista.some(function(p){return !p.dias || !p.etapa;}) ? '<div class="senal warn">Hay partidas sin duración o sin etapa: el cronograma les pone 1 día y el presupuesto las junta en Otras partidas. '+
+        '<a href="#" onclick="sugerirDuraciones();return false">Llenar las sugeridas</a></div>' : '')+
+      '<table><tr><th style="width:56px">Orden</th><th>Partida</th><th>Etapa</th><th>Hito de calidad</th>'+
+        '<th class="num" style="width:70px">Peso</th><th class="num" style="width:70px">% del tipo</th>'+
+        '<th class="num" style="width:78px">Días</th><th style="width:96px">Quién</th><th></th></tr>'+
+      lista.map(function(p){
+        var tot = lista.reduce(function(a,x){return a+(x.peso||1);},0);
+        return '<tr><td class="num">'+p.orden+'</td><td>'+esc(p.partida)+'</td>'+
+          '<td class="meta">'+(p.etapa?esc(p.etapa):'<span class="AMBAR">sin etapa</span>')+'</td>'+
+          '<td class="meta">'+esc(p.hito||'—')+'</td>'+
+          '<td class="num">'+(p.peso||1)+'</td>'+
+          '<td class="num meta">'+pct0((p.peso||1)/tot)+'</td>'+
+          '<td class="num">'+(p.dias||'—')+(p.espera?'<div class="meta">+'+p.espera+' espera</div>':'')+
+            (p.real?'<div class="meta '+(p.dias && p.real.prom>p.dias*1.2?'AMBAR':'')+'">real '+p.real.prom.toFixed(1)+'</div>':'')+'</td>'+
+          '<td class="meta">'+esc(p.quien||'—')+(p.paralelo?'<div>con la anterior</div>':'')+'</td>'+
+          '<td class="num"><button class="sec sm" style="margin:0" onclick="editarPartida('+
+            d.partidas.indexOf(p)+')">Editar</button></td></tr>'; }).join('')+'</table>'+
+      '<button class="sm" onclick="nuevaPartida('+d.tiposObra.indexOf(t)+','+
+        (lista.length?lista[lista.length-1].orden+1:1)+')">+ Agregar partida</button></div>'; }).join('');
+
+  var nFoto = 0; Object.keys(d.checklist).forEach(function(k){ d.checklist[k].forEach(function(p){ if(p.foto) nFoto++; }); });
+  var calid = '<div class="sep">Puntos de control de calidad</div>'+
+    '<div class="meta" style="margin:-4px 0 10px"><span>Puntos que piden foto:</span> '+nFoto+(nFoto>9?' · <a href="#" onclick="fotosCriticas();return false">Pedir foto solo en lo crítico</a>':'')+'</div>'+
+    (S.hitos = Object.keys(d.checklist).sort()).map(function(hito,hi){
+      var ps = d.checklist[hito];
+      return '<div class="card"><h3>'+esc(hito)+' <span class="meta">· '+ps.length+' puntos</span></h3>'+
+        '<table><tr><th style="width:56px">Orden</th><th>Punto</th><th style="width:80px">Foto</th><th></th></tr>'+
+        ps.map(function(p){
+          return '<tr><td class="num">'+p.n+'</td><td>'+esc(p.punto)+'</td>'+
+            '<td class="meta">'+(p.foto?'requiere':'—')+'</td>'+
+            '<td class="num"><button class="sec sm" style="margin:0" onclick="editarPunto('+hi+','+p.n+')">'+
+              'Editar</button></td></tr>'; }).join('')+
+        '</table><button class="sm" onclick="editarPunto('+hi+',0)">+ Agregar punto</button></div>';
+    }).join('')+
+    '<button class="sec" onclick="nuevoHito()">+ Nuevo punto de control</button>';
+
+  var modoT = S.modoTipo || 'blanco';
+  var clonar='<div class="card" id="cardTipo"><h3>Nuevo tipo de obra</h3>'+
+    '<div style="margin:4px 0 12px">'+
+      '<button class="'+(modoT==='blanco'?'':'sec ')+'sm" onclick="S.modoTipo=\'blanco\';render()">Empezar en blanco</button> '+
+      '<button class="'+(modoT==='copiar'?'':'sec ')+'sm" onclick="S.modoTipo=\'copiar\';render()">Copiar uno existente</button></div>'+
+    (modoT==='blanco'
+      ? '<div class="meta">Para trabajos que no se parecen a los que ya tienes: un piso de cemento, una lavandería.</div>'+
+        '<div class="row"><div><label>Nombre del tipo</label><input id="tNom" placeholder="Piso de cemento, Lavandería…"></div>'+
+        '<div style="flex:0 0 180px"><label>Tamaño comparado con un baño</label><input id="tPeso" type="number" value="40"></div></div>'+
+        '<label>Partidas (una por renglón)</label>'+
+        '<textarea id="tPart" rows="6" placeholder="Protección y preparación de superficie&#10;Reparación de grietas&#10;Desbaste y pulido&#10;Aplicación de sellador"></textarea>'+
+        '<div class="meta">El tamaño decide cuánto pesa este tipo en el avance de una obra combinada: un baño completo '+
+          'suma 90 y un closet 30. Se reparte parejo entre las partidas; después puedes afinar cada una y '+
+          'asignarles puntos de control.</div>'+
+        '<button onclick="crearTipo()">Crear tipo</button>'
+      : '<div class="meta">Copia una secuencia existente y edítala. Más rápido que empezar de cero.</div>'+
+        '<div class="row"><div><label>Copiar desde</label><select id="cDesde">'+
+          d.tiposObra.map(function(t){return '<option>'+esc(t)+'</option>';}).join('')+'</select></div>'+
+        '<div><label>Nombre del nuevo tipo</label><input id="cHacia" placeholder="Medio baño, Lavandería…"></div></div>'+
+        '<button onclick="clonar()">Crear</button>')+
+    '</div>';
+
+  var audit = '<div class="card"><h3>Registro de correcciones</h3>'+
+    '<div class="meta">Nada se borra del sistema. Un registro equivocado se anula y queda el rastro '+
+    'de quién lo cambió y por qué. El PM puede corregir lo suyo dentro de 48 horas; tú, sin límite, '+
+    'salvo en obras ya cerradas.</div>'+
+    '<button class="sec" onclick="verCorrecciones()">Ver el registro</button></div>';
+  return '<div id="formCat"></div>'+cuadrilla+banco+audit+calid+
+    '<div class="sep">Catálogo de partidas</div>'+porTipo+clonar;
+}
+function editarPunto(hi, n){
+  var hito = S.hitos[hi];
+  var ps = S.d.checklist[hito]||[];
+  var p = n ? ps.filter(function(x){return x.n===n;})[0] : null;
+  var nuevo = !p;
+  if(nuevo) p = { n:(ps.length?ps[ps.length-1].n+1:1), punto:'', foto:false };
+  $('formCat').innerHTML='<div class="card" style="border-color:var(--acc)">'+
+    '<h3>'+(nuevo?'Nuevo punto':'Editar punto')+' · '+esc(hito)+'</h3>'+
+    '<div class="row"><div style="flex:0 0 110px"><label>Orden</label>'+
+      '<input id="qOrden" type="number" value="'+p.n+'"></div>'+
+    '<div><label>¿Requiere foto?</label><select id="qFoto">'+
+      '<option value="1"'+(p.foto?' selected':'')+'>Sí</option>'+
+      '<option value="0"'+(p.foto?'':' selected')+'>No</option></select></div></div>'+
+    '<label>Qué se revisa</label><input id="qPunto" value="'+esc(p.punto)+'">'+
+    '<input type="hidden" id="qHito" value="'+esc(hito)+'">'+
+    '<input type="hidden" id="qOrig" value="'+esc(nuevo?'':p.punto)+'">'+
+    '<button onclick="guardarPunto()">Guardar</button>'+
+    '<button class="sec" onclick="document.getElementById(\'formCat\').innerHTML=\'\'">Cancelar</button>'+
+    (nuevo?'':'<button class="bad" onclick="borrarPunto()">Borrar</button>')+'</div>';
+  $('formCat').scrollIntoView({behavior:'smooth'});
+}
+function guardarPunto(){
+  enInicio('duGuardarPunto', [{ hito:$('qHito').value, orden:$('qOrden').value,
+      punto:$('qPunto').value, foto:$('qFoto').value==='1', puntoOriginal:$('qOrig').value }], function(){ toast('Checklist actualizado');
+    $('formCat').innerHTML=''; ; }, function(e){toast(e.message,true);});
+}
+function borrarPunto(){
+  if(!confirm('¿Borrar este punto del checklist?')) return;
+  enInicio('duBorrarPunto', [$('qHito').value,$('qOrig').value], function(){ toast('Punto borrado');
+    $('formCat').innerHTML=''; ; }, function(e){toast(e.message,true);});
+}
+
+/* ------------------------------------------------ subcontratistas */
+function editarSub(i){
+  var nuevo = i < 0;
+  var s = nuevo ? { id:'', nombre:'', oficio:'', telefono:'', contacto:'', correo:'', seguroVence:'',
+                    licencia:'', licenciaVence:'', w9:false, activo:true, abiertas:0 }
+                : S.d.subsCatalogo[i];
+  var oficios = S.d.subsCatalogo.map(function(x){return x.oficio;})
+    .filter(function(v,k,a){ return v && a.indexOf(v)===k; });
+  $('formCat').innerHTML='<div class="card" style="border-color:var(--acc)">'+
+    '<h3>'+(nuevo?'Nuevo subcontratista':'Editar · '+esc(s.nombre))+'</h3>'+
+    '<div class="row"><div><label>Nombre o razón social</label><input id="sbNom" value="'+esc(s.nombre)+'"></div>'+
+    '<div><label>Oficio</label><input id="sbOf" list="sbOficios" value="'+esc(s.oficio)+'" placeholder="Tile, Plomería, Eléctrico…">'+
+      '<datalist id="sbOficios">'+oficios.map(function(o){return '<option value="'+esc(o)+'">';}).join('')+'</datalist></div></div>'+
+    '<div class="row"><div><label>Contacto</label><input id="sbCon" value="'+esc(s.contacto)+'"></div>'+
+    '<div><label>Teléfono</label><input id="sbTel" value="'+esc(s.telefono)+'"></div>'+
+    '<div><label>Correo</label><input id="sbMail" type="email" value="'+esc(s.correo)+'"></div></div>'+
+    '<div class="row"><div><label>Seguro vence</label><input id="sbSeg" type="date" value="'+esc(s.seguroVence)+'"></div>'+
+    '<div><label>Licencia estatal</label><input id="sbLic" value="'+esc(s.licencia)+'" placeholder="Solo plomería, eléctrico y A/C"></div>'+
+    '<div><label>Licencia vence</label><input id="sbLicV" type="date" value="'+esc(s.licenciaVence)+'"></div>'+
+    '<div><label>W-9 en archivo</label><select id="sbW9"><option value="1"'+(s.w9?' selected':'')+'>Sí</option>'+
+      '<option value="0"'+(s.w9?'':' selected')+'>No</option></select></div></div>'+
+    '<div class="meta">El W-9 lo necesitas para el 1099 de fin de año de todo sub que te facture en el año. '+
+      'El seguro vencido te frena al pagarle.</div>'+
+    '<input type="hidden" id="sbId" value="'+esc(s.id)+'">'+
+    '<button onclick="guardarSub()">Guardar</button>'+
+    '<button class="sec" onclick="document.getElementById(\'formCat\').innerHTML=\'\'">Cancelar</button>'+
+    (nuevo?'':'<button class="bad" onclick="activarSub('+i+',false)">Dar de baja</button>')+
+    '</div>';
+  $('formCat').scrollIntoView({behavior:'smooth'});
+}
+function guardarSub(){
+  enInicio('duGuardarSub', [{ id:$('sbId').value, nombre:$('sbNom').value, oficio:$('sbOf').value,
+      contacto:$('sbCon').value, telefono:$('sbTel').value, correo:$('sbMail').value,
+      seguroVence:$('sbSeg').value, licencia:$('sbLic').value, licenciaVence:$('sbLicV').value,
+      w9:$('sbW9').value==='1', activo:true }], function(r){
+    $('formCat').innerHTML=''; ;
+    toast(r.avisos && r.avisos.length ? 'Guardado. Ojo: '+r.avisos.join('; ') : 'Subcontratista guardado', !!(r.avisos && r.avisos.length));
+  }, function(e){toast(e.message,true);});
+}
+function activarSub(i, activo){
+  var s = S.d.subsCatalogo[i];
+  if(!activo && !confirm('¿Dar de baja a '+s.nombre+'? Se conserva su historial y deja de aparecer '+
+    'al emitir órdenes nuevas.'+(s.abiertas?' Tiene '+s.abiertas+' orden(es) abierta(s): esas siguen vigentes.':''))) return;
+  enInicio('duActivarSub', [s.id, activo], function(){
+    $('formCat').innerHTML=''; toast(activo?s.nombre+' reactivado':s.nombre+' dado de baja'); ;
+  }, function(e){toast(e.message,true);});
+}
+
+function crearTipo(){
+  var partidas = $('tPart').value.split('\n').map(function(x){ return x.trim(); }).filter(Boolean);
+  enInicio('duCrearTipo', [{ nombre:$('tNom').value, partidas:partidas, pesoTotal:$('tPeso').value }], function(r){
+    toast('Tipo creado con '+r.n+' partidas'); S.modoTipo='blanco'; ;
+  }, function(e){ toast(e.message,true); });
+}
+function nuevoHito(){
+  $('formCat').innerHTML='<div class="card" style="border-color:var(--acc)">'+
+    '<h3>Nuevo punto de control</h3>'+
+    '<div class="meta">Un punto de control es una inspección con fotos antes de cubrir o entregar. '+
+      'Después de crearlo, asígnalo a las partidas desde Editar partida.</div>'+
+    '<label>Nombre del punto de control</label><input id="hNom" placeholder="PC6 Pre-sellado">'+
+    '<label>Primer punto a revisar</label><input id="hPunto" placeholder="Base limpia, seca y sin grietas abiertas">'+
+    '<label>¿Requiere foto?</label><select id="hFoto"><option value="1">Sí</option><option value="0">No</option></select>'+
+    '<button onclick="guardarNuevoHito()">Crear</button>'+
+    '<button class="sec" onclick="document.getElementById(\'formCat\').innerHTML=\'\'">Cancelar</button></div>';
+  $('formCat').scrollIntoView({behavior:'smooth'});
+}
+function guardarNuevoHito(){
+  var nom = $('hNom').value.trim();
+  if(Object.keys(S.d.checklist).some(function(x){ return x.toLowerCase()===nom.toLowerCase(); })){
+    toast('Ya existe un punto de control con ese nombre. Agrega sus puntos desde su tarjeta.', true); return;
+  }
+  enInicio('duGuardarPunto', [{ hito:nom, punto:$('hPunto').value, orden:1, foto:$('hFoto').value==='1' }], function(){
+    $('formCat').innerHTML=''; toast('Punto de control creado'); ;
+  }, function(e){ toast(e.message,true); });
+}
+/* ------------------------------------------------ compras de la oficina */
+function formGastoOficina(){
+  var o=S.det;
+  $('formGasto').innerHTML='<div class="card" style="border-color:var(--acc);margin:0 0 10px">'+
+    '<div class="meta">Lo que compra la oficina — gabinetes, appliances — también es costo de la obra.</div>'+
+    '<div class="row"><div><label>Monto</label><input id="goMonto" type="number"></div>'+
+    '<div><label>Categoría</label><select id="goCat">'+['Material','Renta equipo','Herramienta','Permisos','Disposicion','Otro']
+      .map(function(x){return '<option>'+x+'</option>';}).join('')+'</select></div></div>'+
+    '<div class="row"><div><label>Proveedor</label><input id="goProv"></div>'+
+    '<div><label>Método</label><select id="goMet">'+['Transferencia','Cheque','Tarjeta de la empresa','Efectivo']
+      .map(function(x){return '<option>'+x+'</option>';}).join('')+'</select></div></div>'+
+    '<label>Qué se compró</label><input id="goDesc" placeholder="Gabinetes shaker blancos, 14 piezas">'+
+    '<label>¿Para qué partida?</label><select id="goPart"><option value="">— sin partida (va a Generales de obra) —</option>'+
+      o.partidas.map(function(x,i){return '<option value="'+i+'">'+esc(x.area)+' · '+esc(x.partida)+'</option>';}).join('')+'</select>'+
+    '<label>Número de factura</label><input id="goFact" placeholder="Opcional">'+
+    '<button onclick="guardarGastoOficina()">Registrar compra</button></div>';
+}
+function guardarGastoOficina(){
+  var o=S.det, i=$('goPart').value, x=i===''?null:o.partidas[Number(i)];
+  enObra('duGasto', [{ obra:o.id, monto:$('goMonto').value, categoria:$('goCat').value, proveedor:$('goProv').value,
+      metodo:$('goMet').value, descripcion:$('goDesc').value, factura:$('goFact').value, partida: x ? x.areaId+'|'+x.partida : '' }], o.id, function(r){ toast('Compra registrada · '+r.id); ; ; }, function(e){toast(e.message,true);});
+}
+function revisarCompra(i){
+  var g=S.d.comprasLimite[i];
+  enInicio('duRevisarGasto', [g.id], function(){ toast('Compra revisada'); ; }, function(e){toast(e.message,true);});
+}
+/* ------------------------------------------------ partidas de esta obra */
+function quitarPartidaObra(i){
+  var o=S.det, x=o.partidas[i];
+  var m=prompt('¿Por qué se quita "'+x.partida+'" de esta obra? (queda registrado)','No se contrató en esta obra');
+  if(m===null) return;
+  enObra('duQuitarPartidaObra', [o.id, x.areaId, x.partida, m], o.id, function(){ toast('Partida quitada de esta obra'); ; ; }, function(e){toast(e.message,true);});
+}
+function agregarPartidaObra(i){
+  var o=S.det, x=o.partidas[i];
+  var n=prompt('Nombre de la partida nueva para '+x.area+' (solo esta obra):',''); if(!n) return;
+  var w=prompt('Peso (complejidad). Un baño completo suma 90:','4'); if(w===null) return;
+  enObra('duAgregarPartidaObra', [o.id, x.areaId, { partida:n, peso:w }], o.id, function(){ toast('Partida agregada a esta obra'); ; ; }, function(e){toast(e.message,true);});
+}
+/* ------------------------------------------------ reprogramar una orden */
+function formReprogramar(otId, cont){
+  var hoy=new Date(), man=new Date(hoy.getTime()+86400000).toISOString().slice(0,10);
+  $(cont).innerHTML='<div class="card" style="border-color:var(--acc);margin-top:8px">'+
+    '<div class="row"><div><label>Nueva fecha de inicio</label><input id="rpIni" type="date" value="'+man+'"></div>'+
+    '<div><label>Nueva fecha de fin</label><input id="rpFin" type="date" value="'+man+'"></div></div>'+
+    '<label>Motivo</label><input id="rpMot" placeholder="No llegó; confirmó para mañana a las 8">'+
+    '<div class="meta">La nueva fecha pide una nueva confirmación por escrito del sub.</div>'+
+    '<button onclick="reprogramarOT(&quot;'+otId+'&quot;)">Reprogramar</button></div>';
+}
+function reprogramarDesdeInicio(i){ formReprogramar(S.d.subsNoLlegaron[i].ot, 'repInicio'); }
+function reprogramarOT(otId){
+  enInicio('duReprogramarOT', [otId, { inicio:$('rpIni').value, fin:$('rpFin').value, motivo:$('rpMot').value }], function(r){ toast('Orden reprogramada'+(r.faltas?' · '+r.faltas+' falta(s) registrada(s)':'')); ; }, function(e){toast(e.message,true);});
+}
+
+function nuevaPartida(ti,orden){ editarPartida(-1,S.d.tiposObra[ti],orden); }
+/* el texto siempre se busca en los datos; nunca viaja dentro de un botón */
+function cobrarPunch(i){ var x=S.det.punch[i]; formOC(S.det.id,'',x.item); }
+function desdeAviso(i){ var b=S.d.bloqueos[i]; formOC(b.obra,b.id,b.descripcion); }
+function editarPartida(idx,tipo,orden){
+  var nuevo = idx<0 || idx===undefined;
+  var p = nuevo ? {tipo:tipo,orden:orden||99,partida:'',hito:''} : S.d.partidas[idx];
+  $('formCat').innerHTML='<div class="card" style="border-color:var(--acc)">'+
+    '<h3>'+(nuevo?'Nueva partida':'Editar partida')+'</h3>'+
+    '<div class="row"><div><label>Tipo de obra</label><input id="pTipo" value="'+esc(p.tipo)+'"></div>'+
+    '<div><label>Orden en la secuencia</label><input id="pOrden" type="number" value="'+p.orden+'"></div>'+
+    '<div><label>Peso (complejidad)</label><input id="pPeso" type="number" value="'+(p.peso||1)+'"></div></div>'+
+    '<div class="meta">El peso decide cuánto avanza la obra cuando esta partida se termina. '+
+      'Un baño completo suma 90; una partida de 18 es 20% del baño.</div>'+
+    '<label>Nombre de la partida</label><input id="pNombre" value="'+esc(p.partida)+'">'+
+    '<label>Etapa del presupuesto</label><input id="pEtapa" list="pEtapas" value="'+esc(p.etapa||'')+'" placeholder="Acabados">'+
+      '<datalist id="pEtapas">'+S.d.partidas.filter(function(x){return x.etapa && (!p.tipo || x.tipo===p.tipo);})
+        .map(function(x){return x.etapa;}).filter(function(v,i,a){return a.indexOf(v)===i;})
+        .map(function(v){return '<option value="'+esc(v)+'">';}).join('')+'</datalist>'+
+    '<div class="row"><div><label>Días hábiles</label><input id="pDias" type="number" value="'+(p.dias||1)+'"></div>'+
+    '<div><label>Quién la hace</label><input id="pQuien" list="pQuienes" value="'+esc(p.quien||'Cuadrilla')+'">'+
+      '<datalist id="pQuienes"><option value="Cuadrilla"><option value="PM">'+S.d.subs.map(function(s){return '<option value="'+esc(s.oficio)+'">';}).join('')+'</datalist></div>'+
+    '<div><label>Días de espera antes</label><input id="pEspera" type="number" value="'+(p.espera||0)+'"></div>'+
+    '<div><label>¿Arranca junto con la anterior?</label><select id="pParalelo"><option value="0">No</option>'+
+      '<option value="1"'+(p.paralelo?' selected':'')+'>Sí</option></select></div></div>'+
+    '<div class="meta">La espera es fabricación: el countertop después de su plantilla. "Quién" con el oficio de un sub '+
+      'hace que aparezca en "subs por programar".</div>'+
+    '<label>Hito de calidad (opcional)</label>'+
+    (function(){                      // solo puntos que existen; uno viejo mal escrito no se pierde de vista
+      var hs = Object.keys(S.d.checklist).sort();
+      if(p.hito && hs.indexOf(p.hito)<0) hs.unshift(p.hito);
+      return '<select id="pHito"><option value="">— sin punto de control —</option>'+
+        hs.map(function(x){ return '<option'+(x===p.hito?' selected':'')+'>'+esc(x)+'</option>'; }).join('')+'</select>';
+    })()+
+    '<input type="hidden" id="pOrig" value="'+esc(nuevo?'':p.partida)+'">'+
+    '<input type="hidden" id="pTipoOrig" value="'+esc(nuevo?'':p.tipo)+'">'+
+    '<button onclick="guardarPartida()">Guardar</button>'+
+    '<button class="sec" onclick="document.getElementById(\'formCat\').innerHTML=\'\'">Cancelar</button>'+
+    (nuevo?'':'<button class="bad" onclick="borrarPartida('+idx+')">Borrar</button>')+'</div>';
+  $('formCat').scrollIntoView({behavior:'smooth'});
+}
+function sugerirDuraciones(){
+  enInicio('duSugerirDuraciones', [], function(r){ toast('Duraciones sugeridas: '+r.n+' partidas'); ; }, function(e){toast(e.message,true);});
+}
+function guardarPartida(){
+  enInicio('duGuardarPartida', [{ tipo:$('pTipo').value, orden:$('pOrden').value, peso:$('pPeso').value,
+      dias:$('pDias').value, quien:$('pQuien').value, espera:$('pEspera').value, paralelo:$('pParalelo').value==='1', etapa:$('pEtapa').value,
+      partida:$('pNombre').value, hito:$('pHito').value,
+      partidaOriginal:$('pOrig').value, tipoOriginal:$('pTipoOrig').value }], function(){ toast('Catálogo actualizado');
+    $('formCat').innerHTML=''; ; }, function(e){toast(e.message,true);});
+}
+function borrarPartida(idx){
+  var p=S.d.partidas[idx];
+  if(!confirm('¿Borrar "'+p.partida+'" del catálogo de '+p.tipo+'?')) return;
+  enInicio('duBorrarPartida', [p.tipo,p.partida], function(){ toast('Partida borrada');
+    $('formCat').innerHTML=''; ; }, function(e){toast(e.message,true);});
+}
+function clonar(){
+  enInicio('duClonarSecuencia', [$('cDesde').value,$('cHacia').value], function(r){ toast('Tipo creado con '+r.n+' partidas'); ; }, function(e){toast(e.message,true);});
+}
+function editarTrab(idx){
+  var t=(idx===undefined||idx<0)
+    ? {id:'',nombre:'',puesto:'',tipoPago:'Por hora',tarifa:'',telefono:'',activo:true}
+    : S.d.trabajadores[idx];
+  $('formCat').innerHTML='<div class="card" style="border-color:var(--acc)">'+
+    '<h3>'+(t.id?'Editar trabajador':'Nuevo trabajador')+'</h3>'+
+    '<div class="row"><div><label>Nombre</label><input id="tNombre" value="'+esc(t.nombre)+'"></div>'+
+    '<div><label>Puesto</label><input id="tPuesto" value="'+esc(t.puesto)+'" placeholder="Oficial de tile"></div></div>'+
+    '<div class="row"><div><label>Tipo de pago</label><select id="tPago">'+
+      ['Por hora','Por dia'].map(function(o){return '<option'+(o===t.tipoPago?' selected':'')+'>'+o+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>Tarifa</label><input id="tTarifa" type="number" value="'+(t.tarifa||'')+'"></div>'+
+    '<div><label>Teléfono</label><input id="tTel" value="'+esc(t.telefono)+'"></div></div>'+
+    '<input type="hidden" id="tId" value="'+esc(t.id)+'">'+
+    '<button onclick="guardarTrab()">Guardar</button>'+
+    '<button class="sec" onclick="document.getElementById(\'formCat\').innerHTML=\'\'">Cancelar</button>'+
+    (t.id?'<button class="bad" onclick="bajaTrab(&quot;'+t.id+'&quot;)">Dar de baja</button>':'')+'</div>';
+  $('formCat').scrollIntoView({behavior:'smooth'});
+}
+function guardarTrab(){
+  enInicio('duGuardarTrabajador', [{ id:$('tId').value, nombre:$('tNombre').value,
+      puesto:$('tPuesto').value, tipoPago:$('tPago').value, tarifa:$('tTarifa').value,
+      telefono:$('tTel').value }], function(){ toast('Cuadrilla actualizada');
+    $('formCat').innerHTML=''; ; }, function(e){toast(e.message,true);});
+}
+function bajaTrab(id){
+  if(!confirm('¿Dar de baja? Se conserva su historial de horas.')) return;
+  enInicio('duBajaTrabajador', [id], function(){ toast('Trabajador dado de baja');
+    $('formCat').innerHTML=''; ; }, function(e){toast(e.message,true);});
+}
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter' && $('login').className===''){ entrar(); }
+});
+aplicarIdioma(IDIOMA);
+</script>
+</body>
+</html>
