@@ -70,3 +70,72 @@ y los parches de Apps Script: candados, memoria por ejecución, numeración por 
 `bitacora`); comentarios en español; textos visibles siempre por i18n.
 **Por qué:** es el idioma del negocio y del legacy; traducir el dominio al inglés introduce errores de
 significado.
+
+## D-011 · Herramientas del repositorio
+
+**Decisión:** Node 22.12 o más reciente (`.nvmrc` y `engines`), pnpm 10 fijo en `packageManager`, TypeScript
+6.0 con `strict` y `noUncheckedIndexedAccess`, ESLint 9 con typescript-eslint y la configuración de Next,
+Prettier, y Vitest 5 con cuatro proyectos: `unidad`, `paridad`, `rls` e `integracion`. La CLI de Supabase es
+dependencia de desarrollo del repositorio. Los paquetes internos (`@ijm/core`, `@ijm/db`) se publican como
+TypeScript sin compilar y Next los transpila.
+**Por qué:** Node 20 dejó de tener soporte en abril de 2026. TypeScript 7 todavía no es compatible con
+typescript-eslint (que pide menos de 6.1). `noUncheckedIndexedAccess` atrapa el error típico del legacy: leer
+`fila[9]` de una columna que no existe. Con la CLI en el repositorio, todos usan la misma versión.
+**Descartado:** instalar la CLI de Supabase de forma global; compilar los paquetes internos (un paso más sin
+beneficio mientras solo los use `apps/web`).
+
+## D-012 · La paridad carga el legacy construido, en Node, sin Python
+
+**Decisión:** las pruebas de paridad cargan `legacy/app/App_Dueno.gs` y `App_PM.gs` en una máquina virtual de
+Node (`packages/core/pruebas/paridad/legacy.ts`), con una simulación mínima de Apps Script y un "ahora"
+controlable. Corren con `TZ=America/Chicago`.
+**Por qué:** son los archivos que de verdad se publican. `legacy/correr_pruebas.sh` depende de rutas fijas de
+Linux (`/tmp`, `/home/claude`) y de Python con openpyxl; el legacy es de solo lectura, así que no se adapta: se
+reproduce su `harness.js` en TypeScript.
+
+## D-013 · Columnas que el PM no debe ver
+
+**Decisión:** el dinero siempre va en tablas propias (D-002). Las columnas que no son dinero pero que el PM no
+debe ver, en tablas que sí lee (`configuracion`, `subcontratistas`, `empresas`, `entregas`,
+`ordenes_cambio`), se le exponen mediante **vistas** `security_invoker` con solo las columnas permitidas; la
+tabla completa queda solo para dueño y administrador.
+**Por qué:** RLS filtra renglones, no columnas. Partir cada tabla por cada columna sensible llena el esquema de
+tablas de una sola fila; los permisos por columna (`GRANT` por columna) son frágiles con Supabase y fáciles de
+romper al agregar una columna.
+**Descartado:** permisos por columna; una tabla aparte por cada grupo de columnas que no son dinero.
+
+## D-014 · Dos medidas por espacio: la cotizada y la verificada
+
+**Decisión:** cada espacio guarda los pies² (y pies lineales) **cotizados**, capturados por el dueño en el alta,
+y los **verificados** en sitio por el PM, con quién y cuándo. El PM los captura mediante una función del
+servidor, que deja rastro en `correcciones`. Los costos unitarios usan la verificada cuando existe.
+`presupuesto_etapas.cantidad` no se guarda: se calcula de la medida vigente.
+**Diferencia con el legacy:** `pmMedida` sobrescribía `Areas.pies2` y la medida cotizada se perdía (solo quedaba
+en `Correcciones`). El presupuesto copiaba los pies² al guardarse y quedaba desactualizado al corregirlos.
+
+## D-015 · Traducción de los datos del catálogo y de los mensajes
+
+**Decisión:** los nombres que captura cada empresa (partidas, etapas, tipos de espacio, puntos de control y sus
+preguntas) se guardan con `nombre_es` y `nombre_en`; se muestra el del idioma del usuario y, si falta, el otro.
+`packages/core` y la capa del servidor no devuelven textos: devuelven un **código con sus datos** (por ejemplo
+`{ codigo: 'faltan', campos: ['cliente', 'fecha_entrega'] }`), y la pantalla los traduce con next-intl.
+**Por qué:** regla 8 de `CLAUDE.md`: ningún texto visible queda fijo en el código. El legacy traducía en el
+navegador con un diccionario (`idioma_en.py`), sin poder traducir lo que el dueño agregaba.
+**Paridad:** se compara el código y sus datos contra el mensaje del legacy, no el texto.
+
+## D-016 · Una empresa por usuario
+
+**Decisión:** en las fases 1 a 3 cada usuario pertenece a una sola empresa. `empresa_actual()` y `rol_actual()`
+se leen de los datos de la sesión de Supabase Auth (`app_metadata`), que solo escribe el servidor, y se
+verifican contra `miembros`.
+**Por qué:** es lo que necesitan los contratistas piloto, y simplifica las políticas. Se puede ampliar a varias
+empresas con un selector sin cambiar las tablas de negocio, porque todas llevan `empresa_id`.
+
+## D-017 · Lo que ve el PM sigue al legacy
+
+**Decisión:** donde el modelo de datos y el legacy no coincidían, manda el legacy:
+- **Órdenes de trabajo:** el PM ve solo las emitidas, confirmadas y aprobadas. Nunca las pagadas ni las
+  canceladas: el estado "pagada" revela pagos.
+- **Órdenes de cambio:** el PM ve las autorizadas y las facturadas, con descripción, días de impacto y fecha
+  de autorización; nunca costo, precio, margen, condición de pago ni fecha de cobro.
+- **Avisos:** el PM ve solo los que él levantó, con su respuesta.

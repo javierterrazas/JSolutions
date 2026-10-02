@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm 10 no corre scripts de instalación salvo los de esta lista.
+# supabase descarga su binario; esbuild, sharp y unrs-resolver traen binarios nativos.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - supabase
+  - unrs-resolver

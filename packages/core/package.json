@@ -1,0 +1,13 @@
+{
+  "name": "@ijm/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reglas de negocio puras de IJM: sin base de datos ni red.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

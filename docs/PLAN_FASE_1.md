@@ -32,7 +32,7 @@ Las pantallas (fases 2 y 3), el importador desde Google Sheets (fase 3), la cola
 ## Antes de empezar
 
 - **Cuentas:** GitHub, Supabase y Vercel.
-- **Herramientas:** Node 20 o más reciente, pnpm, la CLI de Supabase y Docker (para la base local).
+- **Herramientas:** Node 22 o más reciente (ver D-011), pnpm, la CLI de Supabase y Docker (para la base local).
 - **Modelo:** Claude Opus 5.5 con esfuerzo alto para toda la fase. Para revisar las políticas RLS del
   paso 4, conviene una segunda revisión con Claude Fable 5.1, si el plan lo incluye.
 

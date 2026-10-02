@@ -1,0 +1,2 @@
+-- Datos de prueba para la base local (`supabase db reset` los carga después de las migraciones).
+-- En el paso 3: dos empresas y, en cada una, un dueño y dos PMs con usuarios reales de Supabase Auth.
