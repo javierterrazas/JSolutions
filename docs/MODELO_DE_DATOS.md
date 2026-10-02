@@ -1,140 +1,161 @@
 # Modelo de datos
 
-De las 28 hojas del libro de Google Sheets a tablas de PostgreSQL. Este documento es la propuesta de
-partida para la fase 1: ajústala donde el código de `legacy/` diga otra cosa, y anota el cambio en
-`docs/DECISIONES.md`.
+De las 28 hojas del libro de Google Sheets a 44 tablas de PostgreSQL. **La fuente de verdad son las migraciones
+de `supabase/migrations/`**; este documento las explica. El esquema de Drizzle (`packages/db/src/esquema/`) se
+genera desde ellas con `pnpm db:esquema`.
 
 ## Principios
 
-- **Llave primaria `uuid`** en todas las tablas, más un **folio legible por empresa** donde el legacy lo
-  tenía (`OB-001`, `BIT-0001`, `OT-0001`…). Los folios salen de una tabla `folios (empresa_id, prefijo,
-  ultimo)` que se incrementa dentro de la misma transacción, con bloqueo de renglón. Nunca se calculan
-  leyendo la última fila, como hacía el legacy.
-- **`empresa_id` en toda tabla de negocio**, con llave foránea e índice, y RLS por empresa.
-- **Relaciones reales.** Donde el legacy guardaba texto (`area_id|partida`, listas separadas por `|`,
-  enlaces de fotos juntos), aquí van llaves foráneas y tablas hijas.
-- **Nada se borra.** Los registros anulables llevan `estado` (`vigente` / `anulado`). Las correcciones se
-  registran en `correcciones`.
-- **Auditoría básica** en todas: `creado_en`, `creado_por`, `actualizado_en`.
-- **Fechas:** `date` para días de negocio (el día del cierre, la fecha de inicio) y `timestamptz` para
-  momentos (cuándo se envió algo). Los días de negocio se interpretan en la zona horaria de la empresa.
-- **Dinero en `numeric(12,2)`**, nunca en `float`.
+- **Llave primaria `uuid`** en todas las tablas, más un **folio legible por empresa** donde una persona lo lee o
+  lo cita: `OB-001`, `BIT-0001`, `GTO`, `BLQ`, `PUN`, `OT`, `PAG`, `OC`, `NC`, `COB`. Los da
+  `siguiente_folio(empresa, prefijo, dígitos)` dentro de la misma transacción, con bloqueo de renglón (D-005).
+- **`empresa_id` en toda tabla de negocio**, y **llaves foráneas compuestas** `(empresa_id, x_id)`: la base
+  misma impide que un registro de una empresa apunte a algo de otra. Lo que cuelga de una obra lleva además
+  `obra_id`, con llaves `(obra_id, x_id)`; y lo que cuelga de un espacio, `(espacio_id, partida_obra_id)`. Así un
+  avance no puede apuntar a la partida de otra obra, ni la mano de obra de un baño a una partida de la cocina
+  (D-018).
+- **Nada se borra.** Los registros anulables llevan `estado` (`vigente` / `anulado`): bitácora, avance, mano de
+  obra, gastos, pagos y cobros. Las ediciones y anulaciones quedan en `correcciones`.
+- **Auditoría:** `creado_en`, `creado_por` (el **miembro** que capturó) y `actualizado_en`, que un disparador
+  renueva en cada edición.
+- **Fechas:** `date` para días de negocio y `timestamptz` para momentos (D-006).
+- **Dinero en `numeric(12,2)`**; ninguna columna usa punto flotante.
+- **Estados y listas fijas como `enum`**, con los valores del legacy (D-020).
+- **Lo que se muestra y lo captura cada empresa, en dos idiomas:** `nombre_es` (obligatorio) y `nombre_en`
+  (D-015).
+- **RLS activado en todas las tablas.** Sin políticas, nadie con sesión de usuario lee ni escribe nada: las
+  políticas llegan en el paso 4. Una prueba falla si una tabla queda sin RLS.
 
 ## Quién lee qué
 
-Leyenda: **D** = dueño y administrador · **PM** = el PM, solo en sus obras asignadas · **—** = sin acceso.
+Leyenda: **D** = dueño y administrador · **PM** = el PM, solo en sus obras asignadas · **—** = sin acceso ·
+💲 = tabla con dinero, solo dueño y administrador (D-002). Las columnas que el PM no debe ver en tablas que sí
+lee se le dan por **vistas** (D-013, paso 4).
 
-La escritura de los flujos importantes (cerrar el día, aprobar un trabajo, inspeccionar) pasa por funciones
-del servidor que validan las reglas; RLS es la última línea de defensa, no la única.
+La escritura de los flujos importantes pasa por funciones del servidor que validan las reglas; RLS es la última
+línea de defensa, no la única.
 
 ### Empresa y usuarios
 
-| Tabla | Viene de | Columnas principales | D | PM |
+| Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `empresas` | Config | `nombre`, `ciudad`, `zona_horaria`, `idioma` | lee y escribe | lee `nombre` |
-| `configuracion` | Config | una fila por empresa: `impuesto`, `limite_compra_pm`, `sla_bloqueo_horas`, `sla_oc_horas`, `umbral_oc_menor`, `margen_minimo_oc`, `horas_sin_recibo`, metas de indicadores | lee y escribe | lee `limite_compra_pm` y `horas_sin_recibo` |
-| `miembros` | Usuarios | `user_id` (Supabase Auth), `empresa_id`, `rol` (`dueno`/`admin`/`pm`), `nombre`, `telefono`, `idioma`, `activo`, `tarjeta_ultimos4`, `correo_avisos` | lee y escribe | lee su propio renglón |
+| `empresas` | Config | `nombre`, `ciudad`, `zona_horaria` (por defecto `America/Chicago`), `idioma` | lee y escribe | vista: `nombre`, `zona_horaria` |
+| `configuracion` | Config | una fila por empresa: `impuesto`, `limite_compra_pm`, `sla_bloqueo_horas`, `sla_oc_horas`, `umbral_oc_menor`, `margen_minimo_oc`, `horas_sin_recibo` | lee y escribe | vista: `limite_compra_pm`, `horas_sin_recibo`, `sla_bloqueo_horas` |
+| `metas_indicadores` | Config (`META_*`, `MAX_*`) y metas fijas del código | `indicador`, `meta`; sin renglón vale la del legacy (D-019) | lee y escribe | — |
+| `miembros` | Usuarios | `user_id` (Supabase Auth, único: una empresa por usuario, D-016), `rol` (`dueno`/`admin`/`pm`), `nombre`, `telefono`, `idioma`, `activo`, `tarjeta_ultimos4`, `correo_avisos` | lee y escribe | lee su propio renglón |
 | `folios` | (nueva) | `prefijo`, `ultimo` | solo el servidor | solo el servidor |
 
-El PIN de 4 dígitos del legacy se reemplaza por Supabase Auth. Queda por decidir el método de entrada del PM
-(teléfono con código, correo o PIN en un dispositivo ya verificado): ver decisiones pendientes en el plan.
+`admin` y `dueno` tienen hoy los mismos permisos; quedan separados para poder distinguirlos después (decisión
+pendiente 5 del plan). El PIN de 4 dígitos del legacy se reemplaza por Supabase Auth.
 
 ### Catálogo
 
-| Tabla | Viene de | Columnas principales | D | PM |
+| Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `plantillas_partida` | Partidas_Catalogo | `tipo_obra`, `orden`, `partida`, `hito_calidad`, `peso`, `dias`, `quien`, `paralelo`, `espera`, `etapa` | lee y escribe | — |
-| `puntos_control` | Checklist_Calidad | `hito`, `orden`, `punto`, `requiere_foto` | lee y escribe | lee |
-| `subcontratistas` | Subcontratistas | `nombre`, `oficio`, `telefono`, `contacto`, `correo`, `seguro_vence`, `licencia`, `licencia_vence`, `w9`, `activo` | lee y escribe | lee `nombre`, `oficio`, `telefono` |
+| `tipos_espacio` | Partidas_Catalogo.tipo_obra | Baño, Cocina, Closet…; `es_generales` marca "Generales de obra" (uno por empresa) | lee y escribe | lee |
+| `oficios` | Subcontratistas.oficio, Partidas_Catalogo.quien | Plomería, Eléctrico, Tile…; `requiere_licencia` (Texas: plomería, electricidad, HVAC) | lee y escribe | lee |
+| `etapas` | Partidas_Catalogo.etapa | etapas del presupuesto: Demolición, Plomería, Tile… | lee y escribe | lee |
+| `hitos_calidad` | Checklist_Calidad.hito | `clave` (`PC1`…), `nombre`; `exige_prueba_agua` (el PC3) | lee y escribe | lee |
+| `puntos_control` | Checklist_Calidad | las preguntas de cada hito, `requiere_foto` | lee y escribe | lee |
+| `plantillas_partida` | Partidas_Catalogo | por tipo de espacio: `orden`, `nombre`, `hito_id`, `peso`, `dias`, `responsable` (`cuadrilla`/`pm`/`subcontratista` + `oficio_id`), `paralelo`, `espera`, `etapa_id` | lee y escribe | — |
+| `subcontratistas` | Subcontratistas | `nombre` (único), `oficio_id`, `telefono`, `contacto`, `correo`, `seguro_vence`, `licencia`, `licencia_vence`, `w9`, `activo` | lee y escribe | vista: `nombre`, `oficio`, `telefono` |
 | `trabajadores` | Trabajadores | `nombre`, `puesto`, `tipo_pago` (`hora`/`dia`), `telefono`, `activo` | lee y escribe | lee |
-| `tarifas_trabajador` 💲 | Trabajadores.tarifa | `trabajador_id`, `tarifa`, `vigente_desde` | lee y escribe | — |
+| `tarifas_trabajador` 💲 | Trabajadores.tarifa | `trabajador_id`, `tarifa`, `vigente_desde`: un aumento no cambia el costo de lo pasado | lee y escribe | — |
 
-El PM necesita `tipo_pago` (para ofrecer día completo o medio día), pero nunca la tarifa: por eso se separa.
+El legacy deducía cosas del texto: el tipo "Generales", la licencia por la palabra "plomer" en el oficio, el PC3
+porque su nombre empieza con "PC3", y si una partida la hace un sub porque `quien` no dice "Cuadrilla" ni "PM".
+Aquí son columnas (D-021).
 
 ### Obras
 
-| Tabla | Viene de | Columnas principales | D | PM |
+| Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `obras` | Proyectos | `folio`, `cliente`, `telefono_cliente`, `direccion`, `etiqueta`, `pm_id`, `fecha_inicio`, `fecha_fin_estimada`, `fecha_fin_real`, `estado`, `notas` | lee y escribe | lee |
-| `obras_finanzas` 💲 | Proyectos.contrato_original | `obra_id`, `contrato_original` | lee y escribe | — |
-| `espacios` | Areas | `obra_id`, `tipo`, `nombre`, `pies2`, `pies_lineales`, `orden` | lee y escribe | lee |
-| `partidas_obra` | Partidas_Obra | `espacio_id`, la copia de la plantilla (`orden`, `partida`, `hito_calidad`, `peso`, `dias`, `quien`, `paralelo`, `espera`, `etapa`) y `estado` (`activa`/`quitada`) | lee y escribe | lee |
-| `presupuesto_etapas` 💲 | Presupuesto | `obra_id`, `espacio_id`, `etapa`, `monto`, `cantidad`, `unidad`, `notas` | lee y escribe | — |
-| `plan_semanal` | Plan_Semanal | `semana`, `obra_id`, `espacio_id`, `partida`, `fin_previsto` | lee | — |
+| `obras` | Proyectos | `folio`, `cliente`, `telefono_cliente` (10 dígitos o más), `direccion`, `pm_id`, `fecha_inicio`, `fecha_fin_estimada` (no antes del inicio), `fecha_fin_real`, `estado`, `notas` | lee y escribe | lee |
+| `obras_finanzas` 💲 | Proyectos.contrato_original | `contrato_original` (mayor a cero) | lee y escribe | — |
+| `espacios` | Areas | `tipo_espacio_id`, `nombre`, `orden`; **dos medidas** (D-014): `pies2_cotizados`, `pies_lineales_cotizados` y `pies2_verificados`, `pies_lineales_verificados` con `verificado_por` y `verificado_en` | lee y escribe | lee; verifica la medida mediante el servidor |
+| `partidas_obra` | Partidas_Obra | la copia de la plantilla (`plantilla_id` de origen) o una partida solo de esta obra; `estado` (`activa`/`quitada`) | lee y escribe | lee |
+| `presupuesto_etapas` 💲 | Presupuesto | `espacio_id`, `etapa_id` (nulo = "Otras partidas"), `monto`, `notas`; uno por espacio y etapa | lee y escribe | — |
+| `plan_semanal` | Plan_Semanal | `semana` (lunes), `partida_obra_id`, `fin_previsto`: lo que el cronograma preveía, congelado | lee | — |
 
-El presupuesto del legacy tiene renglones antiguos por partida (`nivel` vacío) y nuevos por etapa
-(`nivel = 'Etapa'`). El importador de la fase 3 convierte los antiguos a su etapa: aquí solo existe el
-presupuesto por etapa.
+La etiqueta de la obra ("Baño + Closet") y los pies² totales no se guardan: salen de sus espacios.
+`presupuesto_etapas` no guarda cantidad ni unidad: son los pies² vigentes del espacio (D-014).
 
 ### Lo que registra el PM
 
-| Tabla | Viene de | Columnas principales | D | PM |
+| Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `bitacora` | Bitacora | `folio`, `obra_id`, `dia` (date), `usuario_id`, `sin_trabajo`, `motivo`, `incidencia`, `tardio`, `fotos_comprometidas`, `estado`, `enviado_en` | lee y escribe | lee y crea |
-| `bitacora_partidas` | Bitacora.partidas | `bitacora_id`, `partida_obra_id` | lee | lee y crea |
-| `bitacora_subs` | Bitacora.subs_presentes | `bitacora_id`, `orden_trabajo_id`, `llego` | lee | lee y crea |
-| `avance` | Avance | `obra_id`, `partida_obra_id`, `estado` (`en_progreso`/`terminada`), `dia`, `usuario_id`, `estado_registro` | lee y escribe | lee y crea |
-| `mano_obra` | Mano_Obra | `obra_id`, `partida_obra_id`, `trabajador_id`, `horas` (días si es por día), `dia`, `usuario_id`, `estado` | lee y escribe | lee y crea |
-| `gastos` | Gastos | `obra_id`, `partida_obra_id`, `categoria`, `proveedor`, `descripcion`, `monto`, `metodo_pago`, `tarjeta_ultimos4`, `origen` (`pm`/`oficina`), `revision`, `usuario_id`, `estado` | lee y escribe | los que él registró |
-| `avisos` | Bloqueos | `obra_id`, `tipo`, `descripcion`, `detiene_avance`, `estado`, `respuesta`, `respondido_en`, `orden_cambio_id` | lee y escribe | lee y crea |
-| `inspecciones` | Calidad | `obra_id`, `espacio_id`, `hito`, `partida_obra_id`, `resultado`, `puntos_ok`, `puntos_total`, `no_aplica`, `defectos`, `usuario_id` | lee y escribe | lee y crea |
-| `pruebas_agua` | Pruebas_Agua | `obra_id`, `espacio_id`, `inicio`, `fin`, `horas`, `resultado`, `usuario_id` | lee | lee y crea |
-| `punch_list` | Punch_List | `obra_id`, `item`, `origen`, `responsable`, `fecha_compromiso`, `estado`, `fecha_cierre` | lee y escribe | lee y escribe |
-| `fotos` | todos los `*_url` y `fotos_pendientes` | `obra_id`, `ref_tipo` (`bitacora`/`inspeccion`/`prueba_agua`/`aviso`/`punch`/`gasto`), `ref_id`, `indice`, `storage_path`, `tomada_en`, `subida_por` | lee | lee y crea en sus obras |
+| `bitacora` | Bitacora | `folio`, `obra_id`, `dia`, `sin_trabajo` + `motivo_sin_trabajo` (obligatorio si no hubo trabajo), `incidencia`, `tardio`, `fotos_comprometidas` (0 a 10), `estado`, `enviado_en`. **Un solo cierre vigente por obra y día** | lee y escribe | lee y crea |
+| `bitacora_partidas` | Bitacora.partidas | las partidas trabajadas ese día | lee | lee y crea |
+| `bitacora_subs` | Bitacora.subs_presentes | `orden_trabajo_id`, `llego` | lee | lee y crea |
+| `avance` | Avance | `partida_obra_id`, `estado` (`en_progreso`/`terminada`), `dia`, `bitacora_id` (D-022), `estado_registro` | lee y escribe | lee y crea |
+| `mano_obra` | Mano_Obra | `espacio_id`, `partida_obra_id` (opcional), `trabajador_id`, `cantidad` (horas, o días si cobra por día), `dia`, `bitacora_id`, `estado` | lee y escribe | lee y crea |
+| `gastos` | Gastos | `folio`, `espacio_id` (D-022), `partida_obra_id` (opcional), `dia`, `categoria`, `proveedor`, `descripcion`, `monto`, `metodo_pago`, `tarjeta_ultimos4`, `origen` (`pm`/`oficina`), `revision`, `estado` | lee y escribe | los que él registró |
+| `avisos` | Bloqueos | `folio`, `tipo`, `descripcion` (10 caracteres o más), `detiene_avance`, `estado`, `respuesta`, `respondido_en`, `respondido_por` | lee y escribe | los que él levantó (D-017) |
+| `inspecciones` | Calidad | `espacio_id`, `hito_id`, `partida_obra_id`, `resultado`, `puntos_ok`, `puntos_total`, `realizada_en`; aprobado si y solo si todos los puntos que aplican cumplen | lee y escribe | lee y crea |
+| `inspeccion_respuestas` | Calidad.defectos y no_aplica | por pregunta: `respuesta` (`cumple`/`no_cumple`/`no_aplica`) y el texto de la pregunta como estaba ese día | lee | lee y crea |
+| `pruebas_agua` | Pruebas_Agua | `espacio_id`, `inicio`, `fin`, `resultado` (`en_curso`/`sin_fugas`/`con_fuga`); una en curso por espacio. Las horas se calculan | lee | lee y crea |
+| `punch_list` | Punch_List | `folio`, `item`, `origen` (`defecto`/`cambio_alcance`/`expectativa`), `responsable`, `fecha_compromiso`, `estado`, `cerrado_en` | lee y escribe | lee y escribe |
+| `fotos` | todos los `*_url` y `fotos_pendientes` | `ref_tipo`, `ref_id`, `indice`, `storage_path`, `tomada_en`; **`unique (ref_tipo, ref_id, indice)`** | lee | lee y crea en sus obras |
 
-Las fotos pendientes de un cierre se calculan: `bitacora.fotos_comprometidas` menos las fotos que llegaron.
-La restricción `unique (ref_tipo, ref_id, indice)` garantiza que un reintento no duplique una foto, como en
-el legacy. Los archivos van a Supabase Storage con ruta `empresa/obra/…` y políticas propias.
-
-El PM ve en `gastos` solo lo que él registró; las compras de la oficina quedan fuera de su vista.
+Las fotos pendientes de un cierre son `bitacora.fotos_comprometidas` menos las fotos que llegaron. El número
+(`indice`) garantiza que un reintento sin señal no duplique una foto. Las fotos de la prueba de agua: índice 1
+al inicio, 2 al final. El recibo de un gasto es una foto con `ref_tipo = 'gasto'`.
 
 ### Subcontratos y cambios
 
-| Tabla | Viene de | Columnas principales | D | PM |
+| Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `ordenes_trabajo` | Ordenes_Trabajo | `folio`, `obra_id`, `subcontratista_id`, `partida_obra_id`, `oficio`, `alcance`, `inicio_programado`, `fin_programado`, `estado`, `confirmada_en`, `se_presento`, `aprobada_en`, `aprobada_por`, `faltas` | lee y escribe | lee; confirma, marca llegada y aprueba mediante el servidor |
-| `ordenes_trabajo_precios` 💲 | Ordenes_Trabajo.precio | `orden_trabajo_id`, `precio` | lee y escribe | — |
-| `pagos_sub` 💲 | Pagos_Sub | `orden_trabajo_id`, `fecha`, `concepto`, `monto`, `metodo`, `referencia`, `estado` | lee y escribe | — |
-| `ordenes_cambio` | Ordenes_Cambio | `folio`, `obra_id`, `fecha_hallazgo`, `motivo`, `descripcion`, `dias_impacto`, `estado`, `emitida_en`, `autorizada_en`, `cobrada_en`, `condicion_pago`, `aviso_id` | lee y escribe | lee solo las autorizadas |
-| `ordenes_cambio_montos` 💲 | Ordenes_Cambio | `orden_cambio_id`, `costo_estimado`, `precio_cliente` | lee y escribe | — |
-| `no_calidad` 💲 | No_Calidad | `obra_id`, `tipo`, `causa`, `subcontratista_id`, `costo`, `dias_perdidos`, `descripcion`, `estado` | lee y escribe | — |
+| `ordenes_trabajo` | Ordenes_Trabajo | `folio`, `subcontratista_id`, `espacio_id`, `partida_obra_id` (obligatoria: sin partida no hay costeo), `alcance`, `inicio_programado`, `fin_programado`, `estado`, `confirmada_en`, `se_presento`, `aprobada_en`, `aprobada_por`, `faltas` | lee y escribe | emitidas, confirmadas y aprobadas (D-017); confirma, marca llegada y aprueba mediante el servidor |
+| `ordenes_trabajo_precios` 💲 | Ordenes_Trabajo.precio | `precio` (cerrado, mayor a cero) | lee y escribe | — |
+| `pagos_sub` 💲 | Pagos_Sub | `folio`, `orden_trabajo_id`, `fecha`, `concepto` (`anticipo`/`parcial`/`liquidacion`), `monto`, `metodo`, `referencia`, `estado` | lee y escribe | — |
+| `ordenes_cambio` | Ordenes_Cambio | `folio`, `fecha_hallazgo`, `motivo`, `descripcion`, `dias_impacto`, `estado` (`propuesta`/`autorizada`/`rechazada`/`facturada`), `emitida_en`, `autorizada_en`, `facturada_en`, `condicion_pago`, `aviso_id` | lee y escribe | vista: autorizadas y facturadas, sin `condicion_pago` ni `facturada_en` (D-017) |
+| `ordenes_cambio_montos` 💲 | Ordenes_Cambio | `costo_estimado`, `precio_cliente` | lee y escribe | — |
+| `no_calidad` 💲 | No_Calidad | `folio`, `tipo` (`retrabajo`/`garantia`), `causa`, `subcontratista_id`, `costo`, `dias_perdidos`, `descripcion`, `estado`, `cerrado_en` | lee y escribe | — |
 
-El margen de una orden de cambio se calcula (`(precio - costo) / precio`); no se guarda.
+El margen de una orden de cambio se calcula (`(precio - costo) / precio`); no se guarda. Si de un aviso sale una
+orden de cambio, la orden apunta al aviso (`aviso_id`); el legacy marcaba además el aviso (`genera_oc`), que
+aquí se deduce.
 
 ### Dinero y cierre
 
-| Tabla | Viene de | Columnas principales | D | PM |
+| Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `cobros` 💲 | Cobros | `obra_id`, `fecha`, `concepto`, `monto`, `metodo`, `referencia`, `estado` | lee y escribe | — |
-| `entregas` | Entrega | `obra_id`, `fecha_entrega`, `garantia_meses`, `garantia_vence`, `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido`, `visita_11m`, `notas` | lee y escribe | lee `fecha_entrega` |
-| `obras_cerradas` 💲 | Obras_Cerradas | la foto fija del cierre: fechas, días de ciclo, contrato, órdenes de cambio, presupuesto, costos por cubo, margen, desvío, cobrado, no calidad, pies² | lee | — |
-| `historico_etapas` 💲 | (nueva) | al cerrar una obra: costo real por etapa y por pie² de cada espacio | lee | — |
-| `historico_duraciones` | (nueva) | al cerrar una obra: días reales por partida | lee | — |
-
-Las dos tablas nuevas de histórico resuelven algo que el legacy recalculaba desde cero en cada carga: los
-costos unitarios y las duraciones reales se guardan una vez, al cerrar la obra.
+| `cobros` 💲 | Cobros | `folio`, `fecha`, `concepto`, `monto`, `metodo`, `referencia`, `estado` | lee y escribe | — |
+| `entregas` | Entrega | una por obra: `fecha_entrega`, `garantia_meses`, `garantia_vence`, `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido`, `visita_11m`, `notas` | lee y escribe | vista: `fecha_entrega` |
+| `obras_cerradas` 💲 | Obras_Cerradas | la foto fija del cierre: fechas, días de ciclo, contrato, órdenes de cambio, presupuesto, materiales, cuadrilla, subcontratos, costo total, margen, desvío, cobrado, no calidad, días reportados, pies² | lee | — |
+| `historico_etapas` 💲 | (nueva) | al cerrar: por espacio y etapa, presupuestado, costo real, pies² y costo por pie² | lee | — |
+| `historico_duraciones` | (nueva) | al cerrar: días planeados y reales de cada partida | lee | — |
 
 ### Sistema
 
-| Tabla | Viene de | Columnas principales | D | PM |
+| Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `correcciones` | Correcciones | `usuario_id`, `tabla`, `registro_id`, `accion`, `campo`, `antes`, `despues`, `motivo` | lee | — (se escribe desde el servidor) |
+| `correcciones` | Correcciones | `tabla`, `registro_id`, `accion` (`editar`/`anular`/`agregar`/`quitar`/`dia_olvidado`/`medida_verificada`), `campo`, `antes`, `despues`, `motivo` (5 caracteres o más), quién y cuándo | lee | — (la escribe el servidor) |
 
 **Lo que no se traslada:** la hoja `Errores` se reemplaza por un servicio de registro de errores; el sello
 `ULTIMO_CAMBIO` por Supabase Realtime; los respaldos y el chequeo de salud del libro por los respaldos del
-proveedor y las restricciones de la base (llaves foráneas, `not null`, `unique`).
+proveedor y las restricciones de la base; `ID_CARPETA_DRIVE` por Supabase Storage.
 
 ## Lo que se calcula y no se guarda
 
-- El avance ponderado de cada obra y espacio.
+- El avance ponderado de cada obra y espacio, y el estado actual de cada partida.
 - El cronograma: plan, previsión, atraso previsto, "Esta semana".
-- Los costos por etapa y por cubo (materiales, cuadrilla, subcontratos) de una obra en curso.
+- Los costos por etapa y por pie² de una obra en curso.
+- Las horas de una prueba de agua, el margen de una orden de cambio, las horas de respuesta a un aviso.
 - Los indicadores.
 
 Estos cálculos viven en `packages/core` como funciones puras, con sus pruebas de paridad contra el legacy.
 
-## Pendiente de revisar en `legacy/`
+## Lo que la base garantiza por sí misma
 
-- ~~Dónde guarda el legacy las **medidas verificadas** por el PM (`pmMedida`)~~: sobrescribe `Areas.pies2` y
-  deja rastro en `Correcciones`. Resuelto en D-014: el espacio guarda las dos medidas (se aplica en el paso 2).
-- Qué columnas exactas usa `Obras_Cerradas` en cada indicador del histórico.
+Probado en `packages/db/pruebas/integracion/modelo.test.ts`: ninguna llave cruza empresas; un solo cierre vigente
+por obra y día; "sin trabajo" exige motivo; una foto con el mismo número no entra dos veces; la entrega no antes
+del inicio; el teléfono con 10 dígitos; la medida verificada con quién y cuándo; dinero en `numeric(12,2)` y
+fuera de las tablas que leerá el PM. Y en `folios.test.ts`: 100 escrituras simultáneas reciben 100 folios
+distintos.
+
+## Pendiente
+
+- Qué columnas exactas usa `Obras_Cerradas` en cada indicador del histórico: se confirma al trasladar los
+  indicadores (paso 5).
+- Las vistas del PM y las políticas RLS: paso 4.

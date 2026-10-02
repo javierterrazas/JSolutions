@@ -139,3 +139,67 @@ empresas con un selector sin cambiar las tablas de negocio, porque todas llevan 
 - **Órdenes de cambio:** el PM ve las autorizadas y las facturadas, con descripción, días de impacto y fecha
   de autorización; nunca costo, precio, margen, condición de pago ni fecha de cobro.
 - **Avisos:** el PM ve solo los que él levantó, con su respuesta.
+
+## D-018 · Llaves foráneas compuestas: la base impide cruzar empresas y obras
+
+**Decisión:** cada tabla de negocio tiene `unique (empresa_id, id)` y se referencia con llaves compuestas
+`(empresa_id, x_id)`. Lo que cuelga de una obra se referencia con `(obra_id, x_id)`, y las partidas desde un
+espacio con `(espacio_id, partida_obra_id)`.
+**Por qué:** RLS evita que un usuario **lea** otra empresa, pero no evita que un error del servidor **escriba**
+un registro de la empresa A que apunte a algo de la B, ni un avance de una obra sobre la partida de otra. Con
+llaves compuestas, la base lo rechaza. Cuesta un índice único más por tabla.
+**Descartado:** llaves simples confiando en el servidor; disparadores de validación.
+
+## D-019 · Metas de los indicadores en su propia tabla
+
+**Decisión:** `metas_indicadores (empresa_id, indicador, meta)`. Sin renglón, vale la meta del legacy, que vive
+en `packages/core`. Se conservan en `configuracion` `IMPUESTO` y `UMBRAL_OC_MENOR`, aunque el código del legacy
+no los usa: están en su libro y el dueño los captura.
+**Por qué:** solo 5 de las 19 metas estaban en Config (`META_*`, `MAX_*`); las demás estaban fijas en el código
+(por ejemplo, PPC = 0.8). `CLAUDE.md` pide metas configurables.
+
+## D-020 · Listas fijas como `enum`, con los valores del legacy
+
+**Decisión:** estados y listas fijas son tipos `enum` de PostgreSQL, en forma canónica sin acentos
+(`condicion_oculta`, `tarjeta_empresa`), traducidos al mostrarse (D-015). Los valores salen del código del
+legacy y de sus pantallas: categorías de gasto, tipos de aviso, orígenes del punch list, motivos de orden de
+cambio, conceptos y métodos de pago, causas de no calidad, motivos de "hoy no hubo trabajo".
+**Cuidado:** a un `enum` se le pueden agregar valores, pero quitar uno exige una migración más cuidadosa.
+Lo que cada empresa define (tipos de espacio, oficios, etapas, puntos de control) es tabla, no `enum`.
+
+## D-021 · Lo que el legacy deducía del texto ahora son columnas
+
+**Decisión:** `tipos_espacio.es_generales` (antes, el tipo se llamaba "Generales"); `oficios.requiere_licencia`
+(antes, una expresión sobre el nombre del oficio); `hitos_calidad.exige_prueba_agua` (antes, el nombre empezaba
+con "PC3"); `responsable` = `cuadrilla` / `pm` / `subcontratista` con su `oficio_id` (antes, el texto de
+`quien`). Tipos de espacio, oficios, etapas y puntos de control son tablas con nombre en dos idiomas.
+**Por qué:** con los nombres traducibles (D-015), deducir reglas del texto se rompe en cuanto alguien renombra
+algo o lo escribe en inglés. **Paridad:** el importador de la fase 3 llena estas columnas con las mismas reglas
+del legacy.
+
+## D-022 · Ajustes al modelo propuesto
+
+- **`espacio_id` en `gastos` y `mano_obra`**, con la partida opcional: un gasto sin partida va a Generales de
+  obra, como en el legacy.
+- **`bitacora_id` en `avance` y `mano_obra`:** anular un cierre encuentra sus registros por la llave, no por
+  obra, día y usuario.
+- **Un solo cierre vigente por obra y día**, con un índice único parcial. El legacy lo revisaba en el código.
+- **`inspeccion_respuestas`**, una tabla hija con la respuesta a cada pregunta y su texto de ese día, en lugar
+  de listas de defectos y de "no aplica" en texto.
+- **La orden de cambio apunta al aviso** del que salió (`aviso_id`), y el aviso no apunta a la orden: la misma
+  información en un solo sentido, sin llaves circulares.
+- **`creado_por` es el miembro** que capturó el registro; quién lo hizo dentro de la empresa, no la cuenta de
+  Auth.
+- **Folios** solo donde una persona los lee o los cita: OB, BIT, GTO, BLQ, PUN, OT, PAG, OC, NC, COB.
+  El cierre tardío del dueño ya no usa prefijos propios (BIA, AVA, MOA): con transacciones no hace falta.
+
+## D-023 · El esquema de Drizzle se genera desde las migraciones
+
+**Decisión:** las migraciones SQL son la fuente de verdad. `pnpm db:esquema` genera
+`packages/db/src/esquema/generado/schema.ts` desde la base local (drizzle-kit pull) y corrige lo que el
+generador deja mal (la referencia a `auth.users`, un archivo de relaciones inválido). Una prueba compara tablas,
+columnas y nulos del esquema contra la base, y falla si alguien cambió una migración sin regenerarlo.
+**Por qué:** escribir el mismo esquema dos veces, en SQL y en TypeScript, garantiza que tarde o temprano digan
+cosas distintas. RLS, funciones y políticas solo se pueden expresar en SQL.
+**Descartado:** escribir el esquema de Drizzle a mano; generar las migraciones desde Drizzle (no expresa RLS ni
+las llaves compuestas con la claridad que hace falta revisar).
