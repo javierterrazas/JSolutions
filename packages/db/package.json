@@ -1,0 +1,21 @@
+{
+  "name": "@ijm/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Esquema de Drizzle, tipos y acceso a datos de IJM.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./esquema": "./src/esquema/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.3",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.11"
+  }
+}

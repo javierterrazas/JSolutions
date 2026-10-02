@@ -1,0 +1,9 @@
+# El legacy es de solo lectura
+legacy/
+pnpm-lock.yaml
+supabase/.temp/
+.next/
+next-env.d.ts
+coverage/
+# Los documentos tienen su propio formato
+*.md

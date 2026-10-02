@@ -135,5 +135,6 @@ Estos cálculos viven en `packages/core` como funciones puras, con sus pruebas d
 
 ## Pendiente de revisar en `legacy/`
 
-- Dónde guarda el legacy las **medidas verificadas** por el PM (`pmMedida`): no hay una hoja con ese nombre.
+- ~~Dónde guarda el legacy las **medidas verificadas** por el PM (`pmMedida`)~~: sobrescribe `Areas.pies2` y
+  deja rastro en `Correcciones`. Resuelto en D-014: el espacio guarda las dos medidas (se aplica en el paso 2).
 - Qué columnas exactas usa `Obras_Cerradas` en cada indicador del histórico.

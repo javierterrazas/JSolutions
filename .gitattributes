@@ -1,0 +1,5 @@
+# Finales de línea LF en el repositorio, también en Windows
+* text=auto eol=lf
+*.xlsx binary
+*.jpg binary
+*.png binary

@@ -7,3 +7,5 @@ supabase/.temp/
 coverage/
 legacy/.trabajo/
 __pycache__/
+*.tsbuildinfo
+next-env.d.ts
