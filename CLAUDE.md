@@ -47,6 +47,7 @@ apps/web/          Next.js: pantallas del dueño y del PM, y la capa de servidor
 packages/core/     reglas de negocio puras (sin base de datos ni red): cronograma, etapas, avance,
                    validaciones, indicadores. Aquí vive la paridad con el legacy
 packages/db/       esquema Drizzle, tipos y acceso a datos
+packages/servidor/ los flujos que escriben: validan con core y escriben con la identidad del usuario (D-035)
 supabase/          configuración local, migraciones SQL, políticas RLS y datos de prueba
 legacy/            el sistema anterior y sus pruebas (solo lectura)
 docs/              plan de fases, modelo de datos y registro de decisiones

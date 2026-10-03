@@ -507,3 +507,58 @@ las horas guardadas; `core` las calcula con las fechas (no hay columna de horas 
 simulado, donde el legacy guarda las horas al responder, coinciden siempre.
 **Para el importador (fase 3):** si un aviso del legacy trae horas de respuesta pero sus fechas no tienen hora,
 reconstruir la hora de respuesta como apertura + horas guardadas, para no perder el dato.
+
+## D-035 · La capa del servidor
+
+**Decisión:**
+- **Dónde va:** en `packages/servidor`, un paquete propio y no dentro de `apps/web`. Así se prueba contra la base
+  sin levantar Next, y en la fase 2 cada pantalla la llama con una envoltura delgada.
+- **Cómo escribe** (D-026, D-027): se conecta como `ijm_servidor` y cada operación es una transacción
+  (`enNombreDe`). En ella toma `servidor_app`, fija las dos variables de identidad del usuario, lee con su RLS,
+  valida con `packages/core` y escribe. Si algo falla, no queda nada a medias.
+- **Las entradas:** se validan con Zod. Un dato mal formado es `datos_invalidos`, con cada campo y su problema;
+  las reglas son de `core`.
+- **"Ahora":** cada flujo lo recibe como argumento opcional, igual que `core`, para que las pruebas sean
+  repetibles.
+- **Los días de negocio** llegan de la base como texto `AAAA-MM-DD`: la conexión desactiva la conversión de
+  `date` a `Date`, que daría la medianoche UTC, el día anterior en Austin (regla 5).
+
+**Los flujos:**
+- **`crearObra`:** solo el dueño o el administrador. Crea la obra con su folio, el contrato, Generales primero y
+  la copia de partidas de cada espacio. Un espacio sin nombre toma el de su tipo.
+- **`guardarPresupuesto`:** solo el dueño. **Decisión del dueño:** nada se borra; una etapa que ya no viene queda
+  en $0. Cada monto que cambia deja rastro en `correcciones`, y la obra pasa entre "sin presupuesto" y "lista
+  para arranque" según quede completo. **Diferencia con el legacy:** una obra entregada ya no se presupuesta.
+- **`cerrarDia`:** solo el PM, en sus obras. Valida en el orden del legacy y escribe todo junto: bitácora,
+  partidas, subs que llegaron (una orden emitida que llega se confirma), avance sin repetir estado, cuadrilla, y
+  el arranque de la obra con su primer día de trabajo.
+  - **Diferencias con el legacy:** un solo cierre por obra y día (D-022); una partida "terminada" tiene que ser
+    del día; la cuadrilla sin partida va a la primera partida del día.
+  - **El tope de cuadrilla cuenta las horas de todas las obras de la empresa** con `cuadrilla_del_dia`
+    (solo cantidades, sin tarifas), aunque una sea de otro PM que este no puede leer.
+- **`rutaParaFoto` y `registrarFoto`:** una ruta aleatoria en la carpeta de la empresa y la obra; el teléfono
+  sube directo a Storage. Al registrarla se comprueba, con `foto_subida`, que el archivo existe y que lo subió
+  ese usuario. Un reintento con el mismo número devuelve la misma foto, y la foto de un cierre tiene que ser una
+  de las comprometidas.
+- **`enlaceDeFoto`:** un enlace firmado de 5 minutos, solo si el usuario puede ver la foto. Lo firma el service
+  role, que solo se usa para eso.
+- **`corregir`, `anular` y `anularCierre`:** reglas en `core/correcciones.ts`. El PM, lo suyo y en 48 h;
+  el dueño, sin límite y también cobros y pagos; nada en obras cerradas; siempre con motivo y con un renglón
+  por campo en `correcciones`.
+  - Si cambia la partida, el registro se muda con ella a su espacio.
+  - Si cambian las horas, se vuelve a revisar el tope del día.
+  - Un pago anulado regresa su orden a "aprobada".
+  - **Anular un cierre** anula la bitácora y el avance y la cuadrilla registrados con ella (por `bitacora_id`, no
+    por obra, día y usuario como el legacy).
+
+**Lo que necesitó la base** (`20261006000100_servidor.sql`): que el PM pueda arrancar su obra (solo de "lista
+para arranque" a "en obra"), `cuadrilla_del_dia` y `foto_subida`. En los datos de prueba (solo local), la
+contraseña de `ijm_servidor`.
+
+**Para la fase 2:** verificar la sesión es de la capa web. Las funciones de este paso reciben al usuario ya
+identificado (`{ userId }`); la página toma su `userId` del token de Supabase verificado (y después, del PIN del
+dispositivo, D-024). Faltan también los flujos que el plan deja para después: el cierre tardío del dueño, gastos,
+avisos, inspecciones, órdenes de trabajo y de cambio, cobros, entrega y cierre de obra.
+
+**Aprendido:** las pruebas encontraron un error en el primer intento: un espacio sin nombre tomaba el **id** de su
+tipo en vez de su nombre.

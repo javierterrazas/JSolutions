@@ -276,3 +276,8 @@ insert into public.feriados (empresa_id, dia, nombre_es, nombre_en, se_trabaja) 
   ('e000000a-0000-4000-8000-000000000000', '2026-11-26', 'Día de Acción de Gracias', 'Thanksgiving', false),
   ('e000000a-0000-4000-8000-000000000000', '2026-12-24', 'Nochebuena', 'Christmas Eve', true),
   ('e000000b-0000-4000-8000-000000000000', '2026-11-26', 'Día de Acción de Gracias', 'Thanksgiving', false);
+
+-- ------------------------------------------------------------------ el usuario de base del servidor
+-- SOLO LOCAL: la contraseña con la que el servidor (y sus pruebas) se conectan como ijm_servidor (D-027). En
+-- producción la pone quien despliega y vive en las variables de entorno, nunca en el repositorio.
+alter role ijm_servidor password 'ijm-servidor-local';

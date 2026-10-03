@@ -35,6 +35,7 @@ export default defineConfig({
           include: [
             'packages/db/pruebas/integracion/**/*.test.ts',
             'apps/web/pruebas/integracion/**/*.test.ts',
+            'packages/servidor/pruebas/**/*.test.ts',
           ],
           env,
           fileParallelism: false,

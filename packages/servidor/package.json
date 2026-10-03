@@ -1,0 +1,21 @@
+{
+  "name": "@ijm/servidor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "La capa del servidor de IJM: cada flujo valida con @ijm/core y escribe con la identidad del usuario, bajo RLS.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ijm/core": "workspace:*",
+    "postgres": "^3.4.9",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.117.2"
+  }
+}

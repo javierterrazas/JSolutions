@@ -179,5 +179,5 @@ distintos.
 
 - Qué columnas exactas usa `Obras_Cerradas` en cada indicador del histórico: se confirma al trasladar los
   indicadores (paso 5).
-- Las funciones del servidor (D-026): paso 6. Hasta entonces nadie escribe más que las migraciones, los datos de
-  prueba y las pruebas.
+- Los flujos del servidor que faltan (D-035): cierre tardío del dueño, gastos, avisos, inspecciones, órdenes,
+  cobros, entrega y cierre de obra.
