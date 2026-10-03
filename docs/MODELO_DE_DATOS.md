@@ -43,10 +43,23 @@ línea de defensa, no la única.
 | `configuracion` | Config | una fila por empresa: `impuesto`, `limite_compra_pm`, `sla_bloqueo_horas`, `sla_oc_horas`, `umbral_oc_menor`, `margen_minimo_oc`, `horas_sin_recibo` | lee y escribe | vista: `limite_compra_pm`, `horas_sin_recibo`, `sla_bloqueo_horas` |
 | `metas_indicadores` | Config (`META_*`, `MAX_*`) y metas fijas del código | `indicador`, `meta`; sin renglón vale la del legacy (D-019) | lee y escribe | — |
 | `miembros` | Usuarios | `user_id` (Supabase Auth, único: una empresa por usuario, D-016), `rol` (`dueno`/`admin`/`pm`), `nombre`, `telefono`, `idioma`, `activo`, `tarjeta_ultimos4`, `correo_avisos` | lee y escribe | lee su propio renglón |
+| `dispositivos` | (nueva) | los celulares que verificó cada miembro: `nombre`, `pin_hash`, `intentos_fallidos`, `bloqueado_hasta`, `verificado_en`, `ultimo_uso`, `revocado_en` (D-024) | lee y revoca | los suyos |
 | `folios` | (nueva) | `prefijo`, `ultimo` | solo el servidor | solo el servidor |
 
 `admin` y `dueno` tienen hoy los mismos permisos; quedan separados para poder distinguirlos después (decisión
-pendiente 5 del plan). El PIN de 4 dígitos del legacy se reemplaza por Supabase Auth.
+pendiente 5 del plan). El PIN del legacy, que valía en cualquier teléfono, se reemplaza por Supabase Auth más un
+PIN por dispositivo verificado (D-024).
+
+**Quién es el usuario de la sesión.** Las políticas usan estas funciones, que leen `miembros` en cada consulta:
+dar de baja a un miembro, o desactivar su empresa, le corta el acceso en ese instante (D-016).
+
+| Función | Devuelve |
+| --- | --- |
+| `miembro_actual()` | el miembro activo de la sesión, de una empresa activa; nulo si no hay |
+| `empresa_actual()` | su empresa |
+| `rol_actual()` | su rol: `dueno`, `admin` o `pm` |
+| `es_dueno_o_admin()` | si ve todo el negocio de su empresa, dinero incluido |
+| `es_pm_de(obra)` | si es el PM asignado a esa obra y la obra no se ha entregado (como `misObras_` del legacy) |
 
 ### Catálogo
 

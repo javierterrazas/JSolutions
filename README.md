@@ -53,6 +53,21 @@ las pruebas usan esos mismos valores si no encuentran `DATABASE_URL`.
 
 Todas las pruebas corren con `TZ=America/Chicago`, la zona de la empresa piloto.
 
+## Usuarios de prueba
+
+`pnpm db:reset` carga [`supabase/seed.sql`](supabase/seed.sql): dos empresas con usuarios reales de Supabase
+Auth. **Solo existen en la base local.** Todos usan la contraseña `ijm-prueba-2026`.
+
+| Correo | Empresa | Rol |
+| --- | --- | --- |
+| `dueno@empresa-a.test` | A · IJM Construction | dueño |
+| `pm1@empresa-a.test` | A | PM de OB-001 (en obra) y OB-003 (entregada) |
+| `pm2@empresa-a.test` | A | PM de OB-002 |
+| `baja@empresa-a.test` | A | PM dado de baja |
+| `dueno@empresa-b.test` | B · Remodelaciones del Valle | dueña |
+| `pm1@empresa-b.test` · `pm2@empresa-b.test` | B | PMs; el primero, de su OB-001 |
+| `sin-empresa@prueba.test` | ninguna | cuenta de Auth sin empresa |
+
 ## Estructura
 
 ```

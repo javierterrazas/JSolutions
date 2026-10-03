@@ -162,50 +162,16 @@ export const configuracion = pgTable(
       foreignColumns: [empresas.id],
       name: 'configuracion_empresa_id_fkey',
     }),
+    check('configuracion_horas_sin_recibo_check', sql`horas_sin_recibo > 0`),
     check('configuracion_impuesto_check', sql`impuesto >= (0)::numeric`),
     check('configuracion_limite_compra_pm_check', sql`limite_compra_pm >= (0)::numeric`),
-    check('configuracion_sla_bloqueo_horas_check', sql`sla_bloqueo_horas > 0`),
-    check('configuracion_sla_oc_horas_check', sql`sla_oc_horas > 0`),
-    check('configuracion_umbral_oc_menor_check', sql`umbral_oc_menor >= (0)::numeric`),
     check(
       'configuracion_margen_minimo_oc_check',
       sql`(margen_minimo_oc >= (0)::numeric) AND (margen_minimo_oc < (1)::numeric)`,
     ),
-    check('configuracion_horas_sin_recibo_check', sql`horas_sin_recibo > 0`),
-  ],
-);
-
-export const hitos_calidad = pgTable(
-  'hitos_calidad',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    clave: text().notNull(),
-    nombre_es: text().notNull(),
-    nombre_en: text(),
-    orden: integer().default(0).notNull(),
-    exige_prueba_agua: boolean().default(false).notNull(),
-    activo: boolean().default(true).notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('hitos_calidad_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
-    foreignKey({
-      columns: [table.empresa_id],
-      foreignColumns: [empresas.id],
-      name: 'hitos_calidad_empresa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'hitos_calidad_empresa_id_creado_por_fkey',
-    }),
-    unique('hitos_calidad_empresa_id_id_key').on(table.id, table.empresa_id),
-    unique('hitos_calidad_empresa_id_clave_key').on(table.empresa_id, table.clave),
-    check('hitos_calidad_clave_check', sql`btrim(clave) <> ''::text`),
-    check('hitos_calidad_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
+    check('configuracion_sla_bloqueo_horas_check', sql`sla_bloqueo_horas > 0`),
+    check('configuracion_sla_oc_horas_check', sql`sla_oc_horas > 0`),
+    check('configuracion_umbral_oc_menor_check', sql`umbral_oc_menor >= (0)::numeric`),
   ],
 );
 
@@ -229,6 +195,11 @@ export const miembros = pgTable(
   (table) => [
     index('miembros_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [table.id, table.empresa_id],
+      name: 'miembros_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id],
       foreignColumns: [empresas.id],
       name: 'miembros_empresa_id_fkey',
@@ -238,16 +209,11 @@ export const miembros = pgTable(
       foreignColumns: [authUsers.id],
       name: 'miembros_user_id_fkey',
     }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [table.empresa_id, table.id],
-      name: 'miembros_empresa_id_creado_por_fkey',
-    }),
     unique('miembros_empresa_id_id_key').on(table.id, table.empresa_id),
     unique('miembros_user_id_key').on(table.user_id),
+    check('miembros_correo_avisos_check', sql`correo_avisos ~~ '%_@_%'::text`),
     check('miembros_nombre_check', sql`btrim(nombre) <> ''::text`),
     check('miembros_tarjeta_ultimos4_check', sql`tarjeta_ultimos4 ~ '^[0-9]{4}$'::text`),
-    check('miembros_correo_avisos_check', sql`correo_avisos ~~ '%_@_%'::text`),
   ],
 );
 
@@ -272,14 +238,14 @@ export const tipos_espacio = pgTable(
       .using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops'))
       .where(sql`es_generales`),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'tipos_espacio_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id],
       foreignColumns: [empresas.id],
       name: 'tipos_espacio_empresa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'tipos_espacio_empresa_id_creado_por_fkey',
     }),
     unique('tipos_espacio_empresa_id_id_key').on(table.id, table.empresa_id),
     check('tipos_espacio_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
@@ -303,14 +269,14 @@ export const oficios = pgTable(
     index('oficios_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
     uniqueIndex('oficios_nombre_unico').using('btree', sql`empresa_id`, sql`lower(nombre_es)`),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'oficios_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id],
       foreignColumns: [empresas.id],
       name: 'oficios_empresa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'oficios_empresa_id_creado_por_fkey',
     }),
     unique('oficios_empresa_id_id_key').on(table.id, table.empresa_id),
     check('oficios_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
@@ -334,17 +300,51 @@ export const etapas = pgTable(
     index('etapas_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
     uniqueIndex('etapas_nombre_unico').using('btree', sql`empresa_id`, sql`lower(nombre_es)`),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'etapas_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id],
       foreignColumns: [empresas.id],
       name: 'etapas_empresa_id_fkey',
     }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'etapas_empresa_id_creado_por_fkey',
-    }),
     unique('etapas_empresa_id_id_key').on(table.id, table.empresa_id),
     check('etapas_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
+  ],
+);
+
+export const hitos_calidad = pgTable(
+  'hitos_calidad',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    clave: text().notNull(),
+    nombre_es: text().notNull(),
+    nombre_en: text(),
+    orden: integer().default(0).notNull(),
+    exige_prueba_agua: boolean().default(false).notNull(),
+    activo: boolean().default(true).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('hitos_calidad_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'hitos_calidad_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id],
+      foreignColumns: [empresas.id],
+      name: 'hitos_calidad_empresa_id_fkey',
+    }),
+    unique('hitos_calidad_empresa_id_id_key').on(table.id, table.empresa_id),
+    unique('hitos_calidad_empresa_id_clave_key').on(table.empresa_id, table.clave),
+    check('hitos_calidad_clave_check', sql`btrim(clave) <> ''::text`),
+    check('hitos_calidad_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
   ],
 );
 
@@ -372,12 +372,12 @@ export const puntos_control = pgTable(
     uniqueIndex('puntos_control_texto_unico').using('btree', sql`hito_id`, sql`lower(texto_es)`),
     foreignKey({
       columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
       name: 'puntos_control_empresa_id_creado_por_fkey',
     }),
     foreignKey({
       columns: [table.empresa_id, table.hito_id],
-      foreignColumns: [hitos_calidad.empresa_id, hitos_calidad.id],
+      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
       name: 'puntos_control_empresa_id_hito_id_fkey',
     }),
     unique('puntos_control_empresa_id_id_key').on(table.id, table.empresa_id),
@@ -417,39 +417,39 @@ export const plantillas_partida = pgTable(
       .using('btree', sql`tipo_espacio_id`, sql`lower(nombre_es)`)
       .where(sql`activa`),
     foreignKey({
-      columns: [table.empresa_id, table.tipo_espacio_id],
-      foreignColumns: [tipos_espacio.empresa_id, tipos_espacio.id],
-      name: 'plantillas_partida_empresa_id_tipo_espacio_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'plantillas_partida_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.etapa_id],
+      foreignColumns: [etapas.id, etapas.empresa_id],
+      name: 'plantillas_partida_empresa_id_etapa_id_fkey',
     }),
     foreignKey({
       columns: [table.empresa_id, table.hito_id],
-      foreignColumns: [hitos_calidad.empresa_id, hitos_calidad.id],
+      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
       name: 'plantillas_partida_empresa_id_hito_id_fkey',
     }),
     foreignKey({
       columns: [table.empresa_id, table.oficio_id],
-      foreignColumns: [oficios.empresa_id, oficios.id],
+      foreignColumns: [oficios.id, oficios.empresa_id],
       name: 'plantillas_partida_empresa_id_oficio_id_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.etapa_id],
-      foreignColumns: [etapas.empresa_id, etapas.id],
-      name: 'plantillas_partida_empresa_id_etapa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'plantillas_partida_empresa_id_creado_por_fkey',
+      columns: [table.empresa_id, table.tipo_espacio_id],
+      foreignColumns: [tipos_espacio.id, tipos_espacio.empresa_id],
+      name: 'plantillas_partida_empresa_id_tipo_espacio_id_fkey',
     }),
     unique('plantillas_partida_empresa_id_id_key').on(table.id, table.empresa_id),
-    check('plantillas_partida_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
-    check('plantillas_partida_peso_check', sql`peso > (0)::numeric`),
-    check('plantillas_partida_dias_check', sql`dias >= 1`),
-    check('plantillas_partida_espera_check', sql`espera >= 0`),
     check(
       'plantillas_partida_check',
       sql`(responsable = 'subcontratista'::responsable_partida) = (oficio_id IS NOT NULL)`,
     ),
+    check('plantillas_partida_dias_check', sql`dias >= 1`),
+    check('plantillas_partida_espera_check', sql`espera >= 0`),
+    check('plantillas_partida_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
+    check('plantillas_partida_peso_check', sql`peso > (0)::numeric`),
   ],
 );
 
@@ -476,14 +476,14 @@ export const subcontratistas = pgTable(
     index('subcontratistas_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
     uniqueIndex('subcontratistas_nombre_unico').using('btree', sql`empresa_id`, sql`lower(btrim(nombre))`),
     foreignKey({
-      columns: [table.empresa_id, table.oficio_id],
-      foreignColumns: [oficios.empresa_id, oficios.id],
-      name: 'subcontratistas_empresa_id_oficio_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'subcontratistas_empresa_id_creado_por_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'subcontratistas_empresa_id_creado_por_fkey',
+      columns: [table.empresa_id, table.oficio_id],
+      foreignColumns: [oficios.id, oficios.empresa_id],
+      name: 'subcontratistas_empresa_id_oficio_id_fkey',
     }),
     unique('subcontratistas_empresa_id_id_key').on(table.id, table.empresa_id),
     check('subcontratistas_nombre_check', sql`btrim(nombre) <> ''::text`),
@@ -508,7 +508,7 @@ export const trabajadores = pgTable(
     index('trabajadores_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
     foreignKey({
       columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
       name: 'trabajadores_empresa_id_creado_por_fkey',
     }),
     foreignKey({
@@ -540,14 +540,14 @@ export const tarifas_trabajador = pgTable(
       table.trabajador_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
-      columns: [table.empresa_id, table.trabajador_id],
-      foreignColumns: [trabajadores.empresa_id, trabajadores.id],
-      name: 'tarifas_trabajador_empresa_id_trabajador_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'tarifas_trabajador_empresa_id_creado_por_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'tarifas_trabajador_empresa_id_creado_por_fkey',
+      columns: [table.empresa_id, table.trabajador_id],
+      foreignColumns: [trabajadores.id, trabajadores.empresa_id],
+      name: 'tarifas_trabajador_empresa_id_trabajador_id_fkey',
     }),
     unique('tarifas_trabajador_trabajador_id_vigente_desde_key').on(table.trabajador_id, table.vigente_desde),
     check('tarifas_trabajador_tarifa_check', sql`tarifa >= (0)::numeric`),
@@ -581,30 +581,30 @@ export const obras = pgTable(
     ),
     index('obras_pm_id_idx').using('btree', table.pm_id.asc().nullsLast().op('uuid_ops')),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'obras_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id],
       foreignColumns: [empresas.id],
       name: 'obras_empresa_id_fkey',
     }),
     foreignKey({
       columns: [table.empresa_id, table.pm_id],
-      foreignColumns: [miembros.empresa_id, miembros.id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
       name: 'obras_empresa_id_pm_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'obras_empresa_id_creado_por_fkey',
     }),
     unique('obras_empresa_id_id_key').on(table.id, table.empresa_id),
     unique('obras_empresa_id_folio_key').on(table.empresa_id, table.folio),
+    check('obras_check', sql`fecha_fin_estimada >= fecha_inicio`),
+    check('obras_check1', sql`(fecha_fin_real IS NULL) OR (fecha_fin_real >= fecha_inicio)`),
     check('obras_cliente_check', sql`btrim(cliente) <> ''::text`),
+    check('obras_direccion_check', sql`btrim(direccion) <> ''::text`),
     check(
       'obras_telefono_cliente_check',
       sql`length(regexp_replace(telefono_cliente, '\D'::text, ''::text, 'g'::text)) >= 10`,
     ),
-    check('obras_direccion_check', sql`btrim(direccion) <> ''::text`),
-    check('obras_check', sql`fecha_fin_estimada >= fecha_inicio`),
-    check('obras_check1', sql`(fecha_fin_real IS NULL) OR (fecha_fin_real >= fecha_inicio)`),
   ],
 );
 
@@ -620,14 +620,14 @@ export const obras_finanzas = pgTable(
   },
   (table) => [
     foreignKey({
-      columns: [table.obra_id, table.empresa_id],
-      foreignColumns: [obras.empresa_id, obras.id],
-      name: 'obras_finanzas_empresa_id_obra_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'obras_finanzas_empresa_id_creado_por_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'obras_finanzas_empresa_id_creado_por_fkey',
+      columns: [table.obra_id, table.empresa_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'obras_finanzas_empresa_id_obra_id_fkey',
     }),
     check('obras_finanzas_contrato_original_check', sql`contrato_original > (0)::numeric`),
   ],
@@ -659,34 +659,34 @@ export const espacios = pgTable(
       table.obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'espacios_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'espacios_empresa_id_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.empresa_id, table.tipo_espacio_id],
-      foreignColumns: [tipos_espacio.empresa_id, tipos_espacio.id],
+      foreignColumns: [tipos_espacio.id, tipos_espacio.empresa_id],
       name: 'espacios_empresa_id_tipo_espacio_id_fkey',
     }),
     foreignKey({
       columns: [table.empresa_id, table.verificado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
       name: 'espacios_empresa_id_verificado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'espacios_empresa_id_creado_por_fkey',
     }),
     unique('espacios_empresa_id_id_key').on(table.id, table.empresa_id),
     unique('espacios_obra_id_id_key').on(table.id, table.obra_id),
-    check('espacios_nombre_check', sql`btrim(nombre) <> ''::text`),
-    check('espacios_pies2_cotizados_check', sql`pies2_cotizados >= (0)::numeric`),
-    check('espacios_pies_lineales_cotizados_check', sql`pies_lineales_cotizados >= (0)::numeric`),
-    check('espacios_pies2_verificados_check', sql`pies2_verificados > (0)::numeric`),
-    check('espacios_pies_lineales_verificados_check', sql`pies_lineales_verificados >= (0)::numeric`),
     check('espacios_check', sql`(pies2_verificados IS NULL) = (verificado_en IS NULL)`),
     check('espacios_check1', sql`(verificado_por IS NULL) = (verificado_en IS NULL)`),
+    check('espacios_nombre_check', sql`btrim(nombre) <> ''::text`),
+    check('espacios_pies2_cotizados_check', sql`pies2_cotizados >= (0)::numeric`),
+    check('espacios_pies2_verificados_check', sql`pies2_verificados > (0)::numeric`),
+    check('espacios_pies_lineales_cotizados_check', sql`pies_lineales_cotizados >= (0)::numeric`),
+    check('espacios_pies_lineales_verificados_check', sql`pies_lineales_verificados >= (0)::numeric`),
   ],
 );
 
@@ -724,51 +724,51 @@ export const partidas_obra = pgTable(
       .using('btree', sql`espacio_id`, sql`lower(nombre_es)`)
       .where(sql`(estado = 'activa'::estado_partida)`),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'partidas_obra_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.etapa_id],
+      foreignColumns: [etapas.id, etapas.empresa_id],
+      name: 'partidas_obra_empresa_id_etapa_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.hito_id],
+      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
+      name: 'partidas_obra_empresa_id_hito_id_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'partidas_obra_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.oficio_id],
+      foreignColumns: [oficios.id, oficios.empresa_id],
+      name: 'partidas_obra_empresa_id_oficio_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.plantilla_id],
+      foreignColumns: [plantillas_partida.id, plantillas_partida.empresa_id],
+      name: 'partidas_obra_empresa_id_plantilla_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.espacio_id],
       foreignColumns: [espacios.id, espacios.obra_id],
       name: 'partidas_obra_obra_id_espacio_id_fkey',
     }),
-    foreignKey({
-      columns: [table.empresa_id, table.plantilla_id],
-      foreignColumns: [plantillas_partida.empresa_id, plantillas_partida.id],
-      name: 'partidas_obra_empresa_id_plantilla_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.hito_id],
-      foreignColumns: [hitos_calidad.empresa_id, hitos_calidad.id],
-      name: 'partidas_obra_empresa_id_hito_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.oficio_id],
-      foreignColumns: [oficios.empresa_id, oficios.id],
-      name: 'partidas_obra_empresa_id_oficio_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.etapa_id],
-      foreignColumns: [etapas.empresa_id, etapas.id],
-      name: 'partidas_obra_empresa_id_etapa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'partidas_obra_empresa_id_creado_por_fkey',
-    }),
     unique('partidas_obra_empresa_id_id_key').on(table.id, table.empresa_id),
     unique('partidas_obra_obra_id_id_key').on(table.id, table.obra_id),
     unique('partidas_obra_espacio_id_id_key').on(table.id, table.espacio_id),
-    check('partidas_obra_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
-    check('partidas_obra_peso_check', sql`peso > (0)::numeric`),
-    check('partidas_obra_dias_check', sql`dias >= 1`),
-    check('partidas_obra_espera_check', sql`espera >= 0`),
     check(
       'partidas_obra_check',
       sql`(responsable = 'subcontratista'::responsable_partida) = (oficio_id IS NOT NULL)`,
     ),
+    check('partidas_obra_dias_check', sql`dias >= 1`),
+    check('partidas_obra_espera_check', sql`espera >= 0`),
+    check('partidas_obra_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
+    check('partidas_obra_peso_check', sql`peso > (0)::numeric`),
   ],
 );
 
@@ -793,24 +793,24 @@ export const presupuesto_etapas = pgTable(
       table.obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'presupuesto_etapas_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.etapa_id],
+      foreignColumns: [etapas.id, etapas.empresa_id],
+      name: 'presupuesto_etapas_empresa_id_etapa_id_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'presupuesto_etapas_empresa_id_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.espacio_id],
       foreignColumns: [espacios.id, espacios.obra_id],
       name: 'presupuesto_etapas_obra_id_espacio_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.etapa_id],
-      foreignColumns: [etapas.empresa_id, etapas.id],
-      name: 'presupuesto_etapas_empresa_id_etapa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'presupuesto_etapas_empresa_id_creado_por_fkey',
     }),
     unique('presupuesto_etapas_espacio_id_etapa_id_key').on(table.espacio_id, table.etapa_id),
     check('presupuesto_etapas_monto_check', sql`monto >= (0)::numeric`),
@@ -836,7 +836,7 @@ export const plan_semanal = pgTable(
     ),
     foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'plan_semanal_empresa_id_obra_id_fkey',
     }),
     foreignKey({
@@ -883,24 +883,24 @@ export const bitacora = pgTable(
       )
       .where(sql`(estado = 'vigente'::estado_registro)`),
     foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
-      name: 'bitacora_empresa_id_obra_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'bitacora_empresa_id_creado_por_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'bitacora_empresa_id_creado_por_fkey',
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'bitacora_empresa_id_obra_id_fkey',
     }),
     unique('bitacora_empresa_id_id_key').on(table.id, table.empresa_id),
     unique('bitacora_obra_id_id_key').on(table.id, table.obra_id),
     unique('bitacora_empresa_id_folio_key').on(table.empresa_id, table.folio),
+    check('bitacora_check', sql`sin_trabajo = (motivo_sin_trabajo IS NOT NULL)`),
+    check('bitacora_check1', sql`(NOT sin_trabajo) OR (fotos_comprometidas = 0)`),
     check(
       'bitacora_fotos_comprometidas_check',
       sql`(fotos_comprometidas >= 0) AND (fotos_comprometidas <= 10)`,
     ),
-    check('bitacora_check', sql`sin_trabajo = (motivo_sin_trabajo IS NOT NULL)`),
-    check('bitacora_check1', sql`(NOT sin_trabajo) OR (fotos_comprometidas = 0)`),
   ],
 );
 
@@ -930,14 +930,14 @@ export const avance = pgTable(
       table.partida_obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
-      name: 'avance_empresa_id_obra_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'avance_empresa_id_creado_por_fkey',
     }),
     foreignKey({
-      columns: [table.obra_id, table.partida_obra_id],
-      foreignColumns: [partidas_obra.id, partidas_obra.obra_id],
-      name: 'avance_obra_id_partida_obra_id_fkey',
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'avance_empresa_id_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.bitacora_id],
@@ -945,9 +945,9 @@ export const avance = pgTable(
       name: 'avance_obra_id_bitacora_id_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'avance_empresa_id_creado_por_fkey',
+      columns: [table.obra_id, table.partida_obra_id],
+      foreignColumns: [partidas_obra.id, partidas_obra.obra_id],
+      name: 'avance_obra_id_partida_obra_id_fkey',
     }),
   ],
 );
@@ -981,24 +981,24 @@ export const mano_obra = pgTable(
       table.dia.asc().nullsLast().op('date_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'mano_obra_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'mano_obra_empresa_id_obra_id_fkey',
     }),
     foreignKey({
-      columns: [table.obra_id, table.espacio_id],
-      foreignColumns: [espacios.id, espacios.obra_id],
-      name: 'mano_obra_obra_id_espacio_id_fkey',
+      columns: [table.empresa_id, table.trabajador_id],
+      foreignColumns: [trabajadores.id, trabajadores.empresa_id],
+      name: 'mano_obra_empresa_id_trabajador_id_fkey',
     }),
     foreignKey({
       columns: [table.espacio_id, table.partida_obra_id],
-      foreignColumns: [partidas_obra.espacio_id, partidas_obra.id],
+      foreignColumns: [partidas_obra.id, partidas_obra.espacio_id],
       name: 'mano_obra_espacio_id_partida_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.trabajador_id],
-      foreignColumns: [trabajadores.empresa_id, trabajadores.id],
-      name: 'mano_obra_empresa_id_trabajador_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.bitacora_id],
@@ -1006,9 +1006,9 @@ export const mano_obra = pgTable(
       name: 'mano_obra_obra_id_bitacora_id_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'mano_obra_empresa_id_creado_por_fkey',
+      columns: [table.obra_id, table.espacio_id],
+      foreignColumns: [espacios.id, espacios.obra_id],
+      name: 'mano_obra_obra_id_espacio_id_fkey',
     }),
     check('mano_obra_cantidad_check', sql`(cantidad > (0)::numeric) AND (cantidad <= (16)::numeric)`),
   ],
@@ -1045,28 +1045,28 @@ export const gastos = pgTable(
       table.obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'gastos_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'gastos_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.espacio_id, table.partida_obra_id],
+      foreignColumns: [partidas_obra.id, partidas_obra.espacio_id],
+      name: 'gastos_espacio_id_partida_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.espacio_id],
       foreignColumns: [espacios.id, espacios.obra_id],
       name: 'gastos_obra_id_espacio_id_fkey',
     }),
-    foreignKey({
-      columns: [table.espacio_id, table.partida_obra_id],
-      foreignColumns: [partidas_obra.espacio_id, partidas_obra.id],
-      name: 'gastos_espacio_id_partida_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'gastos_empresa_id_creado_por_fkey',
-    }),
     unique('gastos_empresa_id_folio_key').on(table.empresa_id, table.folio),
-    check('gastos_proveedor_check', sql`btrim(proveedor) <> ''::text`),
     check('gastos_monto_check', sql`monto > (0)::numeric`),
+    check('gastos_proveedor_check', sql`btrim(proveedor) <> ''::text`),
     check('gastos_tarjeta_ultimos4_check', sql`tarjeta_ultimos4 ~ '^[0-9]{4}$'::text`),
   ],
 );
@@ -1097,25 +1097,25 @@ export const avisos = pgTable(
       table.obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'avisos_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'avisos_empresa_id_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.empresa_id, table.respondido_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
       name: 'avisos_empresa_id_respondido_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'avisos_empresa_id_creado_por_fkey',
     }),
     unique('avisos_empresa_id_id_key').on(table.id, table.empresa_id),
     unique('avisos_obra_id_id_key').on(table.id, table.obra_id),
     unique('avisos_empresa_id_folio_key').on(table.empresa_id, table.folio),
-    check('avisos_descripcion_check', sql`length(btrim(descripcion)) >= 10`),
     check('avisos_check', sql`(estado = 'cerrado'::estado_abierto) = (respondido_en IS NOT NULL)`),
+    check('avisos_descripcion_check', sql`length(btrim(descripcion)) >= 10`),
   ],
 );
 
@@ -1149,38 +1149,38 @@ export const inspecciones = pgTable(
       table.realizada_en.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'inspecciones_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.hito_id],
+      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
+      name: 'inspecciones_empresa_id_hito_id_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'inspecciones_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.espacio_id, table.partida_obra_id],
+      foreignColumns: [partidas_obra.id, partidas_obra.espacio_id],
+      name: 'inspecciones_espacio_id_partida_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.espacio_id],
       foreignColumns: [espacios.id, espacios.obra_id],
       name: 'inspecciones_obra_id_espacio_id_fkey',
     }),
-    foreignKey({
-      columns: [table.empresa_id, table.hito_id],
-      foreignColumns: [hitos_calidad.empresa_id, hitos_calidad.id],
-      name: 'inspecciones_empresa_id_hito_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.espacio_id, table.partida_obra_id],
-      foreignColumns: [partidas_obra.espacio_id, partidas_obra.id],
-      name: 'inspecciones_espacio_id_partida_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'inspecciones_empresa_id_creado_por_fkey',
-    }),
     unique('inspecciones_obra_id_id_key').on(table.id, table.obra_id),
-    check('inspecciones_puntos_ok_check', sql`puntos_ok >= 0`),
-    check('inspecciones_puntos_total_check', sql`puntos_total > 0`),
     check('inspecciones_check', sql`puntos_ok <= puntos_total`),
     check(
       'inspecciones_check1',
       sql`(resultado = 'aprobado'::resultado_inspeccion) = (puntos_ok = puntos_total)`,
     ),
+    check('inspecciones_puntos_ok_check', sql`puntos_ok >= 0`),
+    check('inspecciones_puntos_total_check', sql`puntos_total > 0`),
   ],
 );
 
@@ -1208,19 +1208,19 @@ export const pruebas_agua = pgTable(
       .using('btree', table.espacio_id.asc().nullsLast().op('uuid_ops'))
       .where(sql`(resultado = 'en_curso'::estado_prueba_agua)`),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'pruebas_agua_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'pruebas_agua_empresa_id_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.espacio_id],
       foreignColumns: [espacios.id, espacios.obra_id],
       name: 'pruebas_agua_obra_id_espacio_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'pruebas_agua_empresa_id_creado_por_fkey',
     }),
     check('pruebas_agua_check', sql`(resultado = 'en_curso'::estado_prueba_agua) = (fin IS NULL)`),
     check('pruebas_agua_check1', sql`(fin IS NULL) OR (fin > inicio)`),
@@ -1251,18 +1251,18 @@ export const punch_list = pgTable(
       table.obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
-      name: 'punch_list_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
       columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
       name: 'punch_list_empresa_id_creado_por_fkey',
     }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'punch_list_empresa_id_obra_id_fkey',
+    }),
     unique('punch_list_empresa_id_folio_key').on(table.empresa_id, table.folio),
-    check('punch_list_item_check', sql`length(btrim(item)) >= 4`),
     check('punch_list_check', sql`(estado = 'cerrado'::estado_abierto) = (cerrado_en IS NOT NULL)`),
+    check('punch_list_item_check', sql`length(btrim(item)) >= 4`),
   ],
 );
 
@@ -1287,14 +1287,14 @@ export const fotos = pgTable(
       table.obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
-      name: 'fotos_empresa_id_obra_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'fotos_empresa_id_creado_por_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'fotos_empresa_id_creado_por_fkey',
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'fotos_empresa_id_obra_id_fkey',
     }),
     unique('fotos_ref_tipo_ref_id_indice_key').on(table.ref_tipo, table.ref_id, table.indice),
     unique('fotos_storage_path_key').on(table.storage_path),
@@ -1337,42 +1337,42 @@ export const ordenes_trabajo = pgTable(
       table.inicio_programado.asc().nullsLast().op('date_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.aprobada_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'ordenes_trabajo_empresa_id_aprobada_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'ordenes_trabajo_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'ordenes_trabajo_empresa_id_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.empresa_id, table.subcontratista_id],
-      foreignColumns: [subcontratistas.empresa_id, subcontratistas.id],
+      foreignColumns: [subcontratistas.id, subcontratistas.empresa_id],
       name: 'ordenes_trabajo_empresa_id_subcontratista_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.espacio_id, table.partida_obra_id],
+      foreignColumns: [partidas_obra.id, partidas_obra.espacio_id],
+      name: 'ordenes_trabajo_espacio_id_partida_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.espacio_id],
       foreignColumns: [espacios.id, espacios.obra_id],
       name: 'ordenes_trabajo_obra_id_espacio_id_fkey',
     }),
-    foreignKey({
-      columns: [table.espacio_id, table.partida_obra_id],
-      foreignColumns: [partidas_obra.espacio_id, partidas_obra.id],
-      name: 'ordenes_trabajo_espacio_id_partida_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.aprobada_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'ordenes_trabajo_empresa_id_aprobada_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'ordenes_trabajo_empresa_id_creado_por_fkey',
-    }),
     unique('ordenes_trabajo_empresa_id_id_key').on(table.id, table.empresa_id),
     unique('ordenes_trabajo_obra_id_id_key').on(table.id, table.obra_id),
     unique('ordenes_trabajo_empresa_id_folio_key').on(table.empresa_id, table.folio),
     check('ordenes_trabajo_alcance_check', sql`btrim(alcance) <> ''::text`),
-    check('ordenes_trabajo_faltas_check', sql`faltas >= 0`),
     check('ordenes_trabajo_check', sql`fin_programado >= inicio_programado`),
     check('ordenes_trabajo_check1', sql`(aprobada_por IS NULL) = (aprobada_en IS NULL)`),
+    check('ordenes_trabajo_faltas_check', sql`faltas >= 0`),
   ],
 );
 
@@ -1388,14 +1388,14 @@ export const ordenes_trabajo_precios = pgTable(
   },
   (table) => [
     foreignKey({
-      columns: [table.orden_trabajo_id, table.empresa_id],
-      foreignColumns: [ordenes_trabajo.empresa_id, ordenes_trabajo.id],
-      name: 'ordenes_trabajo_precios_empresa_id_orden_trabajo_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'ordenes_trabajo_precios_empresa_id_creado_por_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'ordenes_trabajo_precios_empresa_id_creado_por_fkey',
+      columns: [table.orden_trabajo_id, table.empresa_id],
+      foreignColumns: [ordenes_trabajo.id, ordenes_trabajo.empresa_id],
+      name: 'ordenes_trabajo_precios_empresa_id_orden_trabajo_id_fkey',
     }),
     check('ordenes_trabajo_precios_precio_check', sql`precio > (0)::numeric`),
   ],
@@ -1430,19 +1430,19 @@ export const pagos_sub = pgTable(
       table.orden_trabajo_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'pagos_sub_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'pagos_sub_empresa_id_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.orden_trabajo_id],
       foreignColumns: [ordenes_trabajo.id, ordenes_trabajo.obra_id],
       name: 'pagos_sub_obra_id_orden_trabajo_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'pagos_sub_empresa_id_creado_por_fkey',
     }),
     unique('pagos_sub_empresa_id_folio_key').on(table.empresa_id, table.folio),
     check('pagos_sub_monto_check', sql`monto > (0)::numeric`),
@@ -1477,8 +1477,13 @@ export const ordenes_cambio = pgTable(
       table.obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'ordenes_cambio_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'ordenes_cambio_empresa_id_obra_id_fkey',
     }),
     foreignKey({
@@ -1486,16 +1491,9 @@ export const ordenes_cambio = pgTable(
       foreignColumns: [avisos.id, avisos.obra_id],
       name: 'ordenes_cambio_obra_id_aviso_id_fkey',
     }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'ordenes_cambio_empresa_id_creado_por_fkey',
-    }),
     unique('ordenes_cambio_empresa_id_id_key').on(table.id, table.empresa_id),
     unique('ordenes_cambio_obra_id_id_key').on(table.id, table.obra_id),
     unique('ordenes_cambio_empresa_id_folio_key').on(table.empresa_id, table.folio),
-    check('ordenes_cambio_descripcion_check', sql`btrim(descripcion) <> ''::text`),
-    check('ordenes_cambio_dias_impacto_check', sql`dias_impacto >= 0`),
     check(
       'ordenes_cambio_check',
       sql`(estado <> ALL (ARRAY['autorizada'::estado_orden_cambio, 'facturada'::estado_orden_cambio])) OR (autorizada_en IS NOT NULL)`,
@@ -1504,6 +1502,8 @@ export const ordenes_cambio = pgTable(
       'ordenes_cambio_check1',
       sql`(estado <> 'facturada'::estado_orden_cambio) OR (facturada_en IS NOT NULL)`,
     ),
+    check('ordenes_cambio_descripcion_check', sql`btrim(descripcion) <> ''::text`),
+    check('ordenes_cambio_dias_impacto_check', sql`dias_impacto >= 0`),
   ],
 );
 
@@ -1520,14 +1520,14 @@ export const ordenes_cambio_montos = pgTable(
   },
   (table) => [
     foreignKey({
-      columns: [table.orden_cambio_id, table.empresa_id],
-      foreignColumns: [ordenes_cambio.empresa_id, ordenes_cambio.id],
-      name: 'ordenes_cambio_montos_empresa_id_orden_cambio_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'ordenes_cambio_montos_empresa_id_creado_por_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'ordenes_cambio_montos_empresa_id_creado_por_fkey',
+      columns: [table.orden_cambio_id, table.empresa_id],
+      foreignColumns: [ordenes_cambio.id, ordenes_cambio.empresa_id],
+      name: 'ordenes_cambio_montos_empresa_id_orden_cambio_id_fkey',
     }),
     check('ordenes_cambio_montos_costo_estimado_check', sql`costo_estimado >= (0)::numeric`),
     check('ordenes_cambio_montos_precio_cliente_check', sql`precio_cliente > (0)::numeric`),
@@ -1560,25 +1560,25 @@ export const no_calidad = pgTable(
       table.obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'no_calidad_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'no_calidad_empresa_id_obra_id_fkey',
     }),
     foreignKey({
       columns: [table.empresa_id, table.subcontratista_id],
-      foreignColumns: [subcontratistas.empresa_id, subcontratistas.id],
+      foreignColumns: [subcontratistas.id, subcontratistas.empresa_id],
       name: 'no_calidad_empresa_id_subcontratista_id_fkey',
     }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'no_calidad_empresa_id_creado_por_fkey',
-    }),
     unique('no_calidad_empresa_id_folio_key').on(table.empresa_id, table.folio),
-    check('no_calidad_costo_check', sql`costo >= (0)::numeric`),
-    check('no_calidad_dias_perdidos_check', sql`dias_perdidos >= 0`),
-    check('no_calidad_descripcion_check', sql`btrim(descripcion) <> ''::text`),
     check('no_calidad_check', sql`(estado = 'cerrado'::estado_abierto) = (cerrado_en IS NOT NULL)`),
+    check('no_calidad_costo_check', sql`costo >= (0)::numeric`),
+    check('no_calidad_descripcion_check', sql`btrim(descripcion) <> ''::text`),
+    check('no_calidad_dias_perdidos_check', sql`dias_perdidos >= 0`),
   ],
 );
 
@@ -1606,14 +1606,14 @@ export const cobros = pgTable(
       table.obra_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
-      name: 'cobros_empresa_id_obra_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'cobros_empresa_id_creado_por_fkey',
     }),
     foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'cobros_empresa_id_creado_por_fkey',
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'cobros_empresa_id_obra_id_fkey',
     }),
     unique('cobros_empresa_id_folio_key').on(table.empresa_id, table.folio),
     check('cobros_monto_check', sql`monto > (0)::numeric`),
@@ -1642,18 +1642,18 @@ export const entregas = pgTable(
   (table) => [
     index('entregas_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
     foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
-      name: 'entregas_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
       columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
       name: 'entregas_empresa_id_creado_por_fkey',
     }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'entregas_empresa_id_obra_id_fkey',
+    }),
     unique('entregas_obra_id_key').on(table.obra_id),
-    check('entregas_garantia_meses_check', sql`garantia_meses >= 0`),
     check('entregas_check', sql`garantia_vence >= fecha_entrega`),
+    check('entregas_garantia_meses_check', sql`garantia_meses >= 0`),
   ],
 );
 
@@ -1686,18 +1686,18 @@ export const obras_cerradas = pgTable(
   (table) => [
     index('obras_cerradas_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
     foreignKey({
-      columns: [table.obra_id, table.empresa_id],
-      foreignColumns: [obras.empresa_id, obras.id],
-      name: 'obras_cerradas_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
       columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
       name: 'obras_cerradas_empresa_id_creado_por_fkey',
     }),
+    foreignKey({
+      columns: [table.obra_id, table.empresa_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'obras_cerradas_empresa_id_obra_id_fkey',
+    }),
+    check('obras_cerradas_check', sql`fecha_fin_real >= fecha_inicio`),
     check('obras_cerradas_dias_ciclo_check', sql`dias_ciclo >= 0`),
     check('obras_cerradas_dias_reportados_check', sql`dias_reportados >= 0`),
-    check('obras_cerradas_check', sql`fecha_fin_real >= fecha_inicio`),
   ],
 );
 
@@ -1724,24 +1724,24 @@ export const historico_etapas = pgTable(
       table.etapa_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.etapa_id],
+      foreignColumns: [etapas.id, etapas.empresa_id],
+      name: 'historico_etapas_empresa_id_etapa_id_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'historico_etapas_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.tipo_espacio_id],
+      foreignColumns: [tipos_espacio.id, tipos_espacio.empresa_id],
+      name: 'historico_etapas_empresa_id_tipo_espacio_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.espacio_id],
       foreignColumns: [espacios.id, espacios.obra_id],
       name: 'historico_etapas_obra_id_espacio_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.tipo_espacio_id],
-      foreignColumns: [tipos_espacio.empresa_id, tipos_espacio.id],
-      name: 'historico_etapas_empresa_id_tipo_espacio_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.etapa_id],
-      foreignColumns: [etapas.empresa_id, etapas.id],
-      name: 'historico_etapas_empresa_id_etapa_id_fkey',
     }),
     unique('historico_etapas_espacio_id_etapa_id_key').on(table.espacio_id, table.etapa_id),
   ],
@@ -1768,23 +1768,23 @@ export const historico_duraciones = pgTable(
     ),
     foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'historico_duraciones_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.plantilla_id],
+      foreignColumns: [plantillas_partida.id, plantillas_partida.empresa_id],
+      name: 'historico_duraciones_empresa_id_plantilla_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.tipo_espacio_id],
+      foreignColumns: [tipos_espacio.id, tipos_espacio.empresa_id],
+      name: 'historico_duraciones_empresa_id_tipo_espacio_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.partida_obra_id],
       foreignColumns: [partidas_obra.id, partidas_obra.obra_id],
       name: 'historico_duraciones_obra_id_partida_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.tipo_espacio_id],
-      foreignColumns: [tipos_espacio.empresa_id, tipos_espacio.id],
-      name: 'historico_duraciones_empresa_id_tipo_espacio_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.plantilla_id],
-      foreignColumns: [plantillas_partida.empresa_id, plantillas_partida.id],
-      name: 'historico_duraciones_empresa_id_plantilla_id_fkey',
     }),
     unique('historico_duraciones_partida_obra_id_key').on(table.partida_obra_id),
     check('historico_duraciones_dias_reales_check', sql`dias_reales >= 1`),
@@ -1814,16 +1814,55 @@ export const correcciones = pgTable(
       table.registro_id.asc().nullsLast().op('uuid_ops'),
     ),
     foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'correcciones_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
       columns: [table.empresa_id],
       foreignColumns: [empresas.id],
       name: 'correcciones_empresa_id_fkey',
     }),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.empresa_id, miembros.id],
-      name: 'correcciones_empresa_id_creado_por_fkey',
-    }),
     check('correcciones_motivo_check', sql`length(btrim(motivo)) >= 5`),
+  ],
+);
+
+export const dispositivos = pgTable(
+  'dispositivos',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    miembro_id: uuid().notNull(),
+    nombre: text().notNull(),
+    pin_hash: text(),
+    intentos_fallidos: integer().default(0).notNull(),
+    bloqueado_hasta: timestamp({ withTimezone: true, mode: 'string' }),
+    verificado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    ultimo_uso: timestamp({ withTimezone: true, mode: 'string' }),
+    revocado_en: timestamp({ withTimezone: true, mode: 'string' }),
+    revocado_por: uuid(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('dispositivos_empresa_id_miembro_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.miembro_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.miembro_id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'dispositivos_empresa_id_miembro_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.revocado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'dispositivos_empresa_id_revocado_por_fkey',
+    }),
+    check('dispositivos_check', sql`(revocado_en IS NULL) = (revocado_por IS NULL)`),
+    check('dispositivos_intentos_fallidos_check', sql`intentos_fallidos >= 0`),
+    check('dispositivos_nombre_check', sql`btrim(nombre) <> ''::text`),
   ],
 );
 
@@ -1841,8 +1880,8 @@ export const folios = pgTable(
       name: 'folios_empresa_id_fkey',
     }),
     primaryKey({ columns: [table.empresa_id, table.prefijo], name: 'folios_pkey' }),
-    check('folios_ultimo_check', sql`ultimo >= 0`),
     check('folios_prefijo_check', sql`prefijo ~ '^[A-Z]{2,4}$'::text`),
+    check('folios_ultimo_check', sql`ultimo >= 0`),
   ],
 );
 
@@ -1862,7 +1901,7 @@ export const bitacora_partidas = pgTable(
     ),
     foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'bitacora_partidas_empresa_id_obra_id_fkey',
     }),
     foreignKey({
@@ -1916,7 +1955,7 @@ export const bitacora_subs = pgTable(
     ),
     foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'bitacora_subs_empresa_id_obra_id_fkey',
     }),
     foreignKey({
@@ -1951,18 +1990,18 @@ export const inspeccion_respuestas = pgTable(
     ),
     foreignKey({
       columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.empresa_id, obras.id],
+      foreignColumns: [obras.id, obras.empresa_id],
       name: 'inspeccion_respuestas_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.punto_control_id],
+      foreignColumns: [puntos_control.id, puntos_control.empresa_id],
+      name: 'inspeccion_respuestas_empresa_id_punto_control_id_fkey',
     }),
     foreignKey({
       columns: [table.obra_id, table.inspeccion_id],
       foreignColumns: [inspecciones.id, inspecciones.obra_id],
       name: 'inspeccion_respuestas_obra_id_inspeccion_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.punto_control_id],
-      foreignColumns: [puntos_control.empresa_id, puntos_control.id],
-      name: 'inspeccion_respuestas_empresa_id_punto_control_id_fkey',
     }),
     primaryKey({
       columns: [table.inspeccion_id, table.punto_control_id],
