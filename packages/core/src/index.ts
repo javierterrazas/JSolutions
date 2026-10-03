@@ -8,3 +8,5 @@ export * from './semana';
 export * from './avance';
 export * from './partidas';
 export * from './etapas';
+export * from './validaciones';
+export * from './calidad';

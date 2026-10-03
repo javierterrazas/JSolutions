@@ -443,3 +443,39 @@ algún reporte, se revisa esta decisión.
 - Una regla que los datos nunca ejercitan no la detecta la paridad: un cambio en el peso por omisión de una
   partida pasó sin que ninguna prueba de paridad fallara, porque todas las partidas del legacy traen peso. Para
   eso están las pruebas de unidad.
+
+## D-033 · Validaciones y calidad: los códigos y lo que cambia con el calendario
+
+**Decisión:** las reglas de captura y de calidad viven en `packages/core` (`validaciones.ts`, `calidad.ts`) y
+rechazan con un código y sus datos (D-015), en el mismo orden en que revisaba el legacy, para que el usuario
+reciba el mismo primer problema. La paridad traduce cada mensaje del legacy a su código y compara caso por caso:
+- **el alta de obra**, con las 128 combinaciones de campos faltantes;
+- **la cuadrilla**, con cada trabajador y varias cantidades, en días reales del mes simulado;
+- **el cierre del día y el cierre tardío**, del PM y del dueño;
+- **las inspecciones, la prueba de agua y las fotos críticas.**
+
+Cada prueba exige además que cada tipo de rechazo haya ocurrido al menos una vez: lo aprendido en D-032.
+
+Los códigos son estos:
+- **Alta de obra:** `faltan` (con los campos, en orden), `telefono_incompleto`, `pm_no_activo`,
+  `entrega_antes_del_inicio`, `sin_espacios`, `faltan_pies2`, y la confirmación `obra_duplicada`.
+- **Cuadrilla:** `cuadrilla_dia_o_medio`, `cuadrilla_pasa_un_dia`, `cuadrilla_pasa_16_horas`.
+- **Cierre del día:** `obra_sin_presupuesto`, `falta_motivo_sin_trabajo`, `falta_foto`, `faltan_partidas`,
+  `orden_de_otra_obra`, `falta_inspeccion`.
+- **Cierre tardío:** `fuera_de_ventana`, `dia_ya_cerrado`. El del dueño suma `obra_cerrada`, `falta_motivo`,
+  `falta_dia`, `solo_dias_anteriores` y `antes_del_inicio`.
+- **Calidad:** `inspeccion_sin_foto`, `hito_sin_preguntas`, `ninguno_aplica`, `falta_prueba_agua`,
+  `prueba_sin_foto`, `prueba_en_curso`, `prueba_incompleta`.
+
+**Diferencias con el legacy:**
+- **La ventana del cierre tardío** son los últimos 2 días **laborables del calendario de la empresa** (D-028).
+  Con sábado laborable, el lunes el PM puede cerrar el sábado y el viernes; un feriado de descanso no gasta la
+  ventana.
+- **Una pregunta de inspección se identifica por su id**, no por su texto. La respuesta guarda el texto de ese
+  día (D-022).
+- **El PC3** se reconoce por `hitos_calidad.exige_prueba_agua`, no por el nombre (D-021).
+- **No se traslada** el formato anterior del teléfono para las inspecciones (solo conteos, sin la lista de
+  preguntas): el servidor siempre cuenta contra la lista real.
+- **Las validaciones de los demás formularios** (orden de trabajo, orden de cambio, cobro, compra de la oficina,
+  garantía, no calidad, subcontratista, trabajador, gasto del PM) usan el mismo `exigir`. Se trasladan con sus
+  flujos en el paso 6 y la fase 3.
