@@ -301,3 +301,67 @@ peor aunque el servidor falle.
   `packages/core` en SQL;
 - escribir con el `service_role`: RLS dejaría de proteger las escrituras;
 - funciones `security definer` por cada flujo: la lógica de negocio quedaría en SQL y no en `packages/core`.
+
+## D-027 · Lo que el servidor puede hacer a nombre de un usuario (segunda revisión del paso 4)
+
+**Contexto:** una segunda revisión independiente confirmó que por la API nadie escribe, lee dinero, ve obras
+ajenas ni ve otra empresa. Encontró que, actuando como el servidor con la identidad de un usuario, la base dejaba
+hacer más de lo que D-026 promete. Todo se corrigió en `20261004000200_endurecer.sql`, con una prueba por hallazgo
+en `packages/db/pruebas/rls/servidor.test.ts`.
+
+**Decisión:**
+- **El servidor se conecta con su propio usuario de base, `ijm_servidor`, nunca con `postgres`.** El usuario no
+  hereda nada por sí solo y solo puede tomar `servidor_app`, así que un `reset role` o un camino que olvide el
+  `set role` se queda sin permisos en lugar de saltarse RLS. La contraseña la pone quien despliega.
+- **La marca de importación (`ijm.importando`)** solo cuenta para una sesión sin rol de usuario (el importador
+  con el service role, o una conexión administrativa), nunca para `servidor_app`. Al importar un folio, el
+  contador avanza hasta él.
+- **La base pone `creado_por` (el miembro de la sesión) y `creado_en` (ahora) al crear**, mande lo que mande el
+  servidor. Nadie, ni el dueño, crea registros a nombre de otro ni con fecha inventada.
+- **`obra_id` tampoco cambia después**, igual que empresa, autor, fecha de creación y folio. Corregir la obra de
+  un registro es anularlo y volver a registrarlo. **Diferencia con el legacy:** su corrección permitía cambiar
+  `proyecto_id` de un gasto o de la mano de obra.
+- **Lo que el PM edita, vía servidor, es una lista cerrada de columnas por tabla:**
+  - órdenes de trabajo: estado, confirmación, llegada y aprobación. La aprobación va a su nombre, y una orden
+    nunca regresa de estado;
+  - espacios: solo la medida verificada;
+  - gastos: lo que el legacy dejaba corregir, y nunca uno ya revisado;
+  - bitácora: incidencia y anulación, nunca el día, la hora de envío ni la marca de tardío;
+  - avance, cuadrilla, pruebas de agua y punch list: lo suyo.
+
+  El dueño no tiene lista: sus ediciones las valida el servidor y dejan rastro en `correcciones`.
+- **Lo que el PM cuelga de otro registro** (partidas o subs de un cierre, respuestas de una inspección, fotos)
+  tiene que colgar de algo suyo o visible para él.
+- **`validar_foto` no sirve de oráculo:** revisa primero la empresa y las obras de la sesión, da un solo
+  mensaje, y falla cerrado si aparece un tipo de foto nuevo sin su regla.
+- **La empresa la activa o desactiva el sistema**, no el dueño ni el admin.
+- **El PIN solo lo lee el service role**, tampoco el servidor.
+- **Las vistas no se escriben** y ya no hay permisos por defecto para `servidor_app`: cada migración que cree
+  una tabla le da los suyos.
+
+**Aceptado, con su razón:**
+- **Una URL firmada de subida dura 2 h** y sobrevive a una baja. Solo sirve para subir a la carpeta de su obra,
+  no para leer, y lo que se suba no se registra en `fotos` sin pasar por el servidor.
+- **`Prefer: count=planned` deja ver el tamaño aproximado de tablas ajenas,** también de las de dinero. Es la
+  estimación del planificador de PostgreSQL. No revela ningún dato.
+- **Los huecos en los folios revelan cuántos registros que el PM no ve hay en su empresa,** por ejemplo
+  órdenes pagadas o compras de la oficina. Es el costo de folios legibles y seguidos (D-005).
+- **`servidor_app` puede bloquear una tabla** (`lock table`) porque edita. El servidor es código propio, y con
+  `ijm_servidor` una inyección no pasa de lo que `servidor_app` puede hacer.
+- **Las llaves foráneas distinguen un uuid que existe de uno inventado.** Exige conocer el uuid, que nunca se
+  muestra fuera de su empresa.
+
+**Para el paso 6 (el servidor):**
+- conectarse como `ijm_servidor`;
+- en **cada** transacción, `set local role servidor_app` y fijar **las dos** variables de identidad:
+  `request.jwt.claims` y `request.jwt.claim.sub`. `auth.uid()` lee primero la segunda; si quedara puesta de
+  antes, mandaría sobre la primera;
+- generar rutas de foto aleatorias, no predecibles;
+- dar enlaces firmados de lectura de pocos minutos.
+
+**Antes de producción** (no está en `config.toml`, se configura en el proyecto de Supabase):
+- contraseñas con requisitos, cambio de contraseña seguro, confirmación de correo y MFA para dueño y admin;
+- nunca cargar `supabase/seed.sql` (sus usuarios comparten una contraseña conocida);
+- no instalar extensiones en el esquema `public`: lo que crea `supabase_admin` ahí nace abierto, y la prueba
+  de "nace cerrado" solo cubre lo que crean las migraciones;
+- Realtime: sin canales públicos.

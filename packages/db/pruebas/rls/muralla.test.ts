@@ -286,7 +286,11 @@ describe('el servidor escribe a nombre del usuario, y RLS lo sigue protegiendo',
       await comoServidor(tx, USERS.carlos);
       expect(await errorDe(tx, cierre(OBRAS.a1Carlos, MIEMBROS.carlos))).toBeNull();
       expect(await errorDe(tx, cierre(OBRAS.a2Luis, MIEMBROS.carlos))).toMatch(/row-level security/);
-      expect(await errorDe(tx, cierre(OBRAS.a1Carlos, MIEMBROS.luis))).toMatch(/row-level security/);
+      // a nombre de otro: la base pone al autor de la sesión, mande lo que mande el servidor
+      const [b] = await tx`insert into bitacora (empresa_id, obra_id, dia, creado_por, creado_en)
+                           values (${EMPRESAS.a}, ${OBRAS.a1Carlos}, '2026-10-12', ${MIEMBROS.luis}, '2001-01-01')
+                           returning creado_por, creado_en > now() - interval '1 minute' as ahora`;
+      expect(b).toEqual({ creado_por: MIEMBROS.carlos, ahora: true });
     }));
 
   it('el folio lo pone la base: lo que mande el servidor se ignora', () =>
@@ -306,13 +310,13 @@ describe('el servidor escribe a nombre del usuario, y RLS lo sigue protegiendo',
       const id = p!.id as string;
       expect(
         await errorDe(tx, (t) => t`update punch_list set creado_por = ${MIEMBROS.duenoA} where id = ${id}`),
-      ).toMatch(/no se puede cambiar/);
+      ).toMatch(/no se puede cambiar|El PM no puede cambiar/);
       expect(await errorDe(tx, (t) => t`update punch_list set folio = 'PUN-0099' where id = ${id}`)).toMatch(
-        /no se puede cambiar/,
+        /no se puede cambiar|El PM no puede cambiar/,
       );
       expect(
         await errorDe(tx, (t) => t`update punch_list set creado_en = '2020-01-01' where id = ${id}`),
-      ).toMatch(/no se puede cambiar/);
+      ).toMatch(/no se puede cambiar|El PM no puede cambiar/);
       // lo que sí le toca: cerrarlo
       expect(
         await errorDe(
@@ -326,7 +330,7 @@ describe('el servidor escribe a nombre del usuario, y RLS lo sigue protegiendo',
     enTransaccionRevertida(base, async (tx) => {
       await comoServidor(tx, USERS.carlos);
       expect(await errorDe(tx, (t) => t`update punch_list set obra_id = ${OBRAS.a2Luis}`)).toMatch(
-        /row-level security/,
+        /no puede cambiar obra_id|row-level security/,
       );
     }));
 
@@ -382,7 +386,9 @@ describe('el servidor escribe a nombre del usuario, y RLS lo sigue protegiendo',
       expect(
         await errorDe(tx, foto(`${EMPRESAS.a}/${OBRAS.a1Carlos}/../x-7.jpg`, 'bitacora', b!.id)),
       ).toMatch(/ruta/);
-      expect(await errorDe(tx, foto(propia, 'gasto', deB!.id))).toMatch(/no es de su obra/);
+      expect(await errorDe(tx, foto(propia, 'gasto', deB!.id))).toMatch(
+        /no corresponde a un registro de su obra/,
+      );
       expect(await errorDe(tx, foto(propia, 'bitacora', b!.id))).toBeNull();
     }));
 

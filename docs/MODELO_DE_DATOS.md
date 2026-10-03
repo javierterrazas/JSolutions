@@ -27,8 +27,9 @@ genera desde ellas con `pnpm db:esquema`.
   Ninguna permite borrar. Sin sesión no se lee nada. Una prueba falla si una tabla queda sin RLS, y
   `pnpm test:rls` prueba la tabla de abajo con usuarios reales (D-025).
 - **Por la API solo se lee** (D-026). Toda escritura la hace el servidor con el rol `servidor_app` y la identidad
-  del usuario, bajo RLS. La base pone el folio, protege `empresa_id`, `creado_por`, `creado_en` y `folio`, y
-  amarra cada foto a su empresa y su obra.
+  del usuario, bajo RLS. La base pone el folio, el autor y la fecha de creación; protege `empresa_id`,
+  `obra_id`, `creado_por`, `creado_en` y `folio`; limita las columnas que edita el PM, y amarra cada foto a su
+  empresa y su obra (D-027).
 
 ## Quién lee qué
 

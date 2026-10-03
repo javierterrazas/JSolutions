@@ -79,6 +79,18 @@ describe('permisos de lo que ya existe', () => {
   });
 });
 
+describe('las vistas solo se leen', () => {
+  it('ni la API ni el servidor escriben en una vista (son de postgres y se saltarían RLS)', async () => {
+    const r = await cliente<{ permiso: string }[]>`
+      select r.rolname || ' ' || p.privilege || ' ' || c.relname as permiso
+      from pg_class c join pg_namespace n on n.oid = c.relnamespace
+      cross join (values ('anon'), ('authenticated'), ('servidor_app')) as r(rolname)
+      cross join (values ('INSERT'), ('UPDATE'), ('DELETE')) as p(privilege)
+      where n.nspname = 'public' and c.relkind in ('v', 'm') and has_table_privilege(r.rolname, c.oid, p.privilege)`;
+    expect(r.map((x) => x.permiso)).toEqual([]);
+  });
+});
+
 describe('lo que se cree después nace cerrado', () => {
   it('una función, una vista, una secuencia y una tabla nuevas no quedan abiertas para la API', () =>
     enTransaccionRevertida(cliente, async (tx) => {
@@ -93,7 +105,9 @@ describe('lo que se cree después nace cerrado', () => {
                has_table_privilege('authenticated', 'public.prueba_vista', 'UPDATE') as vista_editable,
                has_sequence_privilege('anon', 'public.prueba_secuencia', 'USAGE') as secuencia_anon,
                has_table_privilege('authenticated', 'public.prueba_tabla', 'INSERT') as tabla_insert,
-               has_table_privilege('authenticated', 'public.prueba_tabla', 'DELETE') as tabla_delete`;
+               has_table_privilege('authenticated', 'public.prueba_tabla', 'DELETE') as tabla_delete,
+               has_table_privilege('servidor_app', 'public.prueba_vista', 'UPDATE') as vista_servidor,
+               has_table_privilege('servidor_app', 'public.prueba_tabla', 'INSERT') as tabla_servidor`;
       expect(r).toEqual({
         fn_anon: false,
         fn_auth: false,
@@ -102,6 +116,8 @@ describe('lo que se cree después nace cerrado', () => {
         secuencia_anon: false,
         tabla_insert: false,
         tabla_delete: false,
+        vista_servidor: false,
+        tabla_servidor: false,
       });
     }));
 });
