@@ -8,7 +8,7 @@
 // identificado por el contenido del legacy y de este archivo: si no cambian, el mes no se vuelve a simular.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,16 +32,16 @@ const isoLocal = (d: Date) =>
   `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}T${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
 
 /** Lo que hace correr_pruebas.sh con sed: las rutas fijas del legacy apuntan a la carpeta de trabajo. */
-function cambiarRutas(codigo: string, trabajo: string): string {
-  return codigo
-    .split('/home/claude/ijm/')
-    .join(LEGACY + 'app/')
-    .split('/tmp/sim/')
-    .join(trabajo + '/sim/')
-    .split("'/tmp'")
-    .join(`'${trabajo}'`)
-    .split('/tmp/')
-    .join(trabajo + '/');
+// En una sola pasada: en Linux la carpeta de trabajo misma está en /tmp, y un segundo reemplazo de "/tmp/" la
+// duplicaría (/tmp/ijm-paridad/…/ijm-paridad/…).
+export function cambiarRutas(codigo: string, trabajo: string, legacy = LEGACY): string {
+  const rutas: Record<string, string> = {
+    '/home/claude/ijm/': legacy + 'app/',
+    '/tmp/sim/': trabajo + '/sim/',
+    "'/tmp'": `'${trabajo}'`,
+    '/tmp/': trabajo + '/',
+  };
+  return codigo.replace(/\/home\/claude\/ijm\/|\/tmp\/sim\/|'\/tmp'|\/tmp\//g, (m) => rutas[m]!);
 }
 
 /** Cambia un texto exacto o falla: si el legacy cambia, mejor enterarse que simular a medias. */
@@ -70,14 +70,19 @@ const VOLCADO = `
 
 let carpeta: string | undefined;
 
-/** Corre el mes simulado (solo la primera vez) y devuelve la carpeta con sus resultados. */
-function simular(): string {
+/**
+ * Corre el mes simulado (solo si no está en caché) y devuelve la carpeta con sus resultados. Se simula en una
+ * carpeta propia que se renombra al terminar: una corrida a medias, o dos al mismo tiempo, nunca dejan una carpeta
+ * incompleta donde otra prueba la busque. Lo llama una vez el globalSetup de la paridad (preparar.ts).
+ */
+export function prepararMesSimulado(): string {
   if (carpeta) return carpeta;
   const huella = createHash('sha256');
   for (const f of FUENTES) huella.update(readFileSync(f));
-  const trabajo = join(tmpdir(), 'ijm-paridad', huella.digest('hex').slice(0, 16)).replace(/\\/g, '/');
+  const destino = join(tmpdir(), 'ijm-paridad', huella.digest('hex').slice(0, 16)).replace(/\\/g, '/');
 
-  if (!existsSync(trabajo + '/sim/dias.json')) {
+  if (!existsSync(destino + '/sim/dias.json')) {
+    const trabajo = `${destino}.${process.pid}.${Date.now()}`;
     mkdirSync(trabajo + '/sim', { recursive: true });
     // el libro de ejemplo como lo dejaba preparar_libro.py
     const libro = leerLibro(XLSX);
@@ -112,7 +117,14 @@ function simular(): string {
       stdio: 'pipe',
       timeout: 600_000,
     });
+    try {
+      renameSync(trabajo, destino);
+    } catch {
+      // otra corrida terminó primero: se usa la suya
+      rmSync(trabajo, { recursive: true, force: true });
+    }
   }
+  const trabajo = destino;
 
   // El reporte del legacy lista los "hallazgos" del mes: su propia prueba exige cero. Si hay alguno, los datos no
   // sirven para comparar (por ejemplo, porque el libro se leyó mal).
@@ -141,14 +153,17 @@ let porDia: Map<string, Libro> | undefined;
 
 /** Las hojas del libro al terminar el mes simulado. */
 export function mesSimulado(): Libro {
-  final ??= revivir(JSON.parse(readFileSync(simular() + '/sim/hojas.json', 'utf8')) as Libro);
+  final ??= revivir(JSON.parse(readFileSync(prepararMesSimulado() + '/sim/hojas.json', 'utf8')) as Libro);
   return final;
 }
 
 /** Las hojas al terminar cada día simulado, por día ("2026-10-05"). */
 export function diasSimulados(): Map<string, Libro> {
   if (!porDia) {
-    const crudo = JSON.parse(readFileSync(simular() + '/sim/dias.json', 'utf8')) as Record<string, Libro>;
+    const crudo = JSON.parse(readFileSync(prepararMesSimulado() + '/sim/dias.json', 'utf8')) as Record<
+      string,
+      Libro
+    >;
     porDia = new Map(Object.entries(crudo).map(([d, l]) => [d, revivir(l)]));
   }
   return porDia;

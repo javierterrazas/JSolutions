@@ -16,7 +16,13 @@ export default defineConfig({
       },
       {
         // reglas de packages/core contra el legacy cargado en Node
-        test: { name: 'paridad', include: ['packages/core/pruebas/paridad/**/*.test.ts'], env },
+        test: {
+          name: 'paridad',
+          include: ['packages/core/pruebas/paridad/**/*.test.ts'],
+          env,
+          // el mes simulado del legacy se corre una vez, antes de todas las pruebas
+          globalSetup: ['packages/core/pruebas/paridad/preparar.ts'],
+        },
       },
       {
         // la muralla financiera y el aislamiento entre empresas; requiere `supabase start`
