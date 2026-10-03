@@ -161,7 +161,9 @@ export function cargarLegacy(app: AppLegacy, opciones: OpcionesLegacy = {}): Con
   const archivo = app === 'Dueno' ? 'App_Dueno.gs' : 'App_PM.gs';
   const codigo = readFileSync(RAIZ_LEGACY + 'app/' + archivo, 'utf8');
   vm.createContext(contexto);
-  vm.runInContext(codigo, contexto, { filename: archivo });
+  // __limpiarMemo: como el __n() de las pruebas del legacy, olvida lo leído para volver a leer las hojas
+  const limpiarMemo = '\nfunction __limpiarMemo() { for (const k in _memo) delete _memo[k]; }';
+  vm.runInContext(codigo + limpiarMemo, contexto, { filename: archivo });
   return contexto;
 }
 

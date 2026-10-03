@@ -418,3 +418,28 @@ resultado depende de la hora a la que se abra el tablero. `packages/core` trabaj
 
 **Confirmado por el dueño:** es un error del legacy y se queda la versión nueva. La prueba de paridad acepta la
 diferencia solo en ese caso exacto, y compara también a las 13:00, donde las dos versiones coinciden en todo.
+
+## D-031 · La cuadrilla se cuesta con la tarifa vigente el día que trabajó
+
+**Diferencia intencional con el legacy:** el legacy multiplicaba todas las horas por la tarifa **actual** del
+trabajador, así que un aumento cambiaba el costo de las obras pasadas, sus desvíos y los costos unitarios con los
+que se cotiza. `tarifas_trabajador` guarda la historia (`vigente_desde`), y `tarifaDelDia` toma la última vigente
+a la fecha del registro.
+**Paridad:** con una sola tarifa por trabajador, vigente desde siempre (que es lo que el legacy guardaba), las dos
+versiones coinciden en cada costo. La historia de tarifas tiene sus propias pruebas en `packages/core/src`.
+
+## D-032 · Montos como número, comparados con 6 decimales en la paridad
+
+**Decisión:** en `packages/core` los montos son `number` en dólares, igual que en el legacy; la base los guarda en
+`numeric(12,2)` y el servidor los convierte. Las sumas se hacen en el mismo orden que el legacy. La paridad
+compara redondeando a 6 decimales para que el último bit de punto flotante no cuente como diferencia; lo que se
+muestra se redondea al mostrarse.
+**Descartado por ahora:** trabajar en centavos enteros. Si en la fase 3 aparece una diferencia de un centavo en
+algún reporte, se revisa esta decisión.
+
+**Aprendido en el paso 5b:**
+- La paridad encontró una regla que faltaba: en una **obra cerrada** no se agregan ni se quitan partidas, y
+  quitar una pide **motivo** (`exigirObraAbierta`, `falta_motivo`).
+- Una regla que los datos nunca ejercitan no la detecta la paridad: un cambio en el peso por omisión de una
+  partida pasó sin que ninguna prueba de paridad fallara, porque todas las partidas del legacy traen peso. Para
+  eso están las pruebas de unidad.
