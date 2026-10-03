@@ -41,7 +41,7 @@ cobro con Stripe y el alta de empresas en línea (fase 4). Apps nativas.
 2. **La invitación llega por correo.** Decidido. En producción sale por Resend con el dominio propio; el correo
    que trae Supabase es solo para pruebas.
 3. **El PIN es de 4 dígitos**, como en el legacy. Decidido. El límite de intentos lo hace seguro (D-024).
-4. **La obra piloto se da de alta a mano**, con los flujos del servidor (, ).
+4. **La obra piloto se da de alta a mano**, con los flujos del servidor (`crearObra`, `guardarPresupuesto`).
    Decidido. El importador sigue en la fase 3.
 5. **Los estilos, con Tailwind.** Decidido. Es la librería de estilos más común con Next.js; se agrega en el paso 1.
 
