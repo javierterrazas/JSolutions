@@ -1,7 +1,6 @@
 # Fase 2 — La app del PM (BORRADOR)
 
-> Borrador para revisar con el dueño antes de empezar. Cuatro de sus cinco decisiones ya están tomadas; la que
-> falta (dónde vive la app) se resuelve antes del paso 1.
+> Borrador para revisar con el dueño antes de empezar. Sus cinco decisiones ya están tomadas.
 
 ## Objetivo
 
@@ -34,10 +33,10 @@ cobro con Stripe y el alta de empresas en línea (fase 4). Apps nativas.
 
 ## Decisiones del dueño
 
-1. **Dónde vive la app** — *pendiente*. Recomendación: dos proyectos de Supabase, "pruebas" (gratuito, para las
-   vistas previas) y "producción" (Pro: sin pausas y con respaldos diarios), en us-east-1; Vercel Pro (el plan
-   gratuito no permite uso comercial) en la misma región; Resend para los correos, con dominio propio. El dueño
-   crea las cuentas y define el **nombre y el dominio** del producto (pendiente 1 de la fase 1).
+1. **Dónde vive la app: Supabase y Vercel**, en Estados Unidos (us-east-1). Decidido (D-036). Dos proyectos de
+   Supabase: "pruebas" (gratuito, para las vistas previas) y "producción" (Pro: sin pausas y con respaldos
+   diarios); Vercel Pro (el gratuito no permite uso comercial); Resend para los correos. El producto se llama
+   **J Solutions**; el dominio está por comprarse. El dueño crea las cuentas.
 2. **La invitación llega por correo.** Decidido. En producción sale por Resend con el dominio propio; el correo
    que trae Supabase es solo para pruebas.
 3. **El PIN es de 4 dígitos**, como en el legacy. Decidido. El límite de intentos lo hace seguro (D-024).
