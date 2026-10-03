@@ -176,7 +176,7 @@ describe('el PM ve solo sus obras', () => {
   it('las vistas solo traen lo de su empresa y sus obras', async () => {
     expect((await leer(como('pm1A'), 'empresa_actual_datos')).map((e) => e.id)).toEqual([EMPRESAS.a]);
     expect(Object.keys((await leer(como('pm1A'), 'configuracion_pm'))[0]!).sort()).toEqual(
-      ['empresa_id', 'horas_sin_recibo', 'limite_compra_pm', 'sla_bloqueo_horas'].sort(),
+      ['dias_laborables', 'empresa_id', 'horas_sin_recibo', 'limite_compra_pm', 'sla_bloqueo_horas'].sort(),
     );
     expect((await leer(como('pm1A'), 'entregas_pm')).map((e) => e.obra_id)).toEqual([OBRAS.a1Carlos]);
     expect((await leer(como('pm1A'), 'subcontratistas_pm')).every((s) => s.empresa_id === EMPRESAS.a)).toBe(

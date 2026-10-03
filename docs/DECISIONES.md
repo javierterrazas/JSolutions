@@ -365,3 +365,56 @@ en `packages/db/pruebas/rls/servidor.test.ts`.
 - no instalar extensiones en el esquema `public`: lo que crea `supabase_admin` ahí nace abierto, y la prueba
   de "nace cerrado" solo cubre lo que crean las migraciones;
 - Realtime: sin canales públicos.
+
+## D-028 · El calendario laboral es de cada empresa: de lunes a sábado por defecto, con feriados opcionales
+
+**Decisión del dueño:** en IJM se trabaja también el sábado, y los feriados se trabajan o no según se decida.
+- `configuracion.dias_laborables`: los días de la semana que se trabajan (ISO: 1 = lunes … 7 = domingo). Por
+  defecto, de lunes a sábado.
+- `feriados (dia, nombre, se_trabaja)`: un feriado se descansa salvo que se marque `se_trabaja`.
+- `packages/core` recibe el calendario como argumento (`calendario(dias, feriadosDeDescanso)`) en todo lo que
+  cuenta días laborables: cronograma, fecha comprometida, atraso, "Esta semana", días sin cierre, y después la
+  ventana del cierre tardío y el punch list.
+- La semana de trabajo va de lunes a domingo. El legacy la cortaba el viernes (`masHab_(lunes, 4)`); con su
+  calendario da lo mismo, porque una partida nunca termina en día no laborable.
+- La semana del PM se pide con el número de días que se quiera mostrar. El legacy mostraba 5; con el sábado
+  laborable conviene mostrar 6.
+
+**Diferencia intencional con el legacy,** que solo contaba de lunes a viernes, sin feriados. La paridad se prueba
+con `CALENDARIO_LEGACY` (lunes a viernes). El calendario real tiene sus propias pruebas en `packages/core/src`:
+sábado laborable, feriados, y una obra que arranca en feriado.
+
+**Ejemplo:** un baño que arranca el lunes 5 de octubre de 2026 sigue tomando 20 días laborables. Con el sábado
+laborable se entrega el martes 27, en vez del viernes 30.
+
+## D-029 · Cómo se prueba la paridad
+
+**Decisión:** el legacy corre de verdad en una máquina virtual de Node (D-012) con dos fuentes de datos.
+- **El libro de ejemplo** (`Gestion_Obra_IJM.xlsx`), leído con un lector propio de `.xlsx` (`zlib` de Node, sin
+  dependencias), que deja las fechas como las dejaba `openpyxl`.
+- **El mes simulado del legacy** (`legacy/sim/`): 5 semanas con 2 PMs y 4 obras. Corre en una copia temporal, con
+  las rutas corregidas como en `correr_pruebas.sh`. En esa copia, el reloj simulado guarda una foto de todas las
+  hojas al terminar cada día: 31 días, con obras arrancando, a medias, atrasadas y entregadas. El resultado se
+  guarda en caché mientras el legacy no cambie. Si el reporte del mes deja algún hallazgo (su propia prueba
+  exige cero), la paridad se detiene.
+
+Las hojas del legacy se convierten a las entradas de `packages/core`
+(`packages/core/pruebas/paridad/convertir.ts`) con las mismas reglas de lectura del legacy. Así se adelanta lo
+que hará el importador de la fase 3: renglones anulados fuera, espacio deducido para registros viejos, y oficio
+de cada partida ligado al oficio de sub que empata por texto.
+
+**Se comprobó que las pruebas tienen dientes:** dos cambios pequeños en `packages/core` hicieron fallar 5 pruebas
+de paridad.
+
+**Aprendido:** la primera versión del lector de `.xlsx` dejaba vacías las hojas con un renglón en blanco en medio
+(entre ellas `Trabajadores`), y el mes simulado lo delató con un hallazgo. Quedó una prueba para eso.
+
+## D-030 · Avance esperado el día de inicio (pregunta abierta)
+
+**Diferencia conocida con el legacy:** el día de inicio de una obra, el legacy da 0 % de "avance esperado" antes
+del mediodía y 1/n después. Guarda la fecha de inicio a las 12:00 y la compara con la hora actual, así que el
+resultado depende de la hora a la que se abra el tablero. `packages/core` trabaja con días, no con horas, y da
+1/n todo el día.
+
+**Pendiente:** confirmar con el dueño que es un error del legacy. La prueba de paridad la acepta solo en ese caso
+exacto, y compara también a las 13:00, donde las dos versiones coinciden en todo.
