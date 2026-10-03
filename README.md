@@ -74,6 +74,7 @@ Auth. **Solo existen en la base local.** Todos usan la contraseña `ijm-prueba-2
 apps/web/          Next.js: pantallas del dueño y del PM, y la capa de servidor
 packages/core/     reglas de negocio puras; aquí vive la paridad con el legacy
 packages/db/       esquema Drizzle, tipos y acceso a datos
+packages/servidor/ los flujos que escriben (crear obra, presupuesto, cerrar el día, fotos, correcciones)
 supabase/          configuración local, migraciones SQL, políticas RLS y datos de prueba
 legacy/            el sistema anterior y sus pruebas (solo lectura)
 docs/              plan de fases, modelo de datos y registro de decisiones

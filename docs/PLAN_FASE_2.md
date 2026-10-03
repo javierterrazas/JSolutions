@@ -1,0 +1,128 @@
+# Fase 2 — La app del PM (BORRADOR)
+
+> Borrador para revisar con el dueño antes de empezar. Lo marcado como **decisión pendiente** se resuelve antes
+> del paso que lo necesita.
+
+## Objetivo
+
+Que un PM de IJM lleve su obra desde el celular: que entre con su PIN, vea su semana, cierre el día en menos de un
+minuto —con o sin señal— y registre gastos, avisos, inspecciones y el punch list. Todo sobre lo que dejó la fase 1:
+las reglas de `packages/core`, la muralla en la base y los flujos de `packages/servidor`.
+
+Al terminar, **un PM real usa la app en una obra real de IJM**, en paralelo con el sistema actual, y los datos de
+las dos coinciden.
+
+## Terminado cuando
+
+- [ ] El PM instala la app en su celular (PWA), entra con su PIN en su dispositivo verificado, y en otro aparato
+      no puede entrar sin una invitación nueva.
+- [ ] El PM cierra el día **sin señal**; al volver la señal se envía solo, sin duplicar nada, y si una regla lo
+      rechaza lo ve con la razón. Probado con Playwright simulando la pérdida de red.
+- [ ] Cerrar un día normal (partidas, cuadrilla, sub, 2 fotos) toma menos de 60 segundos, medido con el PM piloto.
+- [ ] Cada pantalla del PM está en español y en inglés; ningún texto queda fijo en el código; los errores de
+      negocio se muestran por su código (D-015).
+- [ ] Las pruebas de pantalla del legacy que tocan al PM tienen su equivalente en Playwright y pasan en la
+      integración continua, en tamaño de teléfono.
+- [ ] El PM piloto usó la app al menos 2 semanas en una obra y sus datos cuadran con el sistema actual.
+- [ ] Nada de la fase 1 se debilitó: las 261 pruebas siguen en verde, y la muralla tiene una revisión
+      independiente de lo nuevo.
+
+## Fuera de alcance
+
+Las pantallas del dueño, el importador desde Google Sheets y el mes simulado sobre la app completa (fase 3). El
+cobro con Stripe y el alta de empresas en línea (fase 4). Apps nativas.
+
+## Decisiones pendientes del dueño
+
+1. **Dónde vive la app** (para el piloto): crear el proyecto de Supabase en la nube (región Estados Unidos, decisión
+   pendiente 4 de la fase 1) y el de Vercel. Y el **nombre y el dominio** del producto (pendiente 1).
+2. **Cómo llega la invitación al PM:** por correo (gratis) o por mensaje de texto (requiere un proveedor como
+   Twilio, con costo por mensaje).
+3. **El PIN:** 4 o 6 dígitos. El legacy usaba 4; con el límite de intentos (D-024) ambos son seguros.
+4. **Cómo entran los datos de la obra piloto:** el importador es de la fase 3. Para el piloto, o se da de alta la
+   obra a mano (con un script del servidor), o se adelanta un importador mínimo de una sola obra.
+5. **Librería de estilos:** Tailwind (la más común con Next.js) u hojas de estilo propias. Es una dependencia
+   nueva; se explica antes de agregarla.
+
+## Pasos
+
+### 1. La base de la app
+
+Next.js con next-intl (español e inglés, con el idioma de cada miembro), el manifiesto y el service worker de la
+PWA, y el despliegue de vista previa en Vercel con el proyecto de Supabase en la nube. Las server actions solo
+traducen la petición y llaman a `packages/servidor`; no hay reglas en la capa web.
+
+**Terminado cuando** la app vacía se instala en un iPhone y un Android, cambia de idioma, y la integración continua
+despliega una vista previa por cada pull request.
+
+### 2. Entrar: invitación, dispositivo verificado y PIN (D-024)
+
+- El dueño invita al PM (correo o mensaje, decisión 2). Al abrir la invitación en su celular, el dispositivo queda
+  verificado y el PM elige su PIN.
+- El PIN se guarda solo como hash, lo verifica el servidor con el service role (la única vez que se usa para un
+  usuario: D-027) y tiene límite de intentos: 5 fallidos bloquean 15 minutos.
+- Sin señal, el PIN desbloquea la sesión guardada en ese dispositivo. **Riesgo a resolver:** cómo proteger esa
+  sesión guardada (cifrada con una llave derivada del PIN, con WebCrypto).
+- Cada server action verifica el token de Supabase y saca de ahí el `userId` que recibe `packages/servidor`
+  (pendiente de D-035). El dueño ve los dispositivos de cada PM y puede revocar uno.
+
+**Terminado cuando** las pruebas cubren: invitación, PIN correcto e incorrecto, bloqueo, revocación, PM dado de
+baja con sesión abierta (se corta en ese instante, D-016), y otro aparato sin invitación.
+
+### 3. El inicio del PM
+
+Sus obras con el avance ponderado y la entrega prevista; la semana del PM (6 días, con el sábado: D-028); los días
+que olvidó cerrar; las órdenes por confirmar y los subs que llegan; las órdenes de cambio autorizadas que tiene que
+ejecutar; las inspecciones pendientes; las respuestas a sus avisos; los gastos sin recibo; su racha de días
+cerrados. Todo sale de `packages/core`; nada de dinero del negocio.
+
+### 4. Cerrar el día
+
+El flujo estrella. La partida en curso viene sugerida; las terminadas, la cuadrilla (horas o día y medio día), el
+sub que llegó y las fotos con la cámara, comprimidas en el teléfono. "Hoy no hubo trabajo" con su motivo. Los
+últimos 2 días laborables, tarde. Las fotos se suben después, en segundo plano, con su número (D-007).
+
+### 5. Sin señal: la cola
+
+Lo que el PM guarda sin señal queda en el teléfono (IndexedDB) y se envía solo al volver la señal, en orden. Cada
+operación lleva un identificador, para que un reintento nunca la duplique. Las reglas del legacy
+(`prueba_cola.js`) se conservan:
+- un error de red o del servidor no descarta nada: se reintenta;
+- un rechazo de negocio (por ejemplo, PC3 sin prueba de agua) sale de la cola y se le muestra al PM con su razón;
+- si la sesión venció, se marca y se conserva todo hasta que vuelva a entrar.
+
+**Riesgos:** Safari en iPhone no sincroniza en segundo plano y puede borrar el almacenamiento de una PWA poco
+usada; se mide en el piloto. Y lo que cambia mientras el PM está sin señal (la obra se entregó, se pasó la ventana
+de 48 h) se resuelve con los mismos rechazos de negocio.
+
+### 6. Los demás registros del PM
+
+Con su flujo en `packages/servidor` y su pantalla:
+- gasto con recibo, y el aviso de compra arriba del límite;
+- aviso (bloqueo) con fotos;
+- inspección de un punto de control, con "No aplica" y foto en los puntos críticos;
+- prueba de inundación de 24 h;
+- punch list en el recorrido con el cliente;
+- medida verificada (D-014);
+- confirmar, marcar llegada y aprobar una orden de trabajo;
+- correcciones en 48 h;
+- el álbum de fotos de la obra.
+
+### 7. Pruebas de pantalla y piloto
+
+- Playwright en tamaño de teléfono, en la integración continua: el equivalente de `prueba_calidad_ui`,
+  `prueba_tardio_ui`, `prueba_pordia_ui`, `prueba_noaplica_ui`, `prueba_fotos_despues_ui`, `prueba_numeros_ui`,
+  `prueba_formularios_ui` (lo del PM), `prueba_pin`, `prueba_cola`, `prueba_idioma`, `prueba_scroll` y
+  `prueba_placeholder`.
+- Una revisión independiente de la seguridad de lo nuevo (sesión guardada, PIN, cola).
+- El piloto: un PM, una obra, al menos 2 semanas, en paralelo con el sistema actual. Se mide el tiempo de cierre y
+  se comparan los datos.
+
+## Riesgos
+
+- **El teléfono del PM:** celulares viejos, poca memoria, fotos HEIC del iPhone. Se prueba con los teléfonos reales
+  de los PMs de IJM.
+- **Sin señal de verdad:** el piloto puede mostrar casos que la simulación no ve (una obra en un sótano todo el
+  día). La cola tiene que aguantar un día completo sin señal.
+- **Que crezca el alcance:** las pantallas del dueño son de la fase 3. En la fase 2, el dueño sigue usando el
+  sistema actual, y lo nuevo que el PM registra se revisa con consultas directas.

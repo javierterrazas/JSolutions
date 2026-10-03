@@ -23,9 +23,10 @@ y el presupuesto calculan exactamente lo mismo que el sistema que ya funciona.
 - [x] `packages/core` tiene las reglas de negocio de la lista del paso 5, y **las pruebas de paridad contra el
       legacy dan cero diferencias** — o cada diferencia está explicada en `docs/DECISIONES.md`.
       (Pasos 5a a 5d: D-028 a D-034.)
-- [ ] Las funciones del servidor para los flujos principales pasan sus pruebas de integración contra la base
+- [x] Las funciones del servidor para los flujos principales pasan sus pruebas de integración contra la base
       local: crear obra, guardar presupuesto por etapa, cerrar el día, subir una foto numerada.
-- [x] `docs/DECISIONES.md` registra cada decisión de diseño tomada (al día con el paso 5).
+      (Paso 6, con correcciones con rastro: D-035.)
+- [x] `docs/DECISIONES.md` registra cada decisión de diseño tomada (al día con el paso 6).
 
 ## Fuera de alcance
 
