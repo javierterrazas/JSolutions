@@ -143,6 +143,7 @@ pnpm e2e                Playwright
 
 ## Documentos
 
-- `docs/PLAN_FASE_1.md` — la fase en curso, con sus criterios de terminado.
+- `docs/PLAN_FASE_1.md` — la fase 1 (cimientos), terminada: sus siete criterios están cumplidos.
+- `docs/PLAN_FASE_2.md` — el borrador de la fase 2 (la app del PM), por revisar con el dueño.
 - `docs/MODELO_DE_DATOS.md` — las tablas, sus relaciones y quién puede leer qué.
 - `docs/DECISIONES.md` — el registro de decisiones.
