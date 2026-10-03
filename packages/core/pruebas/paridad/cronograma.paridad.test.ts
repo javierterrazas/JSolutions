@@ -161,7 +161,7 @@ describe('paridad del cronograma con el legacy', () => {
     expect(diferencias.slice(0, 5)).toEqual([]);
   });
 
-  // Diferencia conocida (D-030): el día de inicio, el legacy da 0 % de avance esperado antes del mediodía y 1/n
+  // Diferencia intencional (D-030, confirmada por el dueño): el día de inicio, el legacy da 0 % de avance esperado antes del mediodía y 1/n
   // después, porque guarda el inicio a las 12:00 y lo compara con la hora actual. core da 1/n todo el día.
   it('fecha comprometida, atraso, atraso previsto y avance esperado del tablero del dueño', () => {
     const diferencias: string[] = [];

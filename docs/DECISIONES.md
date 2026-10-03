@@ -409,12 +409,12 @@ de paridad.
 **Aprendido:** la primera versión del lector de `.xlsx` dejaba vacías las hojas con un renglón en blanco en medio
 (entre ellas `Trabajadores`), y el mes simulado lo delató con un hallazgo. Quedó una prueba para eso.
 
-## D-030 · Avance esperado el día de inicio (pregunta abierta)
+## D-030 · Avance esperado el día de inicio: el legacy tenía un error
 
 **Diferencia conocida con el legacy:** el día de inicio de una obra, el legacy da 0 % de "avance esperado" antes
 del mediodía y 1/n después. Guarda la fecha de inicio a las 12:00 y la compara con la hora actual, así que el
 resultado depende de la hora a la que se abra el tablero. `packages/core` trabaja con días, no con horas, y da
 1/n todo el día.
 
-**Pendiente:** confirmar con el dueño que es un error del legacy. La prueba de paridad la acepta solo en ese caso
-exacto, y compara también a las 13:00, donde las dos versiones coinciden en todo.
+**Confirmado por el dueño:** es un error del legacy y se queda la versión nueva. La prueba de paridad acepta la
+diferencia solo en ese caso exacto, y compara también a las 13:00, donde las dos versiones coinciden en todo.
