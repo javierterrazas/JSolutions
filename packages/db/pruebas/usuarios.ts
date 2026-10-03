@@ -22,6 +22,20 @@ export const EMPRESAS = {
   b: 'e000000b-0000-4000-8000-000000000000',
 } as const;
 
+/** Los user_id de Auth de supabase/seed.sql, para actuar como el servidor a nombre de cada uno. */
+export const USERS = {
+  duenoA: 'a0000000-0000-4000-8000-000000000001',
+  carlos: 'a0000000-0000-4000-8000-000000000002',
+  luis: 'a0000000-0000-4000-8000-000000000003',
+} as const;
+
+/** Sus miembros (miembros.id), que es lo que va en creado_por. */
+export const MIEMBROS = {
+  duenoA: 'a1000000-0000-4000-8000-000000000001',
+  carlos: 'a1000000-0000-4000-8000-000000000002',
+  luis: 'a1000000-0000-4000-8000-000000000003',
+} as const;
+
 export const OBRAS = {
   a1Carlos: 'a2000000-0000-4000-8000-000000000001',
   a2Luis: 'a2000000-0000-4000-8000-000000000002',

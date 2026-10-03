@@ -227,20 +227,77 @@ con las pantallas del PM (fase 2). Los usuarios de prueba entran con correo y co
 **Descartado:** código por mensaje cada vez (la señal en obra es mala); correo y contraseña (lento en el
 teléfono, al final del día).
 
-## D-025 · Permisos de base y lo que el PM escribe por el servidor
+## D-025 · Permisos de base
+
+**Decisión** (ajustada por D-026 en el mismo paso 4):
+- `anon` (sin sesión) no tiene ningún permiso: ni tablas, ni vistas, ni funciones, ni secuencias.
+- `authenticated` (la API) **solo lee**, siempre bajo RLS. Nunca crea, edita, borra ni vacía (`truncate`).
+  Supabase daba por defecto todos los permisos a los dos roles, incluido `truncate`, al que RLS no aplica.
+- `servidor_app` (D-026) crea y edita bajo RLS, y nunca borra: nada se borra (regla 4).
+- **Lo que se cree después nace cerrado.** Los permisos por defecto de tablas, vistas, secuencias y funciones
+  nuevas no dan nada a `anon` ni a la API. Cuidado: el permiso de ejecutar que toda función nueva da a PUBLIC
+  es global, y `alter default privileges in schema public` no lo quita. Hace falta la forma sin esquema. Una
+  prueba crea una función, una vista, una secuencia y una tabla dentro de una transacción revertida y revisa
+  que nazcan cerradas.
+- **El PIN** (`dispositivos.pin_hash`, intentos y bloqueo) no lo lee nadie por la API, ni el propio miembro: se
+  da `select` solo sobre las demás columnas (D-024).
+- **Paridad:** gastos y avisos se muestran al PM por quién los registró, no por obra, como en el legacy
+  (`sinRecibo`, `bloqueos`). Se ven también los de obras ya entregadas.
+
+## D-026 · Por la API solo se lee; toda escritura pasa por el servidor
+
+**Contexto:** la revisión independiente del paso 4 encontró que, con políticas de escritura para
+`authenticated`, el PM podía saltarse las reglas escribiendo directo por la API. Lo comprobó ejecutando cada
+caso:
+- una prueba de agua "sin fugas" cerrada en 60 segundos;
+- una inspección aprobada sin preguntas;
+- 48 horas de un trabajador en un día;
+- un gasto de $9,999,999;
+- folios elegidos por él (y apartados);
+- el autor y la fecha del punch list cambiados;
+- correcciones falsas en la auditoría.
+
+El dueño también editaba sin dejar rastro. Esas reglas cruzan renglones o viven en `packages/core`: RLS no
+puede expresarlas.
 
 **Decisión:**
-- `anon` (sin sesión) no tiene ningún permiso sobre las tablas. `authenticated` puede leer, crear y editar
-  siempre bajo RLS, y nunca borrar ni vaciar (`delete`, `truncate`): nada se borra (regla 4). Supabase daba por
-  defecto todos los permisos a los dos roles, incluido `truncate`, al que RLS no aplica.
-- Ninguna política permite borrar, tampoco en Storage: una foto subida no se reemplaza ni se borra.
-- El PM **crea** por RLS lo que registra en sus obras (cierre del día, avance, cuadrilla, gastos, avisos,
-  inspecciones, pruebas de agua, punch list, fotos), siempre a su nombre (`creado_por`).
-- El PM **no edita** por RLS ninguna fila, salvo el punch list de sus obras. Lo que cambia en filas que no son
-  suyas va por funciones del servidor del paso 6, que validan la regla y tocan solo las columnas necesarias:
-  confirmar, marcar llegada y aprobar una orden de trabajo; verificar la medida de un espacio; cerrar una prueba
-  de agua (24 h); corregir o anular lo suyo dentro de 48 h; subir el recibo de un gasto.
-**Por qué:** una política de edición deja cambiar la fila completa. Si el PM pudiera editar
-`ordenes_trabajo` para aprobarla, también podría marcarla "pagada" o cambiar sus fechas.
-**Paridad:** gastos y avisos se le muestran por quién los registró, no por obra, como en el legacy (`sinRecibo`,
-`bloqueos`): también los de obras ya entregadas.
+- Por la API (rol `authenticated`), los usuarios **solo leen**.
+- **Toda escritura la hace el servidor de la app** después de validar con `packages/core`:
+  1. se conecta a la base;
+  2. en cada transacción toma el rol **`servidor_app`** (`set local role servidor_app`);
+  3. toma la identidad del usuario (`request.jwt.claims` con su `sub`);
+  4. escribe junto con su rastro en `correcciones`.
+- **RLS sigue protegiendo esas escrituras.** Las políticas de escritura son `to servidor_app` y repiten la regla
+  completa (empresa, obras del PM, `creado_por` = el miembro de la sesión, estados permitidos). Un error del
+  servidor no deja escribir en la obra de otro PM, cruzar empresas, llevar una orden a "pagada" ni registrar una
+  compra de la oficina a nombre del PM. PostgREST no puede tomar `servidor_app`: el rol `authenticator` no es
+  miembro de ese rol.
+- **La base asigna y protege:**
+  - el folio lo pone siempre un disparador, y lo que mande el servidor se ignora;
+  - `empresa_id`, `creado_por`, `creado_en` y `folio` no se pueden cambiar después;
+  - una foto vive en la carpeta de su empresa y su obra y apunta a un registro de esa misma obra.
+  - El importador (fase 3) conserva folios y autores del legacy con `set local ijm.importando = 'si'`.
+- **Fotos:**
+  - Los usuarios **suben** directo a Storage (pesan y la señal es mala), solo a la carpeta de su obra, con
+    límite de 15 MB e imágenes o PDF.
+  - **No las leen directo:** el servidor revisa que el usuario pueda ver la fila de `fotos` (RLS) y le da un
+    enlace firmado de pocos minutos. Así un enlace no sobrevive a una baja ni a la entrega de la obra.
+  - Los recibos de la oficina y las fotos de órdenes de cambio no se le muestran al PM aunque estén en la
+    carpeta de su obra.
+- **Registro abierto apagado** (`enable_signup = false`): los miembros entran por invitación (D-024).
+
+**Por qué:** "RLS es la última línea de defensa, no la única". Con escritura directa por la API era la única, y
+no alcanza para las reglas de negocio. Así, las reglas las valida el servidor y la base sigue impidiendo lo
+peor aunque el servidor falle.
+
+**Consecuencias para el paso 6:**
+- las funciones del servidor usan `servidor_app` con la identidad del usuario, nunca el `service_role` para
+  operaciones de usuarios;
+- escriben su rastro en `correcciones`;
+- dan los enlaces firmados de las fotos.
+
+**Descartado:**
+- mantener las políticas de escritura para `authenticated` y agregar disparadores para cada regla: duplica
+  `packages/core` en SQL;
+- escribir con el `service_role`: RLS dejaría de proteger las escrituras;
+- funciones `security definer` por cada flujo: la lógica de negocio quedaría en SQL y no en `packages/core`.

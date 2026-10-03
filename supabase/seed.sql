@@ -77,9 +77,7 @@ insert into public.obras (id, empresa_id, folio, cliente, telefono_cliente, dire
    'Familia Pérez', '210-555-0101', '300 River Walk, San Antonio, TX', 'b1000000-0000-4000-8000-000000000002',
    '2026-10-05', '2026-10-30', 'en_obra');
 
-insert into public.folios (empresa_id, prefijo, ultimo) values
-  ('e000000a-0000-4000-8000-000000000000', 'OB', 3),
-  ('e000000b-0000-4000-8000-000000000000', 'OB', 1);
+-- Los folios (OB-001…) los asigna la base al insertar: los que aparecen aquí y abajo se reemplazan.
 
 -- ------------------------------------------------------------------ un renglón en cada tabla
 -- Para probar la muralla financiera, cada tabla necesita renglones en las dos empresas: que un PM vea cero
@@ -261,3 +259,14 @@ select pg_temp.cierre('e000000a-0000-4000-8000-000000000000', 'a2000000-0000-400
 -- Un dispositivo verificado por cada PM activo.
 insert into public.dispositivos (empresa_id, miembro_id, nombre)
   select empresa_id, id, 'Celular de ' || nombre from public.miembros where rol = 'pm' and activo;
+
+-- Fotos de recibos y de órdenes de cambio: el recibo de una compra de la oficina y la foto de una orden de cambio
+-- viven en la carpeta de la obra, pero el PM no debe verlos (revisión del paso 4). El recibo de su propio gasto sí.
+insert into public.fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage_path, creado_por)
+  select g.empresa_id, g.obra_id, 'gasto', g.id, 1,
+         g.empresa_id || '/' || g.obra_id || '/gasto/' || g.id || '-1.jpg', g.creado_por
+  from public.gastos g;
+insert into public.fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage_path, creado_por)
+  select oc.empresa_id, oc.obra_id, 'orden_cambio', oc.id, 1,
+         oc.empresa_id || '/' || oc.obra_id || '/orden_cambio/' || oc.id || '-1.jpg', null
+  from public.ordenes_cambio oc;

@@ -56,7 +56,9 @@ docs/              plan de fases, modelo de datos y registro de decisiones
 
 1. **La muralla financiera vive en la base de datos.** Las tablas con dinero tienen RLS que solo permite a
    dueño y administrador; un PM no puede leerlas aunque el código de la app tenga un error. **Nunca se
-   debilita una política RLS para que pase una prueba.**
+   debilita una política RLS para que pase una prueba.** Por la API los usuarios solo leen: toda escritura la
+   hace el servidor con el rol `servidor_app` y la identidad del usuario, bajo RLS (D-026). El `service role` no
+   se usa para operaciones de usuarios.
 2. **Multiempresa.** Toda tabla de negocio lleva `empresa_id` y RLS aísla empresas. Ninguna consulta cruza
    empresas. El `service role` de Supabase solo se usa en migraciones, importación y tareas programadas.
 3. **El PM ve solo las obras que tiene asignadas.**

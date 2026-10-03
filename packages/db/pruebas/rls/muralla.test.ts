@@ -1,10 +1,22 @@
-// Paso 4: la muralla financiera y el aislamiento entre empresas, con usuarios reales de Supabase Auth que leen y
-// escriben por la API, como lo hará la app. supabase/seed.sql deja renglones en TODAS las tablas de las dos
-// empresas: si un PM ve cero renglones, es porque RLS se los oculta, no porque la tabla esté vacía.
+// Paso 4: la muralla financiera y el aislamiento entre empresas. Los usuarios reales de Supabase Auth LEEN por la
+// API, como lo hará la app; las escrituras se hacen como el servidor (rol servidor_app) a nombre de cada usuario
+// (D-026). supabase/seed.sql deja renglones en TODAS las tablas de las dos empresas: si un PM ve cero renglones,
+// es porque RLS se los oculta, no porque la tabla esté vacía.
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { conexionDePrueba } from '../conexion';
-import { clienteAnonimo, clienteServicio, EMPRESAS, entrarComo, OBRAS, USUARIOS } from '../usuarios';
+import { comoServidor, enTransaccionRevertida, errorDe } from '../datos';
+import {
+  clienteAnonimo,
+  clienteServicio,
+  EMPRESAS,
+  entrarComo,
+  MIEMBROS,
+  OBRAS,
+  USERS,
+  USUARIOS,
+} from '../usuarios';
 
 const { cliente: base } = conexionDePrueba();
 afterAll(() => base.end());
@@ -174,9 +186,9 @@ describe('el PM ve solo sus obras', () => {
 
   it('miembros y dispositivos: solo los suyos', async () => {
     expect((await leer(como('pm1A'), 'miembros')).map((m) => m.nombre)).toEqual(['Carlos Méndez']);
-    expect((await leer(como('pm1A'), 'dispositivos')).map((d) => d.nombre)).toEqual([
-      'Celular de Carlos Méndez',
-    ]);
+    // el PIN está vedado por columna (D-024): se piden solo las columnas permitidas
+    const { data } = await como('pm1A').from('dispositivos').select('id, miembro_id, nombre');
+    expect(data?.map((d) => d.nombre)).toEqual(['Celular de Carlos Méndez']);
   });
 });
 
@@ -199,139 +211,255 @@ describe('ninguna empresa ve nada de otra', () => {
   });
 });
 
-describe('nadie modifica lo que no le corresponde', () => {
-  const estadoObra = async (id: string) => (await base`select estado from obras where id = ${id}`)[0]!.estado;
-
-  it('el PM no cambia el estado de su obra', async () => {
-    await como('pm1A').from('obras').update({ estado: 'entregada' }).eq('id', OBRAS.a1Carlos);
-    expect(await estadoObra(OBRAS.a1Carlos)).toBe('en_obra');
+describe('las fotos que ve el PM', () => {
+  it('nunca los recibos de las compras de la oficina ni las fotos de órdenes de cambio', async () => {
+    const r = await leer(como('pm1A'), 'fotos');
+    const [oficina] =
+      await base`select id from gastos where obra_id = ${OBRAS.a1Carlos} and origen = 'oficina'`;
+    expect(r.some((f) => f.ref_tipo === 'orden_cambio')).toBe(false);
+    expect(r.some((f) => f.ref_id === oficina!.id)).toBe(false);
   });
 
-  it('el PM no cambia el precio ni el estado de una orden de trabajo', async () => {
-    const [ot] =
-      await base`select id from ordenes_trabajo where obra_id = ${OBRAS.a1Carlos} and estado = 'emitida'`;
-    await como('pm1A')
-      .from('ordenes_trabajo_precios')
-      .update({ precio: 99999 })
-      .eq('orden_trabajo_id', ot!.id);
-    await como('pm1A').from('ordenes_trabajo').update({ estado: 'pagada' }).eq('id', ot!.id);
-    const [d] = await base`select o.estado, p.precio from ordenes_trabajo o
-                           join ordenes_trabajo_precios p on p.orden_trabajo_id = o.id where o.id = ${ot!.id}`;
-    expect(d).toEqual({ estado: 'emitida', precio: '2000.00' });
+  it('sí el recibo de su propio gasto y las fotos de su bitácora', async () => {
+    const tipos = new Set((await leer(como('pm1A'), 'fotos')).map((f) => f.ref_tipo));
+    expect(tipos).toEqual(new Set(['bitacora', 'gasto']));
   });
+});
 
-  it('el PM no cierra el día en la obra de otro PM, ni a nombre de otro', async () => {
-    const pm = como('pm1A');
-    const otraObra = await pm.from('bitacora').insert({
-      empresa_id: EMPRESAS.a, folio: 'BIT-9001', obra_id: OBRAS.a2Luis, dia: '2026-10-09',
-      creado_por: 'a1000000-0000-4000-8000-000000000002',
-    }); // prettier-ignore
-    expect(otraObra.error?.message).toMatch(/row-level security/);
-    const aNombreDeOtro = await pm.from('bitacora').insert({
-      empresa_id: EMPRESAS.a, folio: 'BIT-9002', obra_id: OBRAS.a1Carlos, dia: '2026-10-09',
-      creado_por: 'a1000000-0000-4000-8000-000000000003',
-    }); // prettier-ignore
-    expect(aNombreDeOtro.error?.message).toMatch(/row-level security/);
-  });
-
-  it('el PM sí cierra el día de su obra, a su nombre', async () => {
-    const { error } = await como('pm1A').from('bitacora').insert({
-      empresa_id: EMPRESAS.a, folio: 'BIT-9003', obra_id: OBRAS.a1Carlos, dia: '2026-10-09',
-      creado_por: 'a1000000-0000-4000-8000-000000000002',
-    }); // prettier-ignore
-    try {
-      expect(error).toBeNull();
-    } finally {
-      await base`delete from bitacora where folio = 'BIT-9003' and empresa_id = ${EMPRESAS.a}`;
+describe('por la API los usuarios solo leen (D-026)', () => {
+  it.each(['pm1A', 'duenoA'] as const)('%s no crea, no edita ni borra en ninguna tabla', async (u) => {
+    const abiertas: string[] = [];
+    for (const t of tablas) {
+      const crear = await como(u).from(t).insert({});
+      // una columna que toda tabla tiene, para que la respuesta sea de permisos y no de columna inexistente
+      const cambio = t === 'empresas' ? { nombre: 'Cambiada' } : { empresa_id: EMPRESAS.a };
+      const editar = await como(u)
+        .from(t)
+        .update(cambio)
+        .eq(t === 'empresas' ? 'id' : 'empresa_id', EMPRESAS.a);
+      const borrar = await como(u)
+        .from(t)
+        .delete()
+        .eq(t === 'empresas' ? 'id' : 'empresa_id', EMPRESAS.a);
+      for (const [op, r] of [
+        ['crear', crear],
+        ['editar', editar],
+        ['borrar', borrar],
+      ] as const) {
+        if (!/permission denied/.test(r.error?.message ?? '')) abiertas.push(`${t}: ${op}`);
+      }
     }
+    expect(abiertas).toEqual([]);
   });
 
-  it('el PM no registra una compra como si fuera de la oficina', async () => {
-    const [esp] = await base`select id from espacios where obra_id = ${OBRAS.a1Carlos} limit 1`;
-    const { error } = await como('pm1A').from('gastos').insert({
-      empresa_id: EMPRESAS.a, folio: 'GTO-9001', obra_id: OBRAS.a1Carlos, espacio_id: esp!.id, dia: '2026-10-09',
-      proveedor: 'Lowe’s', monto: 5000, metodo_pago: 'tarjeta_empresa', origen: 'oficina',
-      creado_por: 'a1000000-0000-4000-8000-000000000002',
-    }); // prettier-ignore
-    expect(error?.message).toMatch(/row-level security/);
-  });
-
-  it('nadie borra: ni el PM su propio cierre, ni el dueño un cobro', async () => {
-    const antes = Number((await base`select count(*) from bitacora`)[0]!.count);
-    const cobros = Number((await base`select count(*) from cobros`)[0]!.count);
-    const pm = await como('pm1A').from('bitacora').delete().eq('obra_id', OBRAS.a1Carlos);
-    const dueno = await como('duenoA').from('cobros').delete().eq('empresa_id', EMPRESAS.a);
-    expect(pm.error?.message).toMatch(/permission denied/);
-    expect(dueno.error?.message).toMatch(/permission denied/);
-    expect(Number((await base`select count(*) from bitacora`)[0]!.count)).toBe(antes);
-    expect(Number((await base`select count(*) from cobros`)[0]!.count)).toBe(cobros);
-  });
-
-  it('el dueño de A no crea ni edita nada en la empresa B', async () => {
-    const crear = await como('duenoA').from('trabajadores').insert({
-      empresa_id: EMPRESAS.b,
-      nombre: 'Intruso',
-      tipo_pago: 'hora',
+  it('el PM no escribe "correcciones" falsas en la auditoría', async () => {
+    const { error } = await como('pm1A').from('correcciones').insert({
+      empresa_id: EMPRESAS.a,
+      tabla: 'cobros',
+      registro_id: OBRAS.a1Carlos,
+      accion: 'anular',
+      motivo: 'el dueño lo pidió',
+      creado_por: MIEMBROS.carlos,
     });
-    expect(crear.error?.message).toMatch(/row-level security/);
-    await como('duenoA').from('obras').update({ cliente: 'Cambiado por A' }).eq('id', OBRAS.b1);
-    expect((await base`select cliente from obras where id = ${OBRAS.b1}`)[0]!.cliente).toBe('Familia Pérez');
+    expect(error?.message).toMatch(/permission denied/);
   });
 
-  it('el dueño no se pasa su obra a la otra empresa', async () => {
-    await como('duenoA').from('obras').update({ empresa_id: EMPRESAS.b }).eq('id', OBRAS.a1Carlos);
-    expect((await base`select empresa_id from obras where id = ${OBRAS.a1Carlos}`)[0]!.empresa_id).toBe(
-      EMPRESAS.a,
-    );
+  it('el PIN no se puede leer, ni el propio ni el de los demás', async () => {
+    for (const u of ['pm1A', 'duenoA'] as const) {
+      const { error } = await como(u).from('dispositivos').select('pin_hash');
+      expect(error?.message, u).toMatch(/permission denied/);
+    }
+    const { data } = await como('pm1A').from('dispositivos').select('id, nombre, verificado_en');
+    expect(data?.length).toBe(1);
   });
+});
+
+describe('el servidor escribe a nombre del usuario, y RLS lo sigue protegiendo', () => {
+  type Tx = postgres.TransactionSql;
+
+  const cierre = (obra: string, creadoPor: string) => (t: Tx) =>
+    t`insert into bitacora (empresa_id, obra_id, dia, creado_por)
+      values (${EMPRESAS.a}, ${obra}, '2026-10-09', ${creadoPor})`;
+
+  it('el PM cierra el día en su obra, a su nombre; no en la obra de otro ni a nombre de otro', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      await comoServidor(tx, USERS.carlos);
+      expect(await errorDe(tx, cierre(OBRAS.a1Carlos, MIEMBROS.carlos))).toBeNull();
+      expect(await errorDe(tx, cierre(OBRAS.a2Luis, MIEMBROS.carlos))).toMatch(/row-level security/);
+      expect(await errorDe(tx, cierre(OBRAS.a1Carlos, MIEMBROS.luis))).toMatch(/row-level security/);
+    }));
+
+  it('el folio lo pone la base: lo que mande el servidor se ignora', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      await comoServidor(tx, USERS.carlos);
+      const [b] = await tx`insert into bitacora (empresa_id, folio, obra_id, dia, creado_por)
+                           values (${EMPRESAS.a}, 'BIT-0001', ${OBRAS.a1Carlos}, '2026-10-09', ${MIEMBROS.carlos})
+                           returning folio`;
+      expect(b!.folio).not.toBe('BIT-0001');
+      expect(b!.folio).toMatch(/^BIT-\d{4}$/);
+    }));
+
+  it('autor, fecha de creación, empresa y folio no se cambian después', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      await comoServidor(tx, USERS.carlos);
+      const [p] = await tx`select id from punch_list where obra_id = ${OBRAS.a1Carlos}`;
+      const id = p!.id as string;
+      expect(
+        await errorDe(tx, (t) => t`update punch_list set creado_por = ${MIEMBROS.duenoA} where id = ${id}`),
+      ).toMatch(/no se puede cambiar/);
+      expect(await errorDe(tx, (t) => t`update punch_list set folio = 'PUN-0099' where id = ${id}`)).toMatch(
+        /no se puede cambiar/,
+      );
+      expect(
+        await errorDe(tx, (t) => t`update punch_list set creado_en = '2020-01-01' where id = ${id}`),
+      ).toMatch(/no se puede cambiar/);
+      // lo que sí le toca: cerrarlo
+      expect(
+        await errorDe(
+          tx,
+          (t) => t`update punch_list set estado = 'cerrado', cerrado_en = now() where id = ${id}`,
+        ),
+      ).toBeNull();
+    }));
+
+  it('el PM no mueve un punch a la obra de otro, ni con un update sin filtro', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      await comoServidor(tx, USERS.carlos);
+      expect(await errorDe(tx, (t) => t`update punch_list set obra_id = ${OBRAS.a2Luis}`)).toMatch(
+        /row-level security/,
+      );
+    }));
+
+  it('el PM aprueba una orden de trabajo, pero no la lleva a "pagada" ni toca su precio', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      await comoServidor(tx, USERS.carlos);
+      const [ot] =
+        await tx`select id from ordenes_trabajo where obra_id = ${OBRAS.a1Carlos} and estado = 'emitida'`;
+      const id = ot!.id as string;
+      expect(
+        await errorDe(tx, (t) => t`update ordenes_trabajo set estado = 'aprobada' where id = ${id}`),
+      ).toBeNull();
+      expect(
+        await errorDe(tx, (t) => t`update ordenes_trabajo set estado = 'pagada' where id = ${id}`),
+      ).toMatch(/row-level security/);
+      const r =
+        await tx`update ordenes_trabajo_precios set precio = 99999 where orden_trabajo_id = ${id} returning 1`;
+      expect(r.length).toBe(0);
+    }));
+
+  it('el PM no cambia el estado de su obra ni registra compras de la oficina', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      await comoServidor(tx, USERS.carlos);
+      expect(
+        (await tx`update obras set estado = 'entregada' where id = ${OBRAS.a1Carlos} returning 1`).length,
+      ).toBe(0);
+      const [esp] = await tx`select id from espacios where obra_id = ${OBRAS.a1Carlos} limit 1`;
+      expect(
+        await errorDe(
+          tx,
+          (
+            t,
+          ) => t`insert into gastos (empresa_id, obra_id, espacio_id, dia, proveedor, monto, metodo_pago, origen,
+                                       creado_por)
+                   values (${EMPRESAS.a}, ${OBRAS.a1Carlos}, ${esp!.id}, '2026-10-09', 'Lowes', 5000, 'tarjeta_empresa',
+                           'oficina', ${MIEMBROS.carlos})`,
+        ),
+      ).toMatch(/row-level security/);
+    }));
+
+  it('una foto vive en la carpeta de su empresa y obra, y apunta a un registro de esa obra', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      const [b] = await tx`select id from bitacora where obra_id = ${OBRAS.a1Carlos}`;
+      const [deB] = await tx`select id from gastos where empresa_id = ${EMPRESAS.b} limit 1`;
+      await comoServidor(tx, USERS.carlos);
+      const foto = (ruta: string, tipo: string, ref: string) => (t: Tx) =>
+        t`insert into fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage_path, creado_por)
+          values (${EMPRESAS.a}, ${OBRAS.a1Carlos}, ${tipo}, ${ref}, 7, ${ruta}, ${MIEMBROS.carlos})`;
+      const propia = `${EMPRESAS.a}/${OBRAS.a1Carlos}/bitacora/x-7.jpg`;
+      expect(
+        await errorDe(tx, foto(`${EMPRESAS.b}/${OBRAS.b1}/bitacora/x-7.jpg`, 'bitacora', b!.id)),
+      ).toMatch(/ruta/);
+      expect(
+        await errorDe(tx, foto(`${EMPRESAS.a}/${OBRAS.a1Carlos}/../x-7.jpg`, 'bitacora', b!.id)),
+      ).toMatch(/ruta/);
+      expect(await errorDe(tx, foto(propia, 'gasto', deB!.id))).toMatch(/no es de su obra/);
+      expect(await errorDe(tx, foto(propia, 'bitacora', b!.id))).toBeNull();
+    }));
+
+  it('el dueño de A, por el servidor, no crea ni edita nada en B, ni se lleva una obra a B', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      await comoServidor(tx, USERS.duenoA);
+      expect(
+        await errorDe(
+          tx,
+          (t) =>
+            t`insert into trabajadores (empresa_id, nombre, tipo_pago) values (${EMPRESAS.b}, 'Intruso', 'hora')`,
+        ),
+      ).toMatch(/row-level security/);
+      expect(
+        (await tx`update obras set cliente = 'Cambiado' where id = ${OBRAS.b1} returning 1`).length,
+      ).toBe(0);
+      expect(
+        await errorDe(tx, (t) => t`update obras set empresa_id = ${EMPRESAS.b} where id = ${OBRAS.a1Carlos}`),
+      ).toMatch(/no se puede cambiar/);
+    }));
+
+  it('nadie borra, ni siquiera el servidor', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      await comoServidor(tx, USERS.duenoA);
+      expect(await errorDe(tx, (t) => t`delete from cobros where empresa_id = ${EMPRESAS.a}`)).toMatch(
+        /permission denied/,
+      );
+    }));
 });
 
 describe('las fotos en Storage', () => {
   const marca = Date.now();
-  const ruta = (empresa: string, obra: string) => `${empresa}/${obra}/prueba/${marca}.jpg`;
+  const ruta = (empresa: string, obra: string, ext = 'jpg') => `${empresa}/${obra}/prueba/${marca}.${ext}`;
   const subidas: string[] = [];
   const foto = new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], { type: 'image/jpeg' });
 
-  async function subir(u: Usuario, path: string) {
-    const { error } = await como(u).storage.from('fotos').upload(path, foto);
+  async function subir(u: Usuario, path: string, archivo: Blob = foto) {
+    const { error } = await como(u).storage.from('fotos').upload(path, archivo);
     if (!error) subidas.push(path);
     return error;
   }
-  const bajar = async (u: Usuario, path: string) =>
-    (await como(u).storage.from('fotos').download(path)).error;
 
   afterAll(async () => {
     if (subidas.length) await clienteServicio().storage.from('fotos').remove(subidas);
   });
 
-  it('el PM sube una foto a su obra y la puede ver', async () => {
-    const p = ruta(EMPRESAS.a, OBRAS.a1Carlos);
-    expect(await subir('pm1A', p)).toBeNull();
-    expect(await bajar('pm1A', p)).toBeNull();
+  it('el PM sube una foto a su obra', async () => {
+    expect(await subir('pm1A', ruta(EMPRESAS.a, OBRAS.a1Carlos))).toBeNull();
   });
 
-  it('el PM no sube fotos a la obra de otro PM ni de otra empresa', async () => {
+  it('nadie la lee ni la firma directo: los enlaces los da el servidor, de pocos minutos', async () => {
+    const p = ruta(EMPRESAS.a, OBRAS.a1Carlos);
+    for (const u of ['pm1A', 'duenoA'] as const) {
+      expect((await como(u).storage.from('fotos').download(p)).error, u).not.toBeNull();
+      expect((await como(u).storage.from('fotos').createSignedUrl(p, 31536000)).error, u).not.toBeNull();
+    }
+  });
+
+  it('el PM no sube fotos a la obra de otro PM, a una entregada ni a otra empresa', async () => {
     expect(await subir('pm1A', ruta(EMPRESAS.a, OBRAS.a2Luis))).not.toBeNull();
+    expect(await subir('pm1A', ruta(EMPRESAS.a, OBRAS.a3CarlosEntregada))).not.toBeNull();
     expect(await subir('pm1A', ruta(EMPRESAS.b, OBRAS.b1))).not.toBeNull();
   });
 
-  it('el PM no ve las fotos de la obra de otro PM ni de otra empresa', async () => {
-    const deLuis = ruta(EMPRESAS.a, OBRAS.a2Luis);
-    const deB = ruta(EMPRESAS.b, OBRAS.b1);
-    expect(await subir('pm2A', deLuis)).toBeNull();
-    expect(await subir('pm1B', deB)).toBeNull();
-    expect(await bajar('pm1A', deLuis)).not.toBeNull();
-    expect(await bajar('pm1A', deB)).not.toBeNull();
+  it('el dueño de A no sube a la carpeta de B', async () => {
+    expect(await subir('duenoA', ruta(EMPRESAS.b, OBRAS.b1, 'png'))).not.toBeNull();
   });
 
-  it('el dueño ve las fotos de su empresa, no las de otra', async () => {
-    expect(await bajar('duenoA', ruta(EMPRESAS.a, OBRAS.a2Luis))).toBeNull();
-    expect(await bajar('duenoA', ruta(EMPRESAS.b, OBRAS.b1))).not.toBeNull();
-  });
-
-  it('una foto subida no se reemplaza', async () => {
+  it('una foto subida no se reemplaza ni se borra', async () => {
     const p = ruta(EMPRESAS.a, OBRAS.a1Carlos);
-    const { error } = await como('pm1A').storage.from('fotos').upload(p, foto, { upsert: true });
-    expect(error).not.toBeNull();
+    expect((await como('pm1A').storage.from('fotos').upload(p, foto, { upsert: true })).error).not.toBeNull();
+    await como('pm1A').storage.from('fotos').remove([p]);
+    expect((await clienteServicio().storage.from('fotos').download(p)).error).toBeNull();
+  });
+
+  it('solo imágenes y PDF', async () => {
+    const html = new Blob(['<b>hola</b>'], { type: 'text/html' });
+    expect(await subir('pm1A', ruta(EMPRESAS.a, OBRAS.a1Carlos, 'html'), html)).not.toBeNull();
   });
 });
