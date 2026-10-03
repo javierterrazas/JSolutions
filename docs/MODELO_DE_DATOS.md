@@ -23,14 +23,17 @@ genera desde ellas con `pnpm db:esquema`.
 - **Estados y listas fijas como `enum`**, con los valores del legacy (D-020).
 - **Lo que se muestra y lo captura cada empresa, en dos idiomas:** `nombre_es` (obligatorio) y `nombre_en`
   (D-015).
-- **RLS activado en todas las tablas.** Sin políticas, nadie con sesión de usuario lee ni escribe nada: las
-  políticas llegan en el paso 4. Una prueba falla si una tabla queda sin RLS.
+- **RLS en todas las tablas, con una política por tabla y por operación** (migración `20261004000100_rls.sql`).
+  Ninguna permite borrar. Sin sesión no se lee nada. Una prueba falla si una tabla queda sin RLS, y
+  `pnpm test:rls` prueba la tabla de abajo con usuarios reales (D-025).
 
 ## Quién lee qué
 
 Leyenda: **D** = dueño y administrador · **PM** = el PM, solo en sus obras asignadas · **—** = sin acceso ·
 💲 = tabla con dinero, solo dueño y administrador (D-002). Las columnas que el PM no debe ver en tablas que sí
-lee se le dan por **vistas** (D-013, paso 4).
+lee se le dan por **vistas** (D-013): `empresa_actual_datos`, `configuracion_pm`, `subcontratistas_pm`,
+`entregas_pm` y `ordenes_cambio_pm`. Lo que el PM cambia en filas que no son suyas pasa por funciones del servidor
+(D-025).
 
 La escritura de los flujos importantes pasa por funciones del servidor que validan las reglas; RLS es la última
 línea de defensa, no la única.
@@ -43,7 +46,7 @@ línea de defensa, no la única.
 | `configuracion` | Config | una fila por empresa: `impuesto`, `limite_compra_pm`, `sla_bloqueo_horas`, `sla_oc_horas`, `umbral_oc_menor`, `margen_minimo_oc`, `horas_sin_recibo` | lee y escribe | vista: `limite_compra_pm`, `horas_sin_recibo`, `sla_bloqueo_horas` |
 | `metas_indicadores` | Config (`META_*`, `MAX_*`) y metas fijas del código | `indicador`, `meta`; sin renglón vale la del legacy (D-019) | lee y escribe | — |
 | `miembros` | Usuarios | `user_id` (Supabase Auth, único: una empresa por usuario, D-016), `rol` (`dueno`/`admin`/`pm`), `nombre`, `telefono`, `idioma`, `activo`, `tarjeta_ultimos4`, `correo_avisos` | lee y escribe | lee su propio renglón |
-| `dispositivos` | (nueva) | los celulares que verificó cada miembro: `nombre`, `pin_hash`, `intentos_fallidos`, `bloqueado_hasta`, `verificado_en`, `ultimo_uso`, `revocado_en` (D-024) | lee y revoca | los suyos |
+| `dispositivos` | (nueva) | los celulares que verificó cada miembro: `nombre`, `pin_hash`, `intentos_fallidos`, `bloqueado_hasta`, `verificado_en`, `ultimo_uso`, `revocado_en` (D-024) | lee; revoca por el servidor | los suyos |
 | `folios` | (nueva) | `prefijo`, `ultimo` | solo el servidor | solo el servidor |
 
 `admin` y `dueno` tienen hoy los mismos permisos; quedan separados para poder distinguirlos después (decisión
@@ -171,4 +174,4 @@ distintos.
 
 - Qué columnas exactas usa `Obras_Cerradas` en cada indicador del histórico: se confirma al trasladar los
   indicadores (paso 5).
-- Las vistas del PM y las políticas RLS: paso 4.
+- Las funciones del servidor para lo que el PM cambia en filas que no son suyas (D-025): paso 6.

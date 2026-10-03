@@ -97,8 +97,13 @@ reproduce su `harness.js` en TypeScript.
 
 **Decisión:** el dinero siempre va en tablas propias (D-002). Las columnas que no son dinero pero que el PM no
 debe ver, en tablas que sí lee (`configuracion`, `subcontratistas`, `empresas`, `entregas`,
-`ordenes_cambio`), se le exponen mediante **vistas** `security_invoker` con solo las columnas permitidas; la
-tabla completa queda solo para dueño y administrador.
+`ordenes_cambio`), se le exponen mediante **vistas** con solo las columnas permitidas; la tabla completa queda
+solo para dueño y administrador. Las vistas son `empresa_actual_datos`, `configuracion_pm`, `subcontratistas_pm`,
+`entregas_pm` y `ordenes_cambio_pm`.
+**Corregida en el paso 4:** la primera versión decía vistas `security_invoker`. Así no funcionan: una vista
+`security_invoker` aplica el RLS del que consulta, y como el PM no puede leer la tabla completa, la vista le
+devolvería cero renglones. Las vistas son del dueño de la base y **cada una filtra por sí misma** (la empresa de
+la sesión y, donde aplica, las obras del PM). Por eso cada vista tiene su prueba en `pnpm test:rls`.
 **Por qué:** RLS filtra renglones, no columnas. Partir cada tabla por cada columna sensible llena el esquema de
 tablas de una sola fila; los permisos por columna (`GRANT` por columna) son frágiles con Supabase y fáciles de
 romper al agregar una columna.
@@ -221,3 +226,21 @@ legacy (un PIN de 4 dígitos sin límite se adivina). El dueño ve los dispositi
 con las pantallas del PM (fase 2). Los usuarios de prueba entran con correo y contraseña.
 **Descartado:** código por mensaje cada vez (la señal en obra es mala); correo y contraseña (lento en el
 teléfono, al final del día).
+
+## D-025 · Permisos de base y lo que el PM escribe por el servidor
+
+**Decisión:**
+- `anon` (sin sesión) no tiene ningún permiso sobre las tablas. `authenticated` puede leer, crear y editar
+  siempre bajo RLS, y nunca borrar ni vaciar (`delete`, `truncate`): nada se borra (regla 4). Supabase daba por
+  defecto todos los permisos a los dos roles, incluido `truncate`, al que RLS no aplica.
+- Ninguna política permite borrar, tampoco en Storage: una foto subida no se reemplaza ni se borra.
+- El PM **crea** por RLS lo que registra en sus obras (cierre del día, avance, cuadrilla, gastos, avisos,
+  inspecciones, pruebas de agua, punch list, fotos), siempre a su nombre (`creado_por`).
+- El PM **no edita** por RLS ninguna fila, salvo el punch list de sus obras. Lo que cambia en filas que no son
+  suyas va por funciones del servidor del paso 6, que validan la regla y tocan solo las columnas necesarias:
+  confirmar, marcar llegada y aprobar una orden de trabajo; verificar la medida de un espacio; cerrar una prueba
+  de agua (24 h); corregir o anular lo suyo dentro de 48 h; subir el recibo de un gasto.
+**Por qué:** una política de edición deja cambiar la fila completa. Si el PM pudiera editar
+`ordenes_trabajo` para aprobarla, también podría marcarla "pagada" o cambiar sus fechas.
+**Paridad:** gastos y avisos se le muestran por quién los registró, no por obra, como en el legacy (`sinRecibo`,
+`bloqueos`): también los de obras ya entregadas.

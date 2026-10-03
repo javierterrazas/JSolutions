@@ -23,7 +23,10 @@ describe('el esquema de Drizzle corresponde a la base', () => {
   it('cada tabla tiene las mismas columnas, con los mismos nulos', async () => {
     const r = await cliente<{ tabla: string; columna: string; nulo: string }[]>`
       select table_name as tabla, column_name as columna, is_nullable as nulo
-      from information_schema.columns where table_schema = 'public'`;
+      from information_schema.columns c
+      where c.table_schema = 'public'
+        and c.table_name in (select table_name from information_schema.tables
+                             where table_schema = 'public' and table_type = 'BASE TABLE')`;
     const enBase = r.map((c) => `${c.tabla}.${c.columna}${c.nulo === 'NO' ? ' not null' : ''}`).sort();
     const enDrizzle = tablasDrizzle
       .flatMap((t) => t.columns.map((c) => `${t.name}.${c.name}${c.notNull ? ' not null' : ''}`))
