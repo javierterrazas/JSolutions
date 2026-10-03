@@ -1,7 +1,7 @@
 # Fase 2 — La app del PM (BORRADOR)
 
-> Borrador para revisar con el dueño antes de empezar. Lo marcado como **decisión pendiente** se resuelve antes
-> del paso que lo necesita.
+> Borrador para revisar con el dueño antes de empezar. Cuatro de sus cinco decisiones ya están tomadas; la que
+> falta (dónde vive la app) se resuelve antes del paso 1.
 
 ## Objetivo
 
@@ -32,17 +32,18 @@ las dos coinciden.
 Las pantallas del dueño, el importador desde Google Sheets y el mes simulado sobre la app completa (fase 3). El
 cobro con Stripe y el alta de empresas en línea (fase 4). Apps nativas.
 
-## Decisiones pendientes del dueño
+## Decisiones del dueño
 
-1. **Dónde vive la app** (para el piloto): crear el proyecto de Supabase en la nube (región Estados Unidos, decisión
-   pendiente 4 de la fase 1) y el de Vercel. Y el **nombre y el dominio** del producto (pendiente 1).
-2. **Cómo llega la invitación al PM:** por correo (gratis) o por mensaje de texto (requiere un proveedor como
-   Twilio, con costo por mensaje).
-3. **El PIN:** 4 o 6 dígitos. El legacy usaba 4; con el límite de intentos (D-024) ambos son seguros.
-4. **Cómo entran los datos de la obra piloto:** el importador es de la fase 3. Para el piloto, o se da de alta la
-   obra a mano (con un script del servidor), o se adelanta un importador mínimo de una sola obra.
-5. **Librería de estilos:** Tailwind (la más común con Next.js) u hojas de estilo propias. Es una dependencia
-   nueva; se explica antes de agregarla.
+1. **Dónde vive la app** — *pendiente*. Recomendación: dos proyectos de Supabase, "pruebas" (gratuito, para las
+   vistas previas) y "producción" (Pro: sin pausas y con respaldos diarios), en us-east-1; Vercel Pro (el plan
+   gratuito no permite uso comercial) en la misma región; Resend para los correos, con dominio propio. El dueño
+   crea las cuentas y define el **nombre y el dominio** del producto (pendiente 1 de la fase 1).
+2. **La invitación llega por correo.** Decidido. En producción sale por Resend con el dominio propio; el correo
+   que trae Supabase es solo para pruebas.
+3. **El PIN es de 4 dígitos**, como en el legacy. Decidido. El límite de intentos lo hace seguro (D-024).
+4. **La obra piloto se da de alta a mano**, con los flujos del servidor (, ).
+   Decidido. El importador sigue en la fase 3.
+5. **Los estilos, con Tailwind.** Decidido. Es la librería de estilos más común con Next.js; se agrega en el paso 1.
 
 ## Pasos
 
@@ -57,7 +58,7 @@ despliega una vista previa por cada pull request.
 
 ### 2. Entrar: invitación, dispositivo verificado y PIN (D-024)
 
-- El dueño invita al PM (correo o mensaje, decisión 2). Al abrir la invitación en su celular, el dispositivo queda
+- El dueño invita al PM por correo (decisión 2). Al abrir la invitación en su celular, el dispositivo queda
   verificado y el PM elige su PIN.
 - El PIN se guarda solo como hash, lo verifica el servidor con el service role (la única vez que se usa para un
   usuario: D-027) y tiene límite de intentos: 5 fallidos bloquean 15 minutos.
