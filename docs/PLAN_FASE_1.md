@@ -12,17 +12,20 @@ y el presupuesto calculan exactamente lo mismo que el sistema que ya funciona.
 
 ## Terminado cuando
 
-- [ ] `pnpm install && supabase start && pnpm test` funciona en una computadora nueva siguiendo el README.
-- [ ] La integración continua corre todas las pruebas en cada cambio, y están en verde.
-- [ ] Las migraciones crean desde cero todas las tablas de `docs/MODELO_DE_DATOS.md`, con llaves foráneas,
+- [x] `pnpm install && supabase start && pnpm test` funciona en una computadora nueva siguiendo el README.
+      (Paso 1; la integración continua lo hace desde cero en cada cambio.)
+- [x] La integración continua corre todas las pruebas en cada cambio, y están en verde.
+- [x] Las migraciones crean desde cero todas las tablas de `docs/MODELO_DE_DATOS.md`, con llaves foráneas,
       restricciones e índices.
-- [ ] **Las pruebas de RLS demuestran**: un PM no puede leer ninguna tabla marcada con 💲; no ve obras que no
+- [x] **Las pruebas de RLS demuestran**: un PM no puede leer ninguna tabla marcada con 💲; no ve obras que no
       tiene asignadas; y una empresa no ve nada de otra. Con usuarios reales de Supabase Auth, no simulados.
-- [ ] `packages/core` tiene las reglas de negocio de la lista del paso 5, y **las pruebas de paridad contra el
+      (Paso 4, con dos revisiones independientes: D-026, D-027.)
+- [x] `packages/core` tiene las reglas de negocio de la lista del paso 5, y **las pruebas de paridad contra el
       legacy dan cero diferencias** — o cada diferencia está explicada en `docs/DECISIONES.md`.
+      (Pasos 5a a 5d: D-028 a D-034.)
 - [ ] Las funciones del servidor para los flujos principales pasan sus pruebas de integración contra la base
       local: crear obra, guardar presupuesto por etapa, cerrar el día, subir una foto numerada.
-- [ ] `docs/DECISIONES.md` registra cada decisión de diseño tomada.
+- [x] `docs/DECISIONES.md` registra cada decisión de diseño tomada (al día con el paso 5).
 
 ## Fuera de alcance
 
