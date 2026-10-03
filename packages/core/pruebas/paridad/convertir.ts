@@ -2,15 +2,24 @@
 // datos. Sigue las reglas de lectura del legacy (comun/obra.js, comun/datos.js): renglones anulados fuera,
 // partidas propias del espacio o, si no tiene copia, las del catálogo, y el espacio deducido cuando un registro
 // es anterior a las áreas. Es, en pequeño, lo que hará el importador de la fase 3.
-import type {
-  AvanceDia,
-  CierreDia,
-  Dia,
-  EspacioCrono,
-  EstadoOrden,
-  OrdenSemana,
-  PartidaCrono,
-  SubSemana,
+import {
+  type AvanceDia,
+  type Cargo,
+  type CierreDia,
+  claveEtapa,
+  type Dia,
+  type EspacioAvance,
+  type EspacioCrono,
+  type EspacioEtapas,
+  type EstadoOrden,
+  type LineaPresupuesto,
+  type ObraParaHistorico,
+  type OrdenSemana,
+  type PartidaCrono,
+  presupuestoDesdePartidas,
+  type SubSemana,
+  type Tarifa,
+  tarifaDelDia,
 } from '../../src/index';
 import { diaLocal, type Libro } from './legacy';
 
@@ -183,3 +192,116 @@ export const obrasDe = (libro: Libro) =>
     estado: texto(p[9]),
     fila: p,
   }));
+
+// ------------------------------------------------------------------ 5b: avance, etapas y costos
+const SIN_ETAPA = 'Otras partidas';
+/** La etapa de una partida del legacy: su texto, o nula ("Otras partidas"). */
+const etapaDe = (v: unknown): string | null => {
+  const e = texto(v);
+  return e && e !== SIN_ETAPA ? e : null;
+};
+
+/** Los espacios con sus partidas y sus pesos, para el avance ponderado. */
+export function espaciosAvance(libro: Libro, obraId: string): EspacioAvance[] {
+  return areasDe(libro, obraId).map((a) => ({
+    id: a.id,
+    generales: a.generales,
+    partidas: partidasDeArea(libro, a).map((c) => ({ id: clavePartida(a.id, c[2]), peso: Number(c[4]) })),
+  }));
+}
+
+/** Los espacios con sus etapas, sus pies² y su tipo (el tipo del legacy es texto: aquí hace de id). */
+export function espaciosEtapas(libro: Libro, obraId: string): EspacioEtapas[] {
+  const pies = new Map(filas(libro, 'Areas').map((a) => [texto(a[0]), Number(a[4]) || 0]));
+  return areasDe(libro, obraId).map((a) => ({
+    id: a.id,
+    generales: a.generales,
+    tipoEspacioId: a.tipo,
+    pies2: pies.get(a.id) ?? 0,
+    partidas: partidasDeArea(libro, a).map((c) => ({ id: clavePartida(a.id, c[2]), etapaId: etapaDe(c[9]) })),
+  }));
+}
+
+/**
+ * El presupuesto de una obra en el modelo nuevo: los renglones por etapa tal cual, y los antiguos (por partida)
+ * convertidos a su etapa con presupuestoDesdePartidas, como lo hará el importador.
+ */
+export function presupuestoDe(libro: Libro, obraId: string): LineaPresupuesto[] {
+  const renglones = filas(libro, 'Presupuesto').filter((x) => x[1] === obraId);
+  const area = (x: Fila) => texto(x[7]) || areaPorPartida(libro, obraId, x[2]);
+  const porEtapa = renglones
+    .filter((x) => texto(x[8]) === 'Etapa')
+    .map((x) => ({ espacioId: area(x), etapaId: etapaDe(x[2]), monto: Number(x[3]) || 0 }));
+  const antiguos = presupuestoDesdePartidas(
+    espaciosEtapas(libro, obraId),
+    renglones
+      .filter((x) => texto(x[8]) !== 'Etapa')
+      .map((x) => ({ espacioId: area(x), partidaId: clavePartida(area(x), x[2]), monto: Number(x[3]) || 0 })),
+  );
+  const suma = new Map<string, LineaPresupuesto>();
+  for (const l of [...porEtapa, ...antiguos]) {
+    const k = claveEtapa(l.espacioId, l.etapaId);
+    suma.set(k, { ...l, monto: (suma.get(k)?.monto ?? 0) + l.monto });
+  }
+  return [...suma.values()];
+}
+
+/** Una tarifa por trabajador, vigente desde siempre: la del legacy, que no guardaba historia. */
+export const tarifasDe = (libro: Libro): Tarifa[] =>
+  filas(libro, 'Trabajadores').map((t) => ({
+    trabajadorId: texto(t[0]),
+    tarifa: Number(t[4]) || 0,
+    vigenteDesde: '1900-01-01',
+  }));
+
+/** Los costos de una obra: gastos, horas de cuadrilla valuadas con su tarifa, y órdenes de trabajo vigentes. */
+export function cargosDe(libro: Libro, obraId: string): Cargo[] {
+  const tarifas = tarifasDe(libro);
+  const cargo = (area: string, partida: unknown, cubo: Cargo['cubo'], monto: number): Cargo => ({
+    espacioId: area,
+    partidaId: texto(partida) ? clavePartida(area, partida) : null,
+    cubo,
+    monto,
+  });
+  return [
+    ...filas(libro, 'Gastos')
+      .filter((g) => g[2] === obraId)
+      .map((g) =>
+        cargo(texto(g[14]) || areaPorPartida(libro, obraId, g[12]), g[12], 'material', Number(g[6]) || 0),
+      ),
+    ...filas(libro, 'Mano_Obra')
+      .filter((m) => m[2] === obraId)
+      .map((m) =>
+        cargo(
+          texto(m[9]) || areaPorPartida(libro, obraId, m[4]),
+          m[4],
+          'cuadrilla',
+          (Number(m[5]) || 0) * tarifaDelDia(tarifas, texto(m[3]), dia(m[1]) ?? '2100-01-01'),
+        ),
+      ),
+    ...filas(libro, 'Ordenes_Trabajo')
+      .filter((o) => o[1] === obraId && o[8] !== 'Cancelada')
+      .map((o) =>
+        cargo(texto(o[14]) || areaPorPartida(libro, obraId, o[13]), o[13], 'sub', Number(o[5]) || 0),
+      ),
+  ];
+}
+
+/** Lo que necesita el histórico de costos unitarios, de todas las obras con presupuesto. */
+export function obrasParaHistorico(libro: Libro): ObraParaHistorico[] {
+  const cerradas = new Set(filas(libro, 'Obras_Cerradas').map((c) => texto(c[1])));
+  const terminadas = new Set(
+    filas(libro, 'Avance')
+      .filter((a) => a[4] === 'Terminada')
+      .map((a) => clavePartida(texto(a[8]) || areaPorPartida(libro, texto(a[2]), a[3]), a[3])),
+  );
+  const conPresupuesto = [...new Set(filas(libro, 'Presupuesto').map((x) => texto(x[1])))];
+  return conPresupuesto.map((id) => ({
+    id,
+    cerrada: cerradas.has(id),
+    espacios: espaciosEtapas(libro, id),
+    presupuesto: presupuestoDe(libro, id),
+    cargos: cargosDe(libro, id),
+    terminadas,
+  }));
+}
