@@ -1,4 +1,4 @@
-// Esquema de Drizzle. Debe corresponder a las migraciones SQL de supabase/migrations/, que son la fuente de verdad.
-// Las tablas de docs/MODELO_DE_DATOS.md llegan en el paso 2.
+// Esquema de Drizzle. Se genera desde las migraciones SQL (supabase/migrations/), que son la fuente de verdad:
+// `pnpm db:esquema`. Ver packages/db/scripts/generar-esquema.mjs.
 
-export {};
+export * from './generado/schema';

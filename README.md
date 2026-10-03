@@ -49,6 +49,7 @@ las pruebas usan esos mismos valores si no encuentran `DATABASE_URL`.
 | `pnpm db:start` · `pnpm db:stop` | levanta o detiene Supabase local, solo con lo que usan las pruebas (base, Auth, API y Storage) | — |
 | `pnpm db:start:completo` | Supabase local con todos sus servicios, incluido Studio (http://127.0.0.1:54323) | — |
 | `pnpm db:reset` | recrea la base desde `supabase/migrations/` y carga `supabase/seed.sql` | — |
+| `pnpm db:esquema` | regenera el esquema de Drizzle desde la base; córrelo después de cambiar una migración y de `pnpm db:reset` | sí |
 
 Todas las pruebas corren con `TZ=America/Chicago`, la zona de la empresa piloto.
 

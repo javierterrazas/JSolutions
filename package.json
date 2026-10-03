@@ -22,7 +22,8 @@
     "db:start": "supabase start -x studio,postgres-meta,realtime,imgproxy,edge-runtime,logflare,vector,mailpit,supavisor",
     "db:start:completo": "supabase start",
     "db:stop": "supabase stop",
-    "db:reset": "supabase db reset"
+    "db:reset": "supabase db reset",
+    "db:esquema": "pnpm --filter @ijm/db db:esquema"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

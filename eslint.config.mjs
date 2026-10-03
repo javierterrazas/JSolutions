@@ -6,9 +6,10 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    // el legacy es de solo lectura y no se revisa
+    // el legacy es de solo lectura; el esquema de Drizzle se genera con `pnpm db:esquema`
     ignores: [
       'legacy/**',
+      'packages/db/src/esquema/generado/**',
       '**/.next/**',
       '**/node_modules/**',
       'supabase/.temp/**',
