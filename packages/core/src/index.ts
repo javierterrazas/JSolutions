@@ -10,3 +10,4 @@ export * from './partidas';
 export * from './etapas';
 export * from './validaciones';
 export * from './calidad';
+export * from './indicadores';

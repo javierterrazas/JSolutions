@@ -479,3 +479,31 @@ Los códigos son estos:
 - **Las validaciones de los demás formularios** (orden de trabajo, orden de cambio, cobro, compra de la oficina,
   garantía, no calidad, subcontratista, trabajador, gasto del PM) usan el mismo `exigir`. Se trasladan con sus
   flujos en el paso 6 y la fase 3.
+
+## D-034 · Los 19 indicadores
+
+**Decisión:** `packages/core/src/indicadores.ts` calcula los 19 indicadores del legacy (`kpis_`), con la misma
+regla, la misma meta y el mismo semáforo. Cada indicador sale con su clave, su proceso (P3 a P6), su valor, su
+meta, su dirección, su semáforo, si todavía no hay datos y si es de los seis del lunes. Los textos que explican
+qué revela cada uno son de la pantalla y se traducen (D-015); `core` solo agrega los datos que esos textos
+necesitan (horas del plazo, costo de las garantías, días perdidos).
+
+**Metas:** cada indicador tiene la del legacy por omisión (`METAS_POR_OMISION`), y la empresa puede cambiarla en
+`metas_indicadores` (D-019). Dos se toman de la configuración: las horas de respuesta a avisos (el plazo de los
+avisos) y el margen de las órdenes de cambio (el margen mínimo).
+
+**Con el calendario de la empresa (D-028):** la tasa de cierre cuenta los días laborables de la última semana,
+sábado incluido.
+
+**Paridad:** contra el tablero del legacy en cada día del mes simulado y en el libro de ejemplo, a las 10:00 y a
+las 21:00 (varios indicadores dependen de cuántas horas han pasado). Coinciden los 19 en valor, meta, semáforo,
+"sin datos" y "principal". La prueba exige además que cada indicador haya medido algo distinto de cero en algún
+caso. "Reseñas obtenidas" nunca lo hacía (en el mes simulado nadie registra una reseña), así que se agregó una
+variante del último día con reseñas recibidas.
+
+**Diferencia conocida, de los datos de ejemplo:** en el libro de ejemplo, escrito a mano, el aviso BLQ-0001 trae 3
+horas de respuesta tecleadas, pero sus fechas de apertura y respuesta son el mismo día sin hora. El legacy promedia
+las horas guardadas; `core` las calcula con las fechas (no hay columna de horas en el modelo nuevo). En el mes
+simulado, donde el legacy guarda las horas al responder, coinciden siempre.
+**Para el importador (fase 3):** si un aviso del legacy trae horas de respuesta pero sus fechas no tienen hora,
+reconstruir la hora de respuesta como apertura + horas guardadas, para no perder el dato.
