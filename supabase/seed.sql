@@ -270,3 +270,9 @@ insert into public.fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage
   select oc.empresa_id, oc.obra_id, 'orden_cambio', oc.id, 1,
          oc.empresa_id || '/' || oc.obra_id || '/orden_cambio/' || oc.id || '-1.jpg', null
   from public.ordenes_cambio oc;
+
+-- Feriados (D-028): IJM descansa Thanksgiving y trabaja el 24 de diciembre; la otra empresa descansa Thanksgiving.
+insert into public.feriados (empresa_id, dia, nombre_es, nombre_en, se_trabaja) values
+  ('e000000a-0000-4000-8000-000000000000', '2026-11-26', 'Día de Acción de Gracias', 'Thanksgiving', false),
+  ('e000000a-0000-4000-8000-000000000000', '2026-12-24', 'Nochebuena', 'Christmas Eve', true),
+  ('e000000b-0000-4000-8000-000000000000', '2026-11-26', 'Día de Acción de Gracias', 'Thanksgiving', false);

@@ -47,7 +47,8 @@ a su nombre, después de validar las reglas con `packages/core` y dejando rastro
 | Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
 | `empresas` | Config | `nombre`, `ciudad`, `zona_horaria` (por defecto `America/Chicago`), `idioma` | lee y escribe | vista: `nombre`, `zona_horaria` |
-| `configuracion` | Config | una fila por empresa: `impuesto`, `limite_compra_pm`, `sla_bloqueo_horas`, `sla_oc_horas`, `umbral_oc_menor`, `margen_minimo_oc`, `horas_sin_recibo` | lee y escribe | vista: `limite_compra_pm`, `horas_sin_recibo`, `sla_bloqueo_horas` |
+| `configuracion` | Config | una fila por empresa: `impuesto`, `limite_compra_pm`, `sla_bloqueo_horas`, `sla_oc_horas`, `umbral_oc_menor`, `margen_minimo_oc`, `horas_sin_recibo`, `dias_laborables` (por defecto de lunes a sábado, D-028) | lee y escribe | vista: `limite_compra_pm`, `horas_sin_recibo`, `sla_bloqueo_horas`, `dias_laborables` |
+| `feriados` | (nueva) | `dia`, `nombre`, `se_trabaja`: un feriado se descansa salvo que se decida trabajarlo (D-028) | lee y escribe | lee |
 | `metas_indicadores` | Config (`META_*`, `MAX_*`) y metas fijas del código | `indicador`, `meta`; sin renglón vale la del legacy (D-019) | lee y escribe | — |
 | `miembros` | Usuarios | `user_id` (Supabase Auth, único: una empresa por usuario, D-016), `rol` (`dueno`/`admin`/`pm`), `nombre`, `telefono`, `idioma`, `activo`, `tarjeta_ultimos4`, `correo_avisos` | lee y escribe | lee su propio renglón |
 | `dispositivos` | (nueva) | los celulares que verificó cada miembro: `nombre`, `pin_hash`, `intentos_fallidos`, `bloqueado_hasta`, `verificado_en`, `ultimo_uso`, `revocado_en` (D-024) | lee; revoca por el servidor | los suyos |

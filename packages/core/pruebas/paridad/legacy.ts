@@ -22,6 +22,8 @@ export interface OpcionesLegacy {
   libro?: Libro;
   /** El momento que el legacy ve como "ahora". Por defecto, el reloj real. */
   ahora?: Date;
+  /** Sesiones ya abiertas, token → usuario: para llamar las funciones públicas (du*, pm*) que piden token. */
+  sesiones?: Record<string, string>;
 }
 
 /** El ámbito global del legacy: sus funciones quedan como propiedades. */
@@ -82,8 +84,14 @@ function relojFijo(ahora: Date): DateConstructor {
 }
 
 export function cargarLegacy(app: AppLegacy, opciones: OpcionesLegacy = {}): ContextoLegacy {
-  const libro = opciones.libro ?? {};
+  // una copia: el legacy escribe en sus hojas, y cada carga debe empezar con los mismos datos
+  const libro = structuredClone(opciones.libro ?? {});
   const cache: Record<string, string> = {};
+  // auth_() del legacy acepta una sesión guardada en la caché con el prefijo de su app
+  for (const [token, usuario] of Object.entries(opciones.sesiones ?? {})) {
+    cache['du_' + token] = usuario;
+    cache['pm_' + token] = usuario;
+  }
   const propiedades: Record<string, string> = {};
   const p2 = (n: number) => String(n).padStart(2, '0');
 

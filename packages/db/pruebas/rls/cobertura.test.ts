@@ -79,6 +79,26 @@ describe('permisos de lo que ya existe', () => {
   });
 });
 
+describe('toda tabla tiene sus disparadores de auditoría (D-027, preparar_tabla)', () => {
+  it('actualizado_en, autor y columnas fijas, en cada tabla que tenga esas columnas', async () => {
+    const r = await cliente<{ falta: string }[]>`
+      with columnas as (
+        select c.relname as tabla, c.oid, array_agg(a.attname::text) as cols
+        from pg_class c join pg_namespace n on n.oid = c.relnamespace
+        join pg_attribute a on a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped
+        where n.nspname = 'public' and c.relkind = 'r' group by c.relname, c.oid),
+      esperados as (
+        select tabla, oid, 'fijar_actualizado_en' as disparador from columnas where 'actualizado_en' = any(cols)
+        union all select tabla, oid, 'fijar_autor' from columnas where cols && array['creado_por', 'creado_en']
+        union all select tabla, oid, 'proteger_columnas_fijas' from columnas
+          where cols && array['empresa_id', 'obra_id', 'creado_por', 'creado_en', 'folio'])
+      select e.tabla || ': ' || e.disparador as falta from esperados e
+      where not exists (select 1 from pg_trigger t where t.tgrelid = e.oid and t.tgname = e.disparador)
+      order by 1`;
+    expect(r.map((x) => x.falta)).toEqual([]);
+  });
+});
+
 describe('las vistas solo se leen', () => {
   it('ni la API ni el servidor escriben en una vista (son de postgres y se saltarían RLS)', async () => {
     const r = await cliente<{ permiso: string }[]>`

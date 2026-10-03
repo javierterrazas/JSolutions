@@ -121,6 +121,10 @@ El detalle está en `legacy/`; esto es el mapa.
   `bitacora`, `avance`. Comentarios en español. No mezcles traducciones del dominio.
 - Si algo del negocio no está claro, pregunta. No inventes reglas.
 - Mantén `docs/DECISIONES.md` al día con cada decisión de diseño y cada diferencia intencional con el legacy.
+- Toda tabla nueva pasa por `select public.preparar_tabla('public.<tabla>')` en su migración (RLS, permisos y
+  disparadores de auditoría) y lleva sus políticas; `pnpm test:rls` falla si falta algo.
+- Los días laborables y "hoy" dependen del calendario y la zona de cada empresa: `packages/core` los recibe como
+  argumento, nunca los supone (D-028).
 
 ## Comandos
 
