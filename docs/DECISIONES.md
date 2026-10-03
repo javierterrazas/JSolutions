@@ -97,8 +97,13 @@ reproduce su `harness.js` en TypeScript.
 
 **Decisión:** el dinero siempre va en tablas propias (D-002). Las columnas que no son dinero pero que el PM no
 debe ver, en tablas que sí lee (`configuracion`, `subcontratistas`, `empresas`, `entregas`,
-`ordenes_cambio`), se le exponen mediante **vistas** `security_invoker` con solo las columnas permitidas; la
-tabla completa queda solo para dueño y administrador.
+`ordenes_cambio`), se le exponen mediante **vistas** con solo las columnas permitidas; la tabla completa queda
+solo para dueño y administrador. Las vistas son `empresa_actual_datos`, `configuracion_pm`, `subcontratistas_pm`,
+`entregas_pm` y `ordenes_cambio_pm`.
+**Corregida en el paso 4:** la primera versión decía vistas `security_invoker`. Así no funcionan: una vista
+`security_invoker` aplica el RLS del que consulta, y como el PM no puede leer la tabla completa, la vista le
+devolvería cero renglones. Las vistas son del dueño de la base y **cada una filtra por sí misma** (la empresa de
+la sesión y, donde aplica, las obras del PM). Por eso cada vista tiene su prueba en `pnpm test:rls`.
 **Por qué:** RLS filtra renglones, no columnas. Partir cada tabla por cada columna sensible llena el esquema de
 tablas de una sola fila; los permisos por columna (`GRANT` por columna) son frágiles con Supabase y fáciles de
 romper al agregar una columna.
@@ -221,3 +226,142 @@ legacy (un PIN de 4 dígitos sin límite se adivina). El dueño ve los dispositi
 con las pantallas del PM (fase 2). Los usuarios de prueba entran con correo y contraseña.
 **Descartado:** código por mensaje cada vez (la señal en obra es mala); correo y contraseña (lento en el
 teléfono, al final del día).
+
+## D-025 · Permisos de base
+
+**Decisión** (ajustada por D-026 en el mismo paso 4):
+- `anon` (sin sesión) no tiene ningún permiso: ni tablas, ni vistas, ni funciones, ni secuencias.
+- `authenticated` (la API) **solo lee**, siempre bajo RLS. Nunca crea, edita, borra ni vacía (`truncate`).
+  Supabase daba por defecto todos los permisos a los dos roles, incluido `truncate`, al que RLS no aplica.
+- `servidor_app` (D-026) crea y edita bajo RLS, y nunca borra: nada se borra (regla 4).
+- **Lo que se cree después nace cerrado.** Los permisos por defecto de tablas, vistas, secuencias y funciones
+  nuevas no dan nada a `anon` ni a la API. Cuidado: el permiso de ejecutar que toda función nueva da a PUBLIC
+  es global, y `alter default privileges in schema public` no lo quita. Hace falta la forma sin esquema. Una
+  prueba crea una función, una vista, una secuencia y una tabla dentro de una transacción revertida y revisa
+  que nazcan cerradas.
+- **El PIN** (`dispositivos.pin_hash`, intentos y bloqueo) no lo lee nadie por la API, ni el propio miembro: se
+  da `select` solo sobre las demás columnas (D-024).
+- **Paridad:** gastos y avisos se muestran al PM por quién los registró, no por obra, como en el legacy
+  (`sinRecibo`, `bloqueos`). Se ven también los de obras ya entregadas.
+
+## D-026 · Por la API solo se lee; toda escritura pasa por el servidor
+
+**Contexto:** la revisión independiente del paso 4 encontró que, con políticas de escritura para
+`authenticated`, el PM podía saltarse las reglas escribiendo directo por la API. Lo comprobó ejecutando cada
+caso:
+- una prueba de agua "sin fugas" cerrada en 60 segundos;
+- una inspección aprobada sin preguntas;
+- 48 horas de un trabajador en un día;
+- un gasto de $9,999,999;
+- folios elegidos por él (y apartados);
+- el autor y la fecha del punch list cambiados;
+- correcciones falsas en la auditoría.
+
+El dueño también editaba sin dejar rastro. Esas reglas cruzan renglones o viven en `packages/core`: RLS no
+puede expresarlas.
+
+**Decisión:**
+- Por la API (rol `authenticated`), los usuarios **solo leen**.
+- **Toda escritura la hace el servidor de la app** después de validar con `packages/core`:
+  1. se conecta a la base;
+  2. en cada transacción toma el rol **`servidor_app`** (`set local role servidor_app`);
+  3. toma la identidad del usuario (`request.jwt.claims` con su `sub`);
+  4. escribe junto con su rastro en `correcciones`.
+- **RLS sigue protegiendo esas escrituras.** Las políticas de escritura son `to servidor_app` y repiten la regla
+  completa (empresa, obras del PM, `creado_por` = el miembro de la sesión, estados permitidos). Un error del
+  servidor no deja escribir en la obra de otro PM, cruzar empresas, llevar una orden a "pagada" ni registrar una
+  compra de la oficina a nombre del PM. PostgREST no puede tomar `servidor_app`: el rol `authenticator` no es
+  miembro de ese rol.
+- **La base asigna y protege:**
+  - el folio lo pone siempre un disparador, y lo que mande el servidor se ignora;
+  - `empresa_id`, `creado_por`, `creado_en` y `folio` no se pueden cambiar después;
+  - una foto vive en la carpeta de su empresa y su obra y apunta a un registro de esa misma obra.
+  - El importador (fase 3) conserva folios y autores del legacy con `set local ijm.importando = 'si'`.
+- **Fotos:**
+  - Los usuarios **suben** directo a Storage (pesan y la señal es mala), solo a la carpeta de su obra, con
+    límite de 15 MB e imágenes o PDF.
+  - **No las leen directo:** el servidor revisa que el usuario pueda ver la fila de `fotos` (RLS) y le da un
+    enlace firmado de pocos minutos. Así un enlace no sobrevive a una baja ni a la entrega de la obra.
+  - Los recibos de la oficina y las fotos de órdenes de cambio no se le muestran al PM aunque estén en la
+    carpeta de su obra.
+- **Registro abierto apagado** (`enable_signup = false`): los miembros entran por invitación (D-024).
+
+**Por qué:** "RLS es la última línea de defensa, no la única". Con escritura directa por la API era la única, y
+no alcanza para las reglas de negocio. Así, las reglas las valida el servidor y la base sigue impidiendo lo
+peor aunque el servidor falle.
+
+**Consecuencias para el paso 6:**
+- las funciones del servidor usan `servidor_app` con la identidad del usuario, nunca el `service_role` para
+  operaciones de usuarios;
+- escriben su rastro en `correcciones`;
+- dan los enlaces firmados de las fotos.
+
+**Descartado:**
+- mantener las políticas de escritura para `authenticated` y agregar disparadores para cada regla: duplica
+  `packages/core` en SQL;
+- escribir con el `service_role`: RLS dejaría de proteger las escrituras;
+- funciones `security definer` por cada flujo: la lógica de negocio quedaría en SQL y no en `packages/core`.
+
+## D-027 · Lo que el servidor puede hacer a nombre de un usuario (segunda revisión del paso 4)
+
+**Contexto:** una segunda revisión independiente confirmó que por la API nadie escribe, lee dinero, ve obras
+ajenas ni ve otra empresa. Encontró que, actuando como el servidor con la identidad de un usuario, la base dejaba
+hacer más de lo que D-026 promete. Todo se corrigió en `20261004000200_endurecer.sql`, con una prueba por hallazgo
+en `packages/db/pruebas/rls/servidor.test.ts`.
+
+**Decisión:**
+- **El servidor se conecta con su propio usuario de base, `ijm_servidor`, nunca con `postgres`.** El usuario no
+  hereda nada por sí solo y solo puede tomar `servidor_app`, así que un `reset role` o un camino que olvide el
+  `set role` se queda sin permisos en lugar de saltarse RLS. La contraseña la pone quien despliega.
+- **La marca de importación (`ijm.importando`)** solo cuenta para una sesión sin rol de usuario (el importador
+  con el service role, o una conexión administrativa), nunca para `servidor_app`. Al importar un folio, el
+  contador avanza hasta él.
+- **La base pone `creado_por` (el miembro de la sesión) y `creado_en` (ahora) al crear**, mande lo que mande el
+  servidor. Nadie, ni el dueño, crea registros a nombre de otro ni con fecha inventada.
+- **`obra_id` tampoco cambia después**, igual que empresa, autor, fecha de creación y folio. Corregir la obra de
+  un registro es anularlo y volver a registrarlo. **Diferencia con el legacy:** su corrección permitía cambiar
+  `proyecto_id` de un gasto o de la mano de obra.
+- **Lo que el PM edita, vía servidor, es una lista cerrada de columnas por tabla:**
+  - órdenes de trabajo: estado, confirmación, llegada y aprobación. La aprobación va a su nombre, y una orden
+    nunca regresa de estado;
+  - espacios: solo la medida verificada;
+  - gastos: lo que el legacy dejaba corregir, y nunca uno ya revisado;
+  - bitácora: incidencia y anulación, nunca el día, la hora de envío ni la marca de tardío;
+  - avance, cuadrilla, pruebas de agua y punch list: lo suyo.
+
+  El dueño no tiene lista: sus ediciones las valida el servidor y dejan rastro en `correcciones`.
+- **Lo que el PM cuelga de otro registro** (partidas o subs de un cierre, respuestas de una inspección, fotos)
+  tiene que colgar de algo suyo o visible para él.
+- **`validar_foto` no sirve de oráculo:** revisa primero la empresa y las obras de la sesión, da un solo
+  mensaje, y falla cerrado si aparece un tipo de foto nuevo sin su regla.
+- **La empresa la activa o desactiva el sistema**, no el dueño ni el admin.
+- **El PIN solo lo lee el service role**, tampoco el servidor.
+- **Las vistas no se escriben** y ya no hay permisos por defecto para `servidor_app`: cada migración que cree
+  una tabla le da los suyos.
+
+**Aceptado, con su razón:**
+- **Una URL firmada de subida dura 2 h** y sobrevive a una baja. Solo sirve para subir a la carpeta de su obra,
+  no para leer, y lo que se suba no se registra en `fotos` sin pasar por el servidor.
+- **`Prefer: count=planned` deja ver el tamaño aproximado de tablas ajenas,** también de las de dinero. Es la
+  estimación del planificador de PostgreSQL. No revela ningún dato.
+- **Los huecos en los folios revelan cuántos registros que el PM no ve hay en su empresa,** por ejemplo
+  órdenes pagadas o compras de la oficina. Es el costo de folios legibles y seguidos (D-005).
+- **`servidor_app` puede bloquear una tabla** (`lock table`) porque edita. El servidor es código propio, y con
+  `ijm_servidor` una inyección no pasa de lo que `servidor_app` puede hacer.
+- **Las llaves foráneas distinguen un uuid que existe de uno inventado.** Exige conocer el uuid, que nunca se
+  muestra fuera de su empresa.
+
+**Para el paso 6 (el servidor):**
+- conectarse como `ijm_servidor`;
+- en **cada** transacción, `set local role servidor_app` y fijar **las dos** variables de identidad:
+  `request.jwt.claims` y `request.jwt.claim.sub`. `auth.uid()` lee primero la segunda; si quedara puesta de
+  antes, mandaría sobre la primera;
+- generar rutas de foto aleatorias, no predecibles;
+- dar enlaces firmados de lectura de pocos minutos.
+
+**Antes de producción** (no está en `config.toml`, se configura en el proyecto de Supabase):
+- contraseñas con requisitos, cambio de contraseña seguro, confirmación de correo y MFA para dueño y admin;
+- nunca cargar `supabase/seed.sql` (sus usuarios comparten una contraseña conocida);
+- no instalar extensiones en el esquema `public`: lo que crea `supabase_admin` ahí nace abierto, y la prueba
+  de "nace cerrado" solo cubre lo que crean las migraciones;
+- Realtime: sin canales públicos.

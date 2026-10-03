@@ -32,6 +32,15 @@ export async function errorDe(tx: Tx, fn: (tx: Tx) => Promise<unknown>): Promise
   }
 }
 
+/**
+ * Dentro de la transacción, actúa como lo hará el servidor de la app: el rol servidor_app con la identidad de un
+ * usuario de Auth (D-026). Todo lo que siga en tx pasa por RLS a nombre de ese usuario.
+ */
+export async function comoServidor(tx: Tx, userId: string): Promise<void> {
+  await tx`set local role servidor_app`;
+  await tx`select set_config('request.jwt.claims', ${JSON.stringify({ sub: userId, role: 'authenticated' })}, true)`;
+}
+
 async function usuarioAuth(tx: Tx): Promise<string> {
   const id = randomUUID();
   await tx`insert into auth.users (id, email, aud, role) values (${id}, ${id + '@prueba.test'}, 'authenticated', 'authenticated')`;

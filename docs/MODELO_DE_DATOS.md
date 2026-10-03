@@ -23,17 +23,24 @@ genera desde ellas con `pnpm db:esquema`.
 - **Estados y listas fijas como `enum`**, con los valores del legacy (D-020).
 - **Lo que se muestra y lo captura cada empresa, en dos idiomas:** `nombre_es` (obligatorio) y `nombre_en`
   (D-015).
-- **RLS activado en todas las tablas.** Sin políticas, nadie con sesión de usuario lee ni escribe nada: las
-  políticas llegan en el paso 4. Una prueba falla si una tabla queda sin RLS.
+- **RLS en todas las tablas, con una política por tabla y por operación** (migración `20261004000100_rls.sql`).
+  Ninguna permite borrar. Sin sesión no se lee nada. Una prueba falla si una tabla queda sin RLS, y
+  `pnpm test:rls` prueba la tabla de abajo con usuarios reales (D-025).
+- **Por la API solo se lee** (D-026). Toda escritura la hace el servidor con el rol `servidor_app` y la identidad
+  del usuario, bajo RLS. La base pone el folio, el autor y la fecha de creación; protege `empresa_id`,
+  `obra_id`, `creado_por`, `creado_en` y `folio`; limita las columnas que edita el PM, y amarra cada foto a su
+  empresa y su obra (D-027).
 
 ## Quién lee qué
 
 Leyenda: **D** = dueño y administrador · **PM** = el PM, solo en sus obras asignadas · **—** = sin acceso ·
 💲 = tabla con dinero, solo dueño y administrador (D-002). Las columnas que el PM no debe ver en tablas que sí
-lee se le dan por **vistas** (D-013, paso 4).
+lee se le dan por **vistas** (D-013): `empresa_actual_datos`, `configuracion_pm`, `subcontratistas_pm`,
+`entregas_pm` y `ordenes_cambio_pm`.
 
-La escritura de los flujos importantes pasa por funciones del servidor que validan las reglas; RLS es la última
-línea de defensa, no la única.
+"Lee" es lo que el usuario consulta por la API. "Escribe", "crea" o "edita" es lo que el **servidor** puede hacer
+a su nombre, después de validar las reglas con `packages/core` y dejando rastro en `correcciones`. RLS es la
+última línea de defensa, no la única.
 
 ### Empresa y usuarios
 
@@ -43,7 +50,7 @@ línea de defensa, no la única.
 | `configuracion` | Config | una fila por empresa: `impuesto`, `limite_compra_pm`, `sla_bloqueo_horas`, `sla_oc_horas`, `umbral_oc_menor`, `margen_minimo_oc`, `horas_sin_recibo` | lee y escribe | vista: `limite_compra_pm`, `horas_sin_recibo`, `sla_bloqueo_horas` |
 | `metas_indicadores` | Config (`META_*`, `MAX_*`) y metas fijas del código | `indicador`, `meta`; sin renglón vale la del legacy (D-019) | lee y escribe | — |
 | `miembros` | Usuarios | `user_id` (Supabase Auth, único: una empresa por usuario, D-016), `rol` (`dueno`/`admin`/`pm`), `nombre`, `telefono`, `idioma`, `activo`, `tarjeta_ultimos4`, `correo_avisos` | lee y escribe | lee su propio renglón |
-| `dispositivos` | (nueva) | los celulares que verificó cada miembro: `nombre`, `pin_hash`, `intentos_fallidos`, `bloqueado_hasta`, `verificado_en`, `ultimo_uso`, `revocado_en` (D-024) | lee y revoca | los suyos |
+| `dispositivos` | (nueva) | los celulares que verificó cada miembro: `nombre`, `pin_hash`, `intentos_fallidos`, `bloqueado_hasta`, `verificado_en`, `ultimo_uso`, `revocado_en` (D-024) | lee; revoca por el servidor | los suyos |
 | `folios` | (nueva) | `prefijo`, `ultimo` | solo el servidor | solo el servidor |
 
 `admin` y `dueno` tienen hoy los mismos permisos; quedan separados para poder distinguirlos después (decisión
@@ -108,7 +115,7 @@ La etiqueta de la obra ("Baño + Closet") y los pies² totales no se guardan: sa
 | `inspeccion_respuestas` | Calidad.defectos y no_aplica | por pregunta: `respuesta` (`cumple`/`no_cumple`/`no_aplica`) y el texto de la pregunta como estaba ese día | lee | lee y crea |
 | `pruebas_agua` | Pruebas_Agua | `espacio_id`, `inicio`, `fin`, `resultado` (`en_curso`/`sin_fugas`/`con_fuga`); una en curso por espacio. Las horas se calculan | lee | lee y crea |
 | `punch_list` | Punch_List | `folio`, `item`, `origen` (`defecto`/`cambio_alcance`/`expectativa`), `responsable`, `fecha_compromiso`, `estado`, `cerrado_en` | lee y escribe | lee y escribe |
-| `fotos` | todos los `*_url` y `fotos_pendientes` | `ref_tipo`, `ref_id`, `indice`, `storage_path`, `tomada_en`; **`unique (ref_tipo, ref_id, indice)`** | lee | lee y crea en sus obras |
+| `fotos` | todos los `*_url` y `fotos_pendientes` | `ref_tipo`, `ref_id` (un registro de la misma obra), `indice`, `storage_path` (`empresa/obra/…`), `tomada_en`; **`unique (empresa_id, ref_tipo, ref_id, indice)`** | lee y sube | las de sus obras, salvo recibos de la oficina y órdenes de cambio; sube en sus obras |
 
 Las fotos pendientes de un cierre son `bitacora.fotos_comprometidas` menos las fotos que llegaron. El número
 (`indice`) garantiza que un reintento sin señal no duplique una foto. Las fotos de la prueba de agua: índice 1
@@ -171,4 +178,5 @@ distintos.
 
 - Qué columnas exactas usa `Obras_Cerradas` en cada indicador del histórico: se confirma al trasladar los
   indicadores (paso 5).
-- Las vistas del PM y las políticas RLS: paso 4.
+- Las funciones del servidor (D-026): paso 6. Hasta entonces nadie escribe más que las migraciones, los datos de
+  prueba y las pruebas.

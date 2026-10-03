@@ -22,6 +22,20 @@ export const EMPRESAS = {
   b: 'e000000b-0000-4000-8000-000000000000',
 } as const;
 
+/** Los user_id de Auth de supabase/seed.sql, para actuar como el servidor a nombre de cada uno. */
+export const USERS = {
+  duenoA: 'a0000000-0000-4000-8000-000000000001',
+  carlos: 'a0000000-0000-4000-8000-000000000002',
+  luis: 'a0000000-0000-4000-8000-000000000003',
+} as const;
+
+/** Sus miembros (miembros.id), que es lo que va en creado_por. */
+export const MIEMBROS = {
+  duenoA: 'a1000000-0000-4000-8000-000000000001',
+  carlos: 'a1000000-0000-4000-8000-000000000002',
+  luis: 'a1000000-0000-4000-8000-000000000003',
+} as const;
+
 export const OBRAS = {
   a1Carlos: 'a2000000-0000-4000-8000-000000000001',
   a2Luis: 'a2000000-0000-4000-8000-000000000002',
@@ -32,6 +46,7 @@ export const OBRAS = {
 interface Api {
   url: string;
   anonKey: string;
+  serviceKey: string;
 }
 
 let api: Api | undefined;
@@ -39,8 +54,12 @@ let api: Api | undefined;
 /** La dirección y la llave pública de la API local: de las variables de entorno o de `supabase status`. */
 function apiLocal(): Api {
   if (api) return api;
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-    api = { url: process.env.SUPABASE_URL, anonKey: process.env.SUPABASE_ANON_KEY };
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    api = {
+      url: process.env.SUPABASE_URL,
+      anonKey: process.env.SUPABASE_ANON_KEY,
+      serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    };
     return api;
   }
   const salida = execSync('pnpm exec supabase status -o env', {
@@ -52,7 +71,7 @@ function apiLocal(): Api {
     if (!m?.[1]) throw new Error(`supabase status no dio ${nombre}: ¿corre la base local (pnpm db:start)?`);
     return m[1];
   };
-  api = { url: valor('API_URL'), anonKey: valor('ANON_KEY') };
+  api = { url: valor('API_URL'), anonKey: valor('ANON_KEY'), serviceKey: valor('SERVICE_ROLE_KEY') };
   return api;
 }
 
@@ -68,4 +87,11 @@ export async function entrarComo(correo: string): Promise<SupabaseClient> {
   const { error } = await cliente.auth.signInWithPassword({ email: correo, password: CONTRASENA_DE_PRUEBA });
   if (error) throw new Error(`No pudo entrar ${correo}: ${error.message}`);
   return cliente;
+}
+
+/** El cliente de servicio, que se salta RLS. Solo para preparar o limpiar lo que una prueba deja; nunca para
+ * comprobar lo que un usuario puede ver. */
+export function clienteServicio(): SupabaseClient {
+  const { url, serviceKey } = apiLocal();
+  return createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 }

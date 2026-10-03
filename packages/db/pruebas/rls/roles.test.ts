@@ -110,3 +110,18 @@ describe('el acceso se corta en ese instante', () => {
     }
   });
 });
+
+describe('el rol admin', () => {
+  it('ve lo mismo que el dueño, dinero incluido (por ahora: decisión pendiente 5 del plan)', async () => {
+    const duena = como('duenoB');
+    await base`update miembros set rol = 'admin' where user_id = 'b0000000-0000-4000-8000-000000000001'`;
+    try {
+      expect(await quienSoy(duena)).toEqual({ empresa: EMPRESAS.b, rol: 'admin', duenoOAdmin: true });
+      const { data } = await duena.from('cobros').select('empresa_id');
+      expect(data?.length).toBeGreaterThan(0);
+      expect(data?.every((c) => c.empresa_id === EMPRESAS.b)).toBe(true);
+    } finally {
+      await base`update miembros set rol = 'dueno' where user_id = 'b0000000-0000-4000-8000-000000000001'`;
+    }
+  });
+});

@@ -174,8 +174,10 @@ describe('reglas que guarda la base', () => {
       const foto = (ruta: string) => (t: typeof tx) =>
         t`insert into fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage_path)
           values (${a.empresa}, ${a.obra}, 'bitacora', ${b!.id}, 1, ${ruta})`;
-      expect(await errorDe(tx, foto('e/o/1.jpg'))).toBeNull();
-      expect(await errorDe(tx, foto('e/o/1-reintento.jpg'))).toMatch(/fotos_ref_tipo_ref_id_indice_key/);
+      expect(await errorDe(tx, foto(`${a.empresa}/${a.obra}/1.jpg`))).toBeNull();
+      expect(await errorDe(tx, foto(`${a.empresa}/${a.obra}/1-reintento.jpg`))).toMatch(
+        /fotos_ref_tipo_ref_id_indice_key/,
+      );
     }));
 
   it('la fecha de entrega no puede ser antes del inicio', () =>
