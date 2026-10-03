@@ -125,9 +125,12 @@ navegador con un diccionario (`idioma_en.py`), sin poder traducir lo que el due�
 
 ## D-016 · Una empresa por usuario
 
-**Decisión:** en las fases 1 a 3 cada usuario pertenece a una sola empresa. `empresa_actual()` y `rol_actual()`
-se leen de los datos de la sesión de Supabase Auth (`app_metadata`), que solo escribe el servidor, y se
-verifican contra `miembros`.
+**Decisión:** en las fases 1 a 3 cada usuario pertenece a una sola empresa (`miembros.user_id` es único).
+`empresa_actual()` y `rol_actual()` se leen de `miembros` en cada consulta, para el usuario de la sesión, si el
+miembro y su empresa están activos.
+**Ajustada en el paso 3:** la primera versión leía la empresa y el rol de los datos de la sesión de Auth
+(`app_metadata`). Se descartó porque esos datos viven en el token hasta una hora: un PM dado de baja seguiría
+entrando. Leyendo `miembros`, la baja corta el acceso en ese instante, como en el legacy (`usuarioActivo_`).
 **Por qué:** es lo que necesitan los contratistas piloto, y simplifica las políticas. Se puede ampliar a varias
 empresas con un selector sin cambiar las tablas de negocio, porque todas llevan `empresa_id`.
 
@@ -203,3 +206,18 @@ columnas y nulos del esquema contra la base, y falla si alguien cambió una migr
 cosas distintas. RLS, funciones y políticas solo se pueden expresar en SQL.
 **Descartado:** escribir el esquema de Drizzle a mano; generar las migraciones desde Drizzle (no expresa RLS ni
 las llaves compuestas con la claridad que hace falta revisar).
+
+## D-024 · El PM entra con un PIN en un dispositivo verificado
+
+**Decisión del dueño (decisión pendiente 2 del plan).** El dueño invita al PM por teléfono o correo; la primera
+vez, el PM abre la invitación en **su** celular y ese dispositivo queda verificado. Ahí elige un PIN, y desde
+entonces entra en ese celular solo con el PIN.
+**Cómo se arma:** el PIN desbloquea la sesión de Supabase Auth guardada en ese dispositivo; no sirve en otro
+aparato. Así el PM también puede abrir la app sin señal. Cuando hay conexión, el servidor revisa el PIN contra
+su hash (`dispositivos.pin_hash`), con límite de intentos: 5 fallidos seguidos bloquean 15 minutos, como en el
+legacy (un PIN de 4 dígitos sin límite se adivina). El dueño ve los dispositivos de cada PM y puede revocar uno
+(`revocado_en`) sin tocar los demás.
+**En la fase 1:** solo la tabla `dispositivos`. La invitación, la verificación y la entrada con PIN se construyen
+con las pantallas del PM (fase 2). Los usuarios de prueba entran con correo y contraseña.
+**Descartado:** código por mensaje cada vez (la señal en obra es mala); correo y contraseña (lento en el
+teléfono, al final del día).
