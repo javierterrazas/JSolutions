@@ -576,4 +576,12 @@ tipo en vez de su nombre.
 - **Los secretos** (la contraseña de `ijm_servidor`, la llave del service role) viven en las variables de
   Vercel, nunca en el repositorio. Cada proyecto tiene su propia contraseña de `ijm_servidor`, distinta de la
   local.
-- **El dueño crea las cuentas y paga.** El dominio está por comprarse.
+- **El dueño crea las cuentas.** El dominio está por comprarse.
+- **Se empieza gratis** (decisión del dueño): Supabase y Vercel en sus planes gratuitos mientras se desarrolla.
+  Se pasa a pago cuando haga falta, no antes:
+  - **Vercel Pro**, cuando la app la use la empresa de verdad (el piloto), porque el plan gratuito no permite
+    uso comercial.
+  - **Supabase Pro**, cuando lleguen al límite gratuito (500 MB de base, 1 GB de archivos: las fotos son lo
+    primero que crece) o cuando haya datos reales sin otro respaldo. Mientras tanto, un respaldo propio cada
+    noche (`pg_dump`) cubre la falta de respaldos diarios. El proyecto se pausa tras una semana sin uso; en el
+    piloto se usa a diario.

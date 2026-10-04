@@ -34,8 +34,8 @@ cobro con Stripe y el alta de empresas en línea (fase 4). Apps nativas.
 ## Decisiones del dueño
 
 1. **Dónde vive la app: Supabase y Vercel**, en Estados Unidos (us-east-1). Decidido (D-036). Dos proyectos de
-   Supabase: "pruebas" (gratuito, para las vistas previas) y "producción" (Pro: sin pausas y con respaldos
-   diarios); Vercel Pro (el gratuito no permite uso comercial); Resend para los correos. El producto se llama
+   Supabase, "pruebas" y "producción", y Vercel, **en sus planes gratuitos** mientras se pueda (D-036 dice
+   cuándo se paga); Resend para los correos. El producto se llama
    **J Solutions**; el dominio está por comprarse. El dueño crea las cuentas.
 2. **La invitación llega por correo.** Decidido. En producción sale por Resend con el dominio propio; el correo
    que trae Supabase es solo para pruebas.
