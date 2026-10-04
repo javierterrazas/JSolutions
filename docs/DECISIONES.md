@@ -566,11 +566,11 @@ tipo en vez de su nombre.
 ## D-036 · Dónde vive la app
 
 **Decisión del dueño:** Supabase y Vercel, en Estados Unidos. El producto se llama **J Solutions**.
-- **Supabase**, en us-east-1, la región más cercana a Texas con todos los servicios. Son dos proyectos:
-  "pruebas" (plan gratuito, para las vistas previas de cada pull request) y "producción" (plan Pro). El plan
-  gratuito pausa el proyecto sin uso y no guarda respaldos diarios, así que los datos reales no van ahí.
-- **Vercel Pro**, en la misma región, para que la app y la base queden juntas. El plan gratuito no permite uso
-  comercial. Cada pull request genera su vista previa contra el proyecto "pruebas".
+- **Supabase**, en us-west-2 (Oregón), donde el dueño creó el proyecto; una vez creado, no se cambia. Son dos
+  proyectos: "pruebas" (plan gratuito, para las vistas previas de cada pull request) y "producción". El plan
+  gratuito pausa el proyecto sin uso y no guarda respaldos diarios: ver abajo cuándo se paga.
+- **Vercel**, con sus funciones en pdx1 (Portland), junto a la base, porque cada operación hace varias
+  consultas. Cada pull request genera su vista previa contra el proyecto "pruebas".
 - **Los correos** (la invitación del PM, decisión 2 del plan de la fase 2) salen por Resend con el dominio
   propio. El correo que trae Supabase es solo para pruebas.
 - **Los secretos** (la contraseña de `ijm_servidor`, la llave del service role) viven en las variables de

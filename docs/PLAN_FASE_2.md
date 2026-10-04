@@ -33,7 +33,7 @@ cobro con Stripe y el alta de empresas en línea (fase 4). Apps nativas.
 
 ## Decisiones del dueño
 
-1. **Dónde vive la app: Supabase y Vercel**, en Estados Unidos (us-east-1). Decidido (D-036). Dos proyectos de
+1. **Dónde vive la app: Supabase y Vercel**, en Estados Unidos (Supabase en us-west-2, Vercel en pdx1). Decidido (D-036). Dos proyectos de
    Supabase, "pruebas" y "producción", y Vercel, **en sus planes gratuitos** mientras se pueda (D-036 dice
    cuándo se paga); Resend para los correos. El producto se llama
    **J Solutions**; el dominio está por comprarse. El dueño crea las cuentas.

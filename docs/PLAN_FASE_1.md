@@ -159,7 +159,7 @@ refleja.
    Decidido: PIN en un dispositivo ya verificado (D-024).
 3. **Modelo de precio** para vender: por empresa, por usuario o por obra activa. Afecta el modelo de datos
    de la fase 4.
-4. ~~**Región de los datos** en Supabase: Estados Unidos, por los clientes en Texas.~~ Decidido: us-east-1
+4. ~~**Región de los datos** en Supabase: Estados Unidos, por los clientes en Texas.~~ Decidido: us-west-2
    (D-036).
 5. **¿Separar "dueño" y "administrador"** como roles distintos? Por ejemplo, una asistente que registra
    pagos pero no ve márgenes.
