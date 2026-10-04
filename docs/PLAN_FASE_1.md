@@ -154,12 +154,13 @@ refleja.
 
 ## Decisiones pendientes del dueño
 
-1. **Nombre del producto y dominio.**
+1. ~~**Nombre del producto y dominio.**~~ Decidido: **J Solutions**; el dominio está por comprarse (D-036).
 2. ~~**Cómo entra el PM:** teléfono con código por mensaje, correo, o PIN en un dispositivo ya verificado.~~
    Decidido: PIN en un dispositivo ya verificado (D-024).
 3. **Modelo de precio** para vender: por empresa, por usuario o por obra activa. Afecta el modelo de datos
    de la fase 4.
-4. **Región de los datos** en Supabase: Estados Unidos, por los clientes en Texas.
+4. ~~**Región de los datos** en Supabase: Estados Unidos, por los clientes en Texas.~~ Decidido: us-west-2
+   (D-036).
 5. **¿Separar "dueño" y "administrador"** como roles distintos? Por ejemplo, una asistente que registra
    pagos pero no ve márgenes.
 

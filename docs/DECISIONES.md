@@ -562,3 +562,26 @@ avisos, inspecciones, órdenes de trabajo y de cambio, cobros, entrega y cierre 
 
 **Aprendido:** las pruebas encontraron un error en el primer intento: un espacio sin nombre tomaba el **id** de su
 tipo en vez de su nombre.
+
+## D-036 · Dónde vive la app
+
+**Decisión del dueño:** Supabase y Vercel, en Estados Unidos. El producto se llama **J Solutions**.
+- **Supabase**, en us-west-2 (Oregón), donde el dueño creó el proyecto; una vez creado, no se cambia. Son dos
+  proyectos: "pruebas" (plan gratuito, para las vistas previas de cada pull request) y "producción". El plan
+  gratuito pausa el proyecto sin uso y no guarda respaldos diarios: ver abajo cuándo se paga.
+- **Vercel**, con sus funciones en pdx1 (Portland), junto a la base, porque cada operación hace varias
+  consultas. Cada pull request genera su vista previa contra el proyecto "pruebas".
+- **Los correos** (la invitación del PM, decisión 2 del plan de la fase 2) salen por Resend con el dominio
+  propio. El correo que trae Supabase es solo para pruebas.
+- **Los secretos** (la contraseña de `ijm_servidor`, la llave del service role) viven en las variables de
+  Vercel, nunca en el repositorio. Cada proyecto tiene su propia contraseña de `ijm_servidor`, distinta de la
+  local.
+- **El dueño crea las cuentas.** El dominio está por comprarse.
+- **Se empieza gratis** (decisión del dueño): Supabase y Vercel en sus planes gratuitos mientras se desarrolla.
+  Se pasa a pago cuando haga falta, no antes:
+  - **Vercel Pro**, cuando la app la use la empresa de verdad (el piloto), porque el plan gratuito no permite
+    uso comercial.
+  - **Supabase Pro**, cuando lleguen al límite gratuito (500 MB de base, 1 GB de archivos: las fotos son lo
+    primero que crece) o cuando haya datos reales sin otro respaldo. Mientras tanto, un respaldo propio cada
+    noche (`pg_dump`) cubre la falta de respaldos diarios. El proyecto se pausa tras una semana sin uso; en el
+    piloto se usa a diario.
