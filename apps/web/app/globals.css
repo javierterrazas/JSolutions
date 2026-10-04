@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+/* Los colores de la marca; app/marca.ts los repite para el manifiesto y los íconos. */
+@theme {
+  --color-marca: #1d3557;
+  --color-fondo: #f8fafc;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+}
