@@ -30,5 +30,14 @@ export default tseslint.config(
     files: ['apps/web/**/*.{ts,tsx}'],
     settings: { next: { rootDir: 'apps/web' } },
   },
+  {
+    // ningún texto visible fijo en las pantallas: todo sale de apps/web/mensajes (D-015)
+    files: ['apps/web/**/*.tsx'],
+    rules: { 'react/jsx-no-literals': ['error', { noStrings: true, ignoreProps: true }] },
+  },
+  {
+    files: ['apps/web/public/sw.js'],
+    languageOptions: { globals: { ...globals.serviceworker } },
+  },
   prettier,
 );

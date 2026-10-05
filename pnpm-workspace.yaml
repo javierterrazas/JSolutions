@@ -9,3 +9,8 @@ onlyBuiltDependencies:
   - sharp
   - supabase
   - unrs-resolver
+
+# @swc/core 1.16.12+ (que trae next-intl) no carga en Windows si la carpeta de su caché tiene permisos para
+# otros usuarios; 1.16.2 no hace esa revisión. Quitar cuando lo corrijan.
+overrides:
+  '@swc/core': 1.16.2

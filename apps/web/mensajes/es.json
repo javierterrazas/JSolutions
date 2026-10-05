@@ -1,0 +1,13 @@
+{
+  "app": {
+    "lema": "La obra al día, desde el celular."
+  },
+  "inicio": {
+    "pronto": "Aquí vas a ver tu semana, tus obras y el cierre del día."
+  },
+  "idioma": {
+    "etiqueta": "Idioma",
+    "es": "Español",
+    "en": "English"
+  }
+}

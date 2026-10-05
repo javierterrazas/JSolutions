@@ -37,13 +37,16 @@ traslada: se resuelve con lo que da PostgreSQL.
 - **Drizzle** para consultas tipadas; migraciones SQL versionadas en `supabase/migrations/`.
 - **Zod** para validar entradas. **Vitest** para unidad, paridad, RLS e integración; **Playwright** para
   pruebas de extremo a extremo.
-- **next-intl** para ES/EN. La app del PM será una PWA con cola sin conexión (IndexedDB) en la fase 2.
-- Despliegue en **Vercel**. Cobro con **Stripe** en la fase 4.
+- **next-intl** para ES/EN y **Tailwind** para los estilos. La app del PM es una PWA con cola sin conexión
+  (IndexedDB).
+- Despliegue en **Vercel**, con las funciones en pdx1, junto a Supabase en us-west-2 (D-036). Cobro con
+  **Stripe** en la fase 4.
 
 ## Estructura
 
 ```
-apps/web/          Next.js: pantallas del dueño y del PM, y la capa de servidor
+apps/web/          Next.js: las pantallas. Sus acciones solo traducen la petición y llaman a packages/servidor;
+                   los textos, en mensajes/es.json y mensajes/en.json
 packages/core/     reglas de negocio puras (sin base de datos ni red): cronograma, etapas, avance,
                    validaciones, indicadores. Aquí vive la paridad con el legacy
 packages/db/       esquema Drizzle, tipos y acceso a datos
@@ -71,7 +74,8 @@ docs/              plan de fases, modelo de datos y registro de decisiones
 7. **Paridad.** Las reglas de `packages/core` deben dar los mismos resultados que el legacy. Toda diferencia
    intencional se anota en `docs/DECISIONES.md`.
 8. **Bilingüe desde el inicio.** Ningún texto visible queda fijo en el código. Los datos se guardan en forma
-   canónica y se traducen al mostrarse.
+   canónica y se traducen al mostrarse. ESLint rechaza texto fijo en las pantallas (`react/jsx-no-literals`)
+   y una prueba exige las mismas llaves en los dos idiomas.
 
 ## Reglas de negocio clave
 

@@ -585,3 +585,19 @@ tipo en vez de su nombre.
     primero que crece) o cuando haya datos reales sin otro respaldo. Mientras tanto, un respaldo propio cada
     noche (`pg_dump`) cubre la falta de respaldos diarios. El proyecto se pausa tras una semana sin uso; en el
     piloto se usa a diario.
+
+## D-037 · La base de la app
+
+**Decisión:**
+- **El idioma no va en la dirección** (nada de `/es/...` o `/en/...`): la PWA abre siempre en `/`. Manda el
+  idioma que eligió el usuario (una cookie); si no eligió, el del teléfono; si no, español. En el paso 2 se
+  guarda también en el miembro, para que lo siga en otro dispositivo.
+- **Los textos** viven en `apps/web/mensajes/`, uno por idioma, con tipos: una llave que no existe no
+  compila. ESLint rechaza texto fijo en las pantallas y una prueba exige las mismas llaves en los dos idiomas.
+- **El cambio de idioma es un formulario**, no un botón con JavaScript: funciona aunque la página no haya
+  terminado de cargar, con poca señal.
+- **El ícono** es la J sobre el color de la marca, generado en el código, hasta que haya un logo.
+- **El service worker** por ahora solo hace instalable la app; la cola sin señal es el paso 5.
+- **@swc/core se fija en 1.16.2.** next-intl lo trae, y desde 1.16.12 no carga en Windows si la carpeta de su
+  caché da permisos a otros usuarios, como pasa en esta computadora. En Linux (la integración continua y
+  Vercel) no pasa. Se quita la fijación cuando lo corrijan.

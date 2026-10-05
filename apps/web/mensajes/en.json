@@ -1,0 +1,13 @@
+{
+  "app": {
+    "lema": "Your jobs up to date, from your phone."
+  },
+  "inicio": {
+    "pronto": "Your week, your jobs and the end-of-day report will show up here."
+  },
+  "idioma": {
+    "etiqueta": "Language",
+    "es": "Español",
+    "en": "English"
+  }
+}
