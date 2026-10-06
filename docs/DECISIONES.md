@@ -601,3 +601,48 @@ tipo en vez de su nombre.
 - **@swc/core se fija en 1.16.2.** next-intl lo trae, y desde 1.16.12 no carga en Windows si la carpeta de su
   caché da permisos a otros usuarios, como pasa en esta computadora. En Linux (la integración continua y
   Vercel) no pasa. Se quita la fijación cuando lo corrijan.
+
+## D-038 · Entrar: la invitación, el celular verificado y el PIN
+
+**Decisiones del dueño:** mientras no haya dominio, la invitación se manda con un botón **Copiar** (o
+**Compartir**) por WhatsApp, mensaje o correo. El dueño también entra con PIN, de **6 dígitos**.
+
+**Cómo funciona** (completa D-024):
+- **La invitación.** El dueño da de alta al PM (nombre, correo e idioma) y la app le da un enlace que sirve una
+  sola vez, por 7 días. La base guarda solo el hash del token. Una invitación nueva anula la que no se usó.
+  Se canjea con un botón y no al abrir el enlace: WhatsApp abre los enlaces para mostrar su vista previa, y eso
+  gastaría la invitación.
+- **El celular verificado.** Al canjear, el servidor genera una llave al azar (32 bytes). El celular la guarda
+  en una cookie de 400 días y la base guarda su hash. El servidor abre la sesión de Supabase Auth del invitado
+  con un enlace mágico que genera y canjea en ese momento, sin mandar ningún correo. Las cookies de la sesión
+  son httpOnly: el JavaScript de la página no ve los tokens.
+- **El PIN** se cifra (bcrypt) **junto con la llave del celular**: sin el celular, el PIN no sirve, y con la base
+  sola no se puede adivinar. El PM usa 4 dígitos y el dueño o administrador 6. No se aceptan un dígito repetido
+  ni una escalera (1234, 9876). El PIN abre la sesión por 16 horas al PM y 12 al dueño, como el legacy
+  (`HORAS_SESION`). 5 intentos fallidos seguidos bloquean 15 minutos, también como el legacy. La función que
+  revisa el PIN no lanza error por un PIN equivocado: devuelve el resultado, para que la transacción guarde el
+  intento fallido.
+- **En cada página** se revisan juntas, en una transacción de la base, tres cosas: la sesión de Auth, la llave
+  del celular y el PIN abierto (`estado_dispositivo`). También se revisa que el miembro y su empresa sigan
+  activos.
+- **Quitar un celular o dar de baja** corta el acceso en ese instante. Al quitar un celular también se cierra
+  su sesión de Auth, como refuerzo. A quien olvidó su PIN se le manda una invitación nueva, que es otro
+  celular verificado.
+- **Todo pasa por funciones de la base** (security definer), que solo puede ejecutar `servidor_app`. Nadie
+  escribe directo en `miembros`, `dispositivos` ni `invitaciones`. Nadie lee la llave, el PIN, los intentos ni
+  el token: ni la API ni el servidor.
+- **El alta de una empresa** con su dueño la hace quien administra la plataforma, con
+  `packages/servidor/scripts/alta-empresa.mjs` y la llave secreta. Es la única escritura con el service role
+  (`alta_empresa`, que solo él puede ejecutar). Ningún usuario da de alta empresas en las fases 1 a 3.
+
+**Diferencia con lo planeado:** el PIN no lo revisa el service role (D-027) sino una función de la base. Así
+ningún código de la app toca el hash del PIN, y el límite de intentos no se puede saltar con dos peticiones al
+mismo tiempo, porque la función bloquea el renglón mientras revisa.
+
+**Límites conocidos** (para la revisión independiente del paso 7):
+- La API de Supabase (PostgREST) revisa la sesión de Auth, pero no el PIN ni el celular. Quien sacara los
+  tokens de las cookies podría **leer**, sin escribir (D-026), lo que su rol ve, hasta que venza el token (una
+  hora) o se quite el celular. Sacar esos tokens no es fácil, porque las cookies son httpOnly. Hay dos formas de
+  cerrarlo: que la API exija el celular abierto, o acortar la vida del token.
+- Sin señal, el PIN del teléfono (paso 5) será solo un candado local: los datos no llegan a la base sin la
+  revisión del servidor.

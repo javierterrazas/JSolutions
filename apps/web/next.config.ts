@@ -3,7 +3,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const config: NextConfig = {
   // los paquetes del monorepo se publican como TypeScript sin compilar
-  transpilePackages: ['@ijm/core', '@ijm/db'],
+  transpilePackages: ['@ijm/core', '@ijm/db', '@ijm/servidor'],
   async headers() {
     return [
       {

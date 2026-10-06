@@ -3,7 +3,7 @@
 import { execSync } from 'node:child_process';
 import { ErrorDeNegocio } from '@ijm/core';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { conectarServidor, tomarIdentidad, type Tx } from '../src/index';
+import { authAdmin, conectarServidor, tomarIdentidad, type Tx } from '../src/index';
 
 export const URL_SERVIDOR_LOCAL = 'postgresql://ijm_servidor:ijm-servidor-local@127.0.0.1:54322/postgres';
 export const servidor = conectarServidor(process.env.SERVIDOR_DATABASE_URL ?? URL_SERVIDOR_LOCAL, 5);
@@ -86,3 +86,19 @@ export async function clienteDe(correo: string): Promise<SupabaseClient> {
 
 /** El service role: aquí solo para firmar enlaces y limpiar lo que suben las pruebas. */
 export const clienteServicio = () => createClient(apiLocal().url, apiLocal().servicio, opciones);
+
+/** La API de Auth local, con la misma implementación que usa la app. */
+export const authLocal = () => authAdmin(apiLocal().url, apiLocal().servicio);
+
+/**
+ * Los usuarios de Auth que crean las pruebas no se revierten con la transacción: se borran al final los de un
+ * dominio propio de las pruebas.
+ */
+export const DOMINIO_DE_PRUEBA = '@acceso.prueba.test';
+export async function borrarUsuariosDePrueba(): Promise<void> {
+  const admin = clienteServicio().auth.admin;
+  const { data, error } = await admin.listUsers({ perPage: 1000 });
+  if (error) throw error;
+  for (const u of data.users.filter((x) => x.email?.endsWith(DOMINIO_DE_PRUEBA)))
+    await admin.deleteUser(u.id);
+}

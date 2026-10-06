@@ -8,7 +8,7 @@ afterAll(() => cliente.end());
 
 // docs/MODELO_DE_DATOS.md
 const TABLAS = [
-  'empresas', 'configuracion', 'metas_indicadores', 'feriados', 'miembros', 'dispositivos', 'folios',
+  'empresas', 'configuracion', 'metas_indicadores', 'feriados', 'miembros', 'dispositivos', 'invitaciones', 'folios',
   'tipos_espacio', 'oficios', 'etapas', 'hitos_calidad', 'puntos_control', 'plantillas_partida',
   'subcontratistas', 'trabajadores', 'tarifas_trabajador',
   'obras', 'obras_finanzas', 'espacios', 'partidas_obra', 'presupuesto_etapas', 'plan_semanal',

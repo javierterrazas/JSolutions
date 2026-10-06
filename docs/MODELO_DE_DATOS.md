@@ -51,7 +51,8 @@ a su nombre, después de validar las reglas con `packages/core` y dejando rastro
 | `feriados` | (nueva) | `dia`, `nombre`, `se_trabaja`: un feriado se descansa salvo que se decida trabajarlo (D-028) | lee y escribe | lee |
 | `metas_indicadores` | Config (`META_*`, `MAX_*`) y metas fijas del código | `indicador`, `meta`; sin renglón vale la del legacy (D-019) | lee y escribe | — |
 | `miembros` | Usuarios | `user_id` (Supabase Auth, único: una empresa por usuario, D-016), `rol` (`dueno`/`admin`/`pm`), `nombre`, `telefono`, `idioma`, `activo`, `tarjeta_ultimos4`, `correo_avisos` | lee y escribe | lee su propio renglón |
-| `dispositivos` | (nueva) | los celulares que verificó cada miembro: `nombre`, `pin_hash`, `intentos_fallidos`, `bloqueado_hasta`, `verificado_en`, `ultimo_uso`, `revocado_en` (D-024) | lee; revoca por el servidor | los suyos |
+| `dispositivos` | (nueva) | los celulares que verificó cada miembro: `nombre`, `secreto_hash` (la llave del celular), `pin_hash` (el PIN, cifrado con la llave), `intentos_fallidos`, `bloqueado_hasta`, `desbloqueado_hasta`, `sesion_id`, `verificado_en`, `ultimo_uso`, `revocado_en` (D-024, D-038). Nadie lee la llave, el PIN ni los intentos | lee; revoca por el servidor | los suyos |
+| `invitaciones` | (nueva) | `miembro_id`, `token_hash` (el enlace no se guarda), `expira_en` (7 días), `usada_en`, `dispositivo_id`, `anulada_en`: una sola vez (D-038) | lee; invita y anula por el servidor | — |
 | `folios` | (nueva) | `prefijo`, `ultimo` | solo el servidor | solo el servidor |
 
 `admin` y `dueno` tienen hoy los mismos permisos; quedan separados para poder distinguirlos después (decisión

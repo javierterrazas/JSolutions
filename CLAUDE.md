@@ -46,7 +46,8 @@ traslada: se resuelve con lo que da PostgreSQL.
 
 ```
 apps/web/          Next.js: las pantallas. Sus acciones solo traducen la petición y llaman a packages/servidor;
-                   los textos, en mensajes/es.json y mensajes/en.json
+                   los textos, en mensajes/es.json y mensajes/en.json. Toda página del miembro empieza con
+                   exigirAcceso() (lib/acceso.ts): sesión de Auth, celular verificado y PIN abierto (D-038)
 packages/core/     reglas de negocio puras (sin base de datos ni red): cronograma, etapas, avance,
                    validaciones, indicadores. Aquí vive la paridad con el legacy
 packages/db/       esquema Drizzle, tipos y acceso a datos

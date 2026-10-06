@@ -120,8 +120,14 @@ export function prepararMesSimulado(): string {
     try {
       renameSync(trabajo, destino);
     } catch {
-      // otra corrida terminó primero: se usa la suya
-      rmSync(trabajo, { recursive: true, force: true });
+      if (existsSync(destino + '/sim/dias.json')) {
+        // otra corrida terminó primero: se usa la suya
+        rmSync(trabajo, { recursive: true, force: true });
+      } else {
+        // una caché incompleta (la limpieza de temporales de Windows vacía las carpetas y las deja): se reemplaza
+        rmSync(destino, { recursive: true, force: true });
+        renameSync(trabajo, destino);
+      }
     }
   }
   const trabajo = destino;

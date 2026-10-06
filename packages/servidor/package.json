@@ -13,9 +13,7 @@
   "dependencies": {
     "@ijm/core": "workspace:*",
     "postgres": "^3.4.9",
-    "zod": "^4.6.5"
-  },
-  "devDependencies": {
+    "zod": "^4.6.5",
     "@supabase/supabase-js": "^2.117.2"
   }
 }
