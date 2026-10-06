@@ -3,11 +3,85 @@
     "lema": "Your jobs up to date, from your phone."
   },
   "inicio": {
-    "pronto": "Your week, your jobs and the end-of-day report will show up here."
+    "hola": "Hi, {nombre}",
+    "pronto": "Your week, your jobs and the end-of-day report will show up here.",
+    "equipo": "Team",
+    "salir": "Sign out",
+    "salirAyuda": "Next time it will ask for your PIN."
   },
   "idioma": {
     "etiqueta": "Language",
     "es": "Español",
     "en": "English"
+  },
+  "sinAcceso": {
+    "titulo": "This phone doesn't have access",
+    "texto": "To get in, ask the owner for an invitation and open it on this phone.",
+    "baja": "If you used to sign in here, this phone may have been removed or your access turned off."
+  },
+  "invitacion": {
+    "titulo": "Your invitation",
+    "texto": "When you continue, this phone gets verified and you choose your PIN. Open it only on your own phone.",
+    "boton": "Verify this phone",
+    "invalidaTitulo": "This invitation no longer works",
+    "invalidaTexto": "It may have been used, expired (they last 7 days) or been canceled. Ask the owner for a new one."
+  },
+  "pin": {
+    "nuevoTitulo": "Choose your PIN",
+    "nuevoTexto": "{largo} digits. You'll use it every day to sign in on this phone.",
+    "repetir": "Type it again",
+    "guardar": "Save PIN",
+    "entrarTitulo": "Enter your PIN",
+    "etiqueta": "PIN",
+    "entrar": "Sign in",
+    "mostrar": "Show PIN",
+    "ocultar": "Hide PIN",
+    "olvide": "Forgot your PIN? Ask the owner for a new invitation."
+  },
+  "equipo": {
+    "titulo": "Team",
+    "volver": "Back",
+    "invitarTitulo": "Invite a PM",
+    "nombre": "Name",
+    "correo": "Email",
+    "idiomaApp": "App language",
+    "invitar": "Create invitation",
+    "enlaceTitulo": "Invitation ready for {nombre}",
+    "enlaceTexto": "Send this link by WhatsApp, text or email. It works once, for 7 days, and must be opened on their own phone.",
+    "copiar": "Copy link",
+    "copiado": "Copied!",
+    "compartir": "Share",
+    "rol": {
+      "dueno": "Owner",
+      "admin": "Administrator",
+      "pm": "PM"
+    },
+    "dadoDeBaja": "Access turned off",
+    "sinCelular": "No verified phone",
+    "celular": "{nombre} · last used: {fecha}",
+    "celularSinUso": "{nombre} · verified on {fecha}",
+    "quitar": "Remove",
+    "pendiente": "Pending invitation; expires {fecha}",
+    "nuevaInvitacion": "New invitation",
+    "darDeBaja": "Turn off access",
+    "reactivar": "Turn access back on"
+  },
+  "errores": {
+    "desconocido": "Something went wrong. Try again.",
+    "datos_invalidos": "Check the information.",
+    "sin_acceso": "You don't have access.",
+    "solo_dueno": "Only the owner can do this.",
+    "correo_ya_registrado": "That email already belongs to a member.",
+    "miembro_no_activo": "That member's access is turned off.",
+    "miembro_invalido": "That change can't be made to this member.",
+    "dispositivo_invalido": "This phone no longer has access.",
+    "invitacion_invalida": "This invitation no longer works.",
+    "pin_invalido": "The PIN has {largo} digits, numbers only.",
+    "pin_debil": "That PIN is too easy to guess: don't repeat one number or use a run like 1234.",
+    "pin_no_coincide": "The two PINs don't match.",
+    "pin_ya_fijado": "This phone already has a PIN.",
+    "pin_incorrecto": "Wrong PIN.",
+    "pin_quedan": "{quedan, plural, one {# try left.} other {# tries left.}}",
+    "pin_bloqueado": "Too many tries. Try again at {hora}."
   }
 }

@@ -262,6 +262,8 @@ insert into public.dispositivos (empresa_id, miembro_id, nombre)
 
 -- Una invitación pendiente en cada empresa (para un celular nuevo), con un token conocido: solo local.
 insert into public.invitaciones (empresa_id, miembro_id, token_hash, expira_en) values
+  ('e000000a-0000-4000-8000-000000000000', 'a1000000-0000-4000-8000-000000000001',
+   public.hash_secreto('invitacion-de-prueba-dueno-ijm-2026'), '2030-01-01'),
   ('e000000a-0000-4000-8000-000000000000', 'a1000000-0000-4000-8000-000000000003',
    public.hash_secreto('invitacion-de-prueba-luis-ijm-2026'), '2030-01-01'),
   ('e000000b-0000-4000-8000-000000000000', 'b1000000-0000-4000-8000-000000000003',

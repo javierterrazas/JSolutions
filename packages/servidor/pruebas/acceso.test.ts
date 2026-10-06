@@ -1,7 +1,7 @@
 // Entrar: la invitación, el celular verificado y el PIN (D-024, D-038), contra la base y la API de Auth locales.
 // Equivale a legacy/pruebas/prueba_pin.py en lo que no es pantalla: el PIN de cada rol, el límite de intentos y
 // que darlo de baja corte el acceso.
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   canjearInvitacion,
   cambiarActivo,
@@ -34,6 +34,8 @@ import {
 
 // la primera llamada a la API local lee su dirección con `supabase status`, que tarda
 beforeAll(() => authLocal(), 60_000);
+// cada prueba llama a la API de Auth (crear usuarios), que a veces tarda más de los 5 s de siempre
+vi.setConfig({ testTimeout: 20_000 });
 
 afterAll(async () => {
   await borrarUsuariosDePrueba();

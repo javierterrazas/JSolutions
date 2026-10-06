@@ -286,8 +286,14 @@ begin
   update public.dispositivos
     set revocado_en = now(), revocado_por = public.miembro_actual(), desbloqueado_hasta = null
     where id = d.id;
+  -- Cerrar su sesión de Auth es un refuerzo: el celular ya no entra porque estado_dispositivo lo ve revocado. Si
+  -- Supabase no deja a esta función tocar auth.sessions, se revoca igual.
   if d.sesion_id is not null then
-    delete from auth.sessions where id = d.sesion_id;
+    begin
+      delete from auth.sessions where id = d.sesion_id;
+    exception when insufficient_privilege then
+      raise warning 'No se pudo cerrar la sesión de Auth % del dispositivo %', d.sesion_id, d.id;
+    end;
   end if;
 end $$;
 

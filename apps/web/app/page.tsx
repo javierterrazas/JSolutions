@@ -1,17 +1,26 @@
 import { getTranslations } from 'next-intl/server';
-import { NOMBRE_APP } from './marca';
-import { SelectorDeIdioma } from './selector-de-idioma';
+import Link from 'next/link';
+import { exigirAcceso } from '@/lib/acceso';
+import { salir } from './acciones/entrar';
+import { Marco, estilos } from './componentes/marco';
 
 export default async function Inicio() {
-  const t = await getTranslations();
+  const { yo } = await exigirAcceso();
+  const t = await getTranslations('inicio');
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-8 px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))]">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold text-marca">{NOMBRE_APP}</h1>
-        <p className="text-slate-600">{t('app.lema')}</p>
-      </header>
-      <p className="rounded-2xl border border-slate-200 bg-white p-4 text-slate-700">{t('inicio.pronto')}</p>
-      <SelectorDeIdioma />
-    </main>
+    <Marco titulo={t('hola', { nombre: yo.nombre })}>
+      <p className={estilos.tarjeta}>{t('pronto')}</p>
+      {yo.rol !== 'pm' ? (
+        <Link href="/equipo" className={`${estilos.boton} flex items-center justify-center`}>
+          {t('equipo')}
+        </Link>
+      ) : null}
+      <form action={salir} className="mt-auto flex flex-col gap-1">
+        <button type="submit" className={estilos.botonSecundario}>
+          {t('salir')}
+        </button>
+        <p className="text-center text-xs text-slate-500">{t('salirAyuda')}</p>
+      </form>
+    </Marco>
   );
 }

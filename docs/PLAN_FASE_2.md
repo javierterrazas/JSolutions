@@ -55,19 +55,24 @@ traducen la petición y llaman a `packages/servidor`; no hay reglas en la capa w
 **Terminado cuando** la app vacía se instala en un iPhone y un Android, cambia de idioma, y la integración continua
 despliega una vista previa por cada pull request.
 
-### 2. Entrar: invitación, dispositivo verificado y PIN (D-024)
+### 2. Entrar: invitación, dispositivo verificado y PIN (D-024, D-038) — hecho
 
-- El dueño invita al PM por correo (decisión 2). Al abrir la invitación en su celular, el dispositivo queda
-  verificado y el PM elige su PIN.
-- El PIN se guarda solo como hash, lo verifica el servidor con el service role (la única vez que se usa para un
-  usuario: D-027) y tiene límite de intentos: 5 fallidos bloquean 15 minutos.
-- Sin señal, el PIN desbloquea la sesión guardada en ese dispositivo. **Riesgo a resolver:** cómo proteger esa
-  sesión guardada (cifrada con una llave derivada del PIN, con WebCrypto).
-- Cada server action verifica el token de Supabase y saca de ahí el `userId` que recibe `packages/servidor`
-  (pendiente de D-035). El dueño ve los dispositivos de cada PM y puede revocar uno.
+- El dueño invita al PM desde la pantalla "Equipo" y le manda el enlace con **Copiar** o **Compartir**
+  (WhatsApp, mensaje o correo). Cuando haya dominio, saldrá solo por correo (decisión 2). Al abrir la
+  invitación en su celular, el dispositivo queda verificado y el PM elige su PIN.
+- El PIN se cifra junto con la llave del celular y lo revisa la base, con límite de intentos: 5 fallidos
+  bloquean 15 minutos. El PM usa 4 dígitos y el dueño 6 (decisión 3).
+- Cada página revisa la sesión de Auth, la llave del celular y el PIN; el `userId` sale del token verificado.
+  El dueño ve los celulares de cada miembro y puede quitar uno o dar de baja.
+- La primera empresa y su dueño se dan de alta con `packages/servidor/scripts/alta-empresa.mjs`.
+- **Pasa al paso 5:** sin señal, el PIN abre lo guardado en el teléfono (un candado local; D-038).
 
-**Terminado cuando** las pruebas cubren: invitación, PIN correcto e incorrecto, bloqueo, revocación, PM dado de
-baja con sesión abierta (se corta en ese instante, D-016), y otro aparato sin invitación.
+**Terminado:** las pruebas cubren la invitación, el PIN correcto e incorrecto, el bloqueo, quitar un celular, el
+PM dado de baja con la sesión abierta y otro aparato sin invitación; y se probó el flujo completo en el
+navegador, en tamaño de teléfono.
+
+**Antes del piloto:** una empresa nueva nace sin catálogo (tipos de espacio, partidas, puntos de control). Hay
+que copiarle el del sistema actual antes de dar de alta la obra piloto.
 
 ### 3. El inicio del PM
 

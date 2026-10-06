@@ -3,11 +3,85 @@
     "lema": "La obra al día, desde el celular."
   },
   "inicio": {
-    "pronto": "Aquí vas a ver tu semana, tus obras y el cierre del día."
+    "hola": "Hola, {nombre}",
+    "pronto": "Aquí vas a ver tu semana, tus obras y el cierre del día.",
+    "equipo": "Equipo",
+    "salir": "Salir",
+    "salirAyuda": "La próxima vez te pide el PIN."
   },
   "idioma": {
     "etiqueta": "Idioma",
     "es": "Español",
     "en": "English"
+  },
+  "sinAcceso": {
+    "titulo": "Este celular no tiene acceso",
+    "texto": "Para entrar, pide al dueño una invitación y ábrela en este celular.",
+    "baja": "Si ya entrabas aquí, pudieron quitar este celular o darte de baja."
+  },
+  "invitacion": {
+    "titulo": "Tu invitación",
+    "texto": "Al continuar, este celular queda verificado y eliges tu PIN. Ábrela solo en tu propio celular.",
+    "boton": "Verificar este celular",
+    "invalidaTitulo": "Esta invitación ya no sirve",
+    "invalidaTexto": "Pudo usarse ya, vencer (duran 7 días) o anularse. Pide una nueva al dueño."
+  },
+  "pin": {
+    "nuevoTitulo": "Elige tu PIN",
+    "nuevoTexto": "{largo} dígitos. Con él entras cada día en este celular.",
+    "repetir": "Escríbelo otra vez",
+    "guardar": "Guardar PIN",
+    "entrarTitulo": "Escribe tu PIN",
+    "etiqueta": "PIN",
+    "entrar": "Entrar",
+    "mostrar": "Mostrar PIN",
+    "ocultar": "Ocultar PIN",
+    "olvide": "¿Olvidaste tu PIN? Pide al dueño una invitación nueva."
+  },
+  "equipo": {
+    "titulo": "Equipo",
+    "volver": "Volver",
+    "invitarTitulo": "Invitar a un PM",
+    "nombre": "Nombre",
+    "correo": "Correo",
+    "idiomaApp": "Idioma de la app",
+    "invitar": "Crear invitación",
+    "enlaceTitulo": "Invitación lista para {nombre}",
+    "enlaceTexto": "Mándale este enlace por WhatsApp, mensaje o correo. Sirve una sola vez, por 7 días, y tiene que abrirlo en su propio celular.",
+    "copiar": "Copiar enlace",
+    "copiado": "¡Copiado!",
+    "compartir": "Compartir",
+    "rol": {
+      "dueno": "Dueño",
+      "admin": "Administrador",
+      "pm": "PM"
+    },
+    "dadoDeBaja": "Dado de baja",
+    "sinCelular": "Sin celular verificado",
+    "celular": "{nombre} · último uso: {fecha}",
+    "celularSinUso": "{nombre} · verificado el {fecha}",
+    "quitar": "Quitar",
+    "pendiente": "Invitación pendiente; vence el {fecha}",
+    "nuevaInvitacion": "Nueva invitación",
+    "darDeBaja": "Dar de baja",
+    "reactivar": "Reactivar"
+  },
+  "errores": {
+    "desconocido": "Algo falló. Intenta de nuevo.",
+    "datos_invalidos": "Revisa los datos.",
+    "sin_acceso": "No tienes acceso.",
+    "solo_dueno": "Solo el dueño puede hacer esto.",
+    "correo_ya_registrado": "Ese correo ya es de un miembro.",
+    "miembro_no_activo": "Ese miembro está dado de baja.",
+    "miembro_invalido": "A ese miembro no se le puede hacer este cambio.",
+    "dispositivo_invalido": "Este celular ya no tiene acceso.",
+    "invitacion_invalida": "Esta invitación ya no sirve.",
+    "pin_invalido": "El PIN lleva {largo} dígitos, solo números.",
+    "pin_debil": "Ese PIN es muy fácil de adivinar: no repitas un número ni uses una escalera como 1234.",
+    "pin_no_coincide": "Los dos PIN no son iguales.",
+    "pin_ya_fijado": "Este celular ya tiene PIN.",
+    "pin_incorrecto": "PIN incorrecto.",
+    "pin_quedan": "{quedan, plural, one {Te queda # intento.} other {Te quedan # intentos.}}",
+    "pin_bloqueado": "Demasiados intentos. Vuelve a intentar a las {hora}."
   }
 }
