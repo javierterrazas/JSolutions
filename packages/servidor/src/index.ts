@@ -9,3 +9,5 @@ export * from './presupuesto';
 export * from './cierre';
 export * from './fotos';
 export * from './correcciones';
+export * from './acceso';
+export * from './auth';

@@ -12,3 +12,4 @@ export * from './validaciones';
 export * from './calidad';
 export * from './indicadores';
 export * from './correcciones';
+export * from './acceso';

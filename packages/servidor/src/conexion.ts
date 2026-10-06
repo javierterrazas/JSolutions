@@ -17,6 +17,9 @@ export function conectarServidor(url: string, maxConexiones = 10): Servidor {
     sql: postgres(url, {
       max: maxConexiones,
       onnotice: () => {},
+      // En la nube se entra por el pooler de Supabase en modo transacción (puerto 6543), que no admite sentencias
+      // preparadas: cada transacción puede caer en otra conexión.
+      prepare: false,
       // Los días de negocio llegan como texto "AAAA-MM-DD", nunca como Date: postgres los convertiría a la
       // medianoche UTC, que en Austin es el día anterior (regla 5, el error de un día del legacy).
       types: {
@@ -40,6 +43,23 @@ export async function tomarIdentidad(tx: Tx, usuario: Usuario): Promise<void> {
   await tx`set local role servidor_app`;
   await tx`select set_config('request.jwt.claims', ${JSON.stringify({ sub: usuario.userId, role: 'authenticated' })}, true),
                   set_config('request.jwt.claim.sub', ${usuario.userId}, true)`;
+}
+
+/**
+ * Toma el rol servidor_app SIN identidad: auth.uid() es nulo, y RLS no deja ver ni escribir nada. Solo para lo que
+ * se hace antes de tener sesión, como canjear una invitación, que es una función que revisa su propia prueba.
+ */
+export async function sinIdentidad(tx: Tx): Promise<void> {
+  await tx`set local role servidor_app`;
+  await tx`select set_config('request.jwt.claims', '', true), set_config('request.jwt.claim.sub', '', true)`;
+}
+
+/** Ejecuta `fn` en una transacción, sin usuario (ver `sinIdentidad`). */
+export async function sinUsuario<T>(servidor: Servidor, fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return (await servidor.sql.begin(async (tx) => {
+    await sinIdentidad(tx);
+    return fn(tx);
+  })) as T;
 }
 
 /** Ejecuta `fn` en una transacción, a nombre del usuario. Si algo falla, no queda nada a medias. */

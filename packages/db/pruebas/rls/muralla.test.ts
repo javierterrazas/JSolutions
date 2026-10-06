@@ -264,11 +264,21 @@ describe('por la API los usuarios solo leen (D-026)', () => {
     expect(error?.message).toMatch(/permission denied/);
   });
 
-  it('el PIN no se puede leer, ni el propio ni el de los demás', async () => {
-    for (const u of ['pm1A', 'duenoA'] as const) {
-      const { error } = await como(u).from('dispositivos').select('pin_hash');
-      expect(error?.message, u).toMatch(/permission denied/);
-    }
+  it('el PIN, la llave del celular y el token de la invitación no se leen, ni los propios ni los de otros', async () => {
+    const secretos = [
+      ['dispositivos', 'pin_hash'],
+      ['dispositivos', 'secreto_hash'],
+      ['dispositivos', 'intentos_fallidos'],
+      ['dispositivos', 'bloqueado_hasta'],
+      ['dispositivos', 'desbloqueado_hasta'],
+      ['dispositivos', 'sesion_id'],
+      ['invitaciones', 'token_hash'],
+    ] as const;
+    for (const u of ['pm1A', 'duenoA'] as const)
+      for (const [tabla, columna] of secretos) {
+        const { error } = await como(u).from(tabla).select(columna);
+        expect(error?.message, `${u} ${tabla}.${columna}`).toMatch(/permission denied/);
+      }
     const { data } = await como('pm1A').from('dispositivos').select('id, nombre, verificado_en');
     expect(data?.length).toBe(1);
   });

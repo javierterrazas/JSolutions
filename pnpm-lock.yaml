@@ -105,16 +105,15 @@ importers:
       '@ijm/core':
         specifier: workspace:*
         version: link:../core
+      '@supabase/supabase-js':
+        specifier: ^2.117.2
+        version: 2.117.2
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
       zod:
         specifier: ^4.6.5
         version: 4.6.5
-    devDependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.117.2
-        version: 2.117.2
 
 packages:
 

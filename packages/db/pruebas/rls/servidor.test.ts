@@ -264,9 +264,32 @@ describe('B7 y PIN', () => {
       ).toBeNull();
     }));
 
-  it('el servidor tampoco lee el PIN: solo el service role', () =>
+  it('el servidor tampoco lee el PIN, la llave ni el token: solo las funciones de acceso', () =>
     enTransaccionRevertida(base, async (tx) => {
       await comoServidor(tx, USERS.duenoA);
-      expect(await errorDe(tx, (t) => t`select pin_hash from dispositivos`)).toMatch(/permission denied/);
+      for (const columna of ['pin_hash', 'secreto_hash', 'desbloqueado_hasta', 'sesion_id'])
+        expect(await errorDe(tx, (t) => t`select ${t(columna)} from dispositivos`), columna).toMatch(
+          /permission denied/,
+        );
+      expect(await errorDe(tx, (t) => t`select token_hash from invitaciones`)).toMatch(/permission denied/);
+    }));
+
+  it('ni escribe directo en miembros, dispositivos e invitaciones, ni da de alta empresas', () =>
+    enTransaccionRevertida(base, async (tx) => {
+      await comoServidor(tx, USERS.duenoA);
+      expect(await errorDe(tx, (t) => t`update miembros set activo = false`)).toMatch(/permission denied/);
+      expect(await errorDe(tx, (t) => t`update dispositivos set revocado_en = now()`)).toMatch(
+        /permission denied/,
+      );
+      expect(await errorDe(tx, (t) => t`update invitaciones set anulada_en = now()`)).toMatch(
+        /permission denied/,
+      );
+      expect(
+        await errorDe(
+          tx,
+          (t) =>
+            t`select public.alta_empresa('X', '', 'America/Chicago', 'es', ${USERS.duenoA}, 'X', 'x', now())`,
+        ),
+      ).toMatch(/permission denied/);
     }));
 });

@@ -260,6 +260,13 @@ select pg_temp.cierre('e000000a-0000-4000-8000-000000000000', 'a2000000-0000-400
 insert into public.dispositivos (empresa_id, miembro_id, nombre)
   select empresa_id, id, 'Celular de ' || nombre from public.miembros where rol = 'pm' and activo;
 
+-- Una invitación pendiente en cada empresa (para un celular nuevo), con un token conocido: solo local.
+insert into public.invitaciones (empresa_id, miembro_id, token_hash, expira_en) values
+  ('e000000a-0000-4000-8000-000000000000', 'a1000000-0000-4000-8000-000000000003',
+   public.hash_secreto('invitacion-de-prueba-luis-ijm-2026'), '2030-01-01'),
+  ('e000000b-0000-4000-8000-000000000000', 'b1000000-0000-4000-8000-000000000003',
+   public.hash_secreto('invitacion-de-prueba-valle-ijm-2026'), '2030-01-01');
+
 -- Fotos de recibos y de órdenes de cambio: el recibo de una compra de la oficina y la foto de una orden de cambio
 -- viven en la carpeta de la obra, pero el PM no debe verlos (revisión del paso 4). El recibo de su propio gasto sí.
 insert into public.fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage_path, creado_por)
