@@ -646,3 +646,42 @@ mismo tiempo, porque la función bloquea el renglón mientras revisa.
   cerrarlo: que la API exija el celular abierto, o acortar la vida del token.
 - Sin señal, el PIN del teléfono (paso 5) será solo un candado local: los datos no llegan a la base sin la
   revisión del servidor.
+
+## D-039 · El catálogo de cada empresa sale de su propio libro
+
+**Decisiones del dueño:**
+1. El catálogo de IJM es **solo de IJM**. No hay una plantilla estándar: una empresa nueva nace vacía, y arma
+   su catálogo con las pantallas del dueño (fase 3) o carga el de su propio libro.
+2. Los datos de la empresa piloto se cargan **desde su libro del sistema actual con un script**.
+3. La obra piloto se da de alta con una **pantalla mínima** "Nueva obra + presupuesto".
+
+**Cómo se carga el libro.** El dueño descarga su Google Sheet como .xlsx, y quien administra la plataforma corre
+`packages/servidor/scripts/cargar-libro.ts` con la llave secreta. El script convierte el libro con
+`importar/libro.ts` y la base lo guarda con `cargar_libro`, una función que solo puede ejecutar el service role:
+- **Qué se carga:**
+  - el catálogo: tipos de espacio, partidas con su peso, días, responsable, paralelo, espera, etapa y punto de
+    control, las etapas, los oficios y los puntos de control con sus preguntas;
+  - la configuración (impuesto, límite de compra, plazos);
+  - las metas que difieren de las del legacy;
+  - los subcontratistas con sus papeles;
+  - la cuadrilla con su tarifa.
+- **Las reglas de lectura del legacy:**
+  - "SI" es sí;
+  - "Generales" es "Generales de obra", y siempre va primero;
+  - el oficio de una partida se empata con el de un sub por texto contenido en el otro;
+  - la licencia la piden plomería, electricidad y aire acondicionado (`requiereLicencia_`);
+  - PC3 exige la prueba de agua;
+  - un renglón sin su id (`sub_id`, `trabajador_id`) es una nota, no un registro.
+- **Primero muestra y después carga.** Sin `--confirmar` solo muestra lo que cargaría. Un dato que no se
+  entiende detiene todo y se reporta con su hoja y su número de renglón, para corregirlo en Google Sheets.
+- **Todo o nada, y una sola vez.** Una empresa que ya tiene catálogo, subcontratistas o cuadrilla se rechaza
+  (`empresa_con_catalogo`): cargar dos veces duplicaría todo. Lo que haya que corregir después se corrige en las
+  pantallas del dueño.
+- **La tarifa del libro vale desde el 2000-01-01**, porque el libro no guarda su historia. El costo de cada día
+  se calcula con la tarifa vigente ese día (D-031).
+- **Los nombres en inglés quedan vacíos**: se muestra el español hasta que el dueño los capture (D-015).
+
+**Por qué no el importador completo:** el importador de la fase 3 trae además las obras, su historia y el
+dinero. Para el piloto basta con el catálogo y los datos de la empresa, porque la obra piloto se da de alta a
+mano (decisión 4 del plan de la fase 2). El lector del .xlsx se mudó a `packages/servidor/src/importar/`, donde
+lo usarán los dos.

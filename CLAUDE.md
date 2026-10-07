@@ -146,9 +146,16 @@ pnpm dev                la app en desarrollo
 pnpm e2e                Playwright
 ```
 
+Con la llave secreta de la nube en un `.env.nube` que no se sube (lo corre quien administra la plataforma):
+
+```
+node --env-file=.env.nube packages/servidor/scripts/alta-empresa.mjs …        dar de alta una empresa (D-038)
+pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/cargar-libro.ts …  cargarle su libro (D-039)
+```
+
 ## Documentos
 
 - `docs/PLAN_FASE_1.md` — la fase 1 (cimientos), terminada: sus siete criterios están cumplidos.
-- `docs/PLAN_FASE_2.md` — el borrador de la fase 2 (la app del PM), por revisar con el dueño.
+- `docs/PLAN_FASE_2.md` — la fase 2 (la app del PM), en curso.
 - `docs/MODELO_DE_DATOS.md` — las tablas, sus relaciones y quién puede leer qué.
 - `docs/DECISIONES.md` — el registro de decisiones.

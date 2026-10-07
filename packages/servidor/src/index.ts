@@ -11,3 +11,5 @@ export * from './fotos';
 export * from './correcciones';
 export * from './acceso';
 export * from './auth';
+export * from './importar/xlsx';
+export * from './importar/libro';
