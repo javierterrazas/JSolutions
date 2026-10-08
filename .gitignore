@@ -9,3 +9,6 @@ legacy/.trabajo/
 __pycache__/
 *.tsbuildinfo
 next-env.d.ts
+
+# libros con datos reales de un negocio (para cargarlos): nunca al repositorio
+/*.xlsx

@@ -140,3 +140,25 @@ describe('un libro con problemas', () => {
     });
   });
 });
+
+describe('un libro anterior al cambio de acentos', () => {
+  it('se carga con sus acentos: igual que el mismo libro ya corregido', () => {
+    const sinAcentos = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').normalize('NFC');
+    const viejo = libro();
+    const columnas: Record<string, number[]> = {
+      Partidas_Catalogo: [0, 2, 3, 6, 9],
+      Checklist_Calidad: [0, 2],
+      Subcontratistas: [2],
+    };
+    for (const [h, cs] of Object.entries(columnas))
+      for (const r of viejo[h]!.slice(1))
+        for (const c of cs) if (typeof r[c] === 'string') r[c] = sinAcentos(r[c]);
+    expect(viejo.Partidas_Catalogo!.some((r) => r[0] === 'Bano')).toBe(true);
+
+    const a = datosDelLibro(viejo);
+    const b = datosDelLibro(libro());
+    for (const k of ['tipos', 'etapas', 'oficios', 'hitos', 'puntos', 'partidas'] as const)
+      expect(a[k], k).toEqual(b[k]);
+    expect(a.subcontratistas.map((s) => s.oficio)).toEqual(b.subcontratistas.map((s) => s.oficio));
+  });
+});
