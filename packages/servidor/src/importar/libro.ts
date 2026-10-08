@@ -10,6 +10,7 @@
 // En los dos, "SI" es sí, los renglones que empiezan con EJEMPLO no se cargan, y el oficio de una partida se empata
 // con el de un sub por texto, como el legacy.
 import { ErrorDeNegocio, METAS_POR_OMISION, type ClaveIndicador } from '@ijm/core';
+import { corregirAcentos } from './acentos';
 import { MARCA_EJEMPLO } from './plantilla';
 import type { Libro } from './xlsx';
 
@@ -143,8 +144,29 @@ function hoja(libro: Libro, nombre: string, opcionalmente = false): Renglon[] {
 
 const conDatos = ({ r }: Renglon) => r.some((c) => texto(c) !== '');
 
+/** Las columnas con nombres del catálogo, que se guardan con sus acentos aunque el libro no los traiga. */
+const COLUMNAS_CON_ACENTOS: Readonly<Record<string, readonly number[]>> = {
+  Partidas_Catalogo: [0, 2, 3, 6, 9], // tipo de espacio, partida, punto de control, quién, etapa
+  Checklist_Calidad: [0, 2], // punto de control, pregunta
+  Subcontratistas: [2], // oficio
+};
+
+/** Una copia del libro con los acentos puestos en los nombres del catálogo. */
+function conAcentos(libro: Libro): Libro {
+  const copia: Libro = { ...libro };
+  for (const [nombre, columnas] of Object.entries(COLUMNAS_CON_ACENTOS)) {
+    const h = libro[nombre];
+    if (!h) continue;
+    copia[nombre] = h.map((r, i) =>
+      i === 0 ? r : r.map((c, j) => (columnas.includes(j) && typeof c === 'string' ? corregirAcentos(c) : c)),
+    );
+  }
+  return copia;
+}
+
 /** Convierte el libro. Lo que no se puede cargar (un dato que falta o no se entiende) es libro_invalido. */
-export function datosDelLibro(libro: Libro): DatosDelLibro {
+export function datosDelLibro(original: Libro): DatosDelLibro {
+  const libro = conAcentos(original);
   const problemas: { hoja: string; renglon: number; problema: string }[] = [];
   const mal = (h: string, i: number, problema: string) =>
     problemas.push({ hoja: h, renglon: i + 2, problema });

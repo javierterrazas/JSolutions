@@ -680,6 +680,11 @@ mismo tiempo, porque la función bloquea el renglón mientras revisa.
 - **La tarifa del libro vale desde el 2000-01-01**, porque el libro no guarda su historia. El costo de cada día
   se calcula con la tarifa vigente ese día (D-031).
 - **Los nombres en inglés quedan vacíos**: se muestra el español hasta que el dueño los capture (D-015).
+- **Los acentos se ponen al cargar.** Los libros de antes del cambio de acentos traen los nombres sin acentos
+  ni ñ ("Bano", "Plomeria"), como el libro real de IJM. El legacy los mostraba corregidos con un mapa exacto
+  (`legacy/app/acentos.py`); el cargador los guarda ya corregidos con el mismo mapa (`importar/acentos.ts`), más
+  dos etapas que le faltaban. Una prueba quita los acentos al libro de ejemplo y exige el mismo resultado.
+- **Los libros con datos reales no van al repositorio**: `.gitignore` excluye los `.xlsx` de la raíz.
 
 **La plantilla estándar de datos iniciales** (decisión del dueño): todo negocio nuevo ordena sus datos en el mismo
 libro, `docs/plantilla/Plantilla_datos_iniciales_J_Solutions.xlsx`, y se carga con el mismo script. La genera el
