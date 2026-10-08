@@ -7,7 +7,8 @@
     "pronto": "Aquí vas a ver tu semana, tus obras y el cierre del día.",
     "equipo": "Equipo",
     "salir": "Salir",
-    "salirAyuda": "La próxima vez te pide el PIN."
+    "salirAyuda": "La próxima vez te pide el PIN.",
+    "obras": "Obras"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -82,6 +83,77 @@
     "pin_ya_fijado": "Este celular ya tiene PIN.",
     "pin_incorrecto": "PIN incorrecto.",
     "pin_quedan": "{quedan, plural, one {Te queda # intento.} other {Te quedan # intentos.}}",
-    "pin_bloqueado": "Demasiados intentos. Vuelve a intentar a las {hora}."
+    "pin_bloqueado": "Demasiados intentos. Vuelve a intentar a las {hora}.",
+    "faltan": "Faltan datos: {campos}.",
+    "telefono_incompleto": "El teléfono necesita al menos 10 dígitos.",
+    "pm_no_activo": "Ese PM no está activo.",
+    "entrega_antes_del_inicio": "La entrega no puede ser antes del inicio.",
+    "sin_espacios": "Agrega al menos un espacio.",
+    "faltan_pies2": "Faltan los pies² de: {espacios}.",
+    "monto_negativo": "Un monto no puede ser negativo.",
+    "etapa_no_es_del_espacio": "Esa etapa no es de ese espacio.",
+    "obra_cerrada": "La obra ya se entregó: su presupuesto no cambia.",
+    "obra_no_encontrada": "No se encontró la obra.",
+    "tipo_espacio_inexistente": "Ese tipo de espacio ya no existe.",
+    "falta_tipo_generales": "Al catálogo le falta Generales de obra.",
+    "campos": {
+      "cliente": "cliente",
+      "telefono_cliente": "teléfono",
+      "direccion": "dirección",
+      "pm": "PM",
+      "fecha_inicio": "fecha de inicio",
+      "fecha_entrega": "fecha de entrega",
+      "contrato": "contrato"
+    }
+  },
+  "obras": {
+    "titulo": "Obras",
+    "nueva": "Nueva obra",
+    "ninguna": "Todavía no hay obras.",
+    "pm": "PM: {nombre} · inicio {fecha}",
+    "presupuesto": "Presupuesto",
+    "estado": {
+      "sin_presupuesto": "Sin presupuesto",
+      "lista_para_arranque": "Lista para arranque",
+      "en_obra": "En obra",
+      "en_cierre": "En cierre",
+      "entregada": "Entregada"
+    },
+    "encabezado": "{folio} · {cliente}"
+  },
+  "obraNueva": {
+    "titulo": "Nueva obra",
+    "cliente": "Cliente",
+    "telefono": "Teléfono del cliente",
+    "direccion": "Dirección",
+    "pm": "PM",
+    "elegirPm": "Elige al PM",
+    "sinPms": "No hay PMs activos: invita uno en Equipo antes de dar de alta la obra.",
+    "inicio": "Fecha de inicio",
+    "entrega": "Fecha de entrega estimada",
+    "contrato": "Contrato ($)",
+    "notas": "Notas (opcional)",
+    "espacios": "Espacios",
+    "espaciosAyuda": "Generales de obra se agrega solo. Cada espacio toma las partidas de su tipo.",
+    "tipo": "Tipo",
+    "nombreEspacio": "Nombre (opcional)",
+    "pies2": "Pies²",
+    "agregar": "Agregar espacio",
+    "quitar": "Quitar",
+    "partidas": "{n, plural, one {# partida} other {# partidas}}",
+    "crear": "Crear obra",
+    "duplicada": "Este cliente ya tiene una obra activa en esa dirección. ¿Es otra obra?",
+    "crearIgual": "Sí, crear otra obra"
+  },
+  "presupuesto": {
+    "titulo": "Presupuesto · {folio}",
+    "ayuda": "El monto de cada etapa de cada espacio. Cada espacio necesita al menos una etapa con monto para que la obra pueda arrancar.",
+    "otras": "Otras partidas",
+    "partidas": "{n, plural, one {# partida} other {# partidas}}",
+    "total": "Total: {total}",
+    "guardar": "Guardar presupuesto",
+    "completo": "Presupuesto completo: la obra quedó lista para arranque.",
+    "incompleto": "Guardado. Faltan montos en: {espacios}.",
+    "volver": "Volver a obras"
   }
 }
