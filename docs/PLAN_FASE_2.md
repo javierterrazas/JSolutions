@@ -71,8 +71,17 @@ despliega una vista previa por cada pull request.
 PM dado de baja con la sesión abierta y otro aparato sin invitación; y se probó el flujo completo en el
 navegador, en tamaño de teléfono.
 
-**Antes del piloto:** una empresa nueva nace sin catálogo (tipos de espacio, partidas, puntos de control). Hay
-que copiarle el del sistema actual antes de dar de alta la obra piloto.
+### 2b. Antes del piloto: el libro y la primera obra (D-039)
+
+- **La carga del libro** — hecha. Una empresa nueva nace vacía. A la empresa piloto se le carga su libro del
+  sistema actual (catálogo, configuración, metas, subcontratistas y cuadrilla) con
+  `packages/servidor/scripts/cargar-libro.ts`: primero muestra lo que va a cargar, y solo carga con
+  `--confirmar` y una sola vez.
+- **La plantilla estándar** — hecha. Todo negocio nuevo llena
+  `docs/plantilla/Plantilla_datos_iniciales_J_Solutions.xlsx`, que se carga con el mismo script.
+- **"Nueva obra + presupuesto"**: una pantalla mínima para que el dueño dé de alta la obra piloto y su
+  presupuesto por etapa, con los flujos de la fase 1 (`crearObra`, `guardarPresupuesto`). Las demás pantallas
+  del dueño siguen en la fase 3.
 
 ### 3. El inicio del PM
 
