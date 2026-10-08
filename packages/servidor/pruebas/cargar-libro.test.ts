@@ -2,7 +2,15 @@
 // en una transacción que se revierte, con la conexión administrativa local.
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
-import { conectarServidor, datosDelLibro, leerLibro, type Tx } from '../src/index';
+import {
+  conectarServidor,
+  datosDelLibro,
+  type DatosDelLibro,
+  generarPlantilla,
+  leerLibro,
+  MARCA_EJEMPLO,
+  type Tx,
+} from '../src/index';
 
 const admin = conectarServidor('postgresql://postgres:postgres@127.0.0.1:54322/postgres', 2);
 afterAll(() => admin.sql.end());
@@ -28,10 +36,17 @@ async function comoServiceRole(fn: (tx: Tx, empresa: string) => Promise<void>) {
   }
 }
 
-const cargar = (tx: Tx, empresa: string) =>
-  tx<
-    { r: Record<string, number> }[]
-  >`select public.cargar_libro(${empresa}, ${tx.json(datos as never)}) as r`;
+const cargar = (tx: Tx, empresa: string, d: DatosDelLibro = datos) =>
+  tx<{ r: Record<string, number> }[]>`select public.cargar_libro(${empresa}, ${tx.json(d as never)}) as r`;
+
+/** La plantilla estándar con sus renglones de ejemplo como si fueran datos. */
+function plantillaLlena(): DatosDelLibro {
+  const l = leerLibro(generarPlantilla());
+  for (const filas of Object.values(l))
+    for (const f of filas)
+      if (String(f[0]).startsWith(MARCA_EJEMPLO)) f[0] = String(f[0]).slice(`${MARCA_EJEMPLO} · `.length);
+  return datosDelLibro(l);
+}
 
 describe('cargar el libro', () => {
   it('carga el catálogo, la configuración, los subcontratistas y la cuadrilla con su tarifa', () =>
@@ -46,7 +61,11 @@ describe('cargar el libro', () => {
         subcontratistas: 6,
         trabajadores: 4,
         metas: 0,
+        feriados: 0,
       });
+      // el libro del sistema actual no trae días laborables: quedan los de siempre (D-028)
+      const [dl] = await tx`select dias_laborables from configuracion where empresa_id = ${empresa}`;
+      expect(dl).toEqual({ dias_laborables: [1, 2, 3, 4, 5, 6] });
       const [c] =
         await tx`select impuesto, limite_compra_pm from configuracion where empresa_id = ${empresa}`;
       expect(c).toEqual({ impuesto: '0.0825', limite_compra_pm: '300.00' });
@@ -95,5 +114,37 @@ describe('cargar el libro', () => {
           rol,
         ).rejects.toThrow(/permission denied/);
       }
+    }));
+});
+
+describe('cargar la plantilla estándar', () => {
+  it('guarda además los días laborables, los feriados y los nombres en inglés', () =>
+    comoServiceRole(async (tx, empresa) => {
+      const d = plantillaLlena();
+      const sinSabado = { ...d, diasLaborables: [1, 2, 3, 4, 5] };
+      const r = (await cargar(tx, empresa, sinSabado))[0]!.r;
+      expect(r).toMatchObject({
+        tipos: 2,
+        partidas: 2,
+        puntos: 1,
+        subcontratistas: 1,
+        trabajadores: 1,
+        feriados: 1,
+      });
+      const [c] = await tx`select dias_laborables from configuracion where empresa_id = ${empresa}`;
+      expect(c).toEqual({ dias_laborables: [1, 2, 3, 4, 5] });
+      const [f] =
+        await tx`select dia::text, nombre_es, nombre_en, se_trabaja from feriados where empresa_id = ${empresa}`;
+      expect(f).toEqual({
+        dia: '2026-11-26',
+        nombre_es: 'Día de Acción de Gracias',
+        nombre_en: 'Thanksgiving Day',
+        se_trabaja: false,
+      });
+      const ingles = await tx`
+        select p.nombre_en from plantillas_partida p where p.empresa_id = ${empresa} order by p.nombre_en`;
+      expect(ingles.map((x) => x.nombre_en)).toEqual(['Plumbing rough-in', 'Protection and setup']);
+      const [pc] = await tx`select texto_en from puntos_control where empresa_id = ${empresa}`;
+      expect(pc).toEqual({ texto_en: 'Plumbing pressure test held' });
     }));
 });

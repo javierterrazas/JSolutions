@@ -144,6 +144,7 @@ pnpm db:reset           recrea la base local desde supabase/migrations/
 pnpm db:esquema         regenera el esquema de Drizzle desde la base (después de cambiar una migración)
 pnpm dev                la app en desarrollo
 pnpm e2e                Playwright
+pnpm plantilla          regenera docs/plantilla/ (la plantilla de datos iniciales, D-039)
 ```
 
 Con la llave secreta de la nube en un `.env.nube` que no se sube (lo corre quien administra la plataforma):

@@ -80,8 +80,9 @@ function fechaDeSerie(serie: number): Date {
 const columna = (ref: string) =>
   [...ref.replace(/\d+$/, '')].reduce((n, c) => n * 26 + c.charCodeAt(0) - 64, 0) - 1;
 
-export function leerLibro(ruta: string): Libro {
-  const zip = descomprimir(readFileSync(ruta));
+/** Lee el libro de un archivo (su ruta) o ya cargado en memoria. */
+export function leerLibro(ruta: string | Buffer): Libro {
+  const zip = descomprimir(typeof ruta === 'string' ? readFileSync(ruta) : ruta);
   const leer = (n: string) => zip.get(n)?.toString('utf8') ?? '';
   const compartidos = [...leer('xl/sharedStrings.xml').matchAll(/<si>([\s\S]*?)<\/si>/g)].map((m) =>
     textoDe(m[1]!),

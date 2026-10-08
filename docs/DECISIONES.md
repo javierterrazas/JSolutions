@@ -681,6 +681,25 @@ mismo tiempo, porque la función bloquea el renglón mientras revisa.
   se calcula con la tarifa vigente ese día (D-031).
 - **Los nombres en inglés quedan vacíos**: se muestra el español hasta que el dueño los capture (D-015).
 
+**La plantilla estándar de datos iniciales** (decisión del dueño): todo negocio nuevo ordena sus datos en el mismo
+libro, `docs/plantilla/Plantilla_datos_iniciales_J_Solutions.xlsx`, y se carga con el mismo script. La genera el
+código (`importar/plantilla.ts`, `pnpm plantilla`), y una prueba la llena con sus ejemplos y la carga; otra exige
+que el archivo esté al día.
+- **Las mismas hojas y el mismo orden de columnas que el libro del sistema actual**: un solo lector sirve para los
+  dos formatos. El lector reconoce la plantilla por `Config → PLANTILLA`.
+- **Lo que solo trae la plantilla:**
+  - los nombres en inglés de partidas, preguntas y feriados;
+  - la columna "Exige prueba de agua" (en el legacy era la regla de PC3);
+  - `DIAS_LABORABLES`;
+  - la hoja de feriados;
+  - las hojas Empresa y Equipo, que no se cargan: son los datos del alta y de las invitaciones.
+- **En la plantilla todo renglón con datos es un registro**, y si le falta algo se reporta. En el legacy, un
+  renglón sin id era una nota.
+- **Los renglones de ejemplo** (grises, empiezan con EJEMPLO) nunca se cargan.
+- **Una plantilla sin partidas** se rechaza con `libro_sin_partidas`.
+- El libro se escribe sin dependencias (`importar/escribir-xlsx.ts`), igual que se lee. Se probó que también lo
+  abre openpyxl.
+
 **Por qué no el importador completo:** el importador de la fase 3 trae además las obras, su historia y el
 dinero. Para el piloto basta con el catálogo y los datos de la empresa, porque la obra piloto se da de alta a
 mano (decisión 4 del plan de la fase 2). El lector del .xlsx se mudó a `packages/servidor/src/importar/`, donde

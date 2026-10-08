@@ -13,3 +13,5 @@ export * from './acceso';
 export * from './auth';
 export * from './importar/xlsx';
 export * from './importar/libro';
+export * from './importar/plantilla';
+export * from './importar/escribir-xlsx';

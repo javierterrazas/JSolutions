@@ -36,6 +36,8 @@ try {
 } catch (e) {
   if (!esErrorDeNegocio(e)) throw e;
   if (e.codigo === 'libro_incompleto') console.error(`Al libro le falta la hoja ${String(e.datos?.hoja)}.`);
+  else if (e.codigo === 'libro_sin_partidas')
+    console.error('El libro no tiene partidas en Partidas_Catalogo (los renglones de EJEMPLO no cuentan).');
   else {
     console.error(
       'El libro tiene datos que no se pueden cargar. Corrígelos en Google Sheets y vuelve a descargarlo:',
@@ -72,6 +74,13 @@ console.log(
   `  Subcontratistas (${datos.subcontratistas.length}): ${lista(datos.subcontratistas.map((s) => s.nombre))}`,
 );
 console.log(`  Cuadrilla (${datos.trabajadores.length}): ${lista(datos.trabajadores.map((t) => t.nombre))}`);
+const DIAS = ['', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
+console.log(
+  `  Días laborables: ${datos.diasLaborables ? lista(datos.diasLaborables.map((d) => DIAS[d]!)) : 'los de siempre (lun a sab)'}`,
+);
+console.log(
+  `  Feriados (${datos.feriados.length})${datos.feriados.length ? ': ' + lista(datos.feriados.map((f) => `${f.dia} ${f.nombre_es}${f.se_trabaja ? ' (se trabaja)' : ''}`)) : ''}`,
+);
 console.log(
   `  Configuración: ${lista(Object.entries(datos.configuracion).map(([k, v]) => `${k} ${v}`))}` +
     (datos.metas.length

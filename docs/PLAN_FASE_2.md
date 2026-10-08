@@ -77,6 +77,8 @@ navegador, en tamaño de teléfono.
   sistema actual (catálogo, configuración, metas, subcontratistas y cuadrilla) con
   `packages/servidor/scripts/cargar-libro.ts`: primero muestra lo que va a cargar, y solo carga con
   `--confirmar` y una sola vez.
+- **La plantilla estándar** — hecha. Todo negocio nuevo llena
+  `docs/plantilla/Plantilla_datos_iniciales_J_Solutions.xlsx`, que se carga con el mismo script.
 - **"Nueva obra + presupuesto"**: una pantalla mínima para que el dueño dé de alta la obra piloto y su
   presupuesto por etapa, con los flujos de la fase 1 (`crearObra`, `guardarPresupuesto`). Las demás pantallas
   del dueño siguen en la fase 3.
