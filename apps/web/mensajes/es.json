@@ -25,7 +25,9 @@
     "texto": "Al continuar, este celular queda verificado y eliges tu PIN. Ábrela solo en tu propio celular.",
     "boton": "Verificar este celular",
     "invalidaTitulo": "Esta invitación ya no sirve",
-    "invalidaTexto": "Pudo usarse ya, vencer (duran 7 días) o anularse. Pide una nueva al dueño."
+    "invalidaTexto": "Pudo usarse ya, vencer (duran 7 días) o anularse. Pide una nueva al dueño.",
+    "yaTieneDueno": "Este celular ya tiene acceso como {nombre}. Un celular es de una sola persona: si continúas, {nombre} ya no podrá entrar aquí y necesitará una invitación nueva. Si es otra persona, ábrela en su propio celular.",
+    "botonReemplazar": "Continuar de todos modos"
   },
   "pin": {
     "nuevoTitulo": "Elige tu PIN",

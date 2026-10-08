@@ -25,7 +25,9 @@
     "texto": "When you continue, this phone gets verified and you choose your PIN. Open it only on your own phone.",
     "boton": "Verify this phone",
     "invalidaTitulo": "This invitation no longer works",
-    "invalidaTexto": "It may have been used, expired (they last 7 days) or been canceled. Ask the owner for a new one."
+    "invalidaTexto": "It may have been used, expired (they last 7 days) or been canceled. Ask the owner for a new one.",
+    "yaTieneDueno": "This phone already has access as {nombre}. A phone belongs to one person only: if you continue, {nombre} will no longer be able to sign in here and will need a new invitation. If this is someone else, open it on their own phone.",
+    "botonReemplazar": "Continue anyway"
   },
   "pin": {
     "nuevoTitulo": "Choose your PIN",

@@ -628,6 +628,13 @@ tipo en vez de su nombre.
 - **Quitar un celular o dar de baja** corta el acceso en ese instante. Al quitar un celular también se cierra
   su sesión de Auth, como refuerzo. A quien olvidó su PIN se le manda una invitación nueva, que es otro
   celular verificado.
+- **Un celular (un navegador) es de una sola persona.** Canjear en él la invitación de otro miembro reemplaza la
+  llave del anterior, que pierde el acceso ahí; su cuenta sigue intacta. Pasó en el piloto: el dueño abrió en su
+  celular la invitación de un PM. Desde entonces, la invitación avisa a quién le quitaría el celular antes de
+  canjearse. Y si el dueño ya no puede entrar a Equipo para reinvitarse, quien administra la plataforma genera
+  la invitación con `packages/servidor/scripts/invitar-de-nuevo.ts --correo …`, con la llave secreta. Para usar
+  la app como dos personas en un mismo teléfono hacen falta dos navegadores (en iPhone, la app instalada y
+  Safari guardan cookies distintas).
 - **Todo pasa por funciones de la base** (security definer), que solo puede ejecutar `servidor_app`. Nadie
   escribe directo en `miembros`, `dispositivos` ni `invitaciones`. Nadie lee la llave, el PIN, los intentos ni
   el token: ni la API ni el servidor.
