@@ -24,6 +24,15 @@ export function MensajeError({ problema }: { problema: Problema | null }) {
     });
   } else if (codigo === 'pin_invalido') {
     texto = t('pin_invalido', { largo: Number(datos?.largo) });
+  } else if (codigo === 'faltan') {
+    const campos = (datos?.campos ?? []) as string[];
+    texto = t('faltan', {
+      campos: campos.map((c) => (t.has(`campos.${c}` as never) ? t(`campos.${c}` as never) : c)).join(', '),
+    });
+  } else if (codigo === 'faltan_pies2') {
+    texto = t('faltan_pies2', { espacios: ((datos?.espacios ?? []) as string[]).join(', ') });
+  } else if (codigo === 'campos') {
+    texto = t('desconocido');
   } else {
     texto = t.has(codigo as never) ? t(codigo as never) : t('desconocido');
   }

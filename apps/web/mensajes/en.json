@@ -7,7 +7,8 @@
     "pronto": "Your week, your jobs and the end-of-day report will show up here.",
     "equipo": "Team",
     "salir": "Sign out",
-    "salirAyuda": "Next time it will ask for your PIN."
+    "salirAyuda": "Next time it will ask for your PIN.",
+    "obras": "Jobs"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -82,6 +83,77 @@
     "pin_ya_fijado": "This phone already has a PIN.",
     "pin_incorrecto": "Wrong PIN.",
     "pin_quedan": "{quedan, plural, one {# try left.} other {# tries left.}}",
-    "pin_bloqueado": "Too many tries. Try again at {hora}."
+    "pin_bloqueado": "Too many tries. Try again at {hora}.",
+    "faltan": "Missing information: {campos}.",
+    "telefono_incompleto": "The phone needs at least 10 digits.",
+    "pm_no_activo": "That PM is not active.",
+    "entrega_antes_del_inicio": "Delivery can't be before the start.",
+    "sin_espacios": "Add at least one space.",
+    "faltan_pies2": "Missing sq ft for: {espacios}.",
+    "monto_negativo": "An amount can't be negative.",
+    "etapa_no_es_del_espacio": "That stage doesn't belong to that space.",
+    "obra_cerrada": "The job was delivered: its budget doesn't change.",
+    "obra_no_encontrada": "Job not found.",
+    "tipo_espacio_inexistente": "That space type no longer exists.",
+    "falta_tipo_generales": "The catalog is missing General conditions.",
+    "campos": {
+      "cliente": "client",
+      "telefono_cliente": "phone",
+      "direccion": "address",
+      "pm": "PM",
+      "fecha_inicio": "start date",
+      "fecha_entrega": "delivery date",
+      "contrato": "contract"
+    }
+  },
+  "obras": {
+    "titulo": "Jobs",
+    "nueva": "New job",
+    "ninguna": "No jobs yet.",
+    "pm": "PM: {nombre} · starts {fecha}",
+    "presupuesto": "Budget",
+    "estado": {
+      "sin_presupuesto": "No budget",
+      "lista_para_arranque": "Ready to start",
+      "en_obra": "In progress",
+      "en_cierre": "Closing out",
+      "entregada": "Delivered"
+    },
+    "encabezado": "{folio} · {cliente}"
+  },
+  "obraNueva": {
+    "titulo": "New job",
+    "cliente": "Client",
+    "telefono": "Client phone",
+    "direccion": "Address",
+    "pm": "PM",
+    "elegirPm": "Choose the PM",
+    "sinPms": "There are no active PMs: invite one in Team before creating the job.",
+    "inicio": "Start date",
+    "entrega": "Estimated delivery date",
+    "contrato": "Contract ($)",
+    "notas": "Notes (optional)",
+    "espacios": "Spaces",
+    "espaciosAyuda": "General conditions is added automatically. Each space gets the line items of its type.",
+    "tipo": "Type",
+    "nombreEspacio": "Name (optional)",
+    "pies2": "Sq ft",
+    "agregar": "Add space",
+    "quitar": "Remove",
+    "partidas": "{n, plural, one {# line item} other {# line items}}",
+    "crear": "Create job",
+    "duplicada": "This client already has an active job at that address. Is this a different job?",
+    "crearIgual": "Yes, create another job"
+  },
+  "presupuesto": {
+    "titulo": "Budget · {folio}",
+    "ayuda": "The amount for each stage of each space. Every space needs at least one stage with an amount before the job can start.",
+    "otras": "Other line items",
+    "partidas": "{n, plural, one {# line item} other {# line items}}",
+    "total": "Total: {total}",
+    "guardar": "Save budget",
+    "completo": "Budget complete: the job is ready to start.",
+    "incompleto": "Saved. Missing amounts in: {espacios}.",
+    "volver": "Back to jobs"
   }
 }
