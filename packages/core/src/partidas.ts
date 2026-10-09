@@ -56,6 +56,26 @@ export function copiarPlantilla(
 
 const mismoNombre = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
+/** Cuánto pesa un tipo de obra nuevo si no se dice: el legacy proponía 50 (un baño completo suma 90). */
+export const TAMANO_TIPO_NUEVO = 50;
+
+/**
+ * Las partidas de un tipo de obra que empieza en blanco (legacy: duCrearTipo): una por renglón, sin repetir y en ese
+ * orden, con los valores de omisión. El tamaño dice cuánto pesa el tipo en el avance de una obra combinada y se
+ * reparte parejo; después se afina partida por partida. Error: `tipo_sin_partidas`.
+ */
+export function partidasDeTipoNuevo(renglones: readonly string[], tamano?: number | null): PartidaNueva[] {
+  const nombres: string[] = [];
+  for (const r of renglones) {
+    const n = r.trim();
+    if (n && !nombres.some((x) => mismoNombre(x, n))) nombres.push(n);
+  }
+  if (!nombres.length) throw new ErrorDeNegocio('tipo_sin_partidas');
+  const total = tamano && tamano > 0 ? tamano : TAMANO_TIPO_NUEVO;
+  const peso = Math.max(1, Math.round(total / nombres.length));
+  return nombres.map((nombre, i) => normalizar({ nombre, peso }, i + 1));
+}
+
 /** Una obra cerrada ya es histórico: sus partidas, registros y espacios no se cambian. Error: `obra_cerrada`. */
 export function exigirObraAbierta(obraCerrada: boolean): void {
   if (obraCerrada) throw new ErrorDeNegocio('obra_cerrada');

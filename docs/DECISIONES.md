@@ -824,3 +824,30 @@ con pies², como en el alta. El presupuesto incompleto no cambia el estado de un
 **Lo que sigue, también pedido por el dueño:** crear desde la app tipos de trabajo nuevos (piso de cemento, masa
 y pintura…) con sus partidas, en una pantalla de Catálogo aparte del presupuesto, porque son plantillas que se
 usan en muchas obras.
+
+## D-046 · El catálogo desde la app
+
+**Decisión del dueño:** el dueño arma sus tipos de obra (piso de cemento, masa y pintura…) en una pantalla de
+Catálogo, aparte del presupuesto. En pantalla se llaman **tipos de obra**, como en el legacy: en el código, "tipo de
+trabajo" es una etapa.
+
+**Qué se puede hacer** (`catalogo.ts`, solo el dueño o el administrador):
+- **Un tipo nuevo en blanco** (legacy: `duCrearTipo`): su nombre, sus partidas una por renglón y su tamaño
+  comparado con un baño, que se reparte parejo como peso (`partidasDeTipoNuevo`; sin tamaño, 50). Las partidas
+  nacen con un día, a cargo de la cuadrilla, sin etapa ni punto de control, y se afinan después.
+- **Copiar un tipo** (legacy: `duClonarSecuencia`): sus partidas activas, con todo lo suyo.
+- **Agregar o editar una partida** (legacy: `duGuardarPartida`): orden, días, quién la hace (un subcontratista
+  necesita su oficio), etapa, punto de control, si va junto con la anterior, espera y peso.
+- **Dar de baja** una partida o un tipo, y reactivarlos. Nada se borra. Un tipo dado de baja ya no se ofrece en una
+  obra nueva. Generales de obra no se da de baja.
+- **Una etapa nueva** (Pintura): solo su nombre; va al final. Sin ella, las partidas de un trabajo nuevo caerían en
+  "Otras partidas" del presupuesto.
+- Los nombres son únicos sin importar mayúsculas, también contra los dados de baja (así lo exige la base); el
+  nombre en inglés es opcional (D-015).
+
+**Diferencia con el legacy:** el legacy "congelaba" las obras en curso antes de tocar el catálogo
+(`congelarAreasDeTipo_`) y arrastraba el histórico al renombrar una partida (`renombrarPartida_`). Aquí no hace
+falta: cada espacio copia sus partidas al crearse (`partidas_obra`), así que cambiar el catálogo solo afecta a los
+espacios nuevos.
+
+**Pendiente:** crear puntos de control nuevos con sus preguntas, cuando el dueño lo pida.

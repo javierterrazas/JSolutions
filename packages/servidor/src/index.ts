@@ -6,6 +6,7 @@ export * from './sesion';
 export * from './entrada';
 export * from './obras';
 export * from './presupuesto';
+export * from './catalogo';
 export * from './consultas-obra';
 export * from './inicio-pm';
 export * from './pantalla-cierre';
