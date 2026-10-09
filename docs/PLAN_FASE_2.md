@@ -126,6 +126,13 @@ de 48 h) se resuelve con los mismos rechazos de negocio.
 - **5c. Abrir la app sin señal** — pendiente: el service worker guarda la app y una copia de los datos de cada
   obra, y el PIN abre esa copia en el teléfono (un candado local, D-038).
 
+### 5d. Ajustes del piloto (lo que pidió el dueño al probarlo)
+
+- **Nueva obra:** las fechas, una debajo de la otra (no cabían en el celular) — hecho.
+- **Agregar un espacio** a una obra que ya existe, desde su presupuesto (D-045) — hecho.
+- **Corregir un cierre** dentro de 48 horas (D-044) — hecho.
+- **Catálogo:** crear tipos de trabajo nuevos con sus partidas desde la app — siguiente.
+
 ### 6. Los demás registros del PM
 
 Con su flujo en `packages/servidor` y su pantalla:

@@ -5,11 +5,12 @@
 // El cierre lleva una clave de envío (D-042) y se manda en el momento: si una regla lo rechaza, se corrige aquí
 // mismo. Sus fotos van a la cola del teléfono (D-043) y se suben detrás de él, así que no se pierden si el PM sale
 // de la pantalla. Sin señal, o con la sesión vencida, el cierre también va a la cola y se envía solo después.
-import type { EntradaCierre } from '@ijm/servidor';
+import type { CierreParaCorregir, EntradaCierre } from '@ijm/servidor';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { enviarCierre } from '@/app/acciones/cola';
+import { corregirElCierre } from '@/app/acciones/correccion';
 import type { ElementoCola } from '@/lib/cola';
 import { alCambiar, encolar, enviarPendientes, pendientes, siguienteN } from '@/lib/cola-telefono';
 import { comprimirFoto } from '@/lib/comprimir';
@@ -67,20 +68,38 @@ function useFotosPendientes(clave: string | null) {
   return quedan;
 }
 
-export function FormularioCierre({ datos }: { datos: DatosFormularioCierre }) {
+export function FormularioCierre({
+  datos,
+  correccion = null,
+}: {
+  datos: DatosFormularioCierre;
+  /** El cierre que se corrige (D-044): el formulario viene lleno con lo que se capturó. */
+  correccion?: CierreParaCorregir | null;
+}) {
   const t = useTranslations('cierre');
   const [enviando, iniciar] = useTransition();
   const [problema, setProblema] = useState<Problema | null>(null);
-  const [sinTrabajo, setSinTrabajo] = useState(false);
-  const [motivo, setMotivo] = useState('');
-  const [notas, setNotas] = useState('');
+  const [sinTrabajo, setSinTrabajo] = useState(correccion?.sinTrabajo ?? false);
+  const [motivo, setMotivo] = useState(correccion?.motivo ?? '');
+  const [notas, setNotas] = useState(correccion?.incidencia ?? '');
+  const [porQue, setPorQue] = useState('');
   // las que van en curso vienen marcadas: casi siempre se sigue con ellas
   const [trabajadas, setTrabajadas] = useState<ReadonlySet<string>>(
-    () => new Set(datos.espacios.flatMap((e) => e.partidas.filter((p) => p.enCurso).map((p) => p.id))),
+    () =>
+      new Set(
+        correccion?.partidas ??
+          datos.espacios.flatMap((e) => e.partidas.filter((p) => p.enCurso).map((p) => p.id)),
+      ),
   );
-  const [terminadas, setTerminadas] = useState<ReadonlySet<string>>(new Set());
-  const [cuadrilla, setCuadrilla] = useState<Record<string, string>>({});
-  const [subs, setSubs] = useState<Record<string, boolean>>({});
+  const [terminadas, setTerminadas] = useState<ReadonlySet<string>>(
+    () => new Set(correccion?.terminadas ?? []),
+  );
+  const [cuadrilla, setCuadrilla] = useState<Record<string, string>>(() =>
+    Object.fromEntries((correccion?.cuadrilla ?? []).map((c) => [c.trabajadorId, String(c.cantidad)])),
+  );
+  const [subs, setSubs] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries((correccion?.subs ?? []).map((s) => [s.ordenTrabajoId, s.llego])),
+  );
   const [fotos, setFotos] = useState<readonly Foto[]>([]);
   const [destino, setDestino] = useState<Destino | null>(null);
   const [clave, setClave] = useState<string | null>(null);
@@ -151,6 +170,32 @@ export function FormularioCierre({ datos }: { datos: DatosFormularioCierre }) {
         claveEnvio: id,
       };
       const etiqueta = { obra: datos.folio, dia: datos.dia };
+      const mostrar = (p: Problema) => {
+        setProblema(p);
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      };
+
+      // una corrección necesita señal: el PM tiene que ver en el momento si se aceptó (D-044)
+      if (correccion) {
+        const { obraId: _o, tardio: _t, capturado: _c, ...lo } = entrada;
+        let c: Awaited<ReturnType<typeof corregirElCierre>>;
+        try {
+          c = await corregirElCierre({ ...lo, bitacoraId: correccion.bitacoraId, motivo: porQue });
+        } catch {
+          mostrar({ codigo: 'correccion_sin_senal' });
+          return;
+        }
+        if (!c.ok) {
+          mostrar(c.codigo === 'sesion' ? { codigo: 'sesion_vencida' } : c);
+          return;
+        }
+        await encolar(...fotosEnCola(id, etiqueta));
+        setClave(id);
+        setDestino('enviado');
+        await subirFotosEnCola();
+        return;
+      }
+
       const todoALaCola = async (como: Destino) => {
         await encolar(
           { id, n: siguienteN(), tipo: 'cierre', etiqueta, entrada, intentos: 0 },
@@ -341,6 +386,11 @@ export function FormularioCierre({ datos }: { datos: DatosFormularioCierre }) {
           <fieldset className={`${estilos.tarjeta} flex flex-col gap-3`}>
             <legend className="px-1 font-semibold text-marca">{t('fotos')}</legend>
             <p className="text-sm text-slate-600">{t('fotosAyuda')}</p>
+            {correccion?.fotos ? (
+              <p className="text-sm font-medium text-emerald-800">
+                {t('fotosGuardadas', { n: correccion.fotos })}
+              </p>
+            ) : null}
             <input
               ref={camara}
               type="file"
@@ -415,9 +465,22 @@ export function FormularioCierre({ datos }: { datos: DatosFormularioCierre }) {
         />
       </label>
 
+      {correccion ? (
+        <label className={estilos.etiqueta}>
+          {t('porQue')}
+          <textarea
+            value={porQue}
+            onChange={(e) => setPorQue(e.target.value)}
+            required
+            rows={2}
+            className={`${estilos.campo} py-2`}
+          />
+        </label>
+      ) : null}
+
       <MensajeError problema={problema} />
       <button type="submit" disabled={enviando} className={estilos.boton}>
-        {enviando ? t('cerrando') : t('cerrar')}
+        {enviando ? t('cerrando') : correccion ? t('guardarCorreccion') : t('cerrar')}
       </button>
     </form>
   );

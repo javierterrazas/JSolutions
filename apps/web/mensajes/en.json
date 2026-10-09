@@ -125,7 +125,13 @@
     "foto_invalida": "The photo couldn't be read.",
     "foto_no_subida": "The photo didn't upload.",
     "foto_no_comprometida": "That photo doesn't belong to this close.",
-    "registro_no_encontrado": "The close wasn't found."
+    "registro_no_encontrado": "The close wasn't found.",
+    "correccion_sin_senal": "Correcting a close needs signal. Try again when you have it.",
+    "sesion_vencida": "Your session expired: enter your PIN and try again.",
+    "falta_motivo": "Write what you corrected.",
+    "fuera_de_48_horas": "More than 48 hours have passed: ask the owner.",
+    "registro_de_otro": "That record is not yours.",
+    "tabla_no_corregible": "That can't be corrected."
   },
   "obras": {
     "titulo": "Jobs",
@@ -175,7 +181,8 @@
     "guardar": "Save budget",
     "completo": "Budget complete: the job is ready to start.",
     "incompleto": "Saved. Missing amounts in: {espacios}.",
-    "volver": "Back to jobs"
+    "volver": "Back to jobs",
+    "agregarEspacio": "Add space"
   },
   "inicioPm": {
     "racha": "{n, plural, =0 {No streak yet} one {# day in a row closed} other {# days in a row closed}}",
@@ -217,7 +224,8 @@
       "en_cierre": "Closing out"
     },
     "cerrarDia": "Close the day",
-    "cerrarEseDia": "Close that day"
+    "cerrarEseDia": "Close that day",
+    "corregirHoy": "Correct"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -267,7 +275,13 @@
     "guardadoSinRed": "No signal: the close was saved on the phone and will send itself when there is signal.",
     "guardadoSinSesion": "The close was saved on the phone. Enter your PIN to send it.",
     "entrarParaEnviar": "Enter my PIN",
-    "fotosEsperan": "{n, plural, one {# photo is waiting for signal; it will upload by itself.} other {# photos are waiting for signal; they will upload by themselves.}}"
+    "fotosEsperan": "{n, plural, one {# photo is waiting for signal; it will upload by itself.} other {# photos are waiting for signal; they will upload by themselves.}}",
+    "tituloCorregir": "Correct {dia}",
+    "corregir": "Correct this close",
+    "yaNoSeCorrige": "More than 48 hours have passed: ask the owner to correct it.",
+    "fotosGuardadas": "{n, plural, one {# photo already saved; it stays with the close.} other {# photos already saved; they stay with the close.}}",
+    "porQue": "What did you correct? (it stays on record)",
+    "guardarCorreccion": "Save the correction"
   },
   "cola": {
     "pendientes": "{n, plural, one {# record waiting to send} other {# records waiting to send}} from this phone (closes and their photos).",

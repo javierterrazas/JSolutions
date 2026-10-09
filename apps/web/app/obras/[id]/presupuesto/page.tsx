@@ -1,9 +1,10 @@
-import { presupuestoParaCapturar } from '@ijm/servidor';
+import { datosParaObraNueva, presupuestoParaCapturar } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { Marco } from '../../../componentes/marco';
+import { AgregarEspacio } from './agregar-espacio';
 import { FormularioPresupuesto } from './formulario-presupuesto';
 
 export default async function Presupuesto({ params }: PageProps<'/obras/[id]/presupuesto'>) {
@@ -12,6 +13,7 @@ export default async function Presupuesto({ params }: PageProps<'/obras/[id]/pre
   const r = await comoMiembro((tx) => presupuestoParaCapturar(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();
   const p = r.datos;
+  const catalogo = await comoMiembro((tx) => datosParaObraNueva(tx), acceso);
   const [t, to, idioma] = await Promise.all([
     getTranslations('presupuesto'),
     getTranslations('obras'),
@@ -41,6 +43,18 @@ export default async function Presupuesto({ params }: PageProps<'/obras/[id]/pre
           })),
         }))}
       />
+      {p.obra.estado !== 'entregada' && catalogo.ok ? (
+        // se vuelve a montar al agregar uno, para quedar cerrado otra vez
+        <AgregarEspacio
+          key={p.espacios.length}
+          obraId={p.obra.id}
+          tipos={catalogo.datos.tipos.map((x) => ({
+            id: x.id,
+            nombre: (idioma === 'en' ? x.nombre.en : null) ?? x.nombre.es,
+            partidas: x.partidas,
+          }))}
+        />
+      ) : null}
     </Marco>
   );
 }

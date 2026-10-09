@@ -6,6 +6,7 @@ import {
   diaDeCaptura,
   ErrorDeNegocio,
   exigirInspecciones,
+  HORAS_PARA_CORREGIR_PM,
   MOTIVOS_SIN_TRABAJO,
   validarCierreDia,
   validarCierreTardioPM,
@@ -14,6 +15,7 @@ import {
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import { dia, uuid, validarEntrada } from './entrada';
+import { anularCierre } from './correcciones';
 import { leerSesion } from './sesion';
 
 const EntradaCierre = z.object({
@@ -47,10 +49,19 @@ export interface ResultadoCierre {
   readonly cuadrilla: number;
 }
 
+/** Para corregir un cierre (corregirCierre): el que se anuló, su día y las fotos que ya tenía. */
+interface Correccion {
+  readonly corrigeA: string;
+  readonly dia: Dia;
+  readonly tardio: boolean;
+  readonly fotosPrevias: number;
+}
+
 export async function cerrarDia(
   tx: Tx,
   entrada: EntradaCierre,
   ahora = new Date(),
+  correccion?: Correccion,
 ): Promise<ResultadoCierre> {
   const e = validarEntrada(EntradaCierre, entrada);
   const s = await leerSesion(tx, ahora);
@@ -85,7 +96,11 @@ export async function cerrarDia(
     ).map((b) => b.dia),
   );
   let elDia: Dia;
-  if (e.tardio) {
+  if (correccion) {
+    // el día del cierre que se corrige: sus reglas (48 h, solo el suyo) ya las revisó anularCierre
+    elDia = correccion.dia;
+    if (cerrados.has(elDia)) throw new ErrorDeNegocio('dia_ya_cerrado', { dia: elDia });
+  } else if (e.tardio) {
     validarCierreTardioPM(e.tardio, s.hoy, cerrados, s.calendario);
     elDia = e.tardio;
   } else {
@@ -110,12 +125,13 @@ export async function cerrarDia(
     sinTrabajo: e.sinTrabajo,
     motivo: e.motivo ?? null,
     obraSinPresupuesto: obra.estado === 'sin_presupuesto',
-    fotos: 0,
+    fotos: correccion?.fotosPrevias ?? 0,
     fotosPorSubir: e.fotosPorSubir,
     partidas: e.sinTrabajo ? [] : e.partidas,
     ordenesReportadas: e.subs.map((x) => x.ordenTrabajoId),
     ordenesDeLaObra: new Set(ordenes.map((o) => o.id)),
   });
+  const tardio = correccion ? correccion.tardio : !!e.tardio;
   const partidasDelDia = e.sinTrabajo ? [] : e.partidas;
   const terminadas = e.sinTrabajo ? [] : e.terminadas;
   const cuadrilla = e.sinTrabajo ? [] : e.cuadrilla;
@@ -159,9 +175,10 @@ export async function cerrarDia(
   // ---------------------------------------------------------------- escribir
   const [bit] = await tx<{ id: string; folio: string }[]>`
     insert into bitacora (empresa_id, obra_id, dia, sin_trabajo, motivo_sin_trabajo, incidencia, tardio, fotos_comprometidas,
-                          clave_envio)
+                          clave_envio, corrige_a)
     values (${s.empresaId}, ${e.obraId}, ${elDia}, ${e.sinTrabajo}, ${e.sinTrabajo ? e.motivo! : null},
-            ${e.incidencia ?? null}, ${!!e.tardio}, ${fotosComprometidas}, ${e.claveEnvio ?? null})
+            ${e.incidencia ?? null}, ${tardio}, ${fotosComprometidas}, ${e.claveEnvio ?? null},
+            ${correccion?.corrigeA ?? null})
     returning id, folio`;
   const bitacoraId = bit!.id;
   if (partidasDelDia.length) {
@@ -242,7 +259,7 @@ export async function cerrarDia(
     bitacoraId,
     folio: bit!.folio,
     dia: elDia,
-    tardio: !!e.tardio,
+    tardio,
     fotosComprometidas,
     cuadrilla: filas.reduce((a, f) => a + f.cantidad, 0),
   };
@@ -253,4 +270,111 @@ export async function cierreDeClave(tx: Tx, claveEnvio: string): Promise<string 
   const clave = validarEntrada(uuid, claveEnvio);
   const [b] = await tx<{ id: string }[]>`select id from bitacora where clave_envio = ${clave}`;
   return b?.id ?? null;
+}
+
+const EntradaCorreccion = EntradaCierre.omit({ obraId: true, tardio: true, capturado: true }).extend({
+  bitacoraId: uuid,
+  motivo: z.string(),
+});
+export type EntradaCorreccionCierre = z.input<typeof EntradaCorreccion>;
+
+/** Las fotos de un cierre: las suyas y las de los cierres que corrige (corrige_a), que se quedan donde se subieron. */
+export async function fotosDelCierre(tx: Tx, bitacoraId: string): Promise<number> {
+  const [f] = await tx<{ n: number }[]>`
+    with recursive cadena as (
+      select id, corrige_a from bitacora where id = ${bitacoraId}
+      union all
+      select b.id, b.corrige_a from bitacora b join cadena c on b.id = c.corrige_a
+    )
+    select count(*)::int as n from fotos where ref_tipo = 'bitacora' and ref_id in (select id from cadena)`;
+  return f!.n;
+}
+
+/**
+ * Corrige un cierre del PM (D-044): lo anula con su motivo (anularCierre: dentro de 48 h y solo el suyo) y lo vuelve
+ * a cerrar el mismo día con lo corregido, todo en una transacción. El cierre nuevo dice a cuál corrige: las fotos que
+ * ya se subieron cuentan para él sin moverse, y las nuevas se le suben con sus números. Nada se borra: el cierre
+ * anterior queda anulado con su rastro.
+ */
+export async function corregirCierre(
+  tx: Tx,
+  entrada: EntradaCorreccionCierre,
+  ahora = new Date(),
+): Promise<ResultadoCierre> {
+  const { bitacoraId, motivo, ...cierre } = validarEntrada(EntradaCorreccion, entrada);
+  const [b] = await tx<{ obra_id: string; dia: Dia; tardio: boolean }[]>`
+    select obra_id, dia, tardio from bitacora where id = ${bitacoraId} and estado = 'vigente'`;
+  if (!b) throw new ErrorDeNegocio('registro_no_encontrado');
+  const fotos = await fotosDelCierre(tx, bitacoraId);
+  await anularCierre(tx, { bitacoraId, motivo }, ahora);
+  return cerrarDia(tx, { ...cierre, obraId: b.obra_id }, ahora, {
+    corrigeA: bitacoraId,
+    dia: b.dia,
+    tardio: b.tardio,
+    fotosPrevias: fotos,
+  });
+}
+
+export interface CierreParaCorregir {
+  readonly bitacoraId: string;
+  readonly folio: string;
+  /** Si el PM todavía lo puede corregir: es suyo y no han pasado 48 horas. */
+  readonly corregible: boolean;
+  readonly sinTrabajo: boolean;
+  readonly motivo: string | null;
+  readonly incidencia: string | null;
+  readonly partidas: readonly string[];
+  readonly terminadas: readonly string[];
+  readonly cuadrilla: readonly { trabajadorId: string; cantidad: number }[];
+  readonly subs: readonly { ordenTrabajoId: string; llego: boolean }[];
+  readonly fotos: number;
+}
+
+/** El cierre vigente de una obra en un día, con lo que se capturó, para corregirlo; null si ese día no se cerró. */
+export async function cierreParaCorregir(
+  tx: Tx,
+  entrada: { obraId: string; dia: string },
+  ahora = new Date(),
+): Promise<CierreParaCorregir | null> {
+  const e = validarEntrada(z.object({ obraId: uuid, dia }), entrada);
+  const s = await leerSesion(tx, ahora);
+  const [b] = await tx<
+    {
+      id: string;
+      folio: string;
+      sin_trabajo: boolean;
+      motivo: string | null;
+      incidencia: string | null;
+      creado_por: string;
+      creado_en: Date;
+    }[]
+  >`
+    select id, folio, sin_trabajo, motivo_sin_trabajo as motivo, incidencia, creado_por, creado_en
+    from bitacora where obra_id = ${e.obraId} and dia = ${e.dia} and estado = 'vigente'`;
+  if (!b) return null;
+  const partidas = await tx<{ id: string }[]>`
+    select partida_obra_id as id from bitacora_partidas where bitacora_id = ${b.id}`;
+  const terminadas = await tx<{ id: string }[]>`
+    select partida_obra_id as id from avance where bitacora_id = ${b.id} and estado = 'terminada'
+      and estado_registro = 'vigente'`;
+  const cuadrilla = await tx<{ trabajador: string; cantidad: string }[]>`
+    select trabajador_id as trabajador, cantidad from mano_obra where bitacora_id = ${b.id} and estado = 'vigente'`;
+  const subs = await tx<{ orden: string; llego: boolean }[]>`
+    select orden_trabajo_id as orden, llego from bitacora_subs where bitacora_id = ${b.id}`;
+  const fotos = await fotosDelCierre(tx, b.id);
+  return {
+    bitacoraId: b.id,
+    folio: b.folio,
+    corregible:
+      b.creado_por === s.miembroId &&
+      s.ahora.getTime() - b.creado_en.getTime() <= HORAS_PARA_CORREGIR_PM * 3600 * 1000,
+    sinTrabajo: b.sin_trabajo,
+    motivo: b.motivo,
+    incidencia: b.incidencia,
+    partidas: partidas.map((p) => p.id),
+    terminadas: terminadas.map((p) => p.id),
+    cuadrilla: cuadrilla.map((c) => ({ trabajadorId: c.trabajador, cantidad: Number(c.cantidad) })),
+    subs: subs.map((x) => ({ ordenTrabajoId: x.orden, llego: x.llego })),
+    fotos,
+  };
 }

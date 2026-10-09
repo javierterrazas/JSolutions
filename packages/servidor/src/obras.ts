@@ -163,3 +163,42 @@ export async function crearObra(tx: Tx, entrada: EntradaObra, ahora = new Date()
   }
   return { ok: true, obraId: obra!.id, folio: obra!.folio };
 }
+
+const EntradaEspacio = z.object({
+  obraId: uuid,
+  tipoEspacioId: uuid,
+  nombre: z.string().nullish(),
+  pies2: z.number().nonnegative().nullish(),
+});
+
+/**
+ * Agrega un espacio a una obra que ya existe (legacy: duAgregarArea): con las partidas de su tipo, al final. Solo el
+ * dueño o el administrador, y no en una obra entregada. Su presupuesto se captura después, como el de los demás.
+ */
+export async function agregarEspacio(
+  tx: Tx,
+  entrada: z.input<typeof EntradaEspacio>,
+  ahora = new Date(),
+): Promise<{ espacioId: string }> {
+  const e = validarEntrada(EntradaEspacio, entrada);
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  const [obra] = await tx<{ estado: string }[]>`select estado from obras where id = ${e.obraId}`;
+  if (!obra) throw new ErrorDeNegocio('obra_no_encontrada');
+  if (obra.estado === 'entregada') throw new ErrorDeNegocio('obra_cerrada');
+  const [tipo] = await tx<{ nombre_es: string; es_generales: boolean }[]>`
+    select nombre_es, es_generales from tipos_espacio where id = ${e.tipoEspacioId} and activo`;
+  if (!tipo || tipo.es_generales)
+    throw new ErrorDeNegocio('tipo_espacio_inexistente', { tipo: e.tipoEspacioId });
+  const nombre = e.nombre?.trim() || tipo.nombre_es;
+  if (!(Number(e.pies2) > 0)) throw new ErrorDeNegocio('faltan_pies2', { espacios: [nombre] });
+
+  const [ultimo] = await tx<{ orden: number }[]>`
+    select coalesce(max(orden), 0) + 1 as orden from espacios where obra_id = ${e.obraId}`;
+  const [esp] = await tx<{ id: string }[]>`
+    insert into espacios (empresa_id, obra_id, tipo_espacio_id, nombre, orden, pies2_cotizados)
+    values (${s.empresaId}, ${e.obraId}, ${e.tipoEspacioId}, ${nombre}, ${ultimo!.orden}, ${Number(e.pies2)})
+    returning id`;
+  await copiarPartidas(tx, s.empresaId, e.obraId, esp!.id, e.tipoEspacioId);
+  return { espacioId: esp!.id };
+}
