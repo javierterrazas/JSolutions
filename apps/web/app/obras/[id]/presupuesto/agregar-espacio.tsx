@@ -4,6 +4,7 @@
 import { useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
 import { agregarEspacioAObra } from '../../../acciones/obras';
+import { enviarSinVaciar } from '../../../componentes/enviar';
 import { estilos } from '../../../componentes/marco';
 import { MensajeError } from '../../../componentes/mensaje-error';
 
@@ -31,7 +32,7 @@ export function AgregarEspacio({
       </button>
     );
   return (
-    <form action={accion} className={`${estilos.tarjeta} flex flex-col gap-3`}>
+    <form onSubmit={enviarSinVaciar(accion)} className={`${estilos.tarjeta} flex flex-col gap-3`}>
       <p className="font-semibold text-marca">{tp('agregarEspacio')}</p>
       <label className={estilos.etiqueta}>
         {t('tipo')}
