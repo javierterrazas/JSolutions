@@ -116,7 +116,7 @@ export function FormularioObra({
             <span className={estilos.error}>{t('sinPms')}</span>
           )}
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3">
           <label className={estilos.etiqueta}>
             {t('inicio')}
             <input {...campo('inicio')} type="date" className={estilos.campo} />
