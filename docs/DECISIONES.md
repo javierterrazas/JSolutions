@@ -716,3 +716,27 @@ que el archivo esté al día.
 dinero. Para el piloto basta con el catálogo y los datos de la empresa, porque la obra piloto se da de alta a
 mano (decisión 4 del plan de la fase 2). El lector del .xlsx se mudó a `packages/servidor/src/importar/`, donde
 lo usarán los dos.
+
+## D-040 · El inicio del PM
+
+**Decisión:** el inicio del PM sigue al legacy (`construirDatos_`) en lo que muestra, y lo calcula con
+`packages/core`:
+- el avance ponderado (`avanceDeObra`);
+- la entrega comprometida (`fechaComprometida`, que suma los días de las órdenes de cambio autorizadas) y la
+  prevista (`cronogramaObra`);
+- la semana (`semanaDelPM`, con seis días laborables, sábado incluido);
+- los días sin cerrar (`diasSinCierre`);
+- la racha (`rachaDeCierres`, nueva).
+
+Lo lee con la identidad del PM, bajo RLS, y nada de dinero del negocio: de las órdenes de cambio, solo la
+descripción y los días.
+
+**La racha sigue el calendario de la empresa.** El legacy solo saltaba sábado y domingo; aquí no la cortan los
+días que la empresa no trabaja, incluidos sus feriados (D-028).
+
+**Lo suyo en obras ya entregadas.** El PM deja de ver una obra al entregarse (D-017), con sus fotos y sus
+cierres. Pero sus avisos y sus gastos se siguen viendo (D-025), y su racha cuenta todos sus cierres. Para
+calcular "sin recibo" y la racha sin abrirle esas obras, dos funciones de la base contestan solo eso, del miembro
+de la sesión: `mis_gastos_sin_recibo()` y `mis_dias_cerrados()` (`20261009000100_inicio_pm.sql`). Antes de
+ellas, el inicio mostraba como "sin recibo" un gasto que sí lo tenía, porque el PM ya no podía ver esa foto: lo
+encontró la prueba. Un aviso o gasto de una obra que ya no ve se muestra sin su folio.

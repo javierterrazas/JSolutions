@@ -7,6 +7,7 @@ export * from './entrada';
 export * from './obras';
 export * from './presupuesto';
 export * from './consultas-obra';
+export * from './inicio-pm';
 export * from './cierre';
 export * from './fotos';
 export * from './correcciones';
