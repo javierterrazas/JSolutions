@@ -118,6 +118,14 @@ operación lleva un identificador, para que un reintento nunca la duplique. Las 
 usada; se mide en el piloto. Y lo que cambia mientras el PM está sin señal (la obra se entregó, se pasó la ventana
 de 48 h) se resuelve con los mismos rechazos de negocio.
 
+**Avance:**
+- **5a. La clave de envío** — hecha (D-042).
+- **5b. La cola en el teléfono** — hecha (D-043). El cierre y sus fotos se guardan en el teléfono si no hay
+  señal o la sesión venció, y se envían solos. Las fotos de un cierre enviado ya no se pierden si el PM sale de
+  la pantalla. Probado en el navegador apagando el servidor a media captura.
+- **5c. Abrir la app sin señal** — pendiente: el service worker guarda la app y una copia de los datos de cada
+  obra, y el PIN abre esa copia en el teléfono (un candado local, D-038).
+
 ### 6. Los demás registros del PM
 
 Con su flujo en `packages/servidor` y su pantalla:

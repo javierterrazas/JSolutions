@@ -32,6 +32,8 @@ const EntradaCierre = z.object({
     .default([]),
   subs: z.array(z.object({ ordenTrabajoId: uuid, llego: z.boolean() })).default([]),
   fotosPorSubir: z.number().int().nonnegative().default(0),
+  /** La clave que le puso el teléfono al capturarlo: un reintento con la misma clave no lo duplica (D-042). */
+  claveEnvio: uuid.nullish(),
 });
 export type EntradaCierre = z.input<typeof EntradaCierre>;
 
@@ -55,6 +57,26 @@ export async function cerrarDia(
   if (s.rol !== 'pm') throw new ErrorDeNegocio('solo_pm');
   const [obra] = await tx<{ estado: string }[]>`select estado from obras where id = ${e.obraId}`;
   if (!obra) throw new ErrorDeNegocio('obra_no_encontrada');
+
+  // un reintento del mismo cierre: el servidor ya lo guardó y la respuesta no llegó al teléfono (D-042)
+  if (e.claveEnvio) {
+    const [ya] = await tx<
+      { id: string; folio: string; dia: Dia; tardio: boolean; fotos: number; cuadrilla: string }[]
+    >`
+      select b.id, b.folio, b.dia, b.tardio, b.fotos_comprometidas as fotos,
+             coalesce((select sum(m.cantidad) from mano_obra m
+                       where m.bitacora_id = b.id and m.estado = 'vigente'), 0) as cuadrilla
+      from bitacora b where b.obra_id = ${e.obraId} and b.clave_envio = ${e.claveEnvio}`;
+    if (ya)
+      return {
+        bitacoraId: ya.id,
+        folio: ya.folio,
+        dia: ya.dia,
+        tardio: ya.tardio,
+        fotosComprometidas: ya.fotos,
+        cuadrilla: Number(ya.cuadrilla),
+      };
+  }
 
   // el día: el olvidado (con su ventana), o el de la captura
   const cerrados = new Set(
@@ -136,9 +158,10 @@ export async function cerrarDia(
 
   // ---------------------------------------------------------------- escribir
   const [bit] = await tx<{ id: string; folio: string }[]>`
-    insert into bitacora (empresa_id, obra_id, dia, sin_trabajo, motivo_sin_trabajo, incidencia, tardio, fotos_comprometidas)
+    insert into bitacora (empresa_id, obra_id, dia, sin_trabajo, motivo_sin_trabajo, incidencia, tardio, fotos_comprometidas,
+                          clave_envio)
     values (${s.empresaId}, ${e.obraId}, ${elDia}, ${e.sinTrabajo}, ${e.sinTrabajo ? e.motivo! : null},
-            ${e.incidencia ?? null}, ${!!e.tardio}, ${fotosComprometidas})
+            ${e.incidencia ?? null}, ${!!e.tardio}, ${fotosComprometidas}, ${e.claveEnvio ?? null})
     returning id, folio`;
   const bitacoraId = bit!.id;
   if (partidasDelDia.length) {
@@ -223,4 +246,11 @@ export async function cerrarDia(
     fotosComprometidas,
     cuadrilla: filas.reduce((a, f) => a + f.cantidad, 0),
   };
+}
+
+/** El cierre que el teléfono mandó con esa clave, si ya llegó (D-042): sus fotos se suben a él. */
+export async function cierreDeClave(tx: Tx, claveEnvio: string): Promise<string | null> {
+  const clave = validarEntrada(uuid, claveEnvio);
+  const [b] = await tx<{ id: string }[]>`select id from bitacora where clave_envio = ${clave}`;
+  return b?.id ?? null;
 }

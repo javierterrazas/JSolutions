@@ -766,3 +766,31 @@ legacy. Lo nuevo es cómo se captura y cómo llegan las fotos.
 esas fotos se pierden y el cierre queda con fotos comprometidas sin subir. La cola las guardará en el teléfono.
 La cuadrilla va a la primera partida del día, como en la fase 1; anotarla por partida queda para después, si el
 piloto lo pide.
+
+## D-042 · La clave de envío de un cierre
+
+**Decisión:** el teléfono le pone a cada cierre una clave al azar al capturarlo (`bitacora.clave_envio`, única
+por empresa). Si el servidor guardó el cierre pero la respuesta no llegó al teléfono, el reintento llega con la
+misma clave y recibe ese mismo cierre: no lo duplica ni choca con "ese día ya está cerrado", aunque llegue al día
+siguiente. Otro cierre del mismo día con otra clave sí es un segundo cierre, y se rechaza (D-022). Las fotos de
+la cola encuentran su cierre por su clave (`cierreDeClave`): no necesitan esperar el id de la bitácora.
+
+## D-043 · La cola en el teléfono
+
+**Decisión:** lo que el PM captura va primero al teléfono (IndexedDB, que sobrevive a cerrar la app y guarda
+las fotos) y de ahí se envía, con las reglas del legacy (`procesarCola`, `prueba_cola.js`):
+- **en orden**, uno por uno, y las fotos de un cierre detrás de él;
+- **un error de red** no descarta nada: se cuenta el intento, y lo de atrás espera;
+- **un rechazo de negocio** sale de la cola con sus fotos y se le muestra al PM con su razón, hasta que lo da
+  por visto; lo de atrás sigue;
+- **una sesión vencida** detiene la cola sin perder nada. Las acciones de la cola no redirigen: contestan
+  `sesion`, y la cola espera a que el PM escriba su PIN.
+
+**Cuándo se envía:** el cierre, en el momento; si una regla lo rechaza, se corrige ahí mismo en el formulario.
+Sin señal o con la sesión vencida, el cierre y sus fotos van a la cola. Las fotos de un cierre enviado siempre
+van a la cola. La cola se envía al abrir el inicio, al volver la señal (evento `online`) y cada 30 segundos
+mientras quede algo. En el inicio se ve cuánto falta y hay un botón "Enviar ahora". Safari en iPhone no envía
+en segundo plano, así que la cola avanza cuando la app está abierta.
+
+**Las reglas de la cola** son una función pura (`apps/web/lib/cola.ts`) con sus pruebas, que incluyen los casos
+de `prueba_cola.js`. IndexedDB, el envío y la pantalla van aparte.

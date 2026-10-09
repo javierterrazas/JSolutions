@@ -1,18 +1,24 @@
 'use client';
-// Cerrar el día (fase 2, paso 4): en qué se trabajó y qué quedó terminado, quién de la cuadrilla estuvo, si llegó el
-// sub, las fotos y las notas; o "hoy no hubo trabajo" con su motivo. Primero se guarda el cierre; después se suben
-// las fotos una por una, cada una con su número (D-007), y la que falle se reintenta sin repetir las demás.
-import type { ResultadoCierre } from '@ijm/servidor';
+// Cerrar el día (fase 2, pasos 4 y 5): en qué se trabajó y qué quedó terminado, quién de la cuadrilla estuvo, si
+// llegó el sub, las fotos y las notas; o "hoy no hubo trabajo" con su motivo.
+//
+// El cierre lleva una clave de envío (D-042) y se manda en el momento: si una regla lo rechaza, se corrige aquí
+// mismo. Sus fotos van a la cola del teléfono (D-043) y se suben detrás de él, así que no se pierden si el PM sale
+// de la pantalla. Sin señal, o con la sesión vencida, el cierre también va a la cola y se envía solo después.
+import type { EntradaCierre } from '@ijm/servidor';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
+import { enviarCierre } from '@/app/acciones/cola';
+import type { ElementoCola } from '@/lib/cola';
+import { alCambiar, encolar, enviarPendientes, pendientes, siguienteN } from '@/lib/cola-telefono';
 import { comprimirFoto } from '@/lib/comprimir';
-import { cerrarElDia, subirFotoDeCierre } from '../../../acciones/cierre';
 import { estilos } from '../../../componentes/marco';
 import { MensajeError, type Problema } from '../../../componentes/mensaje-error';
 
 export interface DatosFormularioCierre {
   readonly obraId: string;
+  readonly folio: string;
   readonly dia: string;
   readonly tardio: boolean;
   readonly espacios: readonly {
@@ -43,7 +49,23 @@ interface Foto {
   readonly tomadaEn: string;
 }
 
-type EstadoFoto = 'pendiente' | 'subiendo' | 'lista' | 'fallo';
+/** Cómo quedó el cierre: enviado (sus fotos se suben detrás), o guardado en el teléfono hasta que haya señal o sesión. */
+type Destino = 'enviado' | 'sin_red' | 'sin_sesion';
+
+/** Cuántas fotos de este cierre siguen en la cola, y si la cola se quedó sin señal. */
+function useFotosPendientes(clave: string | null) {
+  const [quedan, setQuedan] = useState<number | null>(null);
+  useEffect(() => {
+    if (!clave) return;
+    const contar = () =>
+      void pendientes().then((cola) =>
+        setQuedan(cola.filter((e) => e.tipo === 'foto' && e.clave === clave).length),
+      );
+    contar();
+    return alCambiar(contar);
+  }, [clave]);
+  return quedan;
+}
 
 export function FormularioCierre({ datos }: { datos: DatosFormularioCierre }) {
   const t = useTranslations('cierre');
@@ -60,8 +82,10 @@ export function FormularioCierre({ datos }: { datos: DatosFormularioCierre }) {
   const [cuadrilla, setCuadrilla] = useState<Record<string, string>>({});
   const [subs, setSubs] = useState<Record<string, boolean>>({});
   const [fotos, setFotos] = useState<readonly Foto[]>([]);
-  const [cierre, setCierre] = useState<ResultadoCierre | null>(null);
-  const [estadoFotos, setEstadoFotos] = useState<readonly EstadoFoto[]>([]);
+  const [destino, setDestino] = useState<Destino | null>(null);
+  const [clave, setClave] = useState<string | null>(null);
+  const [sinRedFotos, setSinRedFotos] = useState(false);
+  const quedan = useFotosPendientes(clave);
   const camara = useRef<HTMLInputElement>(null);
 
   const alternar = (conjunto: ReadonlySet<string>, id: string) => {
@@ -86,26 +110,29 @@ export function FormularioCierre({ datos }: { datos: DatosFormularioCierre }) {
     }
   }
 
-  async function subirFotos(bitacoraId: string, cuales: readonly number[]) {
-    for (const i of cuales) {
-      setEstadoFotos((e) => e.map((x, j) => (j === i ? 'subiendo' : x)));
-      const f = new FormData();
-      f.set('foto', fotos[i]!.blob, `foto-${i + 1}.jpg`);
-      f.set('tomadaEn', fotos[i]!.tomadaEn);
-      let ok = false;
-      try {
-        ok = (await subirFotoDeCierre(bitacoraId, i + 1, f)).ok;
-      } catch {
-        // sin señal: queda para reintentar
-      }
-      setEstadoFotos((e) => e.map((x, j) => (j === i ? (ok ? 'lista' : 'fallo') : x)));
-    }
+  /** Las fotos de este cierre, en la cola detrás de él, con su número (D-007). */
+  const fotosEnCola = (claveCierre: string, etiqueta: ElementoCola['etiqueta']): ElementoCola[] =>
+    fotos.map((f, i) => ({
+      id: crypto.randomUUID(),
+      n: siguienteN(),
+      tipo: 'foto',
+      etiqueta,
+      clave: claveCierre,
+      indice: i + 1,
+      foto: f.blob,
+      tomadaEn: f.tomadaEn,
+      intentos: 0,
+    }));
+
+  async function subirFotosEnCola() {
+    setSinRedFotos((await enviarPendientes().catch(() => 'sin_red')) === 'sin_red');
   }
 
   function cerrar() {
     setProblema(null);
     iniciar(async () => {
-      const r = await cerrarElDia(null, {
+      const id = crypto.randomUUID();
+      const entrada: EntradaCierre = {
         obraId: datos.obraId,
         tardio: datos.tardio ? datos.dia : null,
         capturado: new Date().toISOString(),
@@ -121,47 +148,73 @@ export function FormularioCierre({ datos }: { datos: DatosFormularioCierre }) {
               .filter((c) => c.cantidad > 0),
         subs: Object.entries(subs).map(([ordenTrabajoId, llego]) => ({ ordenTrabajoId, llego })),
         fotosPorSubir: fotos.length,
-      });
+        claveEnvio: id,
+      };
+      const etiqueta = { obra: datos.folio, dia: datos.dia };
+      const todoALaCola = async (como: Destino) => {
+        await encolar(
+          { id, n: siguienteN(), tipo: 'cierre', etiqueta, entrada, intentos: 0 },
+          ...fotosEnCola(id, etiqueta),
+        );
+        setClave(id);
+        setDestino(como);
+      };
+
+      let r: Awaited<ReturnType<typeof enviarCierre>>;
+      try {
+        r = await enviarCierre(entrada);
+      } catch {
+        // sin señal: el cierre y sus fotos quedan en el teléfono y se envían solos cuando haya
+        await todoALaCola('sin_red');
+        return;
+      }
+      if (!r.ok && r.codigo === 'sesion') {
+        await todoALaCola('sin_sesion');
+        return;
+      }
       if (!r.ok) {
         setProblema(r);
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         return;
       }
-      setCierre(r.datos);
-      setEstadoFotos(fotos.map(() => 'pendiente'));
-      await subirFotos(
-        r.datos.bitacoraId,
-        fotos.map((_, i) => i),
-      );
+      await encolar(...fotosEnCola(id, etiqueta));
+      setClave(id);
+      setDestino('enviado');
+      await subirFotosEnCola();
     });
   }
 
-  if (cierre) {
-    const hechas = estadoFotos.filter((e) => e === 'lista').length;
-    const fallaron = estadoFotos.flatMap((e, i) => (e === 'fallo' ? [i] : []));
-    const subiendo = estadoFotos.some((e) => e === 'pendiente' || e === 'subiendo');
+  if (destino) {
     return (
       <div className="flex flex-col gap-4">
-        <p role="status" className="rounded-2xl bg-emerald-50 p-4 text-lg font-semibold text-emerald-900">
-          {t('listo')}
+        <p
+          role="status"
+          className={`rounded-2xl p-4 text-lg font-semibold ${destino === 'enviado' ? 'bg-emerald-50 text-emerald-900' : 'bg-amber-50 text-amber-900'}`}
+        >
+          {destino === 'enviado'
+            ? t('listo')
+            : destino === 'sin_red'
+              ? t('guardadoSinRed')
+              : t('guardadoSinSesion')}
         </p>
-        {estadoFotos.length ? (
+        {destino === 'enviado' && fotos.length ? (
           <p className="text-sm text-slate-700">
-            {subiendo
-              ? t('subiendo', { hechas, total: estadoFotos.length })
-              : fallaron.length
-                ? t('fotosFallaron', { n: fallaron.length })
-                : t('fotosListas')}
+            {quedan
+              ? sinRedFotos
+                ? t('fotosEsperan', { n: quedan })
+                : t('subiendo', { hechas: fotos.length - quedan, total: fotos.length })
+              : t('fotosListas')}
           </p>
         ) : null}
-        {!subiendo && fallaron.length ? (
-          <button
-            type="button"
-            onClick={() => iniciar(() => subirFotos(cierre.bitacoraId, fallaron))}
-            className={estilos.boton}
-          >
+        {destino === 'enviado' && quedan && sinRedFotos && !enviando ? (
+          <button type="button" onClick={() => iniciar(subirFotosEnCola)} className={estilos.boton}>
             {t('reintentar')}
           </button>
+        ) : null}
+        {destino === 'sin_sesion' ? (
+          <Link href="/pin" className={`${estilos.boton} flex items-center justify-center`}>
+            {t('entrarParaEnviar')}
+          </Link>
         ) : null}
         <Link href="/" className={`${estilos.botonSecundario} flex items-center justify-center`}>
           {t('volver')}

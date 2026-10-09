@@ -1,7 +1,7 @@
 // Cerrar el día (adaptadas de legacy/pruebas/prueba_escritura.js, prueba_tardio.js y prueba_pordia.js), a nombre
 // de los PMs de prueba, contra la base local. "Hoy" es el lunes 12 de octubre de 2026 en Austin.
 import { afterAll, describe, expect, it } from 'vitest';
-import { cerrarDia, crearObra, guardarPresupuesto, type Tx } from '../src/index';
+import { cerrarDia, cierreDeClave, crearObra, guardarPresupuesto, type Tx } from '../src/index';
 import { codigo, como, enAustin, MIEMBROS, OBRAS, probarComo, servidor, USUARIOS } from './apoyo';
 
 afterAll(() => servidor.sql.end());
@@ -64,6 +64,35 @@ describe('cerrar el día', () => {
       const cierre = { obraId: OBRAS.a1Carlos, partidas: [d.rough.id], fotosPorSubir: 1 };
       await cerrarDia(tx, cierre, LUNES);
       expect(await codigo(tx, () => cerrarDia(tx, cierre, LUNES))).toBe('dia_ya_cerrado');
+    }));
+
+  it('el reintento de un cierre con su clave de envío recibe el mismo cierre, sin duplicar nada (D-042)', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const d = await datosDe(tx, OBRAS.a1Carlos);
+      const clave = '7b0c3f7e-1a2b-4c3d-8e9f-001122334455';
+      const cierre = {
+        obraId: OBRAS.a1Carlos,
+        partidas: [d.rough.id],
+        cuadrilla: [{ trabajadorId: d.pedro, cantidad: 8 }],
+        fotosPorSubir: 2,
+        claveEnvio: clave,
+      };
+      const primero = await cerrarDia(tx, cierre, LUNES);
+      // la señal se cortó antes de la respuesta: el teléfono lo manda otra vez, y hasta al día siguiente
+      const otraVez = await cerrarDia(tx, cierre, enAustin('2026-10-13', 7));
+      expect(otraVez).toEqual(primero);
+      expect(await cierreDeClave(tx, clave)).toBe(primero.bitacoraId);
+      const [n] = await tx`
+        select (select count(*)::int from bitacora where obra_id = ${OBRAS.a1Carlos} and dia = '2026-10-12') as cierres,
+               (select count(*)::int from mano_obra where bitacora_id = ${primero.bitacoraId}) as cuadrilla`;
+      expect(n).toEqual({ cierres: 1, cuadrilla: 1 });
+      // otro cierre del mismo día, con otra clave, sí es un segundo cierre: se rechaza
+      expect(
+        await codigo(tx, () =>
+          cerrarDia(tx, { ...cierre, claveEnvio: '7b0c3f7e-1a2b-4c3d-8e9f-001122334466' }, LUNES),
+        ),
+      ).toBe('dia_ya_cerrado');
+      expect(await cierreDeClave(tx, '7b0c3f7e-1a2b-4c3d-8e9f-001122334477')).toBeNull();
     }));
 
   it('un día sin trabajo se reporta con su motivo, sin partidas ni fotos', () =>
