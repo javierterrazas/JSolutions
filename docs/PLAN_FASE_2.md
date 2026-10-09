@@ -95,11 +95,15 @@ cerrados. Todo sale de `packages/core`; nada de dinero del negocio.
 Lo arma `inicioDelPm` (`packages/servidor/src/inicio-pm.ts`) y lo muestra el inicio de la app cuando entra un PM.
 Los días que olvidó cerrar se avisan arriba; cerrarlos llega con el paso 4.
 
-### 4. Cerrar el día
+### 4. Cerrar el día — hecho (D-041)
 
 El flujo estrella. La partida en curso viene sugerida; las terminadas, la cuadrilla (horas o día y medio día), el
 sub que llegó y las fotos con la cámara, comprimidas en el teléfono. "Hoy no hubo trabajo" con su motivo. Los
 últimos 2 días laborables, tarde. Las fotos se suben después, en segundo plano, con su número (D-007).
+
+Pantalla `/obras/[id]/cierre` (con `?dia=` para un día olvidado), con los datos de `datosParaCierre` y el flujo
+`cerrarDia` de la fase 1. **Pasa al paso 5:** si el PM sale de la pantalla antes de que suban sus fotos, esas
+fotos se pierden y el cierre queda con fotos pendientes; la cola sin señal las guardará en el teléfono.
 
 ### 5. Sin señal: la cola
 

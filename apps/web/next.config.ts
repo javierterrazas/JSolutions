@@ -4,6 +4,9 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const config: NextConfig = {
   // los paquetes del monorepo se publican como TypeScript sin compilar
   transpilePackages: ['@ijm/core', '@ijm/db', '@ijm/servidor'],
+  // las fotos del cierre pasan por una acción del servidor: llegan comprimidas (unos 500 KB), y el tope de Vercel
+  // para una petición es 4.5 MB
+  experimental: { serverActions: { bodySizeLimit: '4mb' } },
   async headers() {
     return [
       {

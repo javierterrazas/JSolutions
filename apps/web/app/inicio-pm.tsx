@@ -3,6 +3,7 @@
 // viene de inicioDelPm (packages/servidor), con las reglas de @ijm/core.
 import type { InicioPm } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatoDinero } from '@/lib/dinero';
 import { estilos } from './componentes/marco';
@@ -39,12 +40,19 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
 
       {datos.obras.flatMap((o) =>
         o.diasSinCierre.map((d) => (
-          <p key={`${o.id}-${d}`} role="alert" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-            {t('faltoCerrar', {
-              dia: dia(d, 'largo'),
-              obra: o.folio,
-            })}
-          </p>
+          <div
+            key={`${o.id}-${d}`}
+            role="alert"
+            className="flex flex-col gap-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900"
+          >
+            <p>{t('faltoCerrar', { dia: dia(d, 'largo'), obra: o.folio })}</p>
+            <Link
+              href={`/obras/${o.id}/cierre?dia=${d}`}
+              className="self-start rounded-lg bg-amber-900 px-3 py-2 font-semibold text-white"
+            >
+              {t('cerrarEseDia')}
+            </Link>
+          </div>
         )),
       )}
 
@@ -86,6 +94,15 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
               <p className={`text-sm font-medium ${o.cerradoHoy ? 'text-emerald-700' : 'text-amber-700'}`}>
                 {o.cerradoHoy ? t('cerradoHoy') : t('sinCerrarHoy')}
               </p>
+            ) : null}
+            {/* arrancar la obra es su primer cierre con trabajo; sin presupuesto no arranca */}
+            {!o.cerradoHoy && (o.estado === 'en_obra' || o.estado === 'lista_para_arranque') ? (
+              <Link
+                href={`/obras/${o.id}/cierre`}
+                className={`${estilos.boton} flex items-center justify-center`}
+              >
+                {t('cerrarDia')}
+              </Link>
             ) : null}
             {o.inspeccionesPendientes.length ? (
               <div className="text-sm text-slate-700">

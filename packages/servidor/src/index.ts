@@ -8,6 +8,7 @@ export * from './obras';
 export * from './presupuesto';
 export * from './consultas-obra';
 export * from './inicio-pm';
+export * from './pantalla-cierre';
 export * from './cierre';
 export * from './fotos';
 export * from './correcciones';
