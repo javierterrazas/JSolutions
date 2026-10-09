@@ -5,11 +5,13 @@ import {
   type Calendario,
   type Dia,
   domingoDe,
+  esLaborable,
   lunesDe,
   masTarde,
   masTemprano,
   primerLaborable,
   restarLaborables,
+  sumarDias,
   sumarLaborables,
 } from './fechas';
 
@@ -230,4 +232,21 @@ export function diasSinCierre(
     if (d >= primero && !cerrados.has(d)) out.push(d);
   }
   return out;
+}
+
+/**
+ * La racha del PM: cuántos días laborables seguidos cerró, contando hacia atrás desde hoy (o desde ayer, si hoy
+ * todavía no cierra). Los días que la empresa no trabaja no la cortan (legacy: construirDatos_, que solo saltaba
+ * sábado y domingo; aquí, el calendario de la empresa, D-028).
+ */
+export function rachaDeCierres(cerrados: readonly Dia[], hoy: Dia, cal: Calendario, hasta = 180): number {
+  const hechos = new Set(cerrados);
+  let dia = hechos.has(hoy) ? hoy : sumarDias(hoy, -1);
+  let racha = 0;
+  for (let i = 0; i < hasta; i++, dia = sumarDias(dia, -1)) {
+    if (!esLaborable(dia, cal)) continue;
+    if (!hechos.has(dia)) break;
+    racha++;
+  }
+  return racha;
 }

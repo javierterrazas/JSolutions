@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Cronograma, CronogramaObra, FilaCrono } from './cronograma';
-import { CALENDARIO_LEGACY, CALENDARIO_POR_DEFECTO } from './fechas';
+import { CALENDARIO_LEGACY, CALENDARIO_POR_DEFECTO, calendario } from './fechas';
 import {
   cumplimientoSemanal,
   diasSinCierre,
   estaSemana,
   type OrdenSemana,
   planDeLaSemana,
+  rachaDeCierres,
   semanaDelPM,
 } from './semana';
 
@@ -179,5 +180,27 @@ describe('la semana del PM y sus días sin cierre', () => {
       [],
     );
     expect(diasSinCierre([{ dia: '2026-10-10', conTrabajo: true }], true, '2026-10-12', LUN_SAB)).toEqual([]);
+  });
+});
+
+describe('la racha de días cerrados', () => {
+  // octubre de 2026: el lunes 12 es día de trabajo; el domingo 11 no
+  it('cuenta hacia atrás los días laborables seguidos con cierre; el domingo no la corta', () => {
+    const cerrados = ['2026-10-08', '2026-10-09', '2026-10-10', '2026-10-12'];
+    expect(rachaDeCierres(cerrados, '2026-10-12', LUN_SAB)).toBe(4);
+    // con el calendario del legacy (sin sábado) el sábado cerrado no cuenta, pero tampoco corta
+    expect(rachaDeCierres(cerrados, '2026-10-12', CALENDARIO_LEGACY)).toBe(3);
+  });
+
+  it('si hoy todavía no cierra, empieza en ayer; un día laborable sin cierre la corta', () => {
+    expect(rachaDeCierres(['2026-10-09', '2026-10-10'], '2026-10-12', LUN_SAB)).toBe(2);
+    expect(rachaDeCierres(['2026-10-08', '2026-10-10'], '2026-10-12', LUN_SAB)).toBe(1);
+    expect(rachaDeCierres([], '2026-10-12', LUN_SAB)).toBe(0);
+  });
+
+  it('un feriado que no se trabaja tampoco la corta', () => {
+    const conFeriado = calendario([1, 2, 3, 4, 5, 6], ['2026-10-09']);
+    expect(rachaDeCierres(['2026-10-08', '2026-10-10'], '2026-10-10', conFeriado)).toBe(2);
+    expect(rachaDeCierres(['2026-10-08', '2026-10-10'], '2026-10-10', LUN_SAB)).toBe(1);
   });
 });

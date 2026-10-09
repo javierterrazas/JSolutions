@@ -85,12 +85,15 @@ navegador, en tamaño de teléfono.
   `guardarPresupuesto`); completo, la obra queda lista para arranque. Las demás pantallas del dueño siguen en la
   fase 3.
 
-### 3. El inicio del PM
+### 3. El inicio del PM — hecho (D-040)
 
 Sus obras con el avance ponderado y la entrega prevista; la semana del PM (6 días, con el sábado: D-028); los días
 que olvidó cerrar; las órdenes por confirmar y los subs que llegan; las órdenes de cambio autorizadas que tiene que
 ejecutar; las inspecciones pendientes; las respuestas a sus avisos; los gastos sin recibo; su racha de días
 cerrados. Todo sale de `packages/core`; nada de dinero del negocio.
+
+Lo arma `inicioDelPm` (`packages/servidor/src/inicio-pm.ts`) y lo muestra el inicio de la app cuando entra un PM.
+Los días que olvidó cerrar se avisan arriba; cerrarlos llega con el paso 4.
 
 ### 4. Cerrar el día
 
