@@ -5,6 +5,7 @@ import { comoMiembro, exigirAcceso } from '@/lib/acceso';
 import { salir } from './acciones/entrar';
 import { Marco, estilos } from './componentes/marco';
 import { MensajeError } from './componentes/mensaje-error';
+import { EstadoCola } from './estado-cola';
 import { InicioDelPm } from './inicio-pm';
 
 export default async function Inicio() {
@@ -14,6 +15,7 @@ export default async function Inicio() {
   const pm = yo.rol === 'pm' ? await comoMiembro((tx) => inicioDelPm(tx), acceso) : null;
   return (
     <Marco titulo={t('hola', { nombre: yo.nombre })}>
+      {yo.rol === 'pm' ? <EstadoCola /> : null}
       {pm?.ok ? <InicioDelPm datos={pm.datos} /> : null}
       {pm && !pm.ok ? <MensajeError problema={pm} /> : null}
       {yo.rol !== 'pm' ? (

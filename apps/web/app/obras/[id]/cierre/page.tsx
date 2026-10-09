@@ -40,6 +40,7 @@ export default async function Cierre({ params, searchParams }: PageProps<'/obras
         <FormularioCierre
           datos={{
             obraId: d.obra.id,
+            folio: d.obra.folio,
             dia: d.dia,
             tardio: d.tardio,
             espacios: d.espacios.map((e) => ({

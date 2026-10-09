@@ -33,22 +33,33 @@ export interface Acceso {
   readonly yo: Yo;
 }
 
+/** Cómo está el acceso en esta petición; con `acceso` solo si está abierto. */
+export async function estadoDeAcceso(): Promise<
+  | { readonly estado: 'abierto'; readonly acceso: Acceso }
+  | { readonly estado: 'cerrado' | 'sin_pin' | 'invalido' }
+> {
+  const sesion = await usuarioDeLaSesion();
+  const llave = await leerLlave();
+  if (!sesion || !llave) return { estado: 'invalido' };
+  const r = await enNombreDe(servidor(), { userId: sesion.userId }, async (tx) => {
+    const estado = await estadoDispositivo(tx, llave);
+    return estado === 'abierto' ? { estado, yo: await quienSoy(tx) } : { estado };
+  });
+  if (r.estado === 'abierto')
+    return { estado: 'abierto', acceso: { userId: sesion.userId, llave, yo: r.yo } };
+  return { estado: r.estado };
+}
+
 /**
  * Exige un miembro activo, en su celular verificado y con el PIN abierto. Si falta algo, manda a donde
  * corresponde: sin celular verificado, a /sin-acceso; sin PIN todavía, a elegirlo; cerrado, a escribirlo.
  */
 export async function exigirAcceso(): Promise<Acceso> {
-  const sesion = await usuarioDeLaSesion();
-  const llave = await leerLlave();
-  if (!sesion || !llave) redirect('/sin-acceso');
-  const r = await enNombreDe(servidor(), { userId: sesion.userId }, async (tx) => {
-    const estado = await estadoDispositivo(tx, llave);
-    return estado === 'abierto' ? { estado, yo: await quienSoy(tx) } : { estado };
-  });
+  const r = await estadoDeAcceso();
+  if (r.estado === 'abierto') return r.acceso;
   if (r.estado === 'sin_pin') redirect('/pin/nuevo');
   if (r.estado === 'cerrado') redirect('/pin');
-  if (r.estado !== 'abierto' || !r.yo) redirect('/sin-acceso');
-  return { userId: sesion.userId, llave, yo: r.yo };
+  redirect('/sin-acceso');
 }
 
 /**

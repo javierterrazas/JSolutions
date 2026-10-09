@@ -263,7 +263,19 @@
     "listo": "Day closed",
     "subiendo": "Uploading photos: {hechas} of {total}",
     "fotosListas": "Photos uploaded.",
-    "fotosFallaron": "{n, plural, one {# photo didn't upload.} other {# photos didn't upload.}}",
-    "reintentar": "Try again"
+    "reintentar": "Try again",
+    "guardadoSinRed": "No signal: the close was saved on the phone and will send itself when there is signal.",
+    "guardadoSinSesion": "The close was saved on the phone. Enter your PIN to send it.",
+    "entrarParaEnviar": "Enter my PIN",
+    "fotosEsperan": "{n, plural, one {# photo is waiting for signal; it will upload by itself.} other {# photos are waiting for signal; they will upload by themselves.}}"
+  },
+  "cola": {
+    "pendientes": "{n, plural, one {# record waiting to send} other {# records waiting to send}} from this phone (closes and their photos).",
+    "sinRed": "No signal right now: it will send itself when it's back.",
+    "enviarAhora": "Send now",
+    "enviando": "Sending…",
+    "cierreRechazado": "The {obra} close for {dia} was not saved:",
+    "fotoRechazada": "A photo from the {obra} close for {dia} was not saved:",
+    "entendido": "Got it"
   }
 }

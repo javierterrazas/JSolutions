@@ -263,7 +263,19 @@
     "listo": "Día cerrado",
     "subiendo": "Subiendo fotos: {hechas} de {total}",
     "fotosListas": "Fotos subidas.",
-    "fotosFallaron": "{n, plural, one {# foto no se subió.} other {# fotos no se subieron.}}",
-    "reintentar": "Reintentar"
+    "reintentar": "Reintentar",
+    "guardadoSinRed": "Sin señal: el cierre quedó guardado en el teléfono y se envía solo cuando haya señal.",
+    "guardadoSinSesion": "El cierre quedó guardado en el teléfono. Escribe tu PIN para enviarlo.",
+    "entrarParaEnviar": "Escribir mi PIN",
+    "fotosEsperan": "{n, plural, one {# foto espera la señal; se sube sola.} other {# fotos esperan la señal; se suben solas.}}"
+  },
+  "cola": {
+    "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres y sus fotos).",
+    "sinRed": "Sin señal por ahora: se envía solo cuando vuelva.",
+    "enviarAhora": "Enviar ahora",
+    "enviando": "Enviando…",
+    "cierreRechazado": "El cierre de {obra} del {dia} no se guardó:",
+    "fotoRechazada": "Una foto del cierre de {obra} del {dia} no se guardó:",
+    "entendido": "Entendido"
   }
 }
