@@ -740,3 +740,29 @@ calcular "sin recibo" y la racha sin abrirle esas obras, dos funciones de la bas
 de la sesión: `mis_gastos_sin_recibo()` y `mis_dias_cerrados()` (`20261009000100_inicio_pm.sql`). Antes de
 ellas, el inicio mostraba como "sin recibo" un gasto que sí lo tenía, porque el PM ya no podía ver esa foto: lo
 encontró la prueba. Un aviso o gasto de una obra que ya no ve se muestra sin su folio.
+
+## D-041 · Cerrar el día desde el celular
+
+**Decisión:** la pantalla de cierre usa el flujo de la fase 1 (`cerrarDia`), que ya valida en el orden del
+legacy. Lo nuevo es cómo se captura y cómo llegan las fotos.
+- **La captura:**
+  - las partidas que van en curso vienen marcadas;
+  - una partida se marca terminada solo si se trabajó;
+  - si su punto de control no tiene la inspección aprobada, la pantalla lo dice en vez de ofrecer "terminada"
+    (la regla sigue en `exigirInspecciones`);
+  - a la cuadrilla se le anotan horas, o día y medio día según cómo cobra;
+  - al sub esperado, "llegó" o "no llegó";
+  - "Hoy no hubo trabajo" pide el motivo.
+- **Las fotos se comprimen en el teléfono** (1600 px, JPEG al 75 %) y se suben **después** de guardar el
+  cierre, una por una con su número (D-007). La que falla se reintenta sin repetir las demás.
+- **Las fotos pasan por el servidor.** El navegador no tiene los tokens de la sesión (cookies httpOnly, D-038),
+  así que una acción del servidor sube el archivo a Storage con la sesión del PM y lo registra
+  (`rutaParaFoto`, `registrarFoto`). Las reglas de Storage siguen valiendo. El tope de una petición es 4 MB, y
+  una foto comprimida pesa unos cientos de KB.
+- **El cierre no vuelve a pintar la página.** Si lo hiciera, la pantalla vería el día ya cerrado y quitaría el
+  formulario a media subida de fotos. Pasó en la prueba en el navegador.
+
+**Pendiente para el paso 5 (la cola sin señal):** si el PM sale de la pantalla antes de que suban sus fotos,
+esas fotos se pierden y el cierre queda con fotos comprometidas sin subir. La cola las guardará en el teléfono.
+La cuadrilla va a la primera partida del día, como en la fase 1; anotarla por partida queda para después, si el
+piloto lo pide.
