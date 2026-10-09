@@ -794,3 +794,33 @@ en segundo plano, así que la cola avanza cuando la app está abierta.
 
 **Las reglas de la cola** son una función pura (`apps/web/lib/cola.ts`) con sus pruebas, que incluyen los casos
 de `prueba_cola.js`. IndexedDB, el envío y la pantalla van aparte.
+
+## D-044 · Corregir un cierre
+
+**Decisión del dueño** (lo pidió al probar el piloto): el PM corrige su cierre si se equivocó o le faltó algo.
+
+**Cómo funciona:**
+- **Dentro de 48 horas**, solo el suyo, como el legacy. "Corregir" abre el mismo formulario lleno con lo que
+  capturó; cambia lo necesario, agrega lo que faltó y escribe qué corrigió.
+- **En el servidor** (`corregirCierre`), en una transacción: el cierre se **anula** con su motivo
+  (`anularCierre` de la fase 1, que revisa las 48 h y el autor), y se **vuelve a cerrar el mismo día** con lo
+  corregido. Nada se borra: el anterior queda anulado, con su cuadrilla y su avance, y el rastro en `correcciones`.
+- **Las fotos no se mueven.** Un archivo se registra una sola vez (`fotos.storage_path` es único), así que las
+  fotos se quedan en el cierre donde se subieron. El cierre nuevo dice a cuál corrige (`bitacora.corrige_a`). Sus
+  fotos son las suyas y las de la cadena que corrige (`fotosDelCierre`), y cuentan para la regla de "al menos
+  una foto". Las fotos nuevas se suben al cierre nuevo por la cola.
+- **Necesita señal.** A diferencia del cierre, la corrección no va a la cola: el PM tiene que ver en el momento
+  si se aceptó.
+- La pantalla ofrece otra vez lo que registró ese cierre: sus partidas terminadas y los subs que reportó
+  (`datosParaCierre` con `corrige`).
+
+## D-045 · Agregar un espacio a una obra
+
+**Decisión del dueño:** a una obra que ya existe se le agregan espacios desde su presupuesto (legacy:
+`duAgregarArea`). `agregarEspacio` lo pone al final, con las partidas de su tipo, y su presupuesto se captura ahí
+mismo. Solo el dueño o el administrador; nunca en una obra entregada, nunca otro "Generales de obra", y siempre
+con pies², como en el alta. El presupuesto incompleto no cambia el estado de una obra que ya arrancó.
+
+**Lo que sigue, también pedido por el dueño:** crear desde la app tipos de trabajo nuevos (piso de cemento, masa
+y pintura…) con sus partidas, en una pantalla de Catálogo aparte del presupuesto, porque son plantillas que se
+usan en muchas obras.

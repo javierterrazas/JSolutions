@@ -45,13 +45,21 @@ export interface DatosCierre {
   readonly motivos: readonly string[];
 }
 
-/** Lo que necesita la pantalla de cierre de una obra del PM; null si la obra no es suya o no la ve. */
+/**
+ * Lo que necesita la pantalla de cierre de una obra del PM; null si la obra no es suya o no la ve. Con `corrige`
+ * (el cierre que se va a corregir, D-044), lo que ese cierre registró se ofrece otra vez: sus partidas terminadas y
+ * los subs que reportó.
+ */
 export async function datosParaCierre(
   tx: Tx,
-  entrada: { obraId: string; dia?: string | null },
+  entrada: { obraId: string; dia?: string | null; corrige?: string | null },
   ahora = new Date(),
 ): Promise<DatosCierre | null> {
-  const e = validarEntrada(z.object({ obraId: uuid, dia: esquemaDia.nullish() }), entrada);
+  const e = validarEntrada(
+    z.object({ obraId: uuid, dia: esquemaDia.nullish(), corrige: uuid.nullish() }),
+    entrada,
+  );
+  const corrige = e.corrige ?? null;
   const s = await leerSesion(tx, ahora);
   const [obra] = await tx<{ id: string; folio: string; cliente: string; estado: string }[]>`
     select id, folio, cliente, estado from obras where id = ${e.obraId} and pm_id = ${s.miembroId}`;
@@ -75,7 +83,8 @@ export async function datosParaCierre(
     select id, espacio_id, nombre_es as es, nombre_en as en, hito_id
     from partidas_obra where obra_id = ${obra.id} and estado = 'activa' order by orden, nombre_es`;
   const avance = await tx<{ partida: string; estado: 'en_progreso' | 'terminada' }[]>`
-    select partida_obra_id as partida, estado from avance where obra_id = ${obra.id} and estado_registro = 'vigente'`;
+    select partida_obra_id as partida, estado from avance where obra_id = ${obra.id} and estado_registro = 'vigente'
+      and bitacora_id is distinct from ${corrige}`;
   const inspecciones = await tx<{ espacio_id: string; hito_id: string; resultado: string }[]>`
     select espacio_id, hito_id, resultado from inspecciones where obra_id = ${obra.id} order by realizada_en`;
   const ultima = new Map(inspecciones.map((i) => [`${i.espacio_id}|${i.hito_id}`, i.resultado]));
@@ -114,8 +123,10 @@ export async function datosParaCierre(
   >`
     select o.id, o.folio, coalesce(s.nombre, '') as sub, o.alcance, o.partida_obra_id as partida
     from ordenes_trabajo o left join subcontratistas_pm s on s.id = o.subcontratista_id
-    where o.obra_id = ${obra.id} and o.estado in ('emitida', 'confirmada') and o.se_presento is null
-      and o.inicio_programado is not null and o.inicio_programado <= ${elDia}
+    where o.obra_id = ${obra.id}
+      and ((o.estado in ('emitida', 'confirmada') and o.se_presento is null
+            and o.inicio_programado is not null and o.inicio_programado <= ${elDia})
+           or o.id in (select orden_trabajo_id from bitacora_subs where bitacora_id = ${corrige}))
     order by o.inicio_programado, o.folio`;
   const nombrePartida = new Map(partidas.map((p) => [p.id, { es: p.es, en: p.en }]));
 

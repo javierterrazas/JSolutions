@@ -1,7 +1,7 @@
 // Crear obra y guardar su presupuesto (adaptadas de legacy/pruebas/prueba_obligatorios.js y prueba_presupuesto.js),
 // a nombre de usuarios reales, contra la base local.
 import { afterAll, describe, expect, it } from 'vitest';
-import { crearObra, guardarPresupuesto, type Tx } from '../src/index';
+import { agregarEspacio, crearObra, guardarPresupuesto, type Tx } from '../src/index';
 import { codigo, como, EMPRESA_A, MIEMBROS, OBRAS, probarComo, servidor, USUARIOS } from './apoyo';
 
 afterAll(() => servidor.sql.end());
@@ -151,5 +151,52 @@ describe('guardar el presupuesto por etapa', () => {
       expect(await codigo(tx, () => guardarPresupuesto(tx, { obraId: OBRAS.a3Entregada, lineas: [] }))).toBe(
         'obra_cerrada',
       );
+    }));
+});
+
+describe('agregar un espacio a una obra que ya existe', () => {
+  it('llega al final, con las partidas de su tipo; su presupuesto se captura después', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const tipo = await tipoBano(tx);
+      const { espacioId } = await agregarEspacio(tx, {
+        obraId: OBRAS.a1Carlos,
+        tipoEspacioId: tipo,
+        pies2: 30,
+      });
+      const espacios = await tx`
+        select e.id, e.nombre, e.pies2_cotizados,
+               (select count(*)::int from partidas_obra p where p.espacio_id = e.id) as partidas
+        from espacios e where e.obra_id = ${OBRAS.a1Carlos} order by e.orden`;
+      expect(espacios.at(-1)).toEqual({
+        id: espacioId,
+        nombre: 'Baño',
+        pies2_cotizados: '30.00',
+        partidas: 2,
+      });
+    }));
+
+  it('pide pies²; no en una obra entregada ni con Generales; el PM no agrega espacios', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const tipo = await tipoBano(tx);
+      const [gen] = await tx<{ id: string }[]>`select id from tipos_espacio where es_generales`;
+      expect(
+        await codigo(tx, () => agregarEspacio(tx, { obraId: OBRAS.a1Carlos, tipoEspacioId: tipo })),
+      ).toBe('faltan_pies2');
+      expect(
+        await codigo(tx, () =>
+          agregarEspacio(tx, { obraId: OBRAS.a3Entregada, tipoEspacioId: tipo, pies2: 20 }),
+        ),
+      ).toBe('obra_cerrada');
+      expect(
+        await codigo(tx, () =>
+          agregarEspacio(tx, { obraId: OBRAS.a1Carlos, tipoEspacioId: gen!.id, pies2: 20 }),
+        ),
+      ).toBe('tipo_espacio_inexistente');
+      await como(tx, USUARIOS.carlos);
+      expect(
+        await codigo(tx, () =>
+          agregarEspacio(tx, { obraId: OBRAS.a1Carlos, tipoEspacioId: tipo, pies2: 20 }),
+        ),
+      ).toBe('solo_dueno');
     }));
 });

@@ -1,8 +1,16 @@
 // Cerrar el día (adaptadas de legacy/pruebas/prueba_escritura.js, prueba_tardio.js y prueba_pordia.js), a nombre
 // de los PMs de prueba, contra la base local. "Hoy" es el lunes 12 de octubre de 2026 en Austin.
 import { afterAll, describe, expect, it } from 'vitest';
-import { cerrarDia, cierreDeClave, crearObra, guardarPresupuesto, type Tx } from '../src/index';
-import { codigo, como, enAustin, MIEMBROS, OBRAS, probarComo, servidor, USUARIOS } from './apoyo';
+import {
+  cerrarDia,
+  cierreDeClave,
+  cierreParaCorregir,
+  corregirCierre,
+  crearObra,
+  guardarPresupuesto,
+  type Tx,
+} from '../src/index';
+import { codigo, como, EMPRESA_A, enAustin, MIEMBROS, OBRAS, probarComo, servidor, USUARIOS } from './apoyo';
 
 afterAll(() => servidor.sql.end());
 
@@ -247,5 +255,110 @@ describe('calidad y cuadrilla al cerrar', () => {
         (await cerrarDia(tx, { ...base, cuadrilla: [{ trabajadorId: d.pedro, cantidad: 6 }] }, LUNES))
           .cuadrilla,
       ).toBe(6);
+    }));
+});
+
+// Con el reloj de verdad: la base pone la hora de creación de cada cierre con now(), y las 48 h se cuentan desde ahí.
+describe('corregir un cierre (D-044)', () => {
+  const AHORA = new Date();
+  const DESPUES = new Date(AHORA.getTime() + 2 * 3600 * 1000);
+  const EN_TRES_DIAS = new Date(AHORA.getTime() + 72 * 3600 * 1000);
+  /** Un cierre del lunes con su foto ya registrada (el archivo es de prueba). */
+  async function cierreConFoto(tx: Tx) {
+    const d = await datosDe(tx, OBRAS.a1Carlos);
+    const r = await cerrarDia(
+      tx,
+      {
+        obraId: OBRAS.a1Carlos,
+        partidas: [d.rough.id],
+        cuadrilla: [{ trabajadorId: d.pedro, cantidad: 8 }],
+        fotosPorSubir: 1,
+      },
+      AHORA,
+    );
+    await tx`insert into fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage_path)
+             values (${EMPRESA_A}, ${OBRAS.a1Carlos}, 'bitacora', ${r.bitacoraId}, 1,
+                     ${`${EMPRESA_A}/${OBRAS.a1Carlos}/bitacora/prueba-correccion.jpg`})`;
+    return { d, r };
+  }
+
+  it('anula el cierre con su motivo y lo vuelve a cerrar el mismo día; la foto ya subida cuenta sin moverse', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const { d, r } = await cierreConFoto(tx);
+      const antes = await cierreParaCorregir(tx, { obraId: OBRAS.a1Carlos, dia: r.dia }, AHORA);
+      expect(antes).toMatchObject({
+        bitacoraId: r.bitacoraId,
+        corregible: true,
+        partidas: [d.rough.id],
+        cuadrilla: [{ trabajadorId: d.pedro, cantidad: 8 }],
+        fotos: 1,
+      });
+
+      const nuevo = await corregirCierre(
+        tx,
+        {
+          bitacoraId: r.bitacoraId,
+          motivo: 'Faltó anotar a Juan',
+          partidas: [d.rough.id],
+          cuadrilla: [
+            { trabajadorId: d.pedro, cantidad: 6 },
+            { trabajadorId: d.juan, cantidad: 1 },
+          ],
+          fotosPorSubir: 1,
+        },
+        DESPUES,
+      );
+      expect(nuevo).toMatchObject({ dia: r.dia, fotosComprometidas: 1 });
+      const [viejo] = await tx`select estado from bitacora where id = ${r.bitacoraId}`;
+      expect(viejo).toEqual({ estado: 'anulado' });
+      const [b] = await tx`select estado, corrige_a, dia::text from bitacora where id = ${nuevo.bitacoraId}`;
+      expect(b).toEqual({ estado: 'vigente', corrige_a: r.bitacoraId, dia: r.dia });
+      const cuadrilla = await tx`
+        select trabajador_id, cantidad, estado from mano_obra where bitacora_id in (${r.bitacoraId}, ${nuevo.bitacoraId})
+        order by estado, cantidad`;
+      expect(cuadrilla.map((c) => [c.estado, c.cantidad])).toEqual([
+        ['vigente', '1.00'],
+        ['vigente', '6.00'],
+        ['anulado', '8.00'],
+      ]);
+      const despues = await cierreParaCorregir(tx, { obraId: OBRAS.a1Carlos, dia: r.dia }, AHORA);
+      expect(despues).toMatchObject({ bitacoraId: nuevo.bitacoraId, fotos: 1 });
+      // el rastro lo lee el dueño: el PM no ve correcciones
+      await como(tx, USUARIOS.duenoA);
+      const [rastro] = await tx`
+        select accion, motivo from correcciones where tabla = 'bitacora' and registro_id = ${r.bitacoraId}`;
+      expect(rastro).toEqual({ accion: 'anular', motivo: 'Faltó anotar a Juan' });
+    }));
+
+  it('sin una foto subida ni nueva, la corrección pide foto como cualquier cierre', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const d = await datosDe(tx, OBRAS.a1Carlos);
+      const r = await cerrarDia(
+        tx,
+        { obraId: OBRAS.a1Carlos, partidas: [d.rough.id], fotosPorSubir: 1 },
+        AHORA,
+      );
+      expect(
+        await codigo(tx, () =>
+          corregirCierre(
+            tx,
+            { bitacoraId: r.bitacoraId, motivo: 'Se me olvidó una partida', partidas: [d.rough.id] },
+            AHORA,
+          ),
+        ),
+      ).toBe('falta_foto');
+    }));
+
+  it('después de 48 horas ya no lo corrige el PM; el de otro PM ni lo encuentra', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const { d, r } = await cierreConFoto(tx);
+      const jueves = EN_TRES_DIAS;
+      expect((await cierreParaCorregir(tx, { obraId: OBRAS.a1Carlos, dia: r.dia }, jueves))?.corregible).toBe(
+        false,
+      );
+      const correccion = { bitacoraId: r.bitacoraId, motivo: 'tarde', partidas: [d.rough.id] };
+      expect(await codigo(tx, () => corregirCierre(tx, correccion, jueves))).toBe('fuera_de_48_horas');
+      await como(tx, USUARIOS.luis);
+      expect(await codigo(tx, () => corregirCierre(tx, correccion, AHORA))).toBe('registro_no_encontrado');
     }));
 });

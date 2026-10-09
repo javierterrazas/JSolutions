@@ -91,8 +91,15 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
               ) : null}
             </p>
             {o.estado === 'en_obra' ? (
-              <p className={`text-sm font-medium ${o.cerradoHoy ? 'text-emerald-700' : 'text-amber-700'}`}>
+              <p
+                className={`flex items-center justify-between gap-2 text-sm font-medium ${o.cerradoHoy ? 'text-emerald-700' : 'text-amber-700'}`}
+              >
                 {o.cerradoHoy ? t('cerradoHoy') : t('sinCerrarHoy')}
+                {o.cerradoHoy ? (
+                  <Link href={`/obras/${o.id}/cierre?corregir=1`} className="text-marca underline">
+                    {t('corregirHoy')}
+                  </Link>
+                ) : null}
               </p>
             ) : null}
             {/* arrancar la obra es su primer cierre con trabajo; sin presupuesto no arranca */}

@@ -125,7 +125,13 @@
     "foto_invalida": "La foto no se pudo leer.",
     "foto_no_subida": "La foto no se subió.",
     "foto_no_comprometida": "Esa foto no corresponde a este cierre.",
-    "registro_no_encontrado": "No se encontró el cierre."
+    "registro_no_encontrado": "No se encontró el cierre.",
+    "correccion_sin_senal": "Para corregir un cierre se necesita señal. Inténtalo cuando haya.",
+    "sesion_vencida": "Tu sesión venció: escribe tu PIN y vuelve a intentarlo.",
+    "falta_motivo": "Escribe qué corregiste.",
+    "fuera_de_48_horas": "Ya pasaron 48 horas: pídeselo al dueño.",
+    "registro_de_otro": "Ese registro no es tuyo.",
+    "tabla_no_corregible": "Eso no se puede corregir."
   },
   "obras": {
     "titulo": "Obras",
@@ -175,7 +181,8 @@
     "guardar": "Guardar presupuesto",
     "completo": "Presupuesto completo: la obra quedó lista para arranque.",
     "incompleto": "Guardado. Faltan montos en: {espacios}.",
-    "volver": "Volver a obras"
+    "volver": "Volver a obras",
+    "agregarEspacio": "Agregar espacio"
   },
   "inicioPm": {
     "racha": "{n, plural, =0 {Sin racha todavía} one {# día seguido cerrado} other {# días seguidos cerrados}}",
@@ -217,7 +224,8 @@
       "en_cierre": "En cierre"
     },
     "cerrarDia": "Cerrar el día",
-    "cerrarEseDia": "Cerrar ese día"
+    "cerrarEseDia": "Cerrar ese día",
+    "corregirHoy": "Corregir"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -267,7 +275,13 @@
     "guardadoSinRed": "Sin señal: el cierre quedó guardado en el teléfono y se envía solo cuando haya señal.",
     "guardadoSinSesion": "El cierre quedó guardado en el teléfono. Escribe tu PIN para enviarlo.",
     "entrarParaEnviar": "Escribir mi PIN",
-    "fotosEsperan": "{n, plural, one {# foto espera la señal; se sube sola.} other {# fotos esperan la señal; se suben solas.}}"
+    "fotosEsperan": "{n, plural, one {# foto espera la señal; se sube sola.} other {# fotos esperan la señal; se suben solas.}}",
+    "tituloCorregir": "Corregir el {dia}",
+    "corregir": "Corregir este cierre",
+    "yaNoSeCorrige": "Ya pasaron 48 horas: para corregirlo, pídeselo al dueño.",
+    "fotosGuardadas": "{n, plural, one {# foto ya guardada; se queda con el cierre.} other {# fotos ya guardadas; se quedan con el cierre.}}",
+    "porQue": "¿Qué corregiste? (queda en el registro)",
+    "guardarCorreccion": "Guardar la corrección"
   },
   "cola": {
     "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres y sus fotos).",
