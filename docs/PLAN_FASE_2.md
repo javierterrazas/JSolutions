@@ -131,7 +131,8 @@ de 48 h) se resuelve con los mismos rechazos de negocio.
 - **Nueva obra:** las fechas, una debajo de la otra (no cabían en el celular) — hecho.
 - **Agregar un espacio** a una obra que ya existe, desde su presupuesto (D-045) — hecho.
 - **Corregir un cierre** dentro de 48 horas (D-044) — hecho.
-- **Catálogo:** crear tipos de trabajo nuevos con sus partidas desde la app — siguiente.
+- **Catálogo:** tipos de obra nuevos (en blanco o copiando otro), sus partidas y etapas nuevas, desde la app
+  (D-046) — hecho. Crear puntos de control nuevos queda para cuando el dueño lo pida.
 
 ### 6. Los demás registros del PM
 
