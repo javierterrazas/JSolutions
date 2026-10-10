@@ -13,6 +13,7 @@ export * from './pantalla-cierre';
 export * from './calidad';
 export * from './gastos';
 export * from './avisos';
+export * from './ordenes';
 export * from './copia-sin-senal';
 export * from './cierre';
 export * from './fotos';

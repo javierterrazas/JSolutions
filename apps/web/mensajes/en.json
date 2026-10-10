@@ -163,7 +163,9 @@
     "ya_anulado": "That record is already voided.",
     "sin_permiso": "You can't change that record.",
     "aviso_sin_detalle": "Describe the problem in detail so the owner can solve it.",
-    "respuesta_corta": "Write a useful answer for the PM."
+    "respuesta_corta": "Write a useful answer for the PM.",
+    "orden_no_encontrada": "That work order is no longer pending.",
+    "orden_ya_confirmada": "That work order was already confirmed."
   },
   "obras": {
     "titulo": "Jobs",
@@ -261,7 +263,8 @@
     "calidad": "Quality",
     "gastoNuevo": "Record expense",
     "adjuntarRecibo": "Attach receipt",
-    "avisoNuevo": "Raise alert"
+    "avisoNuevo": "Raise alert",
+    "ordenesSubs": "Subs"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -565,5 +568,21 @@
     "respuesta": "Your answer for the PM",
     "respuestaEjemplo": "Yes, replace it before closing. I already ordered the material; it arrives tomorrow.",
     "contestar": "Answer and close the alert"
+  },
+  "ordenes": {
+    "titulo": "Subs",
+    "volver": "Back to home",
+    "obra": "{folio} · {cliente}",
+    "nada": "No work orders are waiting on you for this job.",
+    "porConfirmar": "Waiting for confirmation",
+    "porConfirmarAyuda": "Call the sub before the date. When they confirm in writing that they will show up, mark it here.",
+    "porAprobar": "Subs on site",
+    "porAprobarAyuda": "They already showed up. When you walk the finished work together, approve it: that is what lets the sub get paid.",
+    "oficioPartida": "{oficio} · {espacio} · {partida}",
+    "fechas": "From {inicio} to {fin}",
+    "llamar": "Call · {telefono}",
+    "confirmo": "Confirmed in writing",
+    "aprobar": "Approve the work",
+    "confirmarAprobar": "Approve the work? The sub will be able to get paid. Only approve what you already walked with them."
   }
 }

@@ -128,25 +128,23 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                 </ul>
               </div>
             ) : null}
-            <div className="grid grid-cols-3 gap-2">
-              <Link
-                href={`/obras/${o.id}/gasto`}
-                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
-              >
-                {t('gastoNuevo')}
-              </Link>
-              <Link
-                href={`/obras/${o.id}/aviso`}
-                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
-              >
-                {t('avisoNuevo')}
-              </Link>
-              <Link
-                href={`/obras/${o.id}/calidad`}
-                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
-              >
-                {t('calidad')}
-              </Link>
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  ['gasto', 'gastoNuevo'],
+                  ['aviso', 'avisoNuevo'],
+                  ['calidad', 'calidad'],
+                  ['ordenes', 'ordenesSubs'],
+                ] as const
+              ).map(([ruta, texto]) => (
+                <Link
+                  key={ruta}
+                  href={`/obras/${o.id}/${ruta}`}
+                  className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
+                >
+                  {t(texto)}
+                </Link>
+              ))}
             </div>
           </article>
         ))}
@@ -189,7 +187,9 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                 key={o.folio}
                 className={`${estilos.tarjeta} flex items-center justify-between gap-2 text-sm`}
               >
-                <span>{t('ordenConfirmar', { sub: o.sub, dia: dia(o.inicio), obra: o.obra })}</span>
+                <Link href={`/obras/${o.obraId}/ordenes`} className="text-marca underline">
+                  {t('ordenConfirmar', { sub: o.sub, dia: dia(o.inicio), obra: o.obra })}
+                </Link>
                 {o.telefono ? (
                   <a href={`tel:${o.telefono}`} className="font-medium text-marca underline">
                     {o.telefono}

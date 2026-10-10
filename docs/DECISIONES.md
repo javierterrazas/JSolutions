@@ -956,3 +956,18 @@ administrador):
 
 **Diferencia con el legacy:** el legacy mandaba un correo al dueño con cada aviso. Aquí todavía no hay correos: el
 aviso aparece en su inicio.
+
+## D-051 · Las órdenes de trabajo para el PM: confirmar y aprobar
+
+**Cómo funciona** (`ordenes.ts`; legacy: `pmConfirmarOT`, `pmAprobarOT` y las listas "Falta que confirmen" y "Subs
+en obra" de la pantalla de la obra):
+- Una pantalla por obra (`/obras/[id]/ordenes`, "Subs" en el inicio del PM, y las órdenes por confirmar del inicio
+  llevan a ella) con lo que espera algo del PM:
+  - **Por confirmar:** emitidas sin confirmar. El PM llama al sub (botón con su teléfono) y, cuando confirma por
+    escrito que llega, lo marca: la orden queda confirmada con su hora.
+  - **Por aprobar:** el sub ya llegó (lo marca el cierre del día) y el trabajo no se ha aprobado. El PM lo aprueba
+    después de caminarlo con el sub; la app pide confirmarlo ("El sub podrá cobrar"), como el legacy. Queda aprobada a
+    su nombre (la política de la base no deja aprobar a nombre de otro).
+- **Sin precios:** el PM nunca ve lo que se le paga al sub (`ordenes_trabajo_precios` es de la muralla financiera).
+- **Necesitan señal**, como en el legacy. Solo el PM de la obra.
+- Como el legacy, el servidor no exige que el sub haya llegado para aprobar: la pantalla solo lo ofrece cuando llegó.

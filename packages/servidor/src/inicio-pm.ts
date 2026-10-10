@@ -69,6 +69,7 @@ export interface InicioPm {
   readonly obras: readonly ObraDelPm[];
   readonly semana: readonly DiaDeLaSemana[];
   readonly porConfirmar: readonly {
+    obraId: string;
     obra: string;
     folio: string;
     sub: string;
@@ -353,6 +354,7 @@ export async function inicioDelPm(tx: Tx, ahora = new Date()): Promise<InicioPm>
       .filter((x) => x.estado === 'emitida' && !x.confirmada && x.inicio)
       .sort((a, b) => (a.inicio! < b.inicio! ? -1 : 1))
       .map((x) => ({
+        obraId: x.obra_id,
         obra: folio.get(x.obra_id) ?? '',
         folio: x.folio,
         sub: x.sub,

@@ -163,7 +163,9 @@
     "ya_anulado": "Ese registro ya está anulado.",
     "sin_permiso": "No puedes cambiar ese registro.",
     "aviso_sin_detalle": "Describe el problema con detalle para que el dueño pueda resolverlo.",
-    "respuesta_corta": "Escribe una respuesta útil para el PM."
+    "respuesta_corta": "Escribe una respuesta útil para el PM.",
+    "orden_no_encontrada": "Esa orden ya no está pendiente.",
+    "orden_ya_confirmada": "Esa orden ya estaba confirmada."
   },
   "obras": {
     "titulo": "Obras",
@@ -261,7 +263,8 @@
     "calidad": "Calidad",
     "gastoNuevo": "Registrar gasto",
     "adjuntarRecibo": "Adjuntar recibo",
-    "avisoNuevo": "Levantar aviso"
+    "avisoNuevo": "Levantar aviso",
+    "ordenesSubs": "Subs"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -565,5 +568,21 @@
     "respuesta": "Tu respuesta para el PM",
     "respuestaEjemplo": "Sí, reemplázala antes de cerrar. Ya pedí el material; llega mañana.",
     "contestar": "Contestar y cerrar el aviso"
+  },
+  "ordenes": {
+    "titulo": "Subs",
+    "volver": "Volver al inicio",
+    "obra": "{folio} · {cliente}",
+    "nada": "No hay órdenes de trabajo que esperen algo de ti en esta obra.",
+    "porConfirmar": "Falta que confirmen",
+    "porConfirmarAyuda": "Llámale al sub antes de la fecha. Cuando confirme por escrito que llega, márcalo aquí.",
+    "porAprobar": "Subs en obra",
+    "porAprobarAyuda": "Ya llegaron. Cuando caminen juntos el trabajo terminado, apruébalo: con eso el sub cobra.",
+    "oficioPartida": "{oficio} · {espacio} · {partida}",
+    "fechas": "Del {inicio} al {fin}",
+    "llamar": "Llamar · {telefono}",
+    "confirmo": "Confirmó por escrito",
+    "aprobar": "Aprobar el trabajo",
+    "confirmarAprobar": "¿Aprobar el trabajo? El sub podrá cobrar. Solo apruebas lo que ya caminaste con él."
   }
 }
