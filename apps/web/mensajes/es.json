@@ -145,7 +145,16 @@
     "hito_inexistente": "Ese punto de control ya no existe.",
     "oficio_inexistente": "Ese oficio ya no existe.",
     "etapa_sin_nombre": "Escribe el nombre de la etapa.",
-    "etapa_repetida": "Ya existe una etapa con ese nombre."
+    "etapa_repetida": "Ya existe una etapa con ese nombre.",
+    "inspeccion_sin_foto": "La inspección necesita fotos: es la única evidencia que va a quedar.",
+    "hito_sin_preguntas": "Este punto de control no tiene preguntas. Pídele al dueño que las agregue.",
+    "ninguno_aplica": "Una inspección necesita al menos una pregunta que aplique.",
+    "falta_prueba_agua": "La impermeabilización no se aprueba sin la prueba de inundación terminada y sin fugas en este espacio.",
+    "prueba_sin_foto": "Toma la foto del nivel del agua.",
+    "prueba_en_curso": "Ya hay una prueba de inundación en curso en este espacio.",
+    "prueba_incompleta": "Llevan {horas} horas. La prueba es de 24: cerrarla antes no prueba nada; déjala correr y vuelve.",
+    "prueba_no_encontrada": "Esa prueba ya no está en curso.",
+    "espacio_no_encontrado": "Ese espacio no es de esta obra."
   },
   "obras": {
     "titulo": "Obras",
@@ -239,7 +248,8 @@
     },
     "cerrarDia": "Cerrar el día",
     "cerrarEseDia": "Cerrar ese día",
-    "corregirHoy": "Corregir"
+    "corregirHoy": "Corregir",
+    "calidad": "Calidad"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -295,7 +305,8 @@
     "yaNoSeCorrige": "Ya pasaron 48 horas: para corregirlo, pídeselo al dueño.",
     "fotosGuardadas": "{n, plural, one {# foto ya guardada; se queda con el cierre.} other {# fotos ya guardadas; se quedan con el cierre.}}",
     "porQue": "¿Qué corregiste? (queda en el registro)",
-    "guardarCorreccion": "Guardar la corrección"
+    "guardarCorreccion": "Guardar la corrección",
+    "hacerInspeccion": "Hacer la inspección"
   },
   "cola": {
     "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres y sus fotos).",
@@ -385,5 +396,53 @@
     "yaCerrado": "Hoy ya está cerrado.",
     "enElTelefono": "Hoy ya lo cerraste: está en el teléfono y se envía cuando haya señal.",
     "volver": "Volver a tus obras"
+  },
+  "fotos": {
+    "tomar": "Tomar foto",
+    "quitar": "Quitar",
+    "n": "{n, plural, =0 {Sin fotos} one {# foto} other {# fotos}}"
+  },
+  "calidad": {
+    "titulo": "Calidad",
+    "volver": "Volver al inicio",
+    "volverCalidad": "Volver a calidad",
+    "obra": "{folio} · {cliente}",
+    "obraEspacio": "{folio} · {cliente} · {espacio}",
+    "sinPuntos": "Las partidas de esta obra no tienen puntos de control.",
+    "aprobada": "Aprobada",
+    "conDefectos": "Con defectos",
+    "pendiente": "Por inspeccionar",
+    "todaviaNo": "Todavía no",
+    "ultima": "Última: {dia} · {ok} de {total} puntos",
+    "inspeccionar": "Hacer la inspección",
+    "inspeccionarOtraVez": "Inspeccionar otra vez",
+    "ayudaInspeccion": "Marca lo que sí cumple. Si una pregunta no aplica en esta obra, tócale No aplica. Lo que dejes sin marcar se registra como defecto.",
+    "revision": "Revisión",
+    "sinPreguntas": "Este punto de control no tiene preguntas. Pídele al dueño que las agregue.",
+    "requiereFoto": "requiere foto",
+    "noAplica": "No aplica",
+    "fotos": "Fotos de la inspección",
+    "fotosAyuda": "Cada muro completo, con cinta métrica donde ayude. Al menos una.",
+    "ningunoAplica": "Una inspección necesita al menos una pregunta que aplique.",
+    "sinFotos": "La inspección necesita fotos.",
+    "confirmarDefectos": "{n, plural, one {# punto sin cumplir} other {# puntos sin cumplir}}. Se registra como defecto. ¿Guardar así?",
+    "guardar": "Guardar inspección",
+    "guardando": "Enviando {n, plural, one {# foto} other {# fotos}}…",
+    "guardadaAprobada": "Inspección aprobada.",
+    "guardadaConDefectos": "Inspección guardada con {n, plural, one {# defecto} other {# defectos}}. La partida no se puede terminar hasta aprobarla.",
+    "pruebaEnCurso": "Prueba de inundación en curso",
+    "pruebaLlevan": "Arrancó el {inicio} · llevan {horas} h de 24",
+    "pruebaVuelve": "Vuelve cuando se cumplan las 24 horas. Cerrarla antes no prueba nada.",
+    "fotoNivelAhora": "Foto del nivel ahora",
+    "fotoNivelInicio": "Foto del nivel al llenar",
+    "sinFugas": "Sin fugas, cerrar prueba",
+    "hayFuga": "Bajó el nivel: hay fuga",
+    "confirmarFuga": "¿Registrar fuga? La impermeabilización no se aprueba.",
+    "pruebaAprobada": "✓ Prueba de inundación sin fugas",
+    "pruebaDeA": "{inicio} a {fin}",
+    "faltaPrueba": "Falta la prueba de inundación",
+    "ultimaConFuga": "La última prueba marcó fuga.",
+    "pruebaComo": "Tapa el desagüe, llena la zona húmeda y toma la foto del nivel. Vuelve en 24 horas con otra foto.",
+    "arrancarPrueba": "Arrancar la prueba"
   }
 }

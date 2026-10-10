@@ -881,3 +881,28 @@ señal (era una página de Google): esto es nuevo.
 iPhone, Safari puede borrar lo guardado si la app no se abre en unos 7 días; se mide en el piloto. Una página
 guardada de una versión anterior no puede enviar a una versión nueva del servidor: lo que cierre espera en la cola
 hasta que el PM abra la app con señal.
+
+## D-048 · La inspección y la prueba de agua desde el celular
+
+**Decisión del dueño:** el paso 6 va por partes; la primera (6a) es la calidad, porque sin ella el PM no puede
+terminar ninguna partida con punto de control (el cierre exige la inspección aprobada, D-041).
+
+**Cómo funciona** (`calidad.ts` en el servidor, con las reglas de `core/calidad.ts`; legacy: `pmInspeccion`,
+`pmPruebaInicio`, `pmPruebaFin`):
+- **La pantalla de calidad** de cada obra (`/obras/[id]/calidad`, desde el inicio del PM) muestra cada espacio con
+  los puntos de control de sus partidas: aprobada, con defectos, por inspeccionar (ya empezó alguna partida) o
+  todavía no. Las inspecciones pendientes del inicio y el aviso del cierre llevan a ella.
+- **La inspección**, como el legacy: se marca lo que cumple; "No aplica" saca la pregunta del total pero queda
+  registrada; lo que quede sin marcar es defecto, y el teléfono pide confirmarlo. El servidor la califica contra
+  la lista real de preguntas (`calificarInspeccion`) y guarda cada respuesta con su texto. Pide al menos una foto
+  en total, como el legacy; "requiere foto" es una indicación en la pregunta.
+- **La prueba de inundación** de un espacio arranca con la foto del nivel y se cierra con otra, sin fuga o con
+  fuga, después de 23 horas. Una sola en curso por espacio. El punto que la exige (PC3) no se aprueba sin una sin
+  fugas en ese espacio. Se muestra en la pantalla de calidad y en la inspección de PC3.
+- **Necesitan señal**, como en el legacy: el PM tiene que ver en el momento si se aprobó. El registro y sus fotos
+  van en una sola transacción: si una foto no sube, no se guarda nada (el archivo que alcanzó a subir queda en
+  Storage sin registro, y nadie lo ve).
+- Solo el PM de la obra; el dueño las ve, no las hace.
+
+**Diferencia con el legacy:** el legacy mandaba un correo al dueño con cada inspección con defectos o prueba con
+fuga. Aquí todavía no hay correos ni pantallas del dueño para esto: queda para la fase 3.

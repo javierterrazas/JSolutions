@@ -31,6 +31,8 @@ export function MensajeError({ problema }: { problema: Problema | null }) {
     });
   } else if (codigo === 'faltan_pies2') {
     texto = t('faltan_pies2', { espacios: ((datos?.espacios ?? []) as string[]).join(', ') });
+  } else if (codigo === 'prueba_incompleta') {
+    texto = t('prueba_incompleta', { horas: Number(datos?.horas) });
   } else if (codigo === 'campos') {
     texto = t('desconocido');
   } else {

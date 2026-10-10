@@ -48,7 +48,13 @@ export interface ObraDelPm {
   readonly diasSinCierre: readonly Dia[];
   readonly partidas: { readonly terminadas: number; readonly total: number };
   /** Puntos de control de partidas ya empezadas que no tienen una inspección aprobada. */
-  readonly inspeccionesPendientes: readonly { espacio: string; hito: string; nombre: Nombre }[];
+  readonly inspeccionesPendientes: readonly {
+    espacioId: string;
+    hitoId: string;
+    espacio: string;
+    hito: string;
+    nombre: Nombre;
+  }[];
 }
 
 export interface DiaDeLaSemana {
@@ -263,6 +269,8 @@ export async function inicioDelPm(tx: Tx, ahora = new Date()): Promise<InicioPm>
       if (ultimaInspeccion.get(k) === 'aprobado' || pendientes.has(k)) continue;
       const h = hitos.get(p.hito_id);
       pendientes.set(k, {
+        espacioId: p.espacio_id,
+        hitoId: p.hito_id,
         espacio: nombreEspacio.get(p.espacio_id) ?? '',
         hito: h?.clave ?? '',
         nombre: { es: h?.es ?? '', en: h?.en ?? null },
