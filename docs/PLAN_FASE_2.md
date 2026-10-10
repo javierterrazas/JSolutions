@@ -149,6 +149,17 @@ Con su flujo en `packages/servidor` y su pantalla:
 - correcciones en 48 h;
 - el álbum de fotos de la obra.
 
+**Avance**, por partes (decisión del dueño). Los gastos y los avisos traen una lista mínima para el dueño:
+aprobar los gastos en revisión y contestar los avisos.
+- **6a. Inspección y prueba de agua** — hecha (D-048). Probado en el navegador: la prueba con sus dos fotos, PC3
+  rechazada sin la prueba y aprobada con ella, y una inspección con defectos.
+- **6b. Gastos** con recibo, la revisión arriba del límite y su corrección en 48 h, con la lista del dueño —
+  siguiente; sin señal van a la cola.
+- **6c. Avisos** con fotos, con la respuesta del dueño; sin señal van a la cola.
+- **6d. Órdenes de trabajo:** confirmar y aprobar.
+- **6e. Punch list y medida verificada.**
+- **6f. Álbum** de fotos.
+
 ### 7. Pruebas de pantalla y piloto
 
 - Playwright en tamaño de teléfono, en la integración continua: el equivalente de `prueba_calidad_ui`,

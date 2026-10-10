@@ -145,7 +145,16 @@
     "hito_inexistente": "That checkpoint no longer exists.",
     "oficio_inexistente": "That trade no longer exists.",
     "etapa_sin_nombre": "Enter the name of the stage.",
-    "etapa_repetida": "A stage with that name already exists."
+    "etapa_repetida": "A stage with that name already exists.",
+    "inspeccion_sin_foto": "The inspection needs photos: they are the only evidence that will remain.",
+    "hito_sin_preguntas": "This checkpoint has no questions. Ask the owner to add them.",
+    "ninguno_aplica": "An inspection needs at least one question that applies.",
+    "falta_prueba_agua": "Waterproofing can't be approved without a finished flood test with no leaks in this space.",
+    "prueba_sin_foto": "Take the photo of the water level.",
+    "prueba_en_curso": "There is already a flood test in progress in this space.",
+    "prueba_incompleta": "It's been {horas} hours. The test lasts 24: closing it early proves nothing; let it run and come back.",
+    "prueba_no_encontrada": "That test is no longer in progress.",
+    "espacio_no_encontrado": "That space doesn't belong to this job."
   },
   "obras": {
     "titulo": "Jobs",
@@ -239,7 +248,8 @@
     },
     "cerrarDia": "Close the day",
     "cerrarEseDia": "Close that day",
-    "corregirHoy": "Correct"
+    "corregirHoy": "Correct",
+    "calidad": "Quality"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -295,7 +305,8 @@
     "yaNoSeCorrige": "More than 48 hours have passed: ask the owner to correct it.",
     "fotosGuardadas": "{n, plural, one {# photo already saved; it stays with the close.} other {# photos already saved; they stay with the close.}}",
     "porQue": "What did you correct? (it stays on record)",
-    "guardarCorreccion": "Save the correction"
+    "guardarCorreccion": "Save the correction",
+    "hacerInspeccion": "Do the inspection"
   },
   "cola": {
     "pendientes": "{n, plural, one {# record waiting to send} other {# records waiting to send}} from this phone (closes and their photos).",
@@ -385,5 +396,53 @@
     "yaCerrado": "Today is already closed.",
     "enElTelefono": "You already closed today: it is on the phone and will send when there is signal.",
     "volver": "Back to your jobs"
+  },
+  "fotos": {
+    "tomar": "Take photo",
+    "quitar": "Remove",
+    "n": "{n, plural, =0 {No photos} one {# photo} other {# photos}}"
+  },
+  "calidad": {
+    "titulo": "Quality",
+    "volver": "Back to home",
+    "volverCalidad": "Back to quality",
+    "obra": "{folio} · {cliente}",
+    "obraEspacio": "{folio} · {cliente} · {espacio}",
+    "sinPuntos": "This job's line items have no checkpoints.",
+    "aprobada": "Approved",
+    "conDefectos": "With defects",
+    "pendiente": "To inspect",
+    "todaviaNo": "Not yet",
+    "ultima": "Last: {dia} · {ok} of {total} items",
+    "inspeccionar": "Do the inspection",
+    "inspeccionarOtraVez": "Inspect again",
+    "ayudaInspeccion": "Check what passes. If a question doesn't apply on this job, tap N/A. Anything left unchecked is recorded as a defect.",
+    "revision": "Review",
+    "sinPreguntas": "This checkpoint has no questions. Ask the owner to add them.",
+    "requiereFoto": "photo required",
+    "noAplica": "N/A",
+    "fotos": "Inspection photos",
+    "fotosAyuda": "Each full wall, with a tape measure where it helps. At least one.",
+    "ningunoAplica": "An inspection needs at least one question that applies.",
+    "sinFotos": "The inspection needs photos.",
+    "confirmarDefectos": "{n, plural, one {# item not passing} other {# items not passing}}. It is recorded as a defect. Save anyway?",
+    "guardar": "Save inspection",
+    "guardando": "Sending {n, plural, one {# photo} other {# photos}}…",
+    "guardadaAprobada": "Inspection approved.",
+    "guardadaConDefectos": "Inspection saved with {n, plural, one {# defect} other {# defects}}. The line item can't be finished until it's approved.",
+    "pruebaEnCurso": "Flood test in progress",
+    "pruebaLlevan": "Started {inicio} · {horas} h of 24",
+    "pruebaVuelve": "Come back when the 24 hours are up. Closing it early proves nothing.",
+    "fotoNivelAhora": "Photo of the level now",
+    "fotoNivelInicio": "Photo of the level when filled",
+    "sinFugas": "No leaks, close test",
+    "hayFuga": "The level dropped: there is a leak",
+    "confirmarFuga": "Record a leak? Waterproofing won't be approved.",
+    "pruebaAprobada": "✓ Flood test with no leaks",
+    "pruebaDeA": "{inicio} to {fin}",
+    "faltaPrueba": "Flood test missing",
+    "ultimaConFuga": "The last test found a leak.",
+    "pruebaComo": "Plug the drain, fill the wet area and take the photo of the level. Come back in 24 hours with another photo.",
+    "arrancarPrueba": "Start the test"
   }
 }

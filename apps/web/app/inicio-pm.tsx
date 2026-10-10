@@ -116,13 +116,24 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                 <p className="font-medium">{t('inspecciones')}</p>
                 <ul className="list-disc pl-5">
                   {o.inspeccionesPendientes.map((i) => (
-                    <li key={`${i.espacio}-${i.hito}`}>
-                      {t('inspeccion', { espacio: i.espacio, hito: i.hito, nombre: nombre(i.nombre) })}
+                    <li key={`${i.espacioId}-${i.hitoId}`}>
+                      <Link
+                        href={`/obras/${o.id}/calidad/inspeccion?${new URLSearchParams({ espacio: i.espacioId, hito: i.hitoId })}`}
+                        className="text-marca underline"
+                      >
+                        {t('inspeccion', { espacio: i.espacio, hito: i.hito, nombre: nombre(i.nombre) })}
+                      </Link>
                     </li>
                   ))}
                 </ul>
               </div>
             ) : null}
+            <Link
+              href={`/obras/${o.id}/calidad`}
+              className={`${estilos.botonSecundario} flex items-center justify-center`}
+            >
+              {t('calidad')}
+            </Link>
           </article>
         ))}
       </Seccion>

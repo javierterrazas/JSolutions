@@ -328,7 +328,10 @@ export function FormularioCierre({
                     {trabajadas.has(p.id) ? (
                       p.faltaInspeccion ? (
                         <p className="pl-8 text-xs text-amber-800">
-                          {t('faltaInspeccion', { hito: p.hito ?? '' })}
+                          {t('faltaInspeccion', { hito: p.hito ?? '' })}{' '}
+                          <Link href={`/obras/${datos.obraId}/calidad`} className="font-medium underline">
+                            {t('hacerInspeccion')}
+                          </Link>
                         </p>
                       ) : (
                         <label className="flex items-center gap-3 pl-8 text-sm">
