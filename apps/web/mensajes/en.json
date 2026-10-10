@@ -371,5 +371,19 @@
     "darDeBajaTipo": "Deactivate this type",
     "darDeBajaAyuda": "It won't be offered for new jobs; jobs that use it don't change.",
     "reactivarTipo": "Reactivate this type"
+  },
+  "sinSenal": {
+    "titulo": "No signal",
+    "sinCopia": "To use the app without signal, open it once with signal and enter your PIN: that saves your jobs on this phone.",
+    "probarConSenal": "Try with signal",
+    "pinAyuda": "Enter your PIN to open what this phone saved of your jobs.",
+    "aviso": "You have no signal. You're working with what was saved {cuando}; whatever you close will send itself when it's back.",
+    "obras": "Your jobs",
+    "sinObras": "You had no jobs assigned the last time there was signal.",
+    "obra": "{folio} · {cliente}",
+    "cerrarDia": "Close the day",
+    "yaCerrado": "Today is already closed.",
+    "enElTelefono": "You already closed today: it is on the phone and will send when there is signal.",
+    "volver": "Back to your jobs"
   }
 }

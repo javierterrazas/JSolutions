@@ -10,6 +10,7 @@ export * from './catalogo';
 export * from './consultas-obra';
 export * from './inicio-pm';
 export * from './pantalla-cierre';
+export * from './copia-sin-senal';
 export * from './cierre';
 export * from './fotos';
 export * from './correcciones';

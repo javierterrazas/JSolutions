@@ -371,5 +371,19 @@
     "darDeBajaTipo": "Dar de baja este tipo",
     "darDeBajaAyuda": "Ya no se ofrece en obras nuevas; las obras que lo usan no cambian.",
     "reactivarTipo": "Reactivar este tipo"
+  },
+  "sinSenal": {
+    "titulo": "Sin señal",
+    "sinCopia": "Para usar la app sin señal, ábrela una vez con señal y entra con tu PIN: así guarda tus obras en este teléfono.",
+    "probarConSenal": "Probar con señal",
+    "pinAyuda": "Escribe tu PIN para abrir lo que este teléfono guardó de tus obras.",
+    "aviso": "Estás sin señal. Trabajas con lo que se guardó el {cuando}; lo que cierres se envía solo cuando vuelva.",
+    "obras": "Tus obras",
+    "sinObras": "No tenías obras asignadas la última vez que hubo señal.",
+    "obra": "{folio} · {cliente}",
+    "cerrarDia": "Cerrar el día",
+    "yaCerrado": "Hoy ya está cerrado.",
+    "enElTelefono": "Hoy ya lo cerraste: está en el teléfono y se envía cuando haya señal.",
+    "volver": "Volver a tus obras"
   }
 }
