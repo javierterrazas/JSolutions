@@ -10,7 +10,8 @@ export async function GET(_peticion: Request, { params }: RouteContext<'/fotos/[
   const { id } = await params;
   const a = await estadoDeAcceso();
   if (a.estado !== 'abierto') return new NextResponse(null, { status: 404 });
-  const r = await comoMiembro((tx) => enlaceDeFoto(tx, id, firmarFoto), a.acceso);
-  if (!r.ok) return new NextResponse(null, { status: 404 });
+  // el registro existe pero el archivo no está en Storage (o Storage no contesta): para la pantalla es lo mismo
+  const r = await comoMiembro((tx) => enlaceDeFoto(tx, id, firmarFoto), a.acceso).catch(() => null);
+  if (!r?.ok) return new NextResponse(null, { status: 404 });
   return NextResponse.redirect(r.datos.url, { headers: { 'Cache-Control': 'private, no-store' } });
 }
