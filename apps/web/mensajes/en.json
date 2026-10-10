@@ -10,7 +10,8 @@
     "salirAyuda": "Next time it will ask for your PIN.",
     "obras": "Jobs",
     "catalogo": "Catalog",
-    "gastosPorRevisar": "{n, plural, one {# purchase to review} other {# purchases to review}}"
+    "gastosPorRevisar": "{n, plural, one {# purchase to review} other {# purchases to review}}",
+    "avisosPorContestar": "{n, plural, one {# alert to answer} other {# alerts to answer}}"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -160,7 +161,9 @@
     "monto_invalido": "Enter a valid amount.",
     "sin_cambios": "You didn't change anything.",
     "ya_anulado": "That record is already voided.",
-    "sin_permiso": "You can't change that record."
+    "sin_permiso": "You can't change that record.",
+    "aviso_sin_detalle": "Describe the problem in detail so the owner can solve it.",
+    "respuesta_corta": "Write a useful answer for the PM."
   },
   "obras": {
     "titulo": "Jobs",
@@ -257,7 +260,8 @@
     "corregirHoy": "Correct",
     "calidad": "Quality",
     "gastoNuevo": "Record expense",
-    "adjuntarRecibo": "Attach receipt"
+    "adjuntarRecibo": "Attach receipt",
+    "avisoNuevo": "Raise alert"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -317,14 +321,15 @@
     "hacerInspeccion": "Do the inspection"
   },
   "cola": {
-    "pendientes": "{n, plural, one {# record waiting to send} other {# records waiting to send}} from this phone (closes, expenses and their photos).",
+    "pendientes": "{n, plural, one {# record waiting to send} other {# records waiting to send}} from this phone (closes, expenses, alerts and their photos).",
     "sinRed": "No signal right now: it will send itself when it's back.",
     "enviarAhora": "Send now",
     "enviando": "Sending…",
     "cierreRechazado": "The {obra} close for {dia} was not saved:",
     "fotoRechazada": "A photo from the {obra} close for {dia} was not saved:",
     "entendido": "Got it",
-    "gastoRechazado": "An expense for {obra} on {dia} was not saved:"
+    "gastoRechazado": "An expense for {obra} on {dia} was not saved:",
+    "avisoRechazado": "An alert for {obra} on {dia} was not saved:"
   },
   "catalogo": {
     "titulo": "Catalog",
@@ -405,7 +410,8 @@
     "yaCerrado": "Today is already closed.",
     "enElTelefono": "You already closed today: it is on the phone and will send when there is signal.",
     "volver": "Back to your jobs",
-    "registrarGasto": "Record expense"
+    "registrarGasto": "Record expense",
+    "levantarAviso": "Raise alert"
   },
   "fotos": {
     "tomar": "Take photo",
@@ -512,6 +518,52 @@
     "categoriaRecibo": "{categoria} · {recibo}",
     "conRecibo": "with receipt",
     "sinRecibo": "no receipt",
-    "marcarRevisado": "Mark reviewed"
+    "marcarRevisado": "Mark reviewed",
+    "verRecibo": "See the receipt"
+  },
+  "aviso": {
+    "titulo": "Alerts",
+    "volver": "Back to home",
+    "volverObras": "Back to your jobs",
+    "obra": "{folio} · {cliente}",
+    "ayuda": "If something stops the work, raise it with a photo. Response commitment: {horas} hours.",
+    "detiene": "Does it stop the work?",
+    "detieneSi": "Yes, people are idle",
+    "detieneNo": "No, I can keep going",
+    "tipo": "Type",
+    "tipos": {
+      "material": "Material",
+      "cliente": "Client",
+      "sub": "Sub",
+      "condicion_oculta": "Hidden condition",
+      "diseno": "Design",
+      "otro": "Other"
+    },
+    "descripcion": "What is happening and what you need",
+    "descripcionEjemplo": "Behind the wall there is a corroded galvanized steel line. I need to know whether to replace it before closing the wall.",
+    "fotos": "Photos of the problem",
+    "enviar": "Send alert",
+    "enviando": "Sending…",
+    "enviado": "Alert sent. The owner commits to answer within {horas} hours.",
+    "guardadoSinRed": "No signal: the alert was saved on the phone and will send itself when there is signal.",
+    "guardadoSinSesion": "The alert was saved on the phone. Enter your PIN to send it.",
+    "entrarParaEnviar": "Enter my PIN",
+    "tusAvisos": "Your alerts on this job",
+    "levantado": "Raised {cuando}",
+    "levantadoDetiene": "Raised {cuando} · stops the work",
+    "esperando": "Waiting for an answer",
+    "respuesta": "Answer from {cuando}:"
+  },
+  "avisosAbiertos": {
+    "titulo": "Alerts to answer",
+    "volver": "Back",
+    "ninguno": "There are no open alerts.",
+    "obraPm": "{folio} · {cliente} · {pm}",
+    "horas": "Since {cuando} · {horas} h",
+    "horasFuera": "Since {cuando} · {horas} h: past the response commitment",
+    "detiene": "Stops the work: people are idle",
+    "respuesta": "Your answer for the PM",
+    "respuestaEjemplo": "Yes, replace it before closing. I already ordered the material; it arrives tomorrow.",
+    "contestar": "Answer and close the alert"
   }
 }

@@ -1266,6 +1266,51 @@ export const entregas = pgTable(
   ],
 );
 
+export const configuracion = pgTable(
+  'configuracion',
+  {
+    empresa_id: uuid().primaryKey().notNull(),
+    impuesto: numeric({ precision: 6, scale: 4 }).default('0.0825').notNull(),
+    limite_compra_pm: numeric({ precision: 12, scale: 2 }).default('300').notNull(),
+    sla_bloqueo_horas: integer().default(24).notNull(),
+    sla_oc_horas: integer().default(48).notNull(),
+    umbral_oc_menor: numeric({ precision: 12, scale: 2 }).default('200').notNull(),
+    margen_minimo_oc: numeric({ precision: 5, scale: 4 }).default('0.35').notNull(),
+    horas_sin_recibo: integer().default(72).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    dias_laborables: smallint().array().default([1, 2, 3, 4, 5, 6]).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.empresa_id],
+      foreignColumns: [empresas.id],
+      name: 'configuracion_empresa_id_fkey',
+    }),
+    pgPolicy('dueno lee', {
+      as: 'permissive',
+      for: 'select',
+      to: ['authenticated'],
+      using: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    check(
+      'configuracion_dias_laborables_check',
+      sql`((cardinality(dias_laborables) >= 1) AND (cardinality(dias_laborables) <= 7)) AND (dias_laborables <@ '{1,2,3,4,5,6,7}'::smallint[])`,
+    ),
+    check('configuracion_horas_sin_recibo_check', sql`horas_sin_recibo > 0`),
+    check('configuracion_impuesto_check', sql`impuesto >= (0)::numeric`),
+    check('configuracion_limite_compra_pm_check', sql`limite_compra_pm >= (0)::numeric`),
+    check(
+      'configuracion_margen_minimo_oc_check',
+      sql`(margen_minimo_oc >= (0)::numeric) AND (margen_minimo_oc < (1)::numeric)`,
+    ),
+    check('configuracion_sla_bloqueo_horas_check', sql`sla_bloqueo_horas > 0`),
+    check('configuracion_sla_oc_horas_check', sql`sla_oc_horas > 0`),
+    check('configuracion_umbral_oc_menor_check', sql`umbral_oc_menor >= (0)::numeric`),
+  ],
+);
+
 export const miembros = pgTable(
   'miembros',
   {
@@ -1575,65 +1620,6 @@ export const obras = pgTable(
       'obras_telefono_cliente_check',
       sql`length(regexp_replace(telefono_cliente, '\D'::text, ''::text, 'g'::text)) >= 10`,
     ),
-  ],
-);
-
-export const avisos = pgTable(
-  'avisos',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    folio: text(),
-    obra_id: uuid().notNull(),
-    tipo: tipo_aviso().notNull(),
-    descripcion: text().notNull(),
-    detiene_avance: boolean().default(false).notNull(),
-    estado: estado_abierto().default('abierto').notNull(),
-    respuesta: text(),
-    respondido_en: timestamp({ withTimezone: true, mode: 'string' }),
-    respondido_por: uuid(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('avisos_creado_por_idx').using('btree', table.creado_por.asc().nullsLast().op('uuid_ops')),
-    index('avisos_empresa_id_obra_id_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.obra_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'avisos_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.id, obras.empresa_id],
-      name: 'avisos_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.respondido_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'avisos_empresa_id_respondido_por_fkey',
-    }),
-    unique('avisos_empresa_id_id_key').on(table.id, table.empresa_id),
-    unique('avisos_obra_id_id_key').on(table.id, table.obra_id),
-    unique('avisos_empresa_id_folio_key').on(table.empresa_id, table.folio),
-    pgPolicy('dueno lee', {
-      as: 'permissive',
-      for: 'select',
-      to: ['authenticated'],
-      using: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno crea', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('pm lee sus avisos', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    pgPolicy('pm levanta avisos en sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
-    check('avisos_check', sql`(estado = 'cerrado'::estado_abierto) = (respondido_en IS NOT NULL)`),
-    check('avisos_descripcion_check', sql`length(btrim(descripcion)) >= 10`),
-    check('avisos_folio_asignado', sql`folio IS NOT NULL`),
   ],
 );
 
@@ -2221,48 +2207,70 @@ export const gastos = pgTable(
   ],
 );
 
-export const configuracion = pgTable(
-  'configuracion',
+export const avisos = pgTable(
+  'avisos',
   {
-    empresa_id: uuid().primaryKey().notNull(),
-    impuesto: numeric({ precision: 6, scale: 4 }).default('0.0825').notNull(),
-    limite_compra_pm: numeric({ precision: 12, scale: 2 }).default('300').notNull(),
-    sla_bloqueo_horas: integer().default(24).notNull(),
-    sla_oc_horas: integer().default(48).notNull(),
-    umbral_oc_menor: numeric({ precision: 12, scale: 2 }).default('200').notNull(),
-    margen_minimo_oc: numeric({ precision: 5, scale: 4 }).default('0.35').notNull(),
-    horas_sin_recibo: integer().default(72).notNull(),
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    folio: text(),
+    obra_id: uuid().notNull(),
+    tipo: tipo_aviso().notNull(),
+    descripcion: text().notNull(),
+    detiene_avance: boolean().default(false).notNull(),
+    estado: estado_abierto().default('abierto').notNull(),
+    respuesta: text(),
+    respondido_en: timestamp({ withTimezone: true, mode: 'string' }),
+    respondido_por: uuid(),
     creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
     actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    dias_laborables: smallint().array().default([1, 2, 3, 4, 5, 6]).notNull(),
+    clave_envio: uuid(),
   },
   (table) => [
+    uniqueIndex('avisos_clave_envio_unica')
+      .using(
+        'btree',
+        table.empresa_id.asc().nullsLast().op('uuid_ops'),
+        table.clave_envio.asc().nullsLast().op('uuid_ops'),
+      )
+      .where(sql`(clave_envio IS NOT NULL)`),
+    index('avisos_creado_por_idx').using('btree', table.creado_por.asc().nullsLast().op('uuid_ops')),
+    index('avisos_empresa_id_obra_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.obra_id.asc().nullsLast().op('uuid_ops'),
+    ),
     foreignKey({
-      columns: [table.empresa_id],
-      foreignColumns: [empresas.id],
-      name: 'configuracion_empresa_id_fkey',
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'avisos_empresa_id_creado_por_fkey',
     }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'avisos_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.respondido_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'avisos_empresa_id_respondido_por_fkey',
+    }),
+    unique('avisos_empresa_id_id_key').on(table.id, table.empresa_id),
+    unique('avisos_obra_id_id_key').on(table.id, table.obra_id),
+    unique('avisos_empresa_id_folio_key').on(table.empresa_id, table.folio),
     pgPolicy('dueno lee', {
       as: 'permissive',
       for: 'select',
       to: ['authenticated'],
       using: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
     }),
+    pgPolicy('dueno crea', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
     pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    check(
-      'configuracion_dias_laborables_check',
-      sql`((cardinality(dias_laborables) >= 1) AND (cardinality(dias_laborables) <= 7)) AND (dias_laborables <@ '{1,2,3,4,5,6,7}'::smallint[])`,
-    ),
-    check('configuracion_horas_sin_recibo_check', sql`horas_sin_recibo > 0`),
-    check('configuracion_impuesto_check', sql`impuesto >= (0)::numeric`),
-    check('configuracion_limite_compra_pm_check', sql`limite_compra_pm >= (0)::numeric`),
-    check(
-      'configuracion_margen_minimo_oc_check',
-      sql`(margen_minimo_oc >= (0)::numeric) AND (margen_minimo_oc < (1)::numeric)`,
-    ),
-    check('configuracion_sla_bloqueo_horas_check', sql`sla_bloqueo_horas > 0`),
-    check('configuracion_sla_oc_horas_check', sql`sla_oc_horas > 0`),
-    check('configuracion_umbral_oc_menor_check', sql`umbral_oc_menor >= (0)::numeric`),
+    pgPolicy('pm lee sus avisos', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    pgPolicy('pm levanta avisos en sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
+    check('avisos_check', sql`(estado = 'cerrado'::estado_abierto) = (respondido_en IS NOT NULL)`),
+    check('avisos_descripcion_check', sql`length(btrim(descripcion)) >= 10`),
+    check('avisos_folio_asignado', sql`folio IS NOT NULL`),
   ],
 );
 

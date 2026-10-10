@@ -1,13 +1,16 @@
 'use server';
-// Lo que manda la cola del teléfono (fase 2, pasos 5 y 6b): un cierre o un gasto con su clave de envío, o una foto de
-// uno de ellos. A diferencia de las pantallas, no redirigen: si la sesión ya no sirve contestan `sesion`, y la cola
-// espera a que el PM vuelva a entrar sin perder nada.
+// Lo que manda la cola del teléfono (fase 2, pasos 5, 6b y 6c): un cierre, un gasto o un aviso con su clave de envío,
+// o una foto de uno de ellos. A diferencia de las pantallas, no redirigen: si la sesión ya no sirve contestan
+// `sesion`, y la cola espera a que el PM vuelva a entrar sin perder nada.
 import {
+  avisoDeClave,
   cerrarDia,
   cierreDeClave,
+  type EntradaAviso,
   type EntradaCierre,
   type EntradaGasto,
   gastoDeClave,
+  levantarAviso,
   registrarFoto,
   registrarGasto,
   rutaParaFoto,
@@ -44,15 +47,29 @@ export async function enviarGasto(
   return r.ok ? { ok: true, enRevision: r.datos.enRevision, limite: r.datos.limite } : respuesta(r);
 }
 
+/** Un aviso de la cola (D-050). */
+export async function enviarAviso(entrada: EntradaAviso): Promise<Respuesta> {
+  const a = await estadoDeAcceso();
+  if (a.estado !== 'abierto') return SIN_SESION;
+  return respuesta(await comoMiembro((tx) => levantarAviso(tx, entrada), a.acceso));
+}
+
+/** De qué registro es cada foto de la cola, y cómo se encuentra por su clave de envío. */
+const REGISTRO = {
+  cierre: { refTipo: 'bitacora', deClave: cierreDeClave },
+  gasto: { refTipo: 'gasto', deClave: gastoDeClave },
+  aviso: { refTipo: 'aviso', deClave: avisoDeClave },
+} as const;
+
 /**
- * La foto número `indice` del cierre o del gasto con esa clave: la ruta la da el servidor y va a Storage con la
- * sesión del PM.
+ * La foto número `indice` del cierre, el gasto o el aviso con esa clave: la ruta la da el servidor y va a Storage
+ * con la sesión del PM.
  */
 export async function enviarFoto(
   clave: string,
   indice: number,
   formulario: FormData,
-  de: 'cierre' | 'gasto' = 'cierre',
+  de: 'cierre' | 'gasto' | 'aviso' = 'cierre',
 ): Promise<Respuesta> {
   const a = await estadoDeAcceso();
   if (a.estado !== 'abierto') return SIN_SESION;
@@ -60,12 +77,9 @@ export async function enviarFoto(
   if (!(foto instanceof File) || !foto.type.startsWith('image/') || foto.size > MAXIMO)
     return { ok: false, codigo: 'foto_invalida' };
   const tomadaEn = String(formulario.get('tomadaEn') ?? '') || null;
-  const refTipo = de === 'gasto' ? 'gasto' : 'bitacora';
+  const { refTipo, deClave } = REGISTRO[de];
 
-  const registro = await comoMiembro(
-    (tx) => (de === 'gasto' ? gastoDeClave(tx, clave) : cierreDeClave(tx, clave)),
-    a.acceso,
-  );
+  const registro = await comoMiembro((tx) => deClave(tx, clave), a.acceso);
   if (!registro.ok) return respuesta(registro);
   if (!registro.datos) return { ok: false, codigo: 'registro_no_encontrado' };
   const refId = registro.datos;

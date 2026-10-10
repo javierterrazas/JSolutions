@@ -53,6 +53,16 @@ export default async function GastosEnRevision() {
                 recibo: g.reciboId ? t('conRecibo') : t('sinRecibo'),
               })}
             </p>
+            {g.reciboId ? (
+              <a
+                href={`/fotos/${g.reciboId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm font-medium text-marca underline"
+              >
+                {t('verRecibo')}
+              </a>
+            ) : null}
             <BotonRevisado gastoId={g.id} />
           </li>
         ))}

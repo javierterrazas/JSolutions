@@ -10,7 +10,8 @@
     "salirAyuda": "La próxima vez te pide el PIN.",
     "obras": "Obras",
     "catalogo": "Catálogo",
-    "gastosPorRevisar": "{n, plural, one {# compra por revisar} other {# compras por revisar}}"
+    "gastosPorRevisar": "{n, plural, one {# compra por revisar} other {# compras por revisar}}",
+    "avisosPorContestar": "{n, plural, one {# aviso por contestar} other {# avisos por contestar}}"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -160,7 +161,9 @@
     "monto_invalido": "Captura un monto válido.",
     "sin_cambios": "No cambiaste nada.",
     "ya_anulado": "Ese registro ya está anulado.",
-    "sin_permiso": "No puedes cambiar ese registro."
+    "sin_permiso": "No puedes cambiar ese registro.",
+    "aviso_sin_detalle": "Describe el problema con detalle para que el dueño pueda resolverlo.",
+    "respuesta_corta": "Escribe una respuesta útil para el PM."
   },
   "obras": {
     "titulo": "Obras",
@@ -257,7 +260,8 @@
     "corregirHoy": "Corregir",
     "calidad": "Calidad",
     "gastoNuevo": "Registrar gasto",
-    "adjuntarRecibo": "Adjuntar recibo"
+    "adjuntarRecibo": "Adjuntar recibo",
+    "avisoNuevo": "Levantar aviso"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -317,14 +321,15 @@
     "hacerInspeccion": "Hacer la inspección"
   },
   "cola": {
-    "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres, gastos y sus fotos).",
+    "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres, gastos, avisos y sus fotos).",
     "sinRed": "Sin señal por ahora: se envía solo cuando vuelva.",
     "enviarAhora": "Enviar ahora",
     "enviando": "Enviando…",
     "cierreRechazado": "El cierre de {obra} del {dia} no se guardó:",
     "fotoRechazada": "Una foto del cierre de {obra} del {dia} no se guardó:",
     "entendido": "Entendido",
-    "gastoRechazado": "Un gasto de {obra} del {dia} no se guardó:"
+    "gastoRechazado": "Un gasto de {obra} del {dia} no se guardó:",
+    "avisoRechazado": "Un aviso de {obra} del {dia} no se guardó:"
   },
   "catalogo": {
     "titulo": "Catálogo",
@@ -405,7 +410,8 @@
     "yaCerrado": "Hoy ya está cerrado.",
     "enElTelefono": "Hoy ya lo cerraste: está en el teléfono y se envía cuando haya señal.",
     "volver": "Volver a tus obras",
-    "registrarGasto": "Registrar gasto"
+    "registrarGasto": "Registrar gasto",
+    "levantarAviso": "Levantar aviso"
   },
   "fotos": {
     "tomar": "Tomar foto",
@@ -512,6 +518,52 @@
     "categoriaRecibo": "{categoria} · {recibo}",
     "conRecibo": "con recibo",
     "sinRecibo": "sin recibo",
-    "marcarRevisado": "Marcar revisada"
+    "marcarRevisado": "Marcar revisada",
+    "verRecibo": "Ver el recibo"
+  },
+  "aviso": {
+    "titulo": "Avisos",
+    "volver": "Volver al inicio",
+    "volverObras": "Volver a tus obras",
+    "obra": "{folio} · {cliente}",
+    "ayuda": "Si algo detiene el avance, levántalo con foto. Compromiso de respuesta: {horas} horas.",
+    "detiene": "¿Detiene el avance?",
+    "detieneSi": "Sí, hay gente parada",
+    "detieneNo": "No, puedo seguir",
+    "tipo": "Tipo",
+    "tipos": {
+      "material": "Material",
+      "cliente": "Cliente",
+      "sub": "Sub",
+      "condicion_oculta": "Condición oculta",
+      "diseno": "Diseño",
+      "otro": "Otro"
+    },
+    "descripcion": "Qué pasa y qué necesitas",
+    "descripcionEjemplo": "Detrás del muro hay línea de acero galvanizado corroída. Necesito saber si se reemplaza antes de cerrar el muro.",
+    "fotos": "Fotos del problema",
+    "enviar": "Enviar aviso",
+    "enviando": "Enviando…",
+    "enviado": "Aviso enviado. El dueño se compromete a contestar en {horas} horas.",
+    "guardadoSinRed": "Sin señal: el aviso quedó guardado en el teléfono y se envía solo cuando haya señal.",
+    "guardadoSinSesion": "El aviso quedó guardado en el teléfono. Escribe tu PIN para enviarlo.",
+    "entrarParaEnviar": "Escribir mi PIN",
+    "tusAvisos": "Tus avisos de esta obra",
+    "levantado": "Levantado el {cuando}",
+    "levantadoDetiene": "Levantado el {cuando} · detiene el avance",
+    "esperando": "Esperando respuesta",
+    "respuesta": "Respuesta del {cuando}:"
+  },
+  "avisosAbiertos": {
+    "titulo": "Avisos por contestar",
+    "volver": "Volver",
+    "ninguno": "No hay avisos abiertos.",
+    "obraPm": "{folio} · {cliente} · {pm}",
+    "horas": "Desde el {cuando} · {horas} h",
+    "horasFuera": "Desde el {cuando} · {horas} h: ya pasó el compromiso de respuesta",
+    "detiene": "Detiene el avance: hay gente parada",
+    "respuesta": "Tu respuesta para el PM",
+    "respuestaEjemplo": "Sí, reemplázala antes de cerrar. Ya pedí el material; llega mañana.",
+    "contestar": "Contestar y cerrar el aviso"
   }
 }

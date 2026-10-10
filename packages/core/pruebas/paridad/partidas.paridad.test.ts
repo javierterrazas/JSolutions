@@ -222,7 +222,8 @@ describe('paridad de las partidas de cada obra', () => {
     }
     expect(usadas).toBeGreaterThan(10);
     expect(libres).toBeGreaterThan(10);
-  });
+    // recorre días del mes simulado, como las demás de paridad: con todas las pruebas a la vez pasa de 5 s
+  }, 600_000);
 });
 
 describe('paridad al guardar el presupuesto por etapa', () => {

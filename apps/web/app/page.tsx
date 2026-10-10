@@ -1,4 +1,4 @@
-import { copiaSinSenal, gastosEnRevision, inicioDelPm } from '@ijm/servidor';
+import { avisosAbiertos, copiaSinSenal, gastosEnRevision, inicioDelPm } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
@@ -19,6 +19,9 @@ export default async function Inicio() {
   // las compras del PM arriba de su límite que el dueño tiene que revisar (D-049)
   const enRevision = yo.rol !== 'pm' ? await comoMiembro((tx) => gastosEnRevision(tx), acceso) : null;
   const porRevisar = enRevision?.ok ? enRevision.datos.length : 0;
+  // y los avisos de los PMs que esperan respuesta (D-050)
+  const abiertos = yo.rol !== 'pm' ? await comoMiembro((tx) => avisosAbiertos(tx), acceso) : null;
+  const avisos = abiertos?.ok ? abiertos.datos : [];
   return (
     <Marco titulo={t('hola', { nombre: yo.nombre })}>
       {copia?.ok && copia.datos ? <GuardarCopia copia={copia.datos} /> : null}
@@ -27,6 +30,14 @@ export default async function Inicio() {
       {pm && !pm.ok ? <MensajeError problema={pm} /> : null}
       {yo.rol !== 'pm' ? (
         <>
+          {avisos.length ? (
+            <Link
+              href="/avisos"
+              className={`flex min-h-12 items-center justify-center rounded-xl px-4 font-semibold ${avisos.some((a) => a.fueraDeSla) ? 'bg-red-100 text-red-900' : 'bg-amber-100 text-amber-900'}`}
+            >
+              {t('avisosPorContestar', { n: avisos.length })}
+            </Link>
+          ) : null}
           {porRevisar ? (
             <Link
               href="/gastos"

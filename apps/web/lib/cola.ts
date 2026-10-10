@@ -5,9 +5,9 @@
 //   · un rechazo de negocio (una regla) no se arregla reintentando: sale de la cola y se le muestra al PM con su
 //     razón, y lo de atrás sigue;
 //   · si la sesión venció, se detiene sin perder nada hasta que vuelva a entrar.
-// Un cierre o un gasto lleva su clave de envío (D-042, D-049) y sus fotos esperan detrás de él: si se rechaza, sus
-// fotos salen con él.
-import type { EntradaCierre, EntradaGasto } from '@ijm/servidor';
+// Un cierre, un gasto o un aviso lleva su clave de envío (D-042, D-049, D-050) y sus fotos esperan detrás de él: si
+// se rechaza, sus fotos salen con él.
+import type { EntradaAviso, EntradaCierre, EntradaGasto } from '@ijm/servidor';
 
 export interface CierreEnCola {
   readonly id: string;
@@ -31,14 +31,25 @@ export interface GastoEnCola {
   readonly intentos: number;
 }
 
+/** Un aviso del PM (D-050), con sus fotos detrás. */
+export interface AvisoEnCola {
+  readonly id: string;
+  readonly n: number;
+  readonly tipo: 'aviso';
+  readonly etiqueta: { readonly obra: string; readonly dia: string };
+  /** Con `claveEnvio` = `id`. */
+  readonly entrada: EntradaAviso;
+  readonly intentos: number;
+}
+
 export interface FotoEnCola {
   readonly id: string;
   readonly n: number;
   readonly tipo: 'foto';
   readonly etiqueta: { readonly obra: string; readonly dia: string };
-  /** De qué es: un cierre o el recibo de un gasto. Las fotos que guardó una versión anterior no lo dicen: son de un cierre. */
-  readonly de?: 'cierre' | 'gasto';
-  /** La clave de envío de su cierre o su gasto. */
+  /** De qué es. Las fotos que guardó una versión anterior no lo dicen: son de un cierre. */
+  readonly de?: 'cierre' | 'gasto' | 'aviso';
+  /** La clave de envío de su cierre, su gasto o su aviso. */
   readonly clave: string;
   readonly indice: number;
   readonly foto: Blob;
@@ -46,7 +57,7 @@ export interface FotoEnCola {
   readonly intentos: number;
 }
 
-export type ElementoCola = CierreEnCola | GastoEnCola | FotoEnCola;
+export type ElementoCola = CierreEnCola | GastoEnCola | AvisoEnCola | FotoEnCola;
 
 export interface Rechazo {
   readonly id: string;

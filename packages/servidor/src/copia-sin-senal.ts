@@ -17,6 +17,8 @@ export interface CopiaSinSenal {
   readonly zona: string;
   /** El límite de compra del PM, para el aviso del gasto (D-049). */
   readonly limiteCompra: number;
+  /** En cuántas horas se compromete el dueño a contestar un aviso (D-050). */
+  readonly slaAvisoHoras: number;
   readonly obras: readonly {
     readonly datos: DatosCierre;
     /** Los días ya cerrados de la última semana: hoy, si ya se cerró, no se vuelve a ofrecer. */
@@ -42,12 +44,14 @@ export async function copiaSinSenal(tx: Tx, ahora = new Date()): Promise<CopiaSi
       order by dia`;
     lista.push({ datos, cerrados: cerrados.map((c) => c.dia) });
   }
-  const [cfg] = await tx<{ limite: string }[]>`select limite_compra_pm as limite from configuracion_pm`;
+  const [cfg] = await tx<{ limite: string; sla: number }[]>`
+    select limite_compra_pm as limite, sla_bloqueo_horas as sla from configuracion_pm`;
   return {
     hecha: ahora.toISOString(),
     miembro: { id: s.miembroId, nombre: yo?.nombre ?? '' },
     zona: s.zona,
     limiteCompra: Number(cfg?.limite ?? 0),
+    slaAvisoHoras: cfg?.sla ?? 24,
     obras: lista,
   };
 }

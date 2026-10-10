@@ -128,16 +128,22 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                 </ul>
               </div>
             ) : null}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <Link
                 href={`/obras/${o.id}/gasto`}
-                className={`${estilos.botonSecundario} flex items-center justify-center`}
+                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
               >
                 {t('gastoNuevo')}
               </Link>
               <Link
+                href={`/obras/${o.id}/aviso`}
+                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
+              >
+                {t('avisoNuevo')}
+              </Link>
+              <Link
                 href={`/obras/${o.id}/calidad`}
-                className={`${estilos.botonSecundario} flex items-center justify-center`}
+                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
               >
                 {t('calidad')}
               </Link>

@@ -16,6 +16,14 @@ import {
 import { estilos } from './componentes/marco';
 import { MensajeError } from './componentes/mensaje-error';
 
+/** El encabezado de lo que una regla rechazó, según qué era. */
+const RECHAZADO = {
+  cierre: 'cierreRechazado',
+  gasto: 'gastoRechazado',
+  aviso: 'avisoRechazado',
+  foto: 'fotoRechazada',
+} as const;
+
 export function EstadoCola() {
   const t = useTranslations('cola');
   const formato = useFormatter();
@@ -90,11 +98,7 @@ export function EstadoCola() {
       {rechazos.map((r) => (
         <div key={r.id} className="flex flex-col gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-900">
           <p className="font-medium">
-            {r.tipo === 'cierre'
-              ? t('cierreRechazado', { obra: r.etiqueta.obra, dia: dia(r.etiqueta.dia) })
-              : r.tipo === 'gasto'
-                ? t('gastoRechazado', { obra: r.etiqueta.obra, dia: dia(r.etiqueta.dia) })
-                : t('fotoRechazada', { obra: r.etiqueta.obra, dia: dia(r.etiqueta.dia) })}
+            {t(RECHAZADO[r.tipo], { obra: r.etiqueta.obra, dia: dia(r.etiqueta.dia) })}
           </p>
           <MensajeError problema={r} />
           <button

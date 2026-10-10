@@ -21,6 +21,7 @@ import { estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
 import { EstadoCola } from '../estado-cola';
 import { FormularioCierre } from '../obras/[id]/cierre/formulario-cierre';
+import { FormularioAviso } from '../obras/[id]/aviso/formulario-aviso';
 import { FormularioGasto } from '../obras/[id]/gasto/formulario-gasto';
 import { CampoPin } from '../pin/campo-pin';
 
@@ -111,7 +112,7 @@ function ObrasSinSenal({ copia }: { copia: CopiaSinSenal }) {
   const formato = useFormatter();
   const idioma = useLocale();
   const [cola, setCola] = useState<readonly ElementoCola[]>([]);
-  const [elegida, setElegida] = useState<{ obraId: string; que: 'cierre' | 'gasto' } | null>(null);
+  const [elegida, setElegida] = useState<{ obraId: string; que: 'cierre' | 'gasto' | 'aviso' } | null>(null);
   const hoy = hoyDeLaCopia(copia, new Date());
 
   useEffect(() => {
@@ -135,6 +136,19 @@ function ObrasSinSenal({ copia }: { copia: CopiaSinSenal }) {
         {t('volver')}
       </button>
     );
+    if (elegida?.que === 'aviso')
+      return (
+        <>
+          {volver}
+          <p className="text-slate-700">{t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}</p>
+          <FormularioAviso
+            datos={{ obraId: d.obra.id, folio: d.obra.folio, slaHoras: copia.slaAvisoHoras ?? 24 }}
+            alTerminar={() => {
+              setElegida(null);
+            }}
+          />
+        </>
+      );
     if (elegida?.que === 'gasto')
       return (
         <>
@@ -236,6 +250,15 @@ function ObrasSinSenal({ copia }: { copia: CopiaSinSenal }) {
                 className={estilos.botonSecundario}
               >
                 {t('registrarGasto')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setElegida({ obraId: o.datos.obra.id, que: 'aviso' });
+                }}
+                className={estilos.botonSecundario}
+              >
+                {t('levantarAviso')}
               </button>
             </li>
           );
