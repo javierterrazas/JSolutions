@@ -41,6 +41,8 @@ export interface DatosCierre {
     sub: string;
     alcance: string;
     partida: Nombre | null;
+    /** Cuándo empieza la orden; sin señal, el teléfono ofrece solo las que ya empezaron (D-047). */
+    inicio: Dia | null;
   }[];
   readonly motivos: readonly string[];
 }
@@ -48,15 +50,21 @@ export interface DatosCierre {
 /**
  * Lo que necesita la pantalla de cierre de una obra del PM; null si la obra no es suya o no la ve. Con `corrige`
  * (el cierre que se va a corregir, D-044), lo que ese cierre registró se ofrece otra vez: sus partidas terminadas y
- * los subs que reportó.
+ * los subs que reportó. Con `subsHasta`, también los subs que empiezan después del día, hasta esa fecha: la copia
+ * para trabajar sin señal (D-047).
  */
 export async function datosParaCierre(
   tx: Tx,
-  entrada: { obraId: string; dia?: string | null; corrige?: string | null },
+  entrada: { obraId: string; dia?: string | null; corrige?: string | null; subsHasta?: string | null },
   ahora = new Date(),
 ): Promise<DatosCierre | null> {
   const e = validarEntrada(
-    z.object({ obraId: uuid, dia: esquemaDia.nullish(), corrige: uuid.nullish() }),
+    z.object({
+      obraId: uuid,
+      dia: esquemaDia.nullish(),
+      corrige: uuid.nullish(),
+      subsHasta: esquemaDia.nullish(),
+    }),
     entrada,
   );
   const corrige = e.corrige ?? null;
@@ -119,13 +127,21 @@ export async function datosParaCierre(
     select id, nombre, puesto, tipo_pago from trabajadores where activo order by nombre`;
   // los subs que se esperan ese día: su orden ya empezó, sigue viva y no se ha reportado si llegó
   const subs = await tx<
-    { id: string; folio: string; sub: string; alcance: string | null; partida: string | null }[]
+    {
+      id: string;
+      folio: string;
+      sub: string;
+      alcance: string | null;
+      partida: string | null;
+      inicio: Dia | null;
+    }[]
   >`
-    select o.id, o.folio, coalesce(s.nombre, '') as sub, o.alcance, o.partida_obra_id as partida
+    select o.id, o.folio, coalesce(s.nombre, '') as sub, o.alcance, o.partida_obra_id as partida,
+           to_char(o.inicio_programado, 'YYYY-MM-DD') as inicio
     from ordenes_trabajo o left join subcontratistas_pm s on s.id = o.subcontratista_id
     where o.obra_id = ${obra.id}
       and ((o.estado in ('emitida', 'confirmada') and o.se_presento is null
-            and o.inicio_programado is not null and o.inicio_programado <= ${elDia})
+            and o.inicio_programado is not null and o.inicio_programado <= ${e.subsHasta ?? elDia})
            or o.id in (select orden_trabajo_id from bitacora_subs where bitacora_id = ${corrige}))
     order by o.inicio_programado, o.folio`;
   const nombrePartida = new Map(partidas.map((p) => [p.id, { es: p.es, en: p.en }]));
@@ -149,6 +165,7 @@ export async function datosParaCierre(
       sub: x.sub,
       alcance: x.alcance ?? '',
       partida: x.partida ? (nombrePartida.get(x.partida) ?? null) : null,
+      inicio: x.inicio,
     })),
     motivos: MOTIVOS_SIN_TRABAJO,
   };

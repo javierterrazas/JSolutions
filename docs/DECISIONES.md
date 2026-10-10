@@ -851,3 +851,33 @@ falta: cada espacio copia sus partidas al crearse (`partidas_obra`), así que ca
 espacios nuevos.
 
 **Pendiente:** crear puntos de control nuevos con sus preguntas, cuando el dueño lo pida.
+
+## D-047 · Abrir la app sin señal
+
+**Decisión del dueño:** el PM abre la app sin señal, escribe su PIN y cierra el día de hoy con la copia que guardó
+el teléfono. Al volver la señal, el cierre y sus fotos se envían solos por la cola (D-043). El legacy no abría sin
+señal (era una página de Google): esto es nuevo.
+
+**Cómo funciona:**
+- **La página sin señal.** El service worker (`public/sw.js`) guarda `/sin-senal` con todo su código. Cuando una
+  página no contesta en **6 segundos** (sin señal, o una señal que casi conecta), muestra la guardada. Con señal todo
+  va al servidor: el service worker no guarda nada del miembro. Cada vez que el PM abre su inicio con señal, se la
+  vuelve a guardar (si cambió la versión o el idioma).
+- **La copia.** El inicio del PM le da al teléfono `copiaSinSenal`: sus obras con lo de la pantalla de cierre, los
+  días cerrados de la última semana, los subs esperados hasta 6 días laborables adelante (con su fecha de inicio,
+  para ofrecer solo los que ya empezaron) y la zona de la empresa. Se guarda en IndexedDB. **No lleva dinero**: es
+  lo mismo que el PM ya ve.
+- **El PIN local** (`lib/sin-senal.ts`) es solo un candado del teléfono, como anticipó D-038. Al escribir el PIN
+  con señal, el teléfono guarda su huella (PBKDF2-SHA256, 100 000 vueltas, con sal), nunca el PIN; queda por
+  confirmar, y el inicio la confirma solo si el servidor aceptó el PIN. Sin señal se revisa con las reglas de la
+  base: 5 intentos fallidos bloquean 15 minutos, y abre por 16 horas. Con 4 dígitos no resiste a quien tenga el
+  celular y sepa de computadoras; pero sin el servidor nada se escribe en la base, y la copia no tiene dinero.
+- **Sin señal se cierra solo el día de hoy** (en la zona de la empresa). Un día olvidado se cierra con señal: la
+  ventana de 2 días deja tiempo. Hoy no se ofrece si ya estaba cerrado o si su cierre espera en la cola. El
+  servidor decide el día por la hora de captura, así que un cierre enviado al día siguiente cae en su día.
+- **Sin acceso** (quitaron el celular o dieron de baja al miembro), el teléfono borra la copia y el PIN local.
+
+**Límites conocidos:** la versión sin señal no muestra la semana ni los avisos, solo las obras y el cierre. En
+iPhone, Safari puede borrar lo guardado si la app no se abre en unos 7 días; se mide en el piloto. Una página
+guardada de una versión anterior no puede enviar a una versión nueva del servidor: lo que cierre espera en la cola
+hasta que el PM abra la app con señal.

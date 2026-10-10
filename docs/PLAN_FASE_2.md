@@ -123,8 +123,10 @@ de 48 h) se resuelve con los mismos rechazos de negocio.
 - **5b. La cola en el teléfono** — hecha (D-043). El cierre y sus fotos se guardan en el teléfono si no hay
   señal o la sesión venció, y se envían solos. Las fotos de un cierre enviado ya no se pierden si el PM sale de
   la pantalla. Probado en el navegador apagando el servidor a media captura.
-- **5c. Abrir la app sin señal** — pendiente: el service worker guarda la app y una copia de los datos de cada
-  obra, y el PIN abre esa copia en el teléfono (un candado local, D-038).
+- **5c. Abrir la app sin señal** — hecha (D-047). El service worker guarda la página sin señal y la muestra si el
+  servidor no contesta en 6 segundos; el PIN se revisa en el teléfono y abre la copia de las obras del PM, que se
+  guarda cada vez que abre su inicio con señal. Sin señal se cierra el día de hoy, con el mismo formulario, y va
+  a la cola. Probado en el navegador apagando el servidor: PIN, cierre con foto, y al volver la señal llegó todo.
 
 ### 5d. Ajustes del piloto (lo que pidió el dueño al probarlo)
 

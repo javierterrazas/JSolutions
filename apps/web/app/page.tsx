@@ -1,4 +1,4 @@
-import { inicioDelPm } from '@ijm/servidor';
+import { copiaSinSenal, inicioDelPm } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
@@ -6,6 +6,7 @@ import { salir } from './acciones/entrar';
 import { Marco, estilos } from './componentes/marco';
 import { MensajeError } from './componentes/mensaje-error';
 import { EstadoCola } from './estado-cola';
+import { GuardarCopia } from './guardar-copia';
 import { InicioDelPm } from './inicio-pm';
 
 export default async function Inicio() {
@@ -13,8 +14,11 @@ export default async function Inicio() {
   const { yo } = acceso;
   const t = await getTranslations('inicio');
   const pm = yo.rol === 'pm' ? await comoMiembro((tx) => inicioDelPm(tx), acceso) : null;
+  // la copia para abrir la app sin señal (D-047)
+  const copia = yo.rol === 'pm' ? await comoMiembro((tx) => copiaSinSenal(tx), acceso) : null;
   return (
     <Marco titulo={t('hola', { nombre: yo.nombre })}>
+      {copia?.ok && copia.datos ? <GuardarCopia copia={copia.datos} /> : null}
       {yo.rol === 'pm' ? <EstadoCola /> : null}
       {pm?.ok ? <InicioDelPm datos={pm.datos} /> : null}
       {pm && !pm.ok ? <MensajeError problema={pm} /> : null}
