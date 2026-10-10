@@ -156,8 +156,10 @@ aprobar los gastos en revisión y contestar los avisos.
 - **6b. Gastos** con recibo, la revisión arriba del límite y su corrección en 48 h, con la lista del dueño — hecha
   (D-049); sin señal van a la cola. Trae una migración (`gastos.clave_envio`). Probado en el navegador: con y sin
   recibo, arriba del límite, recibo después, corrección, gasto sin señal con recibo, y la revisión del dueño.
-- **6c. Avisos** con fotos, con la respuesta del dueño — siguiente; sin señal van a la cola.
-- **6d. Órdenes de trabajo:** confirmar y aprobar.
+- **6c. Avisos** con fotos, con la respuesta del dueño — hecha (D-050); sin señal van a la cola. Trae una
+  migración (`avisos.clave_envio`). Probado en el navegador: con fotos, sin señal, y la respuesta del dueño viendo
+  las fotos.
+- **6d. Órdenes de trabajo:** confirmar y aprobar — siguiente.
 - **6e. Punch list y medida verificada.**
 - **6f. Álbum** de fotos.
 

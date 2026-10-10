@@ -932,3 +932,27 @@ en revisión), porque sin ella el dueño no tendría dónde verlas; sus pantalla
 
 **Diferencia con el legacy:** el legacy guardaba el recibo como enlace en el renglón del gasto; aquí es una foto
 del gasto, como las demás (D-007).
+
+## D-050 · Los avisos del PM, y la respuesta del dueño
+
+**Decisión del dueño:** el paso 6c trae los avisos (bloqueos) del PM con una lista mínima para el dueño (contestar
+los avisos), porque sin ella el aviso no le llegaría a nadie; sus pantallas completas siguen en la fase 3.
+
+**Cómo funciona** (`avisos.ts`; legacy: `pmBloqueo`, `duResponderBloqueo` y la cola de bloqueos del inicio del
+administrador):
+- **Levantar un aviso** desde la obra (`/obras/[id]/aviso`): si detiene el avance (si no se dice, se da por hecho
+  que sí, como el legacy), su tipo, qué pasa y qué se necesita (al menos 10 letras) y fotos del problema. La pantalla
+  muestra sus avisos de esa obra: los que esperan respuesta y las respuestas del dueño.
+- **El dueño** ve en su inicio "N avisos por contestar" (en rojo si alguno ya pasó el compromiso de respuesta de
+  su configuración, 24 h de inicio). En `/avisos` están los abiertos, los más viejos primero, con su obra, su PM,
+  las horas que llevan, si detienen el avance y sus fotos; los contesta (al menos 5 letras) y el aviso se cierra. El
+  PM ve la respuesta en su inicio y en la pantalla de avisos.
+- **Sin señal va a la cola**, como el gasto (D-049): el aviso lleva su clave de envío (`avisos.clave_envio`,
+  migración `20261011000200`) y sus fotos van detrás (`de: 'aviso'`). La versión sin señal ofrece "Levantar aviso"
+  en cada obra; la copia del teléfono lleva el compromiso de respuesta.
+- **Ver una foto** (`/fotos/[id]`): revisa con la identidad del usuario, su celular y su PIN que puede ver esa foto
+  (RLS) y lo manda a un enlace firmado de 5 minutos (D-026). La llave secreta se usa solo para firmar. Lo usan los
+  avisos y el recibo de las compras por revisar; lo usará el álbum.
+
+**Diferencia con el legacy:** el legacy mandaba un correo al dueño con cada aviso. Aquí todavía no hay correos: el
+aviso aparece en su inicio.
