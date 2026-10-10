@@ -1,4 +1,4 @@
-import { copiaSinSenal, inicioDelPm } from '@ijm/servidor';
+import { copiaSinSenal, gastosEnRevision, inicioDelPm } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
@@ -16,6 +16,9 @@ export default async function Inicio() {
   const pm = yo.rol === 'pm' ? await comoMiembro((tx) => inicioDelPm(tx), acceso) : null;
   // la copia para abrir la app sin señal (D-047)
   const copia = yo.rol === 'pm' ? await comoMiembro((tx) => copiaSinSenal(tx), acceso) : null;
+  // las compras del PM arriba de su límite que el dueño tiene que revisar (D-049)
+  const enRevision = yo.rol !== 'pm' ? await comoMiembro((tx) => gastosEnRevision(tx), acceso) : null;
+  const porRevisar = enRevision?.ok ? enRevision.datos.length : 0;
   return (
     <Marco titulo={t('hola', { nombre: yo.nombre })}>
       {copia?.ok && copia.datos ? <GuardarCopia copia={copia.datos} /> : null}
@@ -24,6 +27,14 @@ export default async function Inicio() {
       {pm && !pm.ok ? <MensajeError problema={pm} /> : null}
       {yo.rol !== 'pm' ? (
         <>
+          {porRevisar ? (
+            <Link
+              href="/gastos"
+              className="flex min-h-12 items-center justify-center rounded-xl bg-amber-100 px-4 font-semibold text-amber-900"
+            >
+              {t('gastosPorRevisar', { n: porRevisar })}
+            </Link>
+          ) : null}
           <Link href="/obras" className={`${estilos.boton} flex items-center justify-center`}>
             {t('obras')}
           </Link>

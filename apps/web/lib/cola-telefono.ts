@@ -1,6 +1,6 @@
 // La cola del teléfono: guarda en IndexedDB (almacen.ts), envía con las acciones de la cola (acciones/cola.ts) y
 // sigue las reglas de cola.ts. Las pantallas se enteran de cada cambio con `alCambiar`.
-import { enviarCierre, enviarFoto } from '@/app/acciones/cola';
+import { enviarCierre, enviarFoto, enviarGasto } from '@/app/acciones/cola';
 import { guardar, quitar, todos } from './almacen';
 import { type Almacen, type ElementoCola, type FinDeCola, procesarCola, type Rechazo } from './cola';
 
@@ -51,10 +51,11 @@ let enCurso: Promise<FinDeCola> | null = null;
 
 function enviar(e: ElementoCola) {
   if (e.tipo === 'cierre') return enviarCierre(e.entrada);
+  if (e.tipo === 'gasto') return enviarGasto(e.entrada);
   const f = new FormData();
   f.set('foto', e.foto, `foto-${e.indice}.jpg`);
   f.set('tomadaEn', e.tomadaEn);
-  return enviarFoto(e.clave, e.indice, f);
+  return enviarFoto(e.clave, e.indice, f, e.de ?? 'cierre');
 }
 
 /** Envía lo pendiente, en orden. Si ya se está enviando, espera esa misma pasada. */

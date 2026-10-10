@@ -1,8 +1,17 @@
 'use server';
-// Lo que manda la cola del teléfono (fase 2, paso 5): un cierre con su clave de envío, o una foto de un cierre. A
-// diferencia de las pantallas, no redirigen: si la sesión ya no sirve contestan `sesion`, y la cola espera a que
-// el PM vuelva a entrar sin perder nada.
-import { cerrarDia, cierreDeClave, type EntradaCierre, registrarFoto, rutaParaFoto } from '@ijm/servidor';
+// Lo que manda la cola del teléfono (fase 2, pasos 5 y 6b): un cierre o un gasto con su clave de envío, o una foto de
+// uno de ellos. A diferencia de las pantallas, no redirigen: si la sesión ya no sirve contestan `sesion`, y la cola
+// espera a que el PM vuelva a entrar sin perder nada.
+import {
+  cerrarDia,
+  cierreDeClave,
+  type EntradaCierre,
+  type EntradaGasto,
+  gastoDeClave,
+  registrarFoto,
+  registrarGasto,
+  rutaParaFoto,
+} from '@ijm/servidor';
 import { comoMiembro, estadoDeAcceso, type Resultado } from '@/lib/acceso';
 import type { Respuesta } from '@/lib/cola';
 import { clienteSupabase } from '@/lib/supabase';
@@ -25,24 +34,43 @@ export async function enviarCierre(
   return r.ok ? { ok: true, bitacoraId: r.datos.bitacoraId, folio: r.datos.folio } : respuesta(r);
 }
 
-/** La foto número `indice` del cierre con esa clave: la ruta la da el servidor y va a Storage con la sesión del PM. */
-export async function enviarFoto(clave: string, indice: number, formulario: FormData): Promise<Respuesta> {
+/** Un gasto de la cola (D-049). Devuelve también si pasó el límite, para la pantalla que lo capturó. */
+export async function enviarGasto(
+  entrada: EntradaGasto,
+): Promise<Respuesta & { readonly enRevision?: boolean; readonly limite?: number }> {
+  const a = await estadoDeAcceso();
+  if (a.estado !== 'abierto') return SIN_SESION;
+  const r = await comoMiembro((tx) => registrarGasto(tx, entrada), a.acceso);
+  return r.ok ? { ok: true, enRevision: r.datos.enRevision, limite: r.datos.limite } : respuesta(r);
+}
+
+/**
+ * La foto número `indice` del cierre o del gasto con esa clave: la ruta la da el servidor y va a Storage con la
+ * sesión del PM.
+ */
+export async function enviarFoto(
+  clave: string,
+  indice: number,
+  formulario: FormData,
+  de: 'cierre' | 'gasto' = 'cierre',
+): Promise<Respuesta> {
   const a = await estadoDeAcceso();
   if (a.estado !== 'abierto') return SIN_SESION;
   const foto = formulario.get('foto');
   if (!(foto instanceof File) || !foto.type.startsWith('image/') || foto.size > MAXIMO)
     return { ok: false, codigo: 'foto_invalida' };
   const tomadaEn = String(formulario.get('tomadaEn') ?? '') || null;
+  const refTipo = de === 'gasto' ? 'gasto' : 'bitacora';
 
-  const bitacora = await comoMiembro((tx) => cierreDeClave(tx, clave), a.acceso);
-  if (!bitacora.ok) return respuesta(bitacora);
-  if (!bitacora.datos) return { ok: false, codigo: 'registro_no_encontrado' };
-  const bitacoraId = bitacora.datos;
-
-  const ruta = await comoMiembro(
-    (tx) => rutaParaFoto(tx, { refTipo: 'bitacora', refId: bitacoraId }),
+  const registro = await comoMiembro(
+    (tx) => (de === 'gasto' ? gastoDeClave(tx, clave) : cierreDeClave(tx, clave)),
     a.acceso,
   );
+  if (!registro.ok) return respuesta(registro);
+  if (!registro.datos) return { ok: false, codigo: 'registro_no_encontrado' };
+  const refId = registro.datos;
+
+  const ruta = await comoMiembro((tx) => rutaParaFoto(tx, { refTipo, refId }), a.acceso);
   if (!ruta.ok) return respuesta(ruta);
   const supabase = await clienteSupabase();
   const subida = await supabase.storage
@@ -53,14 +81,7 @@ export async function enviarFoto(clave: string, indice: number, formulario: Form
 
   return respuesta(
     await comoMiembro(
-      (tx) =>
-        registrarFoto(tx, {
-          refTipo: 'bitacora',
-          refId: bitacoraId,
-          indice,
-          ruta: ruta.datos.ruta,
-          tomadaEn,
-        }),
+      (tx) => registrarFoto(tx, { refTipo, refId, indice, ruta: ruta.datos.ruta, tomadaEn }),
       a.acceso,
     ),
   );
