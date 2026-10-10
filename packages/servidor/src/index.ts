@@ -15,6 +15,7 @@ export * from './gastos';
 export * from './avisos';
 export * from './ordenes';
 export * from './punch';
+export * from './album';
 export * from './copia-sin-senal';
 export * from './cierre';
 export * from './fotos';

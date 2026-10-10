@@ -42,6 +42,12 @@ export default async function Obras() {
                 })}
               </span>
             </Link>
+            <Link
+              href={`/obras/${o.id}/album`}
+              className="mt-1 inline-block px-1 text-sm font-medium text-marca underline"
+            >
+              {t('album')}
+            </Link>
           </li>
         ))}
       </ul>

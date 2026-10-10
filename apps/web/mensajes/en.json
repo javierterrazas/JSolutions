@@ -183,7 +183,8 @@
       "en_cierre": "Closing out",
       "entregada": "Delivered"
     },
-    "encabezado": "{folio} · {cliente}"
+    "encabezado": "{folio} · {cliente}",
+    "album": "See the photos"
   },
   "obraNueva": {
     "titulo": "New job",
@@ -268,7 +269,8 @@
     "adjuntarRecibo": "Attach receipt",
     "avisoNuevo": "Raise alert",
     "ordenesSubs": "Subs",
-    "entregaYMedidas": "Handover & measurements"
+    "entregaYMedidas": "Handover & measurements",
+    "album": "Photos"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -625,5 +627,36 @@
     "lineales": "Linear ft",
     "guardarMedida": "Save measurement",
     "medidaGuardada": "Measurement saved."
+  },
+  "album": {
+    "titulo": "Job photos",
+    "volver": "Back",
+    "obra": "{folio} · {cliente}",
+    "vacio": "There are no photos of this job yet. The ones from day closes, inspections, alerts and the punch list show up here.",
+    "recientes": "More recent",
+    "anteriores": "See older",
+    "tipos": {
+      "bitacora": "Day close",
+      "inspeccion": "Inspection",
+      "prueba_agua": "Flood test",
+      "punch": "Punch list",
+      "gasto": "Expense receipt",
+      "aviso": "Alert",
+      "orden_cambio": "Change order"
+    },
+    "resultados": {
+      "aprobado": "approved",
+      "con_defectos": "with defects",
+      "en_curso": "in progress",
+      "sin_fugas": "no leaks",
+      "con_fuga": "leak",
+      "anulado": "corrected",
+      "material": "material",
+      "cliente": "client",
+      "sub": "sub",
+      "condicion_oculta": "hidden condition",
+      "diseno": "design",
+      "otro": "other"
+    }
   }
 }

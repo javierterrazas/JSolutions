@@ -183,7 +183,8 @@
       "en_cierre": "En cierre",
       "entregada": "Entregada"
     },
-    "encabezado": "{folio} · {cliente}"
+    "encabezado": "{folio} · {cliente}",
+    "album": "Ver las fotos"
   },
   "obraNueva": {
     "titulo": "Nueva obra",
@@ -268,7 +269,8 @@
     "adjuntarRecibo": "Adjuntar recibo",
     "avisoNuevo": "Levantar aviso",
     "ordenesSubs": "Subs",
-    "entregaYMedidas": "Entrega y medidas"
+    "entregaYMedidas": "Entrega y medidas",
+    "album": "Fotos"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -625,5 +627,36 @@
     "lineales": "Pies lineales",
     "guardarMedida": "Guardar medida",
     "medidaGuardada": "Medida guardada."
+  },
+  "album": {
+    "titulo": "Fotos de la obra",
+    "volver": "Volver",
+    "obra": "{folio} · {cliente}",
+    "vacio": "Todavía no hay fotos de esta obra. Las del cierre del día, las inspecciones, los avisos y el punch aparecen aquí.",
+    "recientes": "Más recientes",
+    "anteriores": "Ver anteriores",
+    "tipos": {
+      "bitacora": "Cierre del día",
+      "inspeccion": "Inspección",
+      "prueba_agua": "Prueba de agua",
+      "punch": "Punch list",
+      "gasto": "Recibo de un gasto",
+      "aviso": "Aviso",
+      "orden_cambio": "Orden de cambio"
+    },
+    "resultados": {
+      "aprobado": "aprobada",
+      "con_defectos": "con defectos",
+      "en_curso": "en curso",
+      "sin_fugas": "sin fugas",
+      "con_fuga": "con fuga",
+      "anulado": "corregido",
+      "material": "material",
+      "cliente": "cliente",
+      "sub": "sub",
+      "condicion_oculta": "condición oculta",
+      "diseno": "diseño",
+      "otro": "otro"
+    }
   }
 }

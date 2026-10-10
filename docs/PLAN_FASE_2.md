@@ -163,7 +163,7 @@ aprobar los gastos en revisión y contestar los avisos.
   en el cierre del día, y aprobar.
 - **6e. Punch list y medida verificada** — hecha (D-052). Probado en el navegador: detalle con foto, marcarlo
   corregido y la medida del baño.
-- **6f. Álbum** de fotos — siguiente.
+- **6f. Álbum** de fotos — hecho (D-053). Probado en el navegador: un aviso con foto y el álbum por registro.
 
 ### 7. Pruebas de pantalla y piloto
 

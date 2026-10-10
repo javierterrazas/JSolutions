@@ -985,3 +985,17 @@ PM.html), en una pantalla por obra (`/obras/[id]/entrega`, "Entrega y medidas" e
   Generales de obra. Se guardan aparte de los cotizados, con quién y cuándo, y dejan rastro en `correcciones`
   (`medida_verificada`, de la medida vigente a la nueva). Se puede volver a medir.
 - **Necesitan señal**, como en el legacy. Solo el PM de la obra.
+
+## D-053 · El álbum de fotos de la obra
+
+**Cómo funciona** (`album.ts`; legacy: `pmAlbum` y `vFotos` de PM.html), en `/obras/[id]/album` ("Fotos" en el
+inicio del PM y "Ver las fotos" en la lista de obras del dueño):
+- Las fotos de la obra **agrupadas por su registro** (el cierre del día, la inspección, la prueba de agua, el
+  detalle del punch, el recibo de un gasto, el aviso, y para el dueño las órdenes de cambio), con lo que identifica
+  a cada uno (folio, punto de control, espacio, proveedor…), por día y lo más nuevo primero, de 20 en 20 registros.
+- **Cada quien ve lo que puede** (RLS de `fotos`): el PM, las de sus obras, y de los gastos y los avisos solo las
+  suyas; nunca las compras de la oficina ni las órdenes de cambio. El dueño, todas las de su empresa.
+- Las fotos se abren por `/fotos/[id]` (D-050), con un enlace firmado de 5 minutos, y cargan conforme se ven.
+
+**Diferencia con el legacy:** el legacy mostraba solo las fotos del cierre y de los avisos; aquí están todas las
+del PM en su obra.
