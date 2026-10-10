@@ -971,3 +971,17 @@ en obra" de la pantalla de la obra):
 - **Sin precios:** el PM nunca ve lo que se le paga al sub (`ordenes_trabajo_precios` es de la muralla financiera).
 - **Necesitan señal**, como en el legacy. Solo el PM de la obra.
 - Como el legacy, el servidor no exige que el sub haya llegado para aprobar: la pantalla solo lo ofrece cuando llegó.
+
+## D-052 · El punch list y la medida verificada desde el celular
+
+**Cómo funciona** (`punch.ts`; legacy: `pmPunch`, `pmCerrarPunch`, `pmMedida` y la pantalla de entrega de
+PM.html), en una pantalla por obra (`/obras/[id]/entrega`, "Entrega y medidas" en el inicio del PM):
+- **El punch list:** en el recorrido de entrega se anota todo lo que señala el cliente, sin discutir nada en el
+  momento: qué es (al menos 4 letras), si es un defecto, un cambio de alcance o una expectativa, quién lo corrige y
+  una foto opcional (foto del punch). Cada detalle tiene **7 días hábiles** para corregirse, con el calendario de la
+  empresa (el legacy contaba de lunes a viernes; aquí cuenta los días laborables de la empresa, D-028). Los vencidos
+  se marcan en rojo con el consejo del legacy ("Agrúpalos y ve una sola vez"). "Marcar corregido" pide confirmarlo.
+- **La medida verificada (D-014):** los pies² (y pies lineales) reales de cada espacio, medidos en sitio, menos
+  Generales de obra. Se guardan aparte de los cotizados, con quién y cuándo, y dejan rastro en `correcciones`
+  (`medida_verificada`, de la medida vigente a la nueva). Se puede volver a medir.
+- **Necesitan señal**, como en el legacy. Solo el PM de la obra.

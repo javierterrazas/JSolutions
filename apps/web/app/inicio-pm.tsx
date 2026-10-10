@@ -135,6 +135,7 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                   ['aviso', 'avisoNuevo'],
                   ['calidad', 'calidad'],
                   ['ordenes', 'ordenesSubs'],
+                  ['entrega', 'entregaYMedidas'],
                 ] as const
               ).map(([ruta, texto]) => (
                 <Link

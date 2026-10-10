@@ -165,7 +165,10 @@
     "aviso_sin_detalle": "Describe el problema con detalle para que el dueño pueda resolverlo.",
     "respuesta_corta": "Escribe una respuesta útil para el PM.",
     "orden_no_encontrada": "Esa orden ya no está pendiente.",
-    "orden_ya_confirmada": "Esa orden ya estaba confirmada."
+    "orden_ya_confirmada": "Esa orden ya estaba confirmada.",
+    "punch_sin_detalle": "Escribe qué señaló el cliente.",
+    "punch_no_encontrado": "Ese detalle ya no está pendiente.",
+    "medida_invalida": "Captura los pies² del espacio."
   },
   "obras": {
     "titulo": "Obras",
@@ -264,7 +267,8 @@
     "gastoNuevo": "Registrar gasto",
     "adjuntarRecibo": "Adjuntar recibo",
     "avisoNuevo": "Levantar aviso",
-    "ordenesSubs": "Subs"
+    "ordenesSubs": "Subs",
+    "entregaYMedidas": "Entrega y medidas"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -584,5 +588,42 @@
     "confirmo": "Confirmó por escrito",
     "aprobar": "Aprobar el trabajo",
     "confirmarAprobar": "¿Aprobar el trabajo? El sub podrá cobrar. Solo apruebas lo que ya caminaste con él."
+  },
+  "entrega": {
+    "titulo": "Entrega",
+    "volver": "Volver al inicio",
+    "obra": "{folio} · {cliente}",
+    "ayuda": "En el recorrido de entrega anota todo lo que señale el cliente, sin discutir nada en el momento. La clasificación se hace después, no enfrente de él.",
+    "vencidos": "{n, plural, one {# pendiente fuera de los 7 días} other {# pendientes fuera de los 7 días}}. Agrúpalos y ve una sola vez, no cinco viajes.",
+    "agregarDetalle": "Agregar detalle",
+    "detalle": "Qué señaló el cliente",
+    "detalleEjemplo": "Silicón disparejo en la unión del vanity con el muro",
+    "queEs": "¿Qué es?",
+    "origenes": {
+      "defecto": "Defecto",
+      "cambio_alcance": "Cambio",
+      "expectativa": "Expectativa"
+    },
+    "quienCorrige": "¿Quién lo corrige?",
+    "quienEjemplo": "Cuadrilla, Magaña Tile, yo…",
+    "fotoDetalle": "Foto del detalle (opcional)",
+    "agregar": "Agregar a la lista",
+    "agregado": "Agregado a la lista.",
+    "pendientes": "Pendientes ({n})",
+    "detalleCon": "{origen} · {responsable} · antes del {dia}",
+    "detalleSin": "{origen} · antes del {dia}",
+    "vencido": "vencido",
+    "marcarCorregido": "Marcar corregido",
+    "confirmarCorregido": "¿Ya quedó corregido?",
+    "corregidos": "Corregidos ({n})",
+    "listo": "listo",
+    "medidas": "Medida verificada",
+    "medidasAyuda": "Mide cada espacio en la visita de verificación: es el número real, no el del plano, y convierte los costos en costo por pie².",
+    "cotizada": "Falta la medida. Cotizado: {pies2} pies².",
+    "verificada": "Verificada: {pies2} pies² (cotizado {cotizada}) · {dia}",
+    "pies2": "Pies²",
+    "lineales": "Pies lineales",
+    "guardarMedida": "Guardar medida",
+    "medidaGuardada": "Medida guardada."
   }
 }

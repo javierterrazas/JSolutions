@@ -165,7 +165,10 @@
     "aviso_sin_detalle": "Describe the problem in detail so the owner can solve it.",
     "respuesta_corta": "Write a useful answer for the PM.",
     "orden_no_encontrada": "That work order is no longer pending.",
-    "orden_ya_confirmada": "That work order was already confirmed."
+    "orden_ya_confirmada": "That work order was already confirmed.",
+    "punch_sin_detalle": "Write what the client pointed out.",
+    "punch_no_encontrado": "That item is no longer pending.",
+    "medida_invalida": "Enter the square feet of the space."
   },
   "obras": {
     "titulo": "Jobs",
@@ -264,7 +267,8 @@
     "gastoNuevo": "Record expense",
     "adjuntarRecibo": "Attach receipt",
     "avisoNuevo": "Raise alert",
-    "ordenesSubs": "Subs"
+    "ordenesSubs": "Subs",
+    "entregaYMedidas": "Handover & measurements"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -584,5 +588,42 @@
     "confirmo": "Confirmed in writing",
     "aprobar": "Approve the work",
     "confirmarAprobar": "Approve the work? The sub will be able to get paid. Only approve what you already walked with them."
+  },
+  "entrega": {
+    "titulo": "Handover",
+    "volver": "Back to home",
+    "obra": "{folio} · {cliente}",
+    "ayuda": "On the handover walkthrough, write down everything the client points out, without arguing anything on the spot. Sorting it out comes later, not in front of them.",
+    "vencidos": "{n, plural, one {# item past the 7 days} other {# items past the 7 days}}. Group them and go once, not five trips.",
+    "agregarDetalle": "Add item",
+    "detalle": "What the client pointed out",
+    "detalleEjemplo": "Uneven caulk where the vanity meets the wall",
+    "queEs": "What is it?",
+    "origenes": {
+      "defecto": "Defect",
+      "cambio_alcance": "Change",
+      "expectativa": "Expectation"
+    },
+    "quienCorrige": "Who fixes it?",
+    "quienEjemplo": "Crew, Magaña Tile, me…",
+    "fotoDetalle": "Photo of the item (optional)",
+    "agregar": "Add to the list",
+    "agregado": "Added to the list.",
+    "pendientes": "Pending ({n})",
+    "detalleCon": "{origen} · {responsable} · by {dia}",
+    "detalleSin": "{origen} · by {dia}",
+    "vencido": "overdue",
+    "marcarCorregido": "Mark fixed",
+    "confirmarCorregido": "Is it fixed?",
+    "corregidos": "Fixed ({n})",
+    "listo": "done",
+    "medidas": "Verified measurement",
+    "medidasAyuda": "Measure each space on the verification visit: it is the real number, not the plan's, and it turns costs into cost per sq ft.",
+    "cotizada": "Measurement missing. Quoted: {pies2} sq ft.",
+    "verificada": "Verified: {pies2} sq ft (quoted {cotizada}) · {dia}",
+    "pies2": "Sq ft",
+    "lineales": "Linear ft",
+    "guardarMedida": "Save measurement",
+    "medidaGuardada": "Measurement saved."
   }
 }

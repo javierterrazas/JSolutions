@@ -161,8 +161,9 @@ aprobar los gastos en revisión y contestar los avisos.
   las fotos.
 - **6d. Órdenes de trabajo:** confirmar y aprobar — hecha (D-051). Probado en el navegador: confirmar, el sub llega
   en el cierre del día, y aprobar.
-- **6e. Punch list y medida verificada** — siguiente.
-- **6f. Álbum** de fotos.
+- **6e. Punch list y medida verificada** — hecha (D-052). Probado en el navegador: detalle con foto, marcarlo
+  corregido y la medida del baño.
+- **6f. Álbum** de fotos — siguiente.
 
 ### 7. Pruebas de pantalla y piloto
 
