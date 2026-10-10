@@ -163,7 +163,12 @@
     "ya_anulado": "Ese registro ya está anulado.",
     "sin_permiso": "No puedes cambiar ese registro.",
     "aviso_sin_detalle": "Describe el problema con detalle para que el dueño pueda resolverlo.",
-    "respuesta_corta": "Escribe una respuesta útil para el PM."
+    "respuesta_corta": "Escribe una respuesta útil para el PM.",
+    "orden_no_encontrada": "Esa orden ya no está pendiente.",
+    "orden_ya_confirmada": "Esa orden ya estaba confirmada.",
+    "punch_sin_detalle": "Escribe qué señaló el cliente.",
+    "punch_no_encontrado": "Ese detalle ya no está pendiente.",
+    "medida_invalida": "Captura los pies² del espacio."
   },
   "obras": {
     "titulo": "Obras",
@@ -178,7 +183,8 @@
       "en_cierre": "En cierre",
       "entregada": "Entregada"
     },
-    "encabezado": "{folio} · {cliente}"
+    "encabezado": "{folio} · {cliente}",
+    "album": "Ver las fotos"
   },
   "obraNueva": {
     "titulo": "Nueva obra",
@@ -261,7 +267,10 @@
     "calidad": "Calidad",
     "gastoNuevo": "Registrar gasto",
     "adjuntarRecibo": "Adjuntar recibo",
-    "avisoNuevo": "Levantar aviso"
+    "avisoNuevo": "Levantar aviso",
+    "ordenesSubs": "Subs",
+    "entregaYMedidas": "Entrega y medidas",
+    "album": "Fotos"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -565,5 +574,89 @@
     "respuesta": "Tu respuesta para el PM",
     "respuestaEjemplo": "Sí, reemplázala antes de cerrar. Ya pedí el material; llega mañana.",
     "contestar": "Contestar y cerrar el aviso"
+  },
+  "ordenes": {
+    "titulo": "Subs",
+    "volver": "Volver al inicio",
+    "obra": "{folio} · {cliente}",
+    "nada": "No hay órdenes de trabajo que esperen algo de ti en esta obra.",
+    "porConfirmar": "Falta que confirmen",
+    "porConfirmarAyuda": "Llámale al sub antes de la fecha. Cuando confirme por escrito que llega, márcalo aquí.",
+    "porAprobar": "Subs en obra",
+    "porAprobarAyuda": "Ya llegaron. Cuando caminen juntos el trabajo terminado, apruébalo: con eso el sub cobra.",
+    "oficioPartida": "{oficio} · {espacio} · {partida}",
+    "fechas": "Del {inicio} al {fin}",
+    "llamar": "Llamar · {telefono}",
+    "confirmo": "Confirmó por escrito",
+    "aprobar": "Aprobar el trabajo",
+    "confirmarAprobar": "¿Aprobar el trabajo? El sub podrá cobrar. Solo apruebas lo que ya caminaste con él."
+  },
+  "entrega": {
+    "titulo": "Entrega",
+    "volver": "Volver al inicio",
+    "obra": "{folio} · {cliente}",
+    "ayuda": "En el recorrido de entrega anota todo lo que señale el cliente, sin discutir nada en el momento. La clasificación se hace después, no enfrente de él.",
+    "vencidos": "{n, plural, one {# pendiente fuera de los 7 días} other {# pendientes fuera de los 7 días}}. Agrúpalos y ve una sola vez, no cinco viajes.",
+    "agregarDetalle": "Agregar detalle",
+    "detalle": "Qué señaló el cliente",
+    "detalleEjemplo": "Silicón disparejo en la unión del vanity con el muro",
+    "queEs": "¿Qué es?",
+    "origenes": {
+      "defecto": "Defecto",
+      "cambio_alcance": "Cambio",
+      "expectativa": "Expectativa"
+    },
+    "quienCorrige": "¿Quién lo corrige?",
+    "quienEjemplo": "Cuadrilla, Magaña Tile, yo…",
+    "fotoDetalle": "Foto del detalle (opcional)",
+    "agregar": "Agregar a la lista",
+    "agregado": "Agregado a la lista.",
+    "pendientes": "Pendientes ({n})",
+    "detalleCon": "{origen} · {responsable} · antes del {dia}",
+    "detalleSin": "{origen} · antes del {dia}",
+    "vencido": "vencido",
+    "marcarCorregido": "Marcar corregido",
+    "confirmarCorregido": "¿Ya quedó corregido?",
+    "corregidos": "Corregidos ({n})",
+    "listo": "listo",
+    "medidas": "Medida verificada",
+    "medidasAyuda": "Mide cada espacio en la visita de verificación: es el número real, no el del plano, y convierte los costos en costo por pie².",
+    "cotizada": "Falta la medida. Cotizado: {pies2} pies².",
+    "verificada": "Verificada: {pies2} pies² (cotizado {cotizada}) · {dia}",
+    "pies2": "Pies²",
+    "lineales": "Pies lineales",
+    "guardarMedida": "Guardar medida",
+    "medidaGuardada": "Medida guardada."
+  },
+  "album": {
+    "titulo": "Fotos de la obra",
+    "volver": "Volver",
+    "obra": "{folio} · {cliente}",
+    "vacio": "Todavía no hay fotos de esta obra. Las del cierre del día, las inspecciones, los avisos y el punch aparecen aquí.",
+    "recientes": "Más recientes",
+    "anteriores": "Ver anteriores",
+    "tipos": {
+      "bitacora": "Cierre del día",
+      "inspeccion": "Inspección",
+      "prueba_agua": "Prueba de agua",
+      "punch": "Punch list",
+      "gasto": "Recibo de un gasto",
+      "aviso": "Aviso",
+      "orden_cambio": "Orden de cambio"
+    },
+    "resultados": {
+      "aprobado": "aprobada",
+      "con_defectos": "con defectos",
+      "en_curso": "en curso",
+      "sin_fugas": "sin fugas",
+      "con_fuga": "con fuga",
+      "anulado": "corregido",
+      "material": "material",
+      "cliente": "cliente",
+      "sub": "sub",
+      "condicion_oculta": "condición oculta",
+      "diseno": "diseño",
+      "otro": "otro"
+    }
   }
 }

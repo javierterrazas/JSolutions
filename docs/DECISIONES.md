@@ -956,3 +956,46 @@ administrador):
 
 **Diferencia con el legacy:** el legacy mandaba un correo al dueño con cada aviso. Aquí todavía no hay correos: el
 aviso aparece en su inicio.
+
+## D-051 · Las órdenes de trabajo para el PM: confirmar y aprobar
+
+**Cómo funciona** (`ordenes.ts`; legacy: `pmConfirmarOT`, `pmAprobarOT` y las listas "Falta que confirmen" y "Subs
+en obra" de la pantalla de la obra):
+- Una pantalla por obra (`/obras/[id]/ordenes`, "Subs" en el inicio del PM, y las órdenes por confirmar del inicio
+  llevan a ella) con lo que espera algo del PM:
+  - **Por confirmar:** emitidas sin confirmar. El PM llama al sub (botón con su teléfono) y, cuando confirma por
+    escrito que llega, lo marca: la orden queda confirmada con su hora.
+  - **Por aprobar:** el sub ya llegó (lo marca el cierre del día) y el trabajo no se ha aprobado. El PM lo aprueba
+    después de caminarlo con el sub; la app pide confirmarlo ("El sub podrá cobrar"), como el legacy. Queda aprobada a
+    su nombre (la política de la base no deja aprobar a nombre de otro).
+- **Sin precios:** el PM nunca ve lo que se le paga al sub (`ordenes_trabajo_precios` es de la muralla financiera).
+- **Necesitan señal**, como en el legacy. Solo el PM de la obra.
+- Como el legacy, el servidor no exige que el sub haya llegado para aprobar: la pantalla solo lo ofrece cuando llegó.
+
+## D-052 · El punch list y la medida verificada desde el celular
+
+**Cómo funciona** (`punch.ts`; legacy: `pmPunch`, `pmCerrarPunch`, `pmMedida` y la pantalla de entrega de
+PM.html), en una pantalla por obra (`/obras/[id]/entrega`, "Entrega y medidas" en el inicio del PM):
+- **El punch list:** en el recorrido de entrega se anota todo lo que señala el cliente, sin discutir nada en el
+  momento: qué es (al menos 4 letras), si es un defecto, un cambio de alcance o una expectativa, quién lo corrige y
+  una foto opcional (foto del punch). Cada detalle tiene **7 días hábiles** para corregirse, con el calendario de la
+  empresa (el legacy contaba de lunes a viernes; aquí cuenta los días laborables de la empresa, D-028). Los vencidos
+  se marcan en rojo con el consejo del legacy ("Agrúpalos y ve una sola vez"). "Marcar corregido" pide confirmarlo.
+- **La medida verificada (D-014):** los pies² (y pies lineales) reales de cada espacio, medidos en sitio, menos
+  Generales de obra. Se guardan aparte de los cotizados, con quién y cuándo, y dejan rastro en `correcciones`
+  (`medida_verificada`, de la medida vigente a la nueva). Se puede volver a medir.
+- **Necesitan señal**, como en el legacy. Solo el PM de la obra.
+
+## D-053 · El álbum de fotos de la obra
+
+**Cómo funciona** (`album.ts`; legacy: `pmAlbum` y `vFotos` de PM.html), en `/obras/[id]/album` ("Fotos" en el
+inicio del PM y "Ver las fotos" en la lista de obras del dueño):
+- Las fotos de la obra **agrupadas por su registro** (el cierre del día, la inspección, la prueba de agua, el
+  detalle del punch, el recibo de un gasto, el aviso, y para el dueño las órdenes de cambio), con lo que identifica
+  a cada uno (folio, punto de control, espacio, proveedor…), por día y lo más nuevo primero, de 20 en 20 registros.
+- **Cada quien ve lo que puede** (RLS de `fotos`): el PM, las de sus obras, y de los gastos y los avisos solo las
+  suyas; nunca las compras de la oficina ni las órdenes de cambio. El dueño, todas las de su empresa.
+- Las fotos se abren por `/fotos/[id]` (D-050), con un enlace firmado de 5 minutos, y cargan conforme se ven.
+
+**Diferencia con el legacy:** el legacy mostraba solo las fotos del cierre y de los avisos; aquí están todas las
+del PM en su obra.

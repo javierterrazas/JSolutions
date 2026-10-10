@@ -159,9 +159,11 @@ aprobar los gastos en revisión y contestar los avisos.
 - **6c. Avisos** con fotos, con la respuesta del dueño — hecha (D-050); sin señal van a la cola. Trae una
   migración (`avisos.clave_envio`). Probado en el navegador: con fotos, sin señal, y la respuesta del dueño viendo
   las fotos.
-- **6d. Órdenes de trabajo:** confirmar y aprobar — siguiente.
-- **6e. Punch list y medida verificada.**
-- **6f. Álbum** de fotos.
+- **6d. Órdenes de trabajo:** confirmar y aprobar — hecha (D-051). Probado en el navegador: confirmar, el sub llega
+  en el cierre del día, y aprobar.
+- **6e. Punch list y medida verificada** — hecha (D-052). Probado en el navegador: detalle con foto, marcarlo
+  corregido y la medida del baño.
+- **6f. Álbum** de fotos — hecho (D-053). Probado en el navegador: un aviso con foto y el álbum por registro.
 
 ### 7. Pruebas de pantalla y piloto
 
