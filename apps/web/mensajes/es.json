@@ -9,7 +9,8 @@
     "salir": "Salir",
     "salirAyuda": "La próxima vez te pide el PIN.",
     "obras": "Obras",
-    "catalogo": "Catálogo"
+    "catalogo": "Catálogo",
+    "gastosPorRevisar": "{n, plural, one {# compra por revisar} other {# compras por revisar}}"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -106,7 +107,8 @@
       "pm": "PM",
       "fecha_inicio": "fecha de inicio",
       "fecha_entrega": "fecha de entrega",
-      "contrato": "contrato"
+      "contrato": "contrato",
+      "proveedor": "proveedor"
     },
     "solo_pm": "Solo el PM de la obra cierra el día.",
     "dia_ya_cerrado": "Ese día ya está cerrado.",
@@ -154,7 +156,11 @@
     "prueba_en_curso": "Ya hay una prueba de inundación en curso en este espacio.",
     "prueba_incompleta": "Llevan {horas} horas. La prueba es de 24: cerrarla antes no prueba nada; déjala correr y vuelve.",
     "prueba_no_encontrada": "Esa prueba ya no está en curso.",
-    "espacio_no_encontrado": "Ese espacio no es de esta obra."
+    "espacio_no_encontrado": "Ese espacio no es de esta obra.",
+    "monto_invalido": "Captura un monto válido.",
+    "sin_cambios": "No cambiaste nada.",
+    "ya_anulado": "Ese registro ya está anulado.",
+    "sin_permiso": "No puedes cambiar ese registro."
   },
   "obras": {
     "titulo": "Obras",
@@ -249,7 +255,9 @@
     "cerrarDia": "Cerrar el día",
     "cerrarEseDia": "Cerrar ese día",
     "corregirHoy": "Corregir",
-    "calidad": "Calidad"
+    "calidad": "Calidad",
+    "gastoNuevo": "Registrar gasto",
+    "adjuntarRecibo": "Adjuntar recibo"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -309,13 +317,14 @@
     "hacerInspeccion": "Hacer la inspección"
   },
   "cola": {
-    "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres y sus fotos).",
+    "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres, gastos y sus fotos).",
     "sinRed": "Sin señal por ahora: se envía solo cuando vuelva.",
     "enviarAhora": "Enviar ahora",
     "enviando": "Enviando…",
     "cierreRechazado": "El cierre de {obra} del {dia} no se guardó:",
     "fotoRechazada": "Una foto del cierre de {obra} del {dia} no se guardó:",
-    "entendido": "Entendido"
+    "entendido": "Entendido",
+    "gastoRechazado": "Un gasto de {obra} del {dia} no se guardó:"
   },
   "catalogo": {
     "titulo": "Catálogo",
@@ -395,7 +404,8 @@
     "cerrarDia": "Cerrar el día",
     "yaCerrado": "Hoy ya está cerrado.",
     "enElTelefono": "Hoy ya lo cerraste: está en el teléfono y se envía cuando haya señal.",
-    "volver": "Volver a tus obras"
+    "volver": "Volver a tus obras",
+    "registrarGasto": "Registrar gasto"
   },
   "fotos": {
     "tomar": "Tomar foto",
@@ -444,5 +454,64 @@
     "ultimaConFuga": "La última prueba marcó fuga.",
     "pruebaComo": "Tapa el desagüe, llena la zona húmeda y toma la foto del nivel. Vuelve en 24 horas con otra foto.",
     "arrancarPrueba": "Arrancar la prueba"
+  },
+  "gasto": {
+    "titulo": "Gastos",
+    "volver": "Volver al inicio",
+    "volverObras": "Volver a tus obras",
+    "obra": "{folio} · {cliente}",
+    "ayuda": "Con la tarjeta de la empresa, siempre. Captúralo en el estacionamiento, no en la noche. Límite sin autorización: {limite}.",
+    "monto": "Monto",
+    "partida": "¿Para qué partida?",
+    "sinPartida": "— Sin partida (va a Generales de obra) —",
+    "categoria": "Categoría",
+    "categorias": {
+      "material": "Material",
+      "renta_equipo": "Renta de equipo",
+      "herramienta": "Herramienta",
+      "permisos": "Permisos",
+      "disposicion": "Disposición de escombro",
+      "otro": "Otro"
+    },
+    "proveedor": "Proveedor",
+    "proveedorEjemplo": "Home Depot, Ferguson…",
+    "descripcion": "Qué compraste",
+    "descripcionEjemplo": "Tile 12x24 + thinset",
+    "recibo": "Recibo",
+    "fotoRecibo": "Foto del recibo",
+    "registrar": "Registrar gasto",
+    "enviando": "Enviando…",
+    "registrado": "Gasto registrado.",
+    "registradoSinRecibo": "Gasto registrado · falta el recibo.",
+    "enRevision": "Gasto registrado. Pasa el límite de {limite}: ya le aparece al dueño para revisarlo.",
+    "guardadoSinRed": "Sin señal: el gasto quedó guardado en el teléfono y se envía solo cuando haya señal.",
+    "guardadoSinSesion": "El gasto quedó guardado en el teléfono. Escribe tu PIN para enviarlo.",
+    "entrarParaEnviar": "Escribir mi PIN",
+    "tusGastos": "Tus gastos",
+    "tusGastosAyuda": "Los que no tienen recibo, y lo que capturaste en las últimas 48 horas: puedes corregirlo o anularlo. Nada se borra: queda el registro de qué cambiaste y por qué.",
+    "montoProveedor": "{monto} · {proveedor}",
+    "dia": "{dia}",
+    "diaDescripcion": "{dia} · {descripcion}",
+    "pendienteRevision": "Pasa tu límite: el dueño lo va a revisar.",
+    "faltaRecibo": "Falta el recibo",
+    "adjuntarRecibo": "Adjuntar recibo",
+    "corregir": "Corregir",
+    "anular": "Anular",
+    "motivo": "¿Por qué? (queda en el registro)",
+    "cancelar": "Cancelar",
+    "guardarCorreccion": "Guardar la corrección",
+    "anularAyuda": "El gasto queda registrado, pero sale de todos los cálculos.",
+    "anularConfirmar": "Anular el gasto"
+  },
+  "revisionGastos": {
+    "titulo": "Compras por revisar",
+    "volver": "Volver",
+    "ayuda": "Las compras de tus PMs que pasaron su límite. Revísalas y márcalas revisadas.",
+    "ninguno": "No hay compras por revisar.",
+    "obraPm": "{folio} · {cliente} · {pm}",
+    "categoriaRecibo": "{categoria} · {recibo}",
+    "conRecibo": "con recibo",
+    "sinRecibo": "sin recibo",
+    "marcarRevisado": "Marcar revisada"
   }
 }

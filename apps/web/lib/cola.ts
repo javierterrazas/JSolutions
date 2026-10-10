@@ -5,9 +5,9 @@
 //   · un rechazo de negocio (una regla) no se arregla reintentando: sale de la cola y se le muestra al PM con su
 //     razón, y lo de atrás sigue;
 //   · si la sesión venció, se detiene sin perder nada hasta que vuelva a entrar.
-// Un cierre lleva su clave de envío (D-042) y sus fotos esperan detrás de él: si el cierre se rechaza, sus fotos
-// salen con él.
-import type { EntradaCierre } from '@ijm/servidor';
+// Un cierre o un gasto lleva su clave de envío (D-042, D-049) y sus fotos esperan detrás de él: si se rechaza, sus
+// fotos salen con él.
+import type { EntradaCierre, EntradaGasto } from '@ijm/servidor';
 
 export interface CierreEnCola {
   readonly id: string;
@@ -20,12 +20,25 @@ export interface CierreEnCola {
   readonly intentos: number;
 }
 
+/** Un gasto del PM (D-049), con su recibo detrás como foto. */
+export interface GastoEnCola {
+  readonly id: string;
+  readonly n: number;
+  readonly tipo: 'gasto';
+  readonly etiqueta: { readonly obra: string; readonly dia: string; readonly monto?: number };
+  /** Con `claveEnvio` = `id`. */
+  readonly entrada: EntradaGasto;
+  readonly intentos: number;
+}
+
 export interface FotoEnCola {
   readonly id: string;
   readonly n: number;
   readonly tipo: 'foto';
   readonly etiqueta: { readonly obra: string; readonly dia: string };
-  /** La clave de envío de su cierre. */
+  /** De qué es: un cierre o el recibo de un gasto. Las fotos que guardó una versión anterior no lo dicen: son de un cierre. */
+  readonly de?: 'cierre' | 'gasto';
+  /** La clave de envío de su cierre o su gasto. */
   readonly clave: string;
   readonly indice: number;
   readonly foto: Blob;
@@ -33,7 +46,7 @@ export interface FotoEnCola {
   readonly intentos: number;
 }
 
-export type ElementoCola = CierreEnCola | FotoEnCola;
+export type ElementoCola = CierreEnCola | GastoEnCola | FotoEnCola;
 
 export interface Rechazo {
   readonly id: string;
@@ -70,7 +83,14 @@ export async function procesarCola(
   ahora: () => Date = () => new Date(),
 ): Promise<FinDeCola> {
   for (;;) {
-    const [e] = (await almacen.elementos()).sort((a, b) => a.n - b.n);
+    const todos = await almacen.elementos();
+    // una foto nunca sale antes que su cierre o su gasto, aunque haya tomado turno antes
+    const turno = (x: ElementoCola) => {
+      if (x.tipo !== 'foto') return x.n;
+      const suyo = todos.find((p) => p.tipo !== 'foto' && p.id === x.clave);
+      return suyo && suyo.n > x.n ? suyo.n + 0.5 : x.n;
+    };
+    const [e] = todos.sort((a, b) => turno(a) - turno(b));
     if (!e) return 'vacia';
     let r: Respuesta;
     try {
@@ -84,9 +104,9 @@ export async function procesarCola(
       continue;
     }
     if (r.codigo === SIN_SESION) return 'sin_sesion';
-    // negocio: sale, con sus fotos si es un cierre, y se le avisa al PM
+    // negocio: sale, con sus fotos si es un cierre o un gasto, y se le avisa al PM
     const fotos =
-      e.tipo === 'cierre'
+      e.tipo !== 'foto'
         ? (await almacen.elementos()).filter((x) => x.tipo === 'foto' && x.clave === e.id)
         : [];
     for (const f of fotos) await almacen.quitar(f.id);

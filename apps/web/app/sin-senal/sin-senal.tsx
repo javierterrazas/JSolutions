@@ -21,6 +21,7 @@ import { estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
 import { EstadoCola } from '../estado-cola';
 import { FormularioCierre } from '../obras/[id]/cierre/formulario-cierre';
+import { FormularioGasto } from '../obras/[id]/gasto/formulario-gasto';
 import { CampoPin } from '../pin/campo-pin';
 
 type Guardado = { copia: CopiaSinSenal; pin: PinLocal };
@@ -110,7 +111,7 @@ function ObrasSinSenal({ copia }: { copia: CopiaSinSenal }) {
   const formato = useFormatter();
   const idioma = useLocale();
   const [cola, setCola] = useState<readonly ElementoCola[]>([]);
-  const [elegida, setElegida] = useState<string | null>(null);
+  const [elegida, setElegida] = useState<{ obraId: string; que: 'cierre' | 'gasto' } | null>(null);
   const hoy = hoyDeLaCopia(copia, new Date());
 
   useEffect(() => {
@@ -119,20 +120,50 @@ function ObrasSinSenal({ copia }: { copia: CopiaSinSenal }) {
     return alCambiar(leer);
   }, []);
 
-  const obra = copia.obras.find((o) => o.datos.obra.id === elegida);
+  const obra = copia.obras.find((o) => o.datos.obra.id === elegida?.obraId);
+  const nombre = (n: { es: string; en: string | null }) => (idioma === 'en' ? n.en : null) ?? n.es;
   if (obra) {
     const d = datosDeHoy(obra, hoy);
+    const volver = (
+      <button
+        type="button"
+        onClick={() => {
+          setElegida(null);
+        }}
+        className="self-start text-sm font-medium text-marca"
+      >
+        {t('volver')}
+      </button>
+    );
+    if (elegida?.que === 'gasto')
+      return (
+        <>
+          {volver}
+          <p className="text-slate-700">{t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}</p>
+          <FormularioGasto
+            datos={{
+              obraId: d.obra.id,
+              folio: d.obra.folio,
+              limite: copia.limiteCompra ?? 0,
+              espacios: d.espacios.map((e) => ({
+                id: e.id,
+                nombre: e.nombre,
+                partidas: e.partidas.map((p) => ({
+                  id: p.id,
+                  nombre: nombre(p.nombre),
+                  enCurso: p.estado === 'en_progreso',
+                })),
+              })),
+            }}
+            alTerminar={() => {
+              setElegida(null);
+            }}
+          />
+        </>
+      );
     return (
       <>
-        <button
-          type="button"
-          onClick={() => {
-            setElegida(null);
-          }}
-          className="self-start text-sm font-medium text-marca"
-        >
-          {t('volver')}
-        </button>
+        {volver}
         <p className="text-slate-700">{t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}</p>
         <FormularioCierre
           datos={{
@@ -186,7 +217,7 @@ function ObrasSinSenal({ copia }: { copia: CopiaSinSenal }) {
                 <button
                   type="button"
                   onClick={() => {
-                    setElegida(o.datos.obra.id);
+                    setElegida({ obraId: o.datos.obra.id, que: 'cierre' });
                   }}
                   className={estilos.boton}
                 >
@@ -197,6 +228,15 @@ function ObrasSinSenal({ copia }: { copia: CopiaSinSenal }) {
                   {estado === 'cerrado' ? t('yaCerrado') : t('enElTelefono')}
                 </p>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  setElegida({ obraId: o.datos.obra.id, que: 'gasto' });
+                }}
+                className={estilos.botonSecundario}
+              >
+                {t('registrarGasto')}
+              </button>
             </li>
           );
         })}

@@ -92,7 +92,9 @@ export function EstadoCola() {
           <p className="font-medium">
             {r.tipo === 'cierre'
               ? t('cierreRechazado', { obra: r.etiqueta.obra, dia: dia(r.etiqueta.dia) })
-              : t('fotoRechazada', { obra: r.etiqueta.obra, dia: dia(r.etiqueta.dia) })}
+              : r.tipo === 'gasto'
+                ? t('gastoRechazado', { obra: r.etiqueta.obra, dia: dia(r.etiqueta.dia) })
+                : t('fotoRechazada', { obra: r.etiqueta.obra, dia: dia(r.etiqueta.dia) })}
           </p>
           <MensajeError problema={r} />
           <button

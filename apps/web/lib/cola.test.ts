@@ -107,6 +107,40 @@ describe('la cola sin señal', () => {
     expect(a.rechazados).toEqual([expect.objectContaining({ id: 'lunes', fotos: 2 })]);
   });
 
+  it('una foto que tomó turno antes que su gasto o su cierre espera a que él salga', async () => {
+    const a = almacenDePrueba([
+      { ...foto('r1', 1, 'g1', 1), de: 'gasto' } as ElementoCola,
+      cierre('otro', 2),
+      { id: 'g1', n: 3, tipo: 'gasto', etiqueta, entrada: { obraId: 'o', claveEnvio: 'g1' }, intentos: 0 },
+    ]);
+    const s = servidor(() => ({ ok: true }));
+    expect(await procesarCola(a.almacen, s.enviar)).toBe('vacia');
+    expect(s.recibidos).toEqual(['otro', 'g1', 'r1']);
+  });
+
+  it('un gasto va igual: si se rechaza, su recibo sale con él; si no, el recibo va detrás (D-049)', async () => {
+    const gasto = (id: string, n: number): ElementoCola => ({
+      id,
+      n,
+      tipo: 'gasto',
+      etiqueta,
+      entrada: { obraId: 'o', claveEnvio: id },
+      intentos: 0,
+    });
+    const a = almacenDePrueba([
+      gasto('g-malo', 1),
+      { ...foto('r1', 2, 'g-malo', 1), de: 'gasto' } as ElementoCola,
+      gasto('g-bueno', 3),
+      { ...foto('r2', 4, 'g-bueno', 1), de: 'gasto' } as ElementoCola,
+    ]);
+    const s = servidor((e) =>
+      e.id === 'g-malo' ? { ok: false, codigo: 'obra_no_encontrada' } : { ok: true },
+    );
+    expect(await procesarCola(a.almacen, s.enviar)).toBe('vacia');
+    expect(s.recibidos).toEqual(['g-bueno', 'r2']);
+    expect(a.rechazados).toEqual([expect.objectContaining({ id: 'g-malo', tipo: 'gasto', fotos: 1 })]);
+  });
+
   it('vuelve la señal: sigue donde se quedó', async () => {
     const a = almacenDePrueba([cierre('lunes', 1), foto('f1', 2, 'lunes', 1)]);
     let hayRed = false;

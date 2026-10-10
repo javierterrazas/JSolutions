@@ -906,3 +906,29 @@ terminar ninguna partida con punto de control (el cierre exige la inspección ap
 
 **Diferencia con el legacy:** el legacy mandaba un correo al dueño con cada inspección con defectos o prueba con
 fuga. Aquí todavía no hay correos ni pantallas del dueño para esto: queda para la fase 3.
+
+## D-049 · Los gastos del PM, y la revisión del dueño
+
+**Decisión del dueño:** el paso 6b trae los gastos del PM con una lista mínima para el dueño (aprobar las compras
+en revisión), porque sin ella el dueño no tendría dónde verlas; sus pantallas completas siguen en la fase 3.
+
+**Cómo funciona** (`gastos.ts`; legacy: `pmGasto`, `pmSubirRecibo`, `duRevisarGasto`):
+- **Registrar un gasto** desde la obra (`/obras/[id]/gasto`): monto, partida (la que va en curso; si ninguna, la
+  primera, como el legacy; sin partida va a Generales de obra), categoría, proveedor, qué se compró y la foto del
+  recibo. Siempre con la tarjeta de la empresa, con los últimos 4 dígitos del miembro. El día es el de la captura.
+- **Arriba del límite de compra del PM** queda pendiente de revisión: el PM lo ve al registrarlo, y al dueño le
+  aparece en su inicio ("N compras por revisar", `/gastos`), donde la marca revisada. Queda en la auditoría.
+- **El recibo** es una foto del gasto (`refTipo 'gasto'`). Si no se tomó, el gasto sale en "Gastos sin recibo" del
+  inicio y en la pantalla de gastos, donde se adjunta después (con señal).
+- **Corregir o anular** un gasto propio dentro de 48 h, con motivo, con los flujos de correcciones de la fase 1
+  (monto, partida, categoría, proveedor, descripción). Un gasto no se regresa a "sin partida": se anula y se vuelve a
+  registrar.
+- **Sin señal va a la cola**, como en el legacy. El gasto lleva una **clave de envío** (`gastos.clave_envio`,
+  migración `20261011000100`), como el cierre (D-042): un reintento recibe el gasto que ya existe. El recibo va
+  detrás como foto (`de: 'gasto'`); si el gasto se rechaza, su recibo sale con él. La versión sin señal (D-047)
+  ofrece "Registrar gasto" en cada obra, con la copia del teléfono (que ahora lleva el límite de compra).
+- **Una foto nunca sale antes que su gasto o su cierre** en la cola, aunque haya tomado turno antes. Se encontró al
+  probar: el recibo tomaba turno al armarse, antes que su gasto, y al volver la señal se habría perdido.
+
+**Diferencia con el legacy:** el legacy guardaba el recibo como enlace en el renglón del gasto; aquí es una foto
+del gasto, como las demás (D-007).

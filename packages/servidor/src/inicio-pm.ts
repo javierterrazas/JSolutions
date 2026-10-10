@@ -99,6 +99,7 @@ export interface InicioPm {
     dia: Dia;
   }[];
   readonly sinRecibo: readonly {
+    obraId: string;
     obra: string | null;
     folio: string;
     dia: Dia;
@@ -385,6 +386,7 @@ export async function inicioDelPm(tx: Tx, ahora = new Date()): Promise<InicioPm>
         dia: a.respondido ?? a.creado,
       })),
     sinRecibo: sinRecibo.map((g) => ({
+      obraId: g.obra_id,
       obra: folio.get(g.obra_id) ?? null,
       folio: g.folio,
       dia: g.dia,

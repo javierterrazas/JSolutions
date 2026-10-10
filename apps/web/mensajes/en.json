@@ -9,7 +9,8 @@
     "salir": "Sign out",
     "salirAyuda": "Next time it will ask for your PIN.",
     "obras": "Jobs",
-    "catalogo": "Catalog"
+    "catalogo": "Catalog",
+    "gastosPorRevisar": "{n, plural, one {# purchase to review} other {# purchases to review}}"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -106,7 +107,8 @@
       "pm": "PM",
       "fecha_inicio": "start date",
       "fecha_entrega": "delivery date",
-      "contrato": "contract"
+      "contrato": "contract",
+      "proveedor": "vendor"
     },
     "solo_pm": "Only the job's PM closes the day.",
     "dia_ya_cerrado": "That day is already closed.",
@@ -154,7 +156,11 @@
     "prueba_en_curso": "There is already a flood test in progress in this space.",
     "prueba_incompleta": "It's been {horas} hours. The test lasts 24: closing it early proves nothing; let it run and come back.",
     "prueba_no_encontrada": "That test is no longer in progress.",
-    "espacio_no_encontrado": "That space doesn't belong to this job."
+    "espacio_no_encontrado": "That space doesn't belong to this job.",
+    "monto_invalido": "Enter a valid amount.",
+    "sin_cambios": "You didn't change anything.",
+    "ya_anulado": "That record is already voided.",
+    "sin_permiso": "You can't change that record."
   },
   "obras": {
     "titulo": "Jobs",
@@ -249,7 +255,9 @@
     "cerrarDia": "Close the day",
     "cerrarEseDia": "Close that day",
     "corregirHoy": "Correct",
-    "calidad": "Quality"
+    "calidad": "Quality",
+    "gastoNuevo": "Record expense",
+    "adjuntarRecibo": "Attach receipt"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -309,13 +317,14 @@
     "hacerInspeccion": "Do the inspection"
   },
   "cola": {
-    "pendientes": "{n, plural, one {# record waiting to send} other {# records waiting to send}} from this phone (closes and their photos).",
+    "pendientes": "{n, plural, one {# record waiting to send} other {# records waiting to send}} from this phone (closes, expenses and their photos).",
     "sinRed": "No signal right now: it will send itself when it's back.",
     "enviarAhora": "Send now",
     "enviando": "Sending…",
     "cierreRechazado": "The {obra} close for {dia} was not saved:",
     "fotoRechazada": "A photo from the {obra} close for {dia} was not saved:",
-    "entendido": "Got it"
+    "entendido": "Got it",
+    "gastoRechazado": "An expense for {obra} on {dia} was not saved:"
   },
   "catalogo": {
     "titulo": "Catalog",
@@ -395,7 +404,8 @@
     "cerrarDia": "Close the day",
     "yaCerrado": "Today is already closed.",
     "enElTelefono": "You already closed today: it is on the phone and will send when there is signal.",
-    "volver": "Back to your jobs"
+    "volver": "Back to your jobs",
+    "registrarGasto": "Record expense"
   },
   "fotos": {
     "tomar": "Take photo",
@@ -444,5 +454,64 @@
     "ultimaConFuga": "The last test found a leak.",
     "pruebaComo": "Plug the drain, fill the wet area and take the photo of the level. Come back in 24 hours with another photo.",
     "arrancarPrueba": "Start the test"
+  },
+  "gasto": {
+    "titulo": "Expenses",
+    "volver": "Back to home",
+    "volverObras": "Back to your jobs",
+    "obra": "{folio} · {cliente}",
+    "ayuda": "Always with the company card. Record it in the parking lot, not at night. Limit without approval: {limite}.",
+    "monto": "Amount",
+    "partida": "For which line item?",
+    "sinPartida": "— No line item (goes to General conditions) —",
+    "categoria": "Category",
+    "categorias": {
+      "material": "Material",
+      "renta_equipo": "Equipment rental",
+      "herramienta": "Tools",
+      "permisos": "Permits",
+      "disposicion": "Debris disposal",
+      "otro": "Other"
+    },
+    "proveedor": "Vendor",
+    "proveedorEjemplo": "Home Depot, Ferguson…",
+    "descripcion": "What you bought",
+    "descripcionEjemplo": "12x24 tile + thinset",
+    "recibo": "Receipt",
+    "fotoRecibo": "Photo of the receipt",
+    "registrar": "Record expense",
+    "enviando": "Sending…",
+    "registrado": "Expense recorded.",
+    "registradoSinRecibo": "Expense recorded · receipt missing.",
+    "enRevision": "Expense recorded. It is over the {limite} limit: the owner can already see it to review.",
+    "guardadoSinRed": "No signal: the expense was saved on the phone and will send itself when there is signal.",
+    "guardadoSinSesion": "The expense was saved on the phone. Enter your PIN to send it.",
+    "entrarParaEnviar": "Enter my PIN",
+    "tusGastos": "Your expenses",
+    "tusGastosAyuda": "The ones without a receipt, and what you recorded in the last 48 hours: you can correct or void it. Nothing is deleted: the record of what you changed and why stays.",
+    "montoProveedor": "{monto} · {proveedor}",
+    "dia": "{dia}",
+    "diaDescripcion": "{dia} · {descripcion}",
+    "pendienteRevision": "Over your limit: the owner will review it.",
+    "faltaRecibo": "Receipt missing",
+    "adjuntarRecibo": "Attach receipt",
+    "corregir": "Correct",
+    "anular": "Void",
+    "motivo": "Why? (stays in the record)",
+    "cancelar": "Cancel",
+    "guardarCorreccion": "Save the correction",
+    "anularAyuda": "The expense stays recorded, but it is left out of all calculations.",
+    "anularConfirmar": "Void the expense"
+  },
+  "revisionGastos": {
+    "titulo": "Purchases to review",
+    "volver": "Back",
+    "ayuda": "Your PMs' purchases that went over their limit. Review them and mark them reviewed.",
+    "ninguno": "There are no purchases to review.",
+    "obraPm": "{folio} · {cliente} · {pm}",
+    "categoriaRecibo": "{categoria} · {recibo}",
+    "conRecibo": "with receipt",
+    "sinRecibo": "no receipt",
+    "marcarRevisado": "Mark reviewed"
   }
 }

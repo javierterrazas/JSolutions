@@ -153,9 +153,10 @@ Con su flujo en `packages/servidor` y su pantalla:
 aprobar los gastos en revisión y contestar los avisos.
 - **6a. Inspección y prueba de agua** — hecha (D-048). Probado en el navegador: la prueba con sus dos fotos, PC3
   rechazada sin la prueba y aprobada con ella, y una inspección con defectos.
-- **6b. Gastos** con recibo, la revisión arriba del límite y su corrección en 48 h, con la lista del dueño —
-  siguiente; sin señal van a la cola.
-- **6c. Avisos** con fotos, con la respuesta del dueño; sin señal van a la cola.
+- **6b. Gastos** con recibo, la revisión arriba del límite y su corrección en 48 h, con la lista del dueño — hecha
+  (D-049); sin señal van a la cola. Trae una migración (`gastos.clave_envio`). Probado en el navegador: con y sin
+  recibo, arriba del límite, recibo después, corrección, gasto sin señal con recibo, y la revisión del dueño.
+- **6c. Avisos** con fotos, con la respuesta del dueño — siguiente; sin señal van a la cola.
 - **6d. Órdenes de trabajo:** confirmar y aprobar.
 - **6e. Punch list y medida verificada.**
 - **6f. Álbum** de fotos.

@@ -128,12 +128,20 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                 </ul>
               </div>
             ) : null}
-            <Link
-              href={`/obras/${o.id}/calidad`}
-              className={`${estilos.botonSecundario} flex items-center justify-center`}
-            >
-              {t('calidad')}
-            </Link>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href={`/obras/${o.id}/gasto`}
+                className={`${estilos.botonSecundario} flex items-center justify-center`}
+              >
+                {t('gastoNuevo')}
+              </Link>
+              <Link
+                href={`/obras/${o.id}/calidad`}
+                className={`${estilos.botonSecundario} flex items-center justify-center`}
+              >
+                {t('calidad')}
+              </Link>
+            </div>
           </article>
         ))}
       </Seccion>
@@ -246,8 +254,11 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
         <Seccion titulo={t('sinRecibo')}>
           <ul className="flex flex-col gap-2">
             {datos.sinRecibo.map((g) => (
-              <li key={g.folio} className={`${estilos.tarjeta} text-sm`}>
-                {t('gasto', { proveedor: g.proveedor, monto: dinero.format(g.monto), dia: dia(g.dia) })}
+              <li key={g.folio}>
+                <Link href={`/obras/${g.obraId}/gasto`} className={`${estilos.tarjeta} block text-sm`}>
+                  {t('gasto', { proveedor: g.proveedor, monto: dinero.format(g.monto), dia: dia(g.dia) })}
+                  <span className="mt-1 block font-medium text-marca">{t('adjuntarRecibo')}</span>
+                </Link>
               </li>
             ))}
           </ul>
