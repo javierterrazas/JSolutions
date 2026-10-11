@@ -11,6 +11,7 @@ import {
   validarCierreDia,
   validarCierreTardioPM,
   validarCuadrilla,
+  validarDiaDeCaptura,
 } from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
@@ -105,6 +106,8 @@ export async function cerrarDia(
     elDia = e.tardio;
   } else {
     elDia = diaDeCaptura(e.capturado, s.ahora, s.zona);
+    // la hora del teléfono no lleva más atrás que un cierre tardío (D-054)
+    validarDiaDeCaptura(elDia, s.hoy, s.calendario);
     // un solo cierre por obra y día (D-022): el legacy dejaba cerrar dos veces el mismo día
     if (cerrados.has(elDia)) throw new ErrorDeNegocio('dia_ya_cerrado', { dia: elDia });
   }

@@ -48,7 +48,10 @@ export async function guardarCopia(copia: CopiaSinSenal, ahora = new Date()): Pr
   await guardarPin(pinConfirmado(copia.miembro.id, pendiente.largo, pendiente, ahora));
 }
 
-/** Sin acceso (quitaron el celular o dieron de baja al miembro): se borran la copia y el PIN local. */
+/**
+ * Sin acceso (quitaron el celular o dieron de baja al miembro), o quien entra no es PM: se borran la copia y el PIN
+ * local.
+ */
 export async function borrarCopia(): Promise<void> {
   await Promise.all(['copia', 'pin', 'pinPorConfirmar'].map((c) => quitar('datos', c)));
 }

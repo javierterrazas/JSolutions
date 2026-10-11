@@ -198,6 +198,16 @@ export function validarCierreTardioPM(
 }
 
 /**
+ * El día de algo que el PM capturó antes y llega después (de la cola, sin señal): ese día lo dice la hora del
+ * teléfono, y el teléfono puede tener la hora atrasada. No se le cree más atrás de la misma ventana del cierre
+ * tardío: un día capturado en los últimos 2 días laborables, o en uno no laborable entre ellos y hoy (D-054).
+ * Error: `fuera_de_ventana`.
+ */
+export function validarDiaDeCaptura(dia: Dia, hoy: Dia, cal: Calendario, ventana = 2): void {
+  if (dia < restarLaborables(hoy, ventana, cal)) throw new ErrorDeNegocio('fuera_de_ventana', { ventana });
+}
+
+/**
  * El día olvidado que registra el dueño, más atrás de la ventana del PM: con motivo, un día anterior a hoy, no
  * antes del inicio de la obra, sin cierre ya, y con al menos una partida. Errores: `obra_cerrada`,
  * `falta_motivo`, `falta_dia`, `solo_dias_anteriores`, `antes_del_inicio`, `dia_ya_cerrado`, `faltan_partidas`.

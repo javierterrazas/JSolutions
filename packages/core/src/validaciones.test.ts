@@ -9,6 +9,7 @@ import {
   validarAltaObra,
   validarCierreDia,
   validarCierreTardioPM,
+  validarDiaDeCaptura,
   validarCuadrilla,
 } from './validaciones';
 
@@ -111,6 +112,22 @@ describe('el día de una captura, en la zona de la empresa', () => {
     for (const c of [null, 'no', '2026-10-15T12:00:00Z', '2026-10-06T00:00:00Z']) {
       expect(diaDeCaptura(c, ahora, 'America/Chicago')).toBe('2026-10-14');
     }
+  });
+});
+
+describe('el día de una captura que llega después, con la hora del teléfono (D-054)', () => {
+  const lunes = '2026-10-12';
+  it('dentro de la ventana del cierre tardío pasa: hoy, el sábado y el viernes (lunes a sábado)', () => {
+    for (const d of [lunes, '2026-10-10', '2026-10-09'])
+      expect(() => validarDiaDeCaptura(d, lunes, CALENDARIO_POR_DEFECTO), d).not.toThrow();
+  });
+  it('más atrás no: un teléfono con la hora atrasada no cierra días viejos', () => {
+    expect(error(() => validarDiaDeCaptura('2026-10-08', lunes, CALENDARIO_POR_DEFECTO))).toMatchObject({
+      codigo: 'fuera_de_ventana',
+    });
+  });
+  it('un domingo entre la ventana y hoy cuenta: se capturó dentro de ella', () => {
+    expect(() => validarDiaDeCaptura('2026-10-11', lunes, CALENDARIO_POR_DEFECTO)).not.toThrow();
   });
 });
 

@@ -5,7 +5,7 @@
 //
 // El gasto lleva una clave de envío (D-049): sin señal va a la cola del teléfono, y un reintento con la misma clave
 // recibe el gasto que ya existe.
-import { diaDeCaptura, ErrorDeNegocio, estadoDePartida, exigir } from '@ijm/core';
+import { diaDeCaptura, ErrorDeNegocio, estadoDePartida, exigir, validarDiaDeCaptura } from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import type { Nombre } from './consultas-obra';
@@ -47,7 +47,7 @@ export interface GastoRegistrado {
 
 /**
  * Registra un gasto del PM en una de sus obras (legacy: pmGasto). Errores: `faltan` (proveedor), `monto_invalido`,
- * `obra_no_encontrada`, `partida_de_otra_obra`, `falta_tipo_generales`.
+ * `obra_no_encontrada`, `partida_de_otra_obra`, `falta_tipo_generales`, `fuera_de_ventana` (D-054).
  */
 export async function registrarGasto(
   tx: Tx,
@@ -85,6 +85,9 @@ export async function registrarGasto(
     if (!g) throw new ErrorDeNegocio('falta_tipo_generales');
     espacioId = g.id;
   }
+  // el día lo dice la hora del teléfono: no más atrás que un cierre tardío (D-054)
+  const dia = diaDeCaptura(e.capturado, ahora, s.zona);
+  validarDiaDeCaptura(dia, s.hoy, s.calendario);
   const [yo] = await tx<{ tarjeta: string | null }[]>`
     select tarjeta_ultimos4 as tarjeta from miembros where id = ${s.miembroId}`;
   const enRevision = limite > 0 && monto > limite;
@@ -93,7 +96,7 @@ export async function registrarGasto(
     insert into gastos (empresa_id, obra_id, espacio_id, partida_obra_id, dia, categoria, proveedor, descripcion,
                         monto, metodo_pago, tarjeta_ultimos4, origen, revision, clave_envio)
     values (${s.empresaId}, ${e.obraId}, ${espacioId}, ${e.partidaId ?? null},
-            ${diaDeCaptura(e.capturado, ahora, s.zona)}, ${e.categoria}, ${e.proveedor!.trim()},
+            ${dia}, ${e.categoria}, ${e.proveedor!.trim()},
             ${e.descripcion?.trim() || null}, ${monto}, 'tarjeta_empresa', ${yo?.tarjeta ?? null}, 'pm',
             ${enRevision ? 'pendiente' : null}, ${e.claveEnvio})
     returning id, folio`;
