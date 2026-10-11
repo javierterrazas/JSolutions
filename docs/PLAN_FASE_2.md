@@ -176,6 +176,13 @@ aprobar los gastos en revisión y contestar los avisos.
     celular nuevo. Ya están `prueba_pin` (los dos roles) y `prueba_idioma` (el PM en inglés no ve textos de la app en
     español en sus pantallas, y el idioma elegido se guarda en él). En la integración continua, el trabajo
     "Pantallas con Playwright".
+  - **7a.2. Las pantallas del PM** — hechas: `prueba_pordia_ui`, `prueba_formularios_ui` (cambiar de idioma a medio
+    cierre no borra nada), `prueba_numeros_ui` (horas del cierre y montos del presupuesto: sin `type=number`, la
+    rueda no los cambia) y `prueba_tardio_ui` (desde el aviso del inicio, más el día sin trabajo y el de hoy), en
+    `cierre.spec.ts`; `prueba_calidad_ui` y `prueba_noaplica_ui` en `calidad.spec.ts` ("No aplica", un defecto y
+    reinspeccionar; y una partida sin su inspección que el cierre manda a hacer, en un baño que el dueño agrega).
+    Lo del dueño de esas pruebas (alta de obra en rojo, "+7 no aplican" en su detalle) llega con sus pantallas en la
+    fase 3.
 - Una revisión independiente de la seguridad de lo nuevo (sesión guardada, PIN, cola).
 - El piloto: un PM, una obra, al menos 2 semanas, en paralelo con el sistema actual. Se mide el tiempo de cierre y
   se comparan los datos.

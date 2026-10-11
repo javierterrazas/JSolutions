@@ -1,7 +1,7 @@
 // El idioma (legacy/pruebas/prueba_idioma.py): el PM que tiene guardado el inglés ve en inglés todas sus pantallas,
 // sin textos de la app que se queden en español; y el idioma que elige con el botón se guarda en él.
-import { devices, expect, test } from '@playwright/test';
-import { en, entrar, es, MIEMBROS, OBRAS } from './apoyo';
+import { expect, test } from '@playwright/test';
+import { en, entrar, es, MIEMBROS, OBRAS, otroCelular } from './apoyo';
 
 type Mensajes = { readonly [llave: string]: string | Mensajes };
 
@@ -39,11 +39,7 @@ test('el idioma que elige se guarda en él, para cualquier celular', async ({ pa
   await expect(page.getByRole('heading', { name: es.inicio.hola.replace('{nombre}', nombre) })).toBeVisible();
 
   // en otro celular, con el navegador en inglés, entra en español
-  const otro = await browser.newContext({
-    ...devices['Pixel 7'],
-    baseURL: test.info().project.use.baseURL,
-    locale: 'en-US',
-  });
+  const otro = await otroCelular(browser, { locale: 'en-US' });
   try {
     const pagina = await otro.newPage();
     await entrar(pagina, 'pmIngles', 'es');

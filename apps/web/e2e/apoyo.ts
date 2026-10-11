@@ -1,12 +1,28 @@
 // Lo que comparten las pruebas de pantalla: los textos de la app y entrar como un miembro del seed.
 import { createHash, randomBytes } from 'node:crypto';
-import { expect, type Page } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
+import {
+  type Browser,
+  type BrowserContext,
+  type BrowserContextOptions,
+  devices,
+  expect,
+  type Page,
+  test,
+} from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { createTranslator } from 'next-intl';
 import en from '../mensajes/en.json' with { type: 'json' };
 import es from '../mensajes/es.json' with { type: 'json' };
 
 /** Los textos se leen de los mensajes de la app: una prueba no se rompe porque cambió una palabra. */
 export { en, es };
+
+/** Los textos con datos ({n}, {nombre}…), formateados como en la app. */
+export const t = {
+  es: createTranslator({ locale: 'es', messages: es }),
+  en: createTranslator({ locale: 'en', messages: en }),
+};
 
 /** Los miembros del seed (supabase/seed.sql) con los que entran las pruebas, con un PIN que la base acepta. */
 export const MIEMBROS = {
@@ -15,6 +31,9 @@ export const MIEMBROS = {
   pmIngles: { correo: 'pm2@empresa-a.test', nombre: 'Luis Ramírez', pin: '1357', idioma: 'en' },
   dueno: { correo: 'dueno@empresa-a.test', nombre: 'Javier', pin: '482915', idioma: 'es' },
 } as const;
+
+/** Una foto de verdad para la cámara del teléfono (de las pruebas del legacy): la app la comprime antes de subirla. */
+export const FOTO = fileURLToPath(new URL('../../../legacy/pruebas/f_general.jpg', import.meta.url));
 
 /** Las obras del seed de la empresa A, con el PM que la lleva. */
 export const OBRAS = {
@@ -86,4 +105,16 @@ export async function entrar(
   await page.getByRole('button', { name: enAmbos((m) => m.pin.guardar) }).click();
   const hola = (idioma === 'en' ? en : es).inicio.hola.replace('{nombre}', nombre);
   await expect(page.getByRole('heading', { name: hola })).toBeVisible();
+}
+
+/** Otro teléfono, para otra persona en la misma prueba (el dueño y el PM), con lo mismo que playwright.config. */
+export function otroCelular(browser: Browser, opciones: BrowserContextOptions = {}): Promise<BrowserContext> {
+  const { locale, timezoneId, baseURL } = test.info().project.use;
+  return browser.newContext({ ...devices['Pixel 7'], locale, timezoneId, baseURL, ...opciones });
+}
+
+/** Toma una foto con la cámara del teléfono y espera a que la app la tenga lista (la comprime antes). */
+export async function tomarFoto(page: Page, idioma: 'es' | 'en' = 'es'): Promise<void> {
+  await page.locator('input[type="file"]').setInputFiles(FOTO);
+  await expect(page.getByText(t[idioma]('fotos.n', { n: 1 }), { exact: true })).toBeVisible();
 }
