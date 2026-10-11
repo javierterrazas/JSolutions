@@ -183,6 +183,13 @@ aprobar los gastos en revisión y contestar los avisos.
     reinspeccionar; y una partida sin su inspección que el cierre manda a hacer, en un baño que el dueño agrega).
     Lo del dueño de esas pruebas (alta de obra en rojo, "+7 no aplican" en su detalle) llega con sus pantallas en la
     fase 3.
+  - **7a.3. La cola sin señal** — hecha, en `cola.spec.ts` (`prueba_cola` y `prueba_fotos_despues_ui`): el cierre
+    sin señal queda en el teléfono, la app abre sin señal (el service worker y el PIN local) y al volver la señal se
+    envía solo; un cierre que llegó pero cuya respuesta se perdió no se duplica al reenviarlo; uno que una regla
+    rechaza (el mismo día, cerrado desde otro teléfono) se ve con su razón y el gasto que venía detrás sí pasa; y las
+    fotos se suben después aunque el PM cierre la app. Cada prueba usa una obra nueva que el dueño da de alta en su
+    pantalla. En `pantallas.spec.ts`, `prueba_scroll` (cada pantalla se recorre sin salirse a los lados) y
+    `prueba_placeholder` (los ejemplos de los campos salen de los mensajes de cada idioma).
 - Una revisión independiente de la seguridad de lo nuevo (sesión guardada, PIN, cola).
 - El piloto: un PM, una obra, al menos 2 semanas, en paralelo con el sistema actual. Se mide el tiempo de cierre y
   se comparan los datos.
