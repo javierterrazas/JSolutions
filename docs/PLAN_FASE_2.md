@@ -171,6 +171,11 @@ aprobar los gastos en revisión y contestar los avisos.
   `prueba_tardio_ui`, `prueba_pordia_ui`, `prueba_noaplica_ui`, `prueba_fotos_despues_ui`, `prueba_numeros_ui`,
   `prueba_formularios_ui` (lo del PM), `prueba_pin`, `prueba_cola`, `prueba_idioma`, `prueba_scroll` y
   `prueba_placeholder`.
+  - **7a.1. La base** — hecha: `pnpm e2e` corre Playwright (Pixel 7, `es-MX`, zona de Chicago) sobre la app
+    compilada y la base local reiniciada con el seed; cada prueba entra canjeando una invitación nueva, como un
+    celular nuevo. Ya están `prueba_pin` (los dos roles) y `prueba_idioma` (el PM en inglés no ve textos de la app en
+    español en sus pantallas, y el idioma elegido se guarda en él). En la integración continua, el trabajo
+    "Pantallas con Playwright".
 - Una revisión independiente de la seguridad de lo nuevo (sesión guardada, PIN, cola).
 - El piloto: un PM, una obra, al menos 2 semanas, en paralelo con el sistema actual. Se mide el tiempo de cierre y
   se comparan los datos.

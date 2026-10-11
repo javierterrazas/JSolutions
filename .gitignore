@@ -12,3 +12,7 @@ next-env.d.ts
 
 # libros con datos reales de un negocio (para cargarlos): nunca al repositorio
 /*.xlsx
+
+# lo que deja Playwright
+test-results/
+playwright-report/
