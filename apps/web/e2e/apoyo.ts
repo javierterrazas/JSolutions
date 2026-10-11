@@ -96,10 +96,16 @@ function enAmbos(texto: (m: typeof es) => string): RegExp {
   return new RegExp(`^(${escapar(texto(es))}|${escapar(texto(en as typeof es))})$`);
 }
 
-/** Canjea una invitación en este celular y deja la pantalla de elegir el PIN abierta. */
+/**
+ * Canjea una invitación en este celular y deja la pantalla de elegir el PIN abierta. Si el celular ya era de otro
+ * miembro, continúa de todos modos (D-038).
+ */
 export async function verificarCelular(page: Page, quien: Quien): Promise<void> {
   await page.goto(`/invitacion/${await invitacion(quien)}`);
-  await page.getByRole('button', { name: enAmbos((m) => m.invitacion.boton) }).click();
+  await page
+    .getByRole('button', { name: enAmbos((m) => m.invitacion.boton) })
+    .or(page.getByRole('button', { name: enAmbos((m) => m.invitacion.botonReemplazar) }))
+    .click();
   await expect(page).toHaveURL(/\/pin\/nuevo$/);
 }
 
@@ -165,4 +171,22 @@ export async function obraNueva(browser: Browser, cliente: string, pm = MIEMBROS
   } finally {
     await oficina.close();
   }
+}
+
+/** Las claves que la app guardó en la bodega `datos` del teléfono (IndexedDB, lib/almacen.ts). */
+export function datosDelTelefono(page: Page): Promise<string[]> {
+  return page.evaluate(
+    () =>
+      new Promise<string[]>((listo, falla) => {
+        const pedido = indexedDB.open('ijm');
+        pedido.onerror = () => falla(pedido.error);
+        pedido.onsuccess = () => {
+          const db = pedido.result;
+          if (!db.objectStoreNames.contains('datos')) return listo([]);
+          const claves = db.transaction('datos').objectStore('datos').getAllKeys();
+          claves.onsuccess = () => listo(claves.result.map(String).sort());
+          claves.onerror = () => falla(claves.error);
+        };
+      }),
+  );
 }

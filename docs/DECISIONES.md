@@ -999,3 +999,26 @@ inicio del PM y "Ver las fotos" en la lista de obras del dueño):
 
 **Diferencia con el legacy:** el legacy mostraba solo las fotos del cierre y de los avisos; aquí están todas las
 del PM en su obra.
+
+## D-054 · Lo que corrigió la revisión de seguridad de la fase 2
+
+Una revisión independiente (paso 7b) encontró cuatro huecos que se corrigen aquí. Otros hallazgos quedan pendientes
+(ver el plan de la fase 2).
+- **La huella del PIN solo en el teléfono del PM.** Con 4 o 6 dígitos, la huella del PIN local (D-047) se rompe en
+  minutos y revela el PIN real, que es el mismo del servidor. Solo el PM trabaja sin señal, así que solo en su
+  teléfono se guarda; cuando entra alguien más, se borran la copia, el PIN local y la huella por confirmar. En el
+  teléfono del PM el riesgo sigue: quien lo tenga en la mano con las herramientas del navegador puede sacar el PIN.
+  Ese PIN no abre dinero: el PM no lo ve.
+- **El día de una captura no va más atrás que un cierre tardío.** El día de un cierre o un gasto que llega de la
+  cola lo dice la hora del teléfono (`diaDeCaptura`, como el legacy, hasta 7 días). Un teléfono con la hora atrasada
+  cerraba así un día viejo sin quedar como tardío. Ahora no se acepta más atrás de los últimos 2 días laborables
+  (`validarDiaDeCaptura`, error `fuera_de_ventana`); un día no laborable entre ellos y hoy sí. **Diferencia con el
+  legacy.** Dentro de la ventana no se marca tardío: no se distingue de un cierre que se quedó sin señal, y la
+  bitácora guarda cuándo llegó (`enviado_en`).
+- **La cola del teléfono es de quien la capturó.** Cada registro lleva el miembro que entró en el teléfono, y solo
+  se envía y se muestra lo suyo. Si el teléfono pasa a otro miembro, lo del anterior se aparta, sin borrarse, hasta
+  que vuelva a entrar ahí. Antes, lo pendiente de un PM salía con la sesión del otro. Lo que guardó una versión
+  anterior no dice de quién es, y se envía como antes.
+- **Un gasto que el PM corrige arriba de su límite vuelve a la revisión del dueño** (decisión del dueño). Lo hace la
+  base (`revisar_gasto_corregido`): el PM no puede cambiar `revision`, así que tampoco puede quitarse de ella. Queda
+  en el rastro de la corrección. **Diferencia con el legacy**, que no lo revisaba.

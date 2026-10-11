@@ -4,6 +4,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
+  corregir,
   datosParaGasto,
   gastoDeClave,
   gastosEnRevision,
@@ -91,6 +92,17 @@ describe('registrar un gasto', () => {
           'partida_de_otra_obra',
         );
     }));
+
+  it('con la hora del teléfono atrasada, no más atrás que un cierre tardío (D-054)', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const lunes = enAustin('2026-10-12', 9);
+      expect(
+        await codigo(tx, () => registrarGasto(tx, gasto({ capturado: '2026-10-08T12:00:00-05:00' }), lunes)),
+      ).toBe('fuera_de_ventana');
+      const r = await registrarGasto(tx, gasto({ capturado: '2026-10-09T12:00:00-05:00' }), lunes);
+      const [g] = await tx`select to_char(dia, 'YYYY-MM-DD') as dia from gastos where id = ${r.gastoId}`;
+      expect(g).toEqual({ dia: '2026-10-09' });
+    }));
 });
 
 describe('arriba del límite: la revisión del dueño', () => {
@@ -118,6 +130,33 @@ describe('arriba del límite: la revisión del dueño', () => {
       expect(await codigo(tx, () => marcarGastoRevisado(tx, { gastoId: r.gastoId }))).toBe(
         'registro_no_encontrado',
       );
+    }));
+
+  it('uno que el PM corrige arriba del límite le vuelve a aparecer al dueño (D-054)', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const r = await registrarGasto(tx, gasto({ monto: 10, proveedor: 'Lowes' }));
+      expect(r.enRevision).toBe(false);
+      const subir = (monto: number) =>
+        corregir(tx, {
+          tabla: 'gastos',
+          registroId: r.gastoId,
+          cambios: { monto },
+          motivo: 'Era otro ticket',
+        });
+      // abajo del límite sigue sin revisión
+      await subir(250);
+      expect((await tx`select revision from gastos where id = ${r.gastoId}`)[0]!.revision).toBeNull();
+      await subir(5000);
+      expect((await tx`select revision from gastos where id = ${r.gastoId}`)[0]!.revision).toBe('pendiente');
+
+      await como(tx, USUARIOS.duenoA);
+      expect(await gastosEnRevision(tx)).toEqual([
+        expect.objectContaining({ id: r.gastoId, monto: 5000, proveedor: 'Lowes' }),
+      ]);
+      // y queda en el rastro de la corrección
+      const rastro = await tx`
+        select campo, despues from correcciones where registro_id = ${r.gastoId} and campo = 'revision'`;
+      expect(rastro).toEqual([{ campo: 'revision', despues: 'pendiente' }]);
     }));
 });
 

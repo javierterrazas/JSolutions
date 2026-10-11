@@ -106,7 +106,8 @@ const EntradaCorreccion = z.object({
 
 /**
  * Edita campos de un registro. Si cambia la partida, el registro se mueve con ella a su espacio. Si cambian las horas
- * de un trabajador, se vuelve a revisar su tope del día sumando obras. Errores de validarCorreccion,
+ * de un trabajador, se vuelve a revisar su tope del día sumando obras. Si el PM sube un gasto arriba de su límite,
+ * le vuelve a aparecer al dueño para revisarlo. Errores de validarCorreccion,
  * cambiosAplicables, validarHoras, y `registro_no_encontrado`.
  */
 export async function corregir(
@@ -148,8 +149,12 @@ export async function corregir(
       r.id,
     );
   }
-  const actualizados = await tx`update ${tx(t)} set ${tx(valores)} where id = ${r.id} returning id`;
+  const actualizados = await tx<{ id: string; revision?: string | null }[]>`
+    update ${tx(t)} set ${tx(valores)} where id = ${r.id} returning *`;
   if (!actualizados.length) throw new ErrorDeNegocio('sin_permiso');
+  // un gasto que el PM subió arriba de su límite: la base lo regresó a revisión (D-054), y queda en el rastro
+  if (t === 'gastos' && actualizados[0]!.revision !== r.revision)
+    cambios.push({ campo: 'revision', antes: r.revision, despues: actualizados[0]!.revision });
   await dejarRastro(tx, s, t, r.id, 'editar', cambios, e.motivo);
   return { cambios: cambios.length };
 }

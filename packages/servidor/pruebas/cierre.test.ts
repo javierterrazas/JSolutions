@@ -189,6 +189,23 @@ describe('el día y el cierre tardío', () => {
       );
       expect(r.dia).toBe('2026-10-12');
     }));
+
+  it('un teléfono con la hora atrasada no cierra días viejos sin pasar por el cierre tardío (D-054)', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const d = await datosDe(tx, OBRAS.a1Carlos);
+      const capturado = (c: string) => ({
+        obraId: OBRAS.a1Carlos,
+        partidas: [d.rough.id],
+        fotosPorSubir: 1,
+        capturado: c,
+      });
+      // el jueves queda más atrás de la ventana del lunes (sábado y viernes)
+      expect(await codigo(tx, () => cerrarDia(tx, capturado('2026-10-08T17:00:00-05:00'), LUNES))).toBe(
+        'fuera_de_ventana',
+      );
+      // el viernes sí: un cierre que se quedó en la cola sin señal el fin de semana
+      expect((await cerrarDia(tx, capturado('2026-10-09T17:00:00-05:00'), LUNES)).dia).toBe('2026-10-09');
+    }));
 });
 
 describe('calidad y cuadrilla al cerrar', () => {

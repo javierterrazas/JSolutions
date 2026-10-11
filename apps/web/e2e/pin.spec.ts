@@ -1,7 +1,7 @@
 // El PIN en pantalla (legacy/pruebas/prueba_pin.py): se escribe oculto con el teclado numérico, el ojo lo muestra
 // y lo vuelve a ocultar sin borrarlo, en los dos idiomas; y con él se entra y se vuelve a entrar después de salir.
 import { expect, test } from '@playwright/test';
-import { en, es, MIEMBROS, verificarCelular, type Quien } from './apoyo';
+import { datosDelTelefono, en, es, MIEMBROS, verificarCelular, type Quien } from './apoyo';
 
 for (const quien of ['pm', 'dueno'] as const satisfies readonly Quien[]) {
   test(`el PIN del ${quien}`, async ({ page }) => {
@@ -55,5 +55,10 @@ for (const quien of ['pm', 'dueno'] as const satisfies readonly Quien[]) {
     await campo.fill(pin);
     await page.getByRole('button', { name: es.pin.entrar }).click();
     await expect(hola).toBeVisible();
+
+    // solo el PM trabaja sin señal: en el teléfono de nadie más queda la huella del PIN, que lo revelaría (D-054)
+    const datos = await datosDelTelefono(page);
+    if (quien === 'pm') await expect.poll(() => datosDelTelefono(page)).toContain('pin');
+    else expect(datos.filter((c) => c.startsWith('pin'))).toEqual([]);
   });
 }

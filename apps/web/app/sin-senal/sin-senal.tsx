@@ -5,7 +5,7 @@ import type { CopiaSinSenal } from '@ijm/servidor';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, useEffect, useState } from 'react';
 import type { ElementoCola } from '@/lib/cola';
-import { alCambiar, pendientes } from '@/lib/cola-telefono';
+import { alCambiar, fijarMiembroDeLaCola, pendientes } from '@/lib/cola-telefono';
 import { guardarPin, leerCopia, leerPin } from '@/lib/copia-telefono';
 import {
   datosDeHoy,
@@ -88,8 +88,11 @@ function PinLocalForm({ pin, alAbrir }: { pin: PinLocal; alAbrir: (p: PinLocal) 
       const coincide = (await huellaDePin(escrito, pin.sal)) === pin.huella;
       const r = revisarPinLocal(pin, coincide, new Date());
       await guardarPin(r.pin);
-      if (r.resultado.ok) alAbrir(r.pin);
-      else setProblema(r.resultado);
+      if (r.resultado.ok) {
+        // lo que capture sin señal es de quien abrió con su PIN
+        await fijarMiembroDeLaCola(r.pin.miembroId);
+        alAbrir(r.pin);
+      } else setProblema(r.resultado);
     } finally {
       setRevisando(false);
     }

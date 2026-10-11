@@ -1,7 +1,11 @@
 // La cola del teléfono: guarda en IndexedDB (almacen.ts), envía con las acciones de la cola (acciones/cola.ts) y
 // sigue las reglas de cola.ts. Las pantallas se enteran de cada cambio con `alCambiar`.
+//
+// La cola es del miembro que entró en este teléfono (D-054): cada registro lleva quién lo capturó, y solo se envía y se
+// muestra lo suyo. Si el teléfono pasa a otro miembro, lo del anterior se queda apartado (no se borra) hasta que él
+// vuelva a entrar aquí.
 import { enviarAviso, enviarCierre, enviarFoto, enviarGasto } from '@/app/acciones/cola';
-import { guardar, quitar, todos } from './almacen';
+import { guardar, leer, quitar, todos } from './almacen';
 import { type Almacen, type ElementoCola, type FinDeCola, procesarCola, type Rechazo } from './cola';
 
 const oyentes = new Set<() => void>();
@@ -13,8 +17,26 @@ export function alCambiar(fn: () => void): () => void {
   return () => oyentes.delete(fn);
 }
 
+const MIEMBRO = 'miembroDeLaCola';
+
+async function miembroDeLaCola(): Promise<string | null> {
+  return (await leer<{ clave: string; valor: string }>('datos', MIEMBRO))?.valor ?? null;
+}
+
+/** Quién entró en este teléfono: lo hacen las pantallas del PIN (con señal y sin señal). */
+export async function fijarMiembroDeLaCola(miembroId: string): Promise<void> {
+  await guardar('datos', { clave: MIEMBRO, valor: miembroId });
+  avisar();
+}
+
+/** Lo del miembro que entró (lo que no dice de quién es, de una versión anterior, también). */
+async function delMiembro<T extends { miembroId?: string }>(lista: Promise<T[]>): Promise<T[]> {
+  const [m, xs] = await Promise.all([miembroDeLaCola(), lista]);
+  return xs.filter((x) => !m || !x.miembroId || x.miembroId === m);
+}
+
 const almacen: Almacen = {
-  elementos: () => todos<ElementoCola>('cola'),
+  elementos: () => delMiembro(todos<ElementoCola>('cola')),
   guardar: async (e) => {
     await guardar('cola', e);
     avisar();
@@ -29,8 +51,8 @@ const almacen: Almacen = {
   },
 };
 
-export const pendientes = () => todos<ElementoCola>('cola');
-export const rechazados = () => todos<Rechazo>('rechazados');
+export const pendientes = () => delMiembro(todos<ElementoCola>('cola'));
+export const rechazados = () => delMiembro(todos<Rechazo>('rechazados'));
 export async function descartarRechazo(id: string) {
   await quitar('rechazados', id);
   avisar();
@@ -40,8 +62,10 @@ let orden = 0;
 /** El orden de llegada: la hora, y un contador para dos en el mismo milisegundo. */
 export const siguienteN = () => Date.now() * 1000 + (orden++ % 1000);
 
+/** A la cola, a nombre del miembro que entró en este teléfono. */
 export async function encolar(...elementos: ElementoCola[]) {
-  for (const e of elementos) await guardar('cola', e);
+  const m = await miembroDeLaCola();
+  for (const e of elementos) await guardar('cola', m ? { ...e, miembroId: m } : e);
   avisar();
 }
 

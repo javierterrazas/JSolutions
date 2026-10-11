@@ -9,7 +9,15 @@
 // se rechaza, sus fotos salen con él.
 import type { EntradaAviso, EntradaCierre, EntradaGasto } from '@ijm/servidor';
 
-export interface CierreEnCola {
+/**
+ * Lo que va en la cola es de quien lo capturó: en un teléfono que pasa a otro miembro, lo suyo se aparta y no se envía
+ * con la sesión del otro (D-054). Lo que guardó una versión anterior no lo dice.
+ */
+interface DeUnMiembro {
+  readonly miembroId?: string;
+}
+
+export interface CierreEnCola extends DeUnMiembro {
   readonly id: string;
   /** El orden de llegada a la cola. */
   readonly n: number;
@@ -21,7 +29,7 @@ export interface CierreEnCola {
 }
 
 /** Un gasto del PM (D-049), con su recibo detrás como foto. */
-export interface GastoEnCola {
+export interface GastoEnCola extends DeUnMiembro {
   readonly id: string;
   readonly n: number;
   readonly tipo: 'gasto';
@@ -32,7 +40,7 @@ export interface GastoEnCola {
 }
 
 /** Un aviso del PM (D-050), con sus fotos detrás. */
-export interface AvisoEnCola {
+export interface AvisoEnCola extends DeUnMiembro {
   readonly id: string;
   readonly n: number;
   readonly tipo: 'aviso';
@@ -42,7 +50,7 @@ export interface AvisoEnCola {
   readonly intentos: number;
 }
 
-export interface FotoEnCola {
+export interface FotoEnCola extends DeUnMiembro {
   readonly id: string;
   readonly n: number;
   readonly tipo: 'foto';
@@ -59,7 +67,7 @@ export interface FotoEnCola {
 
 export type ElementoCola = CierreEnCola | GastoEnCola | AvisoEnCola | FotoEnCola;
 
-export interface Rechazo {
+export interface Rechazo extends DeUnMiembro {
   readonly id: string;
   readonly cuando: string;
   readonly tipo: ElementoCola['tipo'];
@@ -130,6 +138,7 @@ export async function procesarCola(
       codigo: r.codigo,
       ...(r.datos ? { datos: r.datos } : {}),
       fotos: fotos.length,
+      ...(e.miembroId ? { miembroId: e.miembroId } : {}),
     });
   }
 }

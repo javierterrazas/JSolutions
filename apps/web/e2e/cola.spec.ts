@@ -3,7 +3,7 @@
 // sin duplicar nada; lo que una regla rechaza lo ve con la razón, sin atorar lo que venía detrás; y las fotos se
 // suben después aunque cierre la app. Cada prueba cierra el día de hoy en una obra nueva que da de alta el dueño.
 import { expect, type Page, type Request, test } from '@playwright/test';
-import { admin, entrar, es, hoy, obraNueva, otroCelular, t, tomarFoto } from './apoyo';
+import { admin, en, entrar, es, hoy, obraNueva, otroCelular, t, tomarFoto } from './apoyo';
 
 /** Una acción del servidor (un POST de Next con su encabezado) cuyo cuerpo lleva `texto`. */
 const esAccion = (r: Request, texto: string) =>
@@ -164,6 +164,31 @@ test('un cierre que una regla rechaza se ve con su razón, y el gasto que venía
   // el PM lo da por visto
   await page.getByRole('button', { name: es.cola.entendido }).click();
   await expect(page.getByText(es.errores.dia_ya_cerrado)).toHaveCount(0);
+});
+
+test('en un teléfono que pasa a otro PM, lo pendiente del primero se aparta y sale cuando él vuelve (D-054)', async ({
+  page,
+  context,
+  browser,
+}) => {
+  const obraId = await obraNueva(browser, 'Familia Celular Prestado');
+  await entrar(page, 'pm');
+  await llenarCierre(page, obraId, 1);
+  await context.setOffline(true);
+  await page.getByRole('button', { name: es.cierre.cerrar }).click();
+  await expect(page.getByRole('status')).toHaveText(es.cierre.guardadoSinRed);
+  await context.setOffline(false);
+
+  // Luis canjea su invitación en ese mismo teléfono: no ve lo de Carlos, ni se envía con su sesión
+  await entrar(page, 'pmIngles');
+  await expect(porEnviar(page)).toHaveCount(0);
+  await page.waitForTimeout(3000);
+  expect(await cierresDeHoy(obraId)).toEqual([]);
+  await expect(page.getByRole('button', { name: en.cola.entendido })).toHaveCount(0);
+
+  // Carlos vuelve a entrar en él: su cierre sale, a su nombre
+  await entrar(page, 'pm');
+  await expect.poll(() => cierresDeHoy(obraId), { timeout: 40_000 }).toEqual([1]);
 });
 
 test('las fotos del cierre se suben después, aunque el PM cierre la app', async ({ context, browser }) => {
