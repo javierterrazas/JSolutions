@@ -1,16 +1,18 @@
 // Da de alta una empresa con su dueño y imprime el enlace de invitación del dueño (D-038). Lo corre quien
-// administra la plataforma, desde su computadora, con la llave secreta del proyecto de Supabase en un archivo .env
-// que nunca se sube al repositorio:
+// administra la plataforma, desde su computadora, con la llave secreta del proyecto de Supabase y la conexión a su
+// base en un archivo .env que nunca se sube al repositorio:
 //
 //   node --env-file=.env.nube packages/servidor/scripts/alta-empresa.mjs \
 //     --empresa "IJM Construction" --ciudad "Austin, TX" --dueno "Javier" --correo dueno@ejemplo.com \
 //     --url https://j-solutions.vercel.app
 //
-// El .env necesita NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SECRET_KEY. No manda ningún correo: el enlace se abre en el
-// celular del dueño, vale 7 días y una sola vez.
+// El .env necesita NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SECRET_KEY (para crear el usuario en Auth) y DATABASE_URL
+// (la base, directo: la API de datos de Supabase está apagada, D-038). No manda ningún correo: el enlace se abre en
+// el celular del dueño, vale 7 días y una sola vez.
 import { randomBytes } from 'node:crypto';
 import { parseArgs } from 'node:util';
 import { createClient } from '@supabase/supabase-js';
+import postgres from 'postgres';
 
 const { values: a } = parseArgs({
   options: {
@@ -26,11 +28,12 @@ const { values: a } = parseArgs({
 const faltan = ['empresa', 'dueno', 'correo', 'url'].filter((k) => !a[k]);
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const llave = process.env.SUPABASE_SECRET_KEY;
-if (faltan.length || !url || !llave) {
+const base = process.env.DATABASE_URL;
+if (faltan.length || !url || !llave || !base) {
   console.error(
     faltan.length
       ? `Faltan: ${faltan.map((k) => '--' + k).join(', ')}`
-      : 'Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SECRET_KEY en el archivo .env',
+      : 'Faltan NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY o DATABASE_URL en el archivo .env',
   );
   process.exit(1);
 }
@@ -46,21 +49,24 @@ if (creado.error) {
 
 const token = randomBytes(32).toString('base64url');
 const expira = new Date(Date.now() + 7 * 24 * 3600 * 1000);
-const alta = await supabase.rpc('alta_empresa', {
-  p_nombre: a.empresa,
-  p_ciudad: a.ciudad,
-  p_zona: a.zona,
-  p_idioma: a.idioma,
-  p_dueno_user: creado.data.user.id,
-  p_dueno_nombre: a.dueno,
-  p_token: token,
-  p_expira: expira.toISOString(),
+// la base de la nube pide SSL; la local no lo tiene
+const sql = postgres(base, {
+  max: 1,
+  prepare: false,
+  onnotice: () => {},
+  ssl: /@(127\.0\.0\.1|localhost)[:/]/.test(base) ? false : 'require',
 });
-if (alta.error) {
+try {
+  await sql`
+    select public.alta_empresa(${a.empresa}, ${a.ciudad}, ${a.zona}, ${a.idioma}::public.idioma,
+                               ${creado.data.user.id}::uuid, ${a.dueno}, ${token}, ${expira.toISOString()}::timestamptz)`;
+} catch (e) {
   // sin empresa, el usuario no sirve: se borra para poder intentarlo de nuevo con el mismo correo
   await supabase.auth.admin.deleteUser(creado.data.user.id);
-  console.error(`No se pudo dar de alta la empresa: ${alta.error.message}`);
+  console.error(`No se pudo dar de alta la empresa: ${e instanceof Error ? e.message : String(e)}`);
   process.exit(1);
+} finally {
+  await sql.end();
 }
 
 console.log(`Empresa "${a.empresa}" dada de alta, con ${a.dueno} como dueño.`);

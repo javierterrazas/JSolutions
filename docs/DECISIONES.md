@@ -632,25 +632,32 @@ tipo en vez de su nombre.
   llave del anterior, que pierde el acceso ahí; su cuenta sigue intacta. Pasó en el piloto: el dueño abrió en su
   celular la invitación de un PM. Desde entonces, la invitación avisa a quién le quitaría el celular antes de
   canjearse. Y si el dueño ya no puede entrar a Equipo para reinvitarse, quien administra la plataforma genera
-  la invitación con `packages/servidor/scripts/invitar-de-nuevo.ts --correo …`, con la llave secreta. Para usar
+  la invitación con `packages/servidor/scripts/invitar-de-nuevo.ts --correo …`, conectado directo a la base. Para usar
   la app como dos personas en un mismo teléfono hacen falta dos navegadores (en iPhone, la app instalada y
   Safari guardan cookies distintas).
 - **Todo pasa por funciones de la base** (security definer), que solo puede ejecutar `servidor_app`. Nadie
   escribe directo en `miembros`, `dispositivos` ni `invitaciones`. Nadie lee la llave, el PIN, los intentos ni
   el token: ni la API ni el servidor.
 - **El alta de una empresa** con su dueño la hace quien administra la plataforma, con
-  `packages/servidor/scripts/alta-empresa.mjs` y la llave secreta. Es la única escritura con el service role
-  (`alta_empresa`, que solo él puede ejecutar). Ningún usuario da de alta empresas en las fases 1 a 3.
+  `packages/servidor/scripts/alta-empresa.mjs`: crea el usuario en Auth con la llave secreta y la empresa con
+  `alta_empresa`, que nadie de la app puede ejecutar, conectado directo a la base. Ningún usuario da de alta
+  empresas en las fases 1 a 3.
 
 **Diferencia con lo planeado:** el PIN no lo revisa el service role (D-027) sino una función de la base. Así
 ningún código de la app toca el hash del PIN, y el límite de intentos no se puede saltar con dos peticiones al
 mismo tiempo, porque la función bloquea el renglón mientras revisa.
 
 **Límites conocidos** (para la revisión independiente del paso 7):
-- La API de Supabase (PostgREST) revisa la sesión de Auth, pero no el PIN ni el celular. Quien sacara los
-  tokens de las cookies podría **leer**, sin escribir (D-026), lo que su rol ve, hasta que venza el token (una
-  hora) o se quite el celular. Sacar esos tokens no es fácil, porque las cookies son httpOnly. Hay dos formas de
-  cerrarlo: que la API exija el celular abierto, o acortar la vida del token.
+- ~~La API de Supabase (PostgREST) revisa la sesión de Auth, pero no el PIN ni el celular.~~ **Cerrado al
+  terminar la fase 2** (revisión del paso 7b): el límite era más amplio de lo que decía aquí. Una sesión de Auth
+  se consigue también pidiendo un código al correo del miembro, sin celular ni PIN, y dura lo que su token de
+  renovación; ni "Salir", ni el PIN vencido, ni quitar el celular la cortaban para la API. Con ella se podía leer
+  todo lo que el rol ve (el dueño, todo el dinero). La app nunca usó esa API (todo pasa por el servidor, y las
+  fotos por Storage), así que **se apagó la API de datos en la nube** (Data API, con GraphQL), y los scripts de
+  administración se conectan directo a la base (`DATABASE_URL`). Una sesión de Auth sola ya no lee nada. El
+  límite de tiempo de las sesiones de Auth es del plan Pro de Supabase; con la API apagada no hace falta.
+  "Salir" no cierra la sesión de Auth a propósito: el PIN la vuelve a abrir en ese celular; cerrarla obligaría a
+  pedir una invitación nueva.
 - Sin señal, el PIN del teléfono (paso 5) será solo un candado local: los datos no llegan a la base sin la
   revisión del servidor.
 
@@ -663,8 +670,8 @@ mismo tiempo, porque la función bloquea el renglón mientras revisa.
 3. La obra piloto se da de alta con una **pantalla mínima** "Nueva obra + presupuesto".
 
 **Cómo se carga el libro.** El dueño descarga su Google Sheet como .xlsx, y quien administra la plataforma corre
-`packages/servidor/scripts/cargar-libro.ts` con la llave secreta. El script convierte el libro con
-`importar/libro.ts` y la base lo guarda con `cargar_libro`, una función que solo puede ejecutar el service role:
+`packages/servidor/scripts/cargar-libro.ts`, conectado directo a la base (D-038). El script convierte el libro con
+`importar/libro.ts` y la base lo guarda con `cargar_libro`, una función que nadie de la app puede ejecutar:
 - **Qué se carga:**
   - el catálogo: tipos de espacio, partidas con su peso, días, responsable, paralelo, espera, etapa y punto de
     control, las etapas, los oficios y los puntos de control con sus preguntas;

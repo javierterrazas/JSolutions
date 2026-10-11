@@ -147,11 +147,13 @@ pnpm e2e                Playwright: las pantallas sobre `pnpm build`; reinicia l
 pnpm plantilla          regenera docs/plantilla/ (la plantilla de datos iniciales, D-039)
 ```
 
-Con la llave secreta de la nube en un `.env.nube` que no se sube (lo corre quien administra la plataforma):
+Con la conexión a la base de la nube (`DATABASE_URL`) y su llave secreta en un `.env.nube` que no se sube (lo corre
+quien administra la plataforma). Van directo a la base: la API de datos de Supabase está apagada (D-038).
 
 ```
-node --env-file=.env.nube packages/servidor/scripts/alta-empresa.mjs …        dar de alta una empresa (D-038)
-pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/cargar-libro.ts …  cargarle su libro (D-039)
+node --env-file=.env.nube packages/servidor/scripts/alta-empresa.mjs …           dar de alta una empresa (D-038)
+pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/cargar-libro.ts …     cargarle su libro (D-039)
+pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/invitar-de-nuevo.ts … reinvitar a un miembro (D-038)
 ```
 
 ## Documentos

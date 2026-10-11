@@ -1,6 +1,7 @@
 // Carga en una empresa su libro del sistema actual (D-039): catálogo, configuración, metas, subcontratistas y
 // cuadrilla. Primero muestra lo que va a cargar; solo carga con --confirmar. Lo corre quien administra la
-// plataforma, con la llave secreta en un archivo .env que nunca se sube al repositorio:
+// plataforma, con la conexión a la base (DATABASE_URL: directo, porque la API de datos de Supabase está apagada,
+// D-038) en un archivo .env que nunca se sube al repositorio:
 //
 //   pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/cargar-libro.ts \
 //     --libro "C:\Users\...\Gestion_Obra_IJM.xlsx" --empresa "IJM Construction" [--confirmar]
@@ -8,7 +9,7 @@
 // El libro se descarga de Google Sheets con Archivo → Descargar → Microsoft Excel (.xlsx).
 import { parseArgs } from 'node:util';
 import { esErrorDeNegocio } from '@ijm/core';
-import { createClient } from '@supabase/supabase-js';
+import postgres from 'postgres';
 import { datosDelLibro, type DatosDelLibro } from '../src/importar/libro';
 import { leerLibro } from '../src/importar/xlsx';
 
@@ -19,13 +20,10 @@ const { values: a } = parseArgs({
     confirmar: { type: 'boolean', default: false },
   },
 });
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const llave = process.env.SUPABASE_SECRET_KEY;
-if (!a.libro || !a.empresa || !url || !llave) {
+const base = process.env.DATABASE_URL;
+if (!a.libro || !a.empresa || !base) {
   console.error(
-    !a.libro || !a.empresa
-      ? 'Faltan --libro o --empresa'
-      : 'Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SECRET_KEY en el archivo .env',
+    !a.libro || !a.empresa ? 'Faltan --libro o --empresa' : 'Falta DATABASE_URL en el archivo .env',
   );
   process.exit(1);
 }
@@ -48,14 +46,17 @@ try {
   process.exit(1);
 }
 
-const supabase = createClient(url, llave, { auth: { persistSession: false, autoRefreshToken: false } });
-const { data: empresas, error } = await supabase
-  .from('empresas')
-  .select('id, nombre')
-  .eq('nombre', a.empresa);
-if (error) throw error;
+// la base de la nube pide SSL; la local no lo tiene
+const sql = postgres(base, {
+  max: 1,
+  prepare: false,
+  onnotice: () => {},
+  ssl: /@(127\.0\.0\.1|localhost)[:/]/.test(base) ? false : 'require',
+});
+const empresas = await sql<{ id: string }[]>`select id from public.empresas where nombre = ${a.empresa}`;
 if (empresas.length !== 1) {
   console.error(`No hay una empresa que se llame "${a.empresa}" (escríbelo igual que en el alta).`);
+  await sql.end();
   process.exit(1);
 }
 
@@ -90,16 +91,22 @@ console.log(
 
 if (!a.confirmar) {
   console.log('\nNo se cargó nada. Si todo está bien, vuelve a correrlo con --confirmar.');
+  await sql.end();
   process.exit(0);
 }
 
-const carga = await supabase.rpc('cargar_libro', { p_empresa: empresas[0]!.id, p_datos: datos });
-if (carga.error) {
+try {
+  const [carga] = await sql<{ r: unknown }[]>`
+    select public.cargar_libro(${empresas[0]!.id}::uuid, ${sql.json(JSON.parse(JSON.stringify(datos)))}) as r`;
+  console.log('\nCargado:', carga!.r);
+} catch (e) {
+  const mensaje = e instanceof Error ? e.message : String(e);
   console.error(
-    carga.error.message === 'empresa_con_catalogo'
+    mensaje === 'empresa_con_catalogo'
       ? 'Esa empresa ya tiene catálogo: no se carga dos veces. Los cambios se harán desde las pantallas del dueño.'
-      : `No se pudo cargar: ${carga.error.message}`,
+      : `No se pudo cargar: ${mensaje}`,
   );
-  process.exit(1);
+  process.exitCode = 1;
+} finally {
+  await sql.end();
 }
-console.log('\nCargado:', carga.data);
