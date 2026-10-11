@@ -49,13 +49,27 @@ function variable(nombre: string): string {
 }
 
 /**
+ * La base local con la llave secreta, sin RLS: para preparar lo que la app no hace (una invitación) y para revisar
+ * lo que quedó guardado. Nunca para hacer lo que la prueba debe hacer en la pantalla.
+ */
+export function admin() {
+  return createClient(variable('NEXT_PUBLIC_SUPABASE_URL'), variable('SUPABASE_SECRET_KEY'), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+/** Hoy en la zona de la empresa, "AAAA-MM-DD", más `dias`. */
+export function hoy(dias = 0): string {
+  const d = new Date(Date.now() + dias * 24 * 3600 * 1000);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(d);
+}
+
+/**
  * Una invitación nueva para el miembro, como la del script invitar-de-nuevo: la base guarda solo el hash del token.
  * Cada prueba que la canjea verifica un celular nuevo (su propio contexto del navegador).
  */
 export async function invitacion(quien: Quien): Promise<string> {
-  const supabase = createClient(variable('NEXT_PUBLIC_SUPABASE_URL'), variable('SUPABASE_SECRET_KEY'), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const supabase = admin();
   const { data: usuarios, error } = await supabase.auth.admin.listUsers({ perPage: 200 });
   if (error) throw error;
   const userId = usuarios.users.find((u) => u.email === MIEMBROS[quien].correo)?.id;
@@ -113,8 +127,42 @@ export function otroCelular(browser: Browser, opciones: BrowserContextOptions = 
   return browser.newContext({ ...devices['Pixel 7'], locale, timezoneId, baseURL, ...opciones });
 }
 
-/** Toma una foto con la cámara del teléfono y espera a que la app la tenga lista (la comprime antes). */
-export async function tomarFoto(page: Page, idioma: 'es' | 'en' = 'es'): Promise<void> {
+/**
+ * Toma una foto con la cámara del teléfono y espera a que la app la tenga lista (la comprime antes): `n` es cuántas
+ * lleva con esta.
+ */
+export async function tomarFoto(page: Page, idioma: 'es' | 'en' = 'es', n = 1): Promise<void> {
   await page.locator('input[type="file"]').setInputFiles(FOTO);
-  await expect(page.getByText(t[idioma]('fotos.n', { n: 1 }), { exact: true })).toBeVisible();
+  await expect(page.getByText(t[idioma]('fotos.n', { n }), { exact: true })).toBeVisible();
+}
+
+/**
+ * Una obra nueva para el PM, con un baño y su presupuesto completo, dada de alta por el dueño en su pantalla desde
+ * otro teléfono: así una prueba tiene un día de hoy sin cerrar, pase lo que pase en las demás. Devuelve su id.
+ */
+export async function obraNueva(browser: Browser, cliente: string, pm = MIEMBROS.pm.nombre): Promise<string> {
+  const oficina = await otroCelular(browser);
+  try {
+    const page = await oficina.newPage();
+    await entrar(page, 'dueno');
+    await page.goto('/obras/nueva');
+    const o = es.obraNueva;
+    await page.getByRole('textbox', { name: o.cliente, exact: true }).fill(cliente);
+    await page.getByRole('textbox', { name: o.telefono, exact: true }).fill('512-555-0190');
+    await page.getByRole('textbox', { name: o.direccion, exact: true }).fill(`${cliente} 100, Austin, TX`);
+    await page.getByRole('combobox', { name: o.pm, exact: true }).selectOption({ label: pm });
+    await page.getByLabel(o.inicio, { exact: true }).fill(hoy());
+    await page.getByLabel(o.entrega, { exact: true }).fill(hoy(30));
+    await page.getByRole('textbox', { name: o.contrato, exact: true }).fill('20000');
+    await page.getByRole('combobox', { name: o.tipo, exact: true }).selectOption({ label: 'Baño' });
+    await page.getByRole('textbox', { name: o.pies2, exact: true }).fill('45');
+    await page.getByRole('button', { name: o.crear, exact: true }).click();
+    await expect(page).toHaveURL(/\/obras\/[0-9a-f-]{36}\/presupuesto$/);
+    for (const monto of await page.locator('fieldset').getByRole('textbox').all()) await monto.fill('1000');
+    await page.getByRole('button', { name: es.presupuesto.guardar }).click();
+    await expect(page.getByRole('status')).toHaveText(es.presupuesto.completo);
+    return page.url().split('/').at(-2)!;
+  } finally {
+    await oficina.close();
+  }
 }
