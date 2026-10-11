@@ -45,6 +45,7 @@ las pruebas usan esos mismos valores si no encuentran `DATABASE_URL`.
 | `pnpm test:paridad` | las reglas de `packages/core` contra el legacy | no |
 | `pnpm test:rls` | la muralla financiera y el aislamiento entre empresas | sí |
 | `pnpm test:integracion` | las funciones del servidor contra la base local | sí |
+| `pnpm e2e` | las pantallas con Playwright, en tamaño de teléfono, sobre la app compilada: primero `pnpm build` (y una vez `pnpm exec playwright install chromium`). Reinicia la base local con el seed antes de empezar | sí |
 | `pnpm lint` · `pnpm typecheck` · `pnpm format:check` | revisión de código, tipos y formato | no |
 | `pnpm db:start` · `pnpm db:stop` | levanta o detiene Supabase local, solo con lo que usan las pruebas (base, Auth, API y Storage) | — |
 | `pnpm db:start:completo` | Supabase local con todos sus servicios, incluido Studio (http://127.0.0.1:54323) | — |

@@ -143,7 +143,7 @@ pnpm test:rls           la muralla financiera y el aislamiento entre empresas
 pnpm db:reset           recrea la base local desde supabase/migrations/
 pnpm db:esquema         regenera el esquema de Drizzle desde la base (después de cambiar una migración)
 pnpm dev                la app en desarrollo
-pnpm e2e                Playwright
+pnpm e2e                Playwright: las pantallas sobre `pnpm build`; reinicia la base local con el seed
 pnpm plantilla          regenera docs/plantilla/ (la plantilla de datos iniciales, D-039)
 ```
 

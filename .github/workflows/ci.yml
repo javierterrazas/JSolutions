@@ -45,3 +45,42 @@ jobs:
       - run: pnpm test:integracion
       - if: always()
         run: pnpm exec supabase stop --no-backup
+
+  pantallas:
+    name: Pantallas con Playwright
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm db:start
+      # la app toma las llaves de la base local; las NEXT_PUBLIC_ se fijan al compilar, así que van antes del build
+      - name: apps/web/.env.local
+        run: |
+          pnpm exec supabase status -o env 2>/dev/null | grep -E '^[A-Z_]+=' > "$RUNNER_TEMP/supabase.env"
+          set -a; . "$RUNNER_TEMP/supabase.env"; set +a
+          {
+            echo "DATABASE_URL=$DB_URL"
+            echo "SERVIDOR_DATABASE_URL=postgresql://ijm_servidor:ijm-servidor-local@127.0.0.1:54322/postgres"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
+          } > apps/web/.env.local
+      - run: pnpm build
+      # la base acaba de crearse con el seed: no hace falta reiniciarla
+      - run: pnpm e2e
+        env:
+          E2E_SIN_RESET: '1'
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+      - if: always()
+        run: pnpm exec supabase stop --no-backup
