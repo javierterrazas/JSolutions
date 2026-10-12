@@ -5,11 +5,14 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
   corregir,
+  datosParaCompra,
   datosParaGasto,
   gastoDeClave,
   gastosEnRevision,
   marcarGastoRevisado,
+  registrarCompraOficina,
   registrarGasto,
+  seguimientoDeObra,
   type Tx,
 } from '../src/index';
 import { codigo, como, enAustin, MIEMBROS, OBRAS, probarComo, servidor, USUARIOS } from './apoyo';
@@ -180,5 +183,98 @@ describe('la pantalla de gastos del PM', () => {
       expect(d.recientes.map((g) => g.id)).toContain(r.gastoId);
       await como(tx, USUARIOS.luis);
       expect(await datosParaGasto(tx, { obraId: OBRAS.a1Carlos })).toBeNull();
+    }));
+});
+
+// D-063: el dueño registra en una obra lo que compró la oficina.
+describe('las compras de la oficina', () => {
+  const LUNES = enAustin('2026-10-12', 9);
+  const compra = (extra: Record<string, unknown> = {}) => ({
+    obraId: OBRAS.a1Carlos,
+    monto: 340.25,
+    proveedor: ' Floor & Decor ',
+    descripcion: 'Tile 12x24',
+    ...extra,
+  });
+
+  it('el dueño la registra en la obra, con su día, cómo se pagó y su partida; cuenta en el seguimiento', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const d = (await datosParaCompra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!;
+      expect(d).toMatchObject({ obra: { folio: 'OB-001' }, hoy: '2026-10-12' });
+      const rough = d.espacios.flatMap((e) => e.partidas).find((p) => p.nombre.es === 'Rough de plomería')!;
+      const antes = (await seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!.presupuesto.gastado;
+
+      const r = await registrarCompraOficina(
+        tx,
+        compra({ partidaId: rough.id, dia: '2026-10-09', metodoPago: 'zelle', categoria: 'material' }),
+        LUNES,
+      );
+      expect(r.folio).toMatch(/^GTO-/);
+      const [g] = await tx`
+        select to_char(dia, 'YYYY-MM-DD') as dia, proveedor, monto, metodo_pago, origen, revision, partida_obra_id,
+               creado_por
+        from gastos where id = ${r.gastoId}`;
+      expect(g).toEqual({
+        dia: '2026-10-09',
+        proveedor: 'Floor & Decor',
+        monto: '340.25',
+        metodo_pago: 'zelle',
+        origen: 'oficina',
+        revision: null,
+        partida_obra_id: rough.id,
+        creado_por: MIEMBROS.duenoA,
+      });
+      expect(
+        (await seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!.presupuesto.gastado,
+      ).toBeCloseTo(antes + 340.25, 2);
+
+      // sin partida va a Generales de obra; sin día, es de hoy
+      const sin = await registrarCompraOficina(tx, compra(), LUNES);
+      const [h] = await tx`
+        select to_char(g.dia, 'YYYY-MM-DD') as dia, t.es_generales as generales
+        from gastos g join espacios e on e.id = g.espacio_id join tipos_espacio t on t.id = e.tipo_espacio_id
+        where g.id = ${sin.gastoId}`;
+      expect(h).toEqual({ dia: '2026-10-12', generales: true });
+
+      // en una obra que todavía no arranca, la compra aparece en su día a día
+      await registrarCompraOficina(tx, compra({ obraId: OBRAS.a2Luis, dia: '2026-10-10' }), LUNES);
+      const luis = (await seguimientoDeObra(tx, { obraId: OBRAS.a2Luis }, LUNES))!;
+      expect(luis.dias.find((x) => x.dia === '2026-10-10')?.gastos).toContainEqual({
+        proveedor: 'Floor & Decor',
+        monto: 340.25,
+        origen: 'oficina',
+      });
+
+      // el PM no la ve
+      await como(tx, USUARIOS.carlos);
+      expect(await tx`select id from gastos where id = ${r.gastoId}`).toEqual([]);
+    }));
+
+  it('rechaza lo que no cuadra; el PM no registra compras de la oficina', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      expect(
+        await codigo(tx, () =>
+          registrarCompraOficina(tx, compra({ proveedor: ' ', descripcion: '' }), LUNES),
+        ),
+      ).toBe('faltan');
+      expect(await codigo(tx, () => registrarCompraOficina(tx, compra({ monto: 0 }), LUNES))).toBe(
+        'monto_invalido',
+      );
+      expect(await codigo(tx, () => registrarCompraOficina(tx, compra({ dia: '2026-10-13' }), LUNES))).toBe(
+        'dia_futuro',
+      );
+      const [ajena] = await tx<
+        { id: string }[]
+      >`select id from partidas_obra where obra_id = ${OBRAS.a2Luis} limit 1`;
+      expect(
+        await codigo(tx, () => registrarCompraOficina(tx, compra({ partidaId: ajena!.id }), LUNES)),
+      ).toBe('partida_de_otra_obra');
+      await como(tx, USUARIOS.duenoB);
+      expect(await codigo(tx, () => registrarCompraOficina(tx, compra(), LUNES))).toBe('obra_no_encontrada');
+      await como(tx, USUARIOS.carlos);
+      expect(await codigo(tx, () => registrarCompraOficina(tx, compra(), LUNES))).toBe('solo_dueno');
+      expect(await codigo(tx, () => datosParaCompra(tx, { obraId: OBRAS.a1Carlos }, LUNES))).toBe(
+        'solo_dueno',
+      );
     }));
 });

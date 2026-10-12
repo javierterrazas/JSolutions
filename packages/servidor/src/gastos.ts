@@ -5,11 +5,18 @@
 //
 // El gasto lleva una clave de envío (D-049): sin señal va a la cola del teléfono, y un reintento con la misma clave
 // recibe el gasto que ya existe.
-import { diaDeCaptura, ErrorDeNegocio, estadoDePartida, exigir, validarDiaDeCaptura } from '@ijm/core';
+import {
+  type Dia,
+  diaDeCaptura,
+  ErrorDeNegocio,
+  estadoDePartida,
+  exigir,
+  validarDiaDeCaptura,
+} from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import type { Nombre } from './consultas-obra';
-import { instante, textoCorto, textoLargo, uuid, validarEntrada } from './entrada';
+import { dia, instante, textoCorto, textoLargo, uuid, validarEntrada } from './entrada';
 import { exigirDueno, leerSesion } from './sesion';
 
 export const CATEGORIAS_GASTO = [
@@ -293,4 +300,122 @@ export async function marcarGastoRevisado(
   const r =
     await tx`update gastos set revision = 'revisado' where id = ${gastoId} and revision = 'pendiente'`;
   if (!r.count) throw new ErrorDeNegocio('registro_no_encontrado');
+}
+
+// ------------------------------------------------------------------ las compras de la oficina
+/** Cómo pagó la oficina una compra. */
+export const METODOS_PAGO = [
+  'transferencia',
+  'tarjeta',
+  'cheque',
+  'zelle',
+  'efectivo',
+  'tarjeta_empresa',
+] as const;
+export type MetodoPago = (typeof METODOS_PAGO)[number];
+
+export interface DatosCompra {
+  readonly obra: { id: string; folio: string; cliente: string };
+  /** Hoy en la zona de la empresa: el día de la compra si no se dice otro. */
+  readonly hoy: Dia;
+  /** Cada espacio con sus partidas (también las terminadas: a veces se paga después). */
+  readonly espacios: readonly {
+    id: string;
+    nombre: string;
+    partidas: readonly { id: string; nombre: Nombre }[];
+  }[];
+}
+
+/** Lo que necesita la pantalla de una compra de la oficina (D-063). Null si la obra no existe. Solo el dueño. */
+export async function datosParaCompra(
+  tx: Tx,
+  entrada: { obraId: string },
+  ahora = new Date(),
+): Promise<DatosCompra | null> {
+  const { obraId } = validarEntrada(z.object({ obraId: uuid }), entrada);
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  const [obra] = await tx<{ id: string; folio: string; cliente: string }[]>`
+    select id, folio, cliente from obras where id = ${obraId}`;
+  if (!obra) return null;
+  const espacios = await tx<{ id: string; nombre: string }[]>`
+    select id, nombre from espacios where obra_id = ${obraId} order by orden`;
+  const partidas = await tx<{ id: string; espacio_id: string; es: string; en: string | null }[]>`
+    select id, espacio_id, nombre_es as es, nombre_en as en from partidas_obra
+    where obra_id = ${obraId} and estado = 'activa' order by orden, nombre_es`;
+  return {
+    obra,
+    hoy: s.hoy,
+    espacios: espacios
+      .map((e) => ({
+        id: e.id,
+        nombre: e.nombre,
+        partidas: partidas
+          .filter((p) => p.espacio_id === e.id)
+          .map((p) => ({ id: p.id, nombre: { es: p.es, en: p.en } })),
+      }))
+      .filter((e) => e.partidas.length),
+  };
+}
+
+const EntradaCompra = z.object({
+  obraId: uuid,
+  monto: z.number().nullish(),
+  /** El día de la compra; hoy, si no se dice. */
+  dia: dia.nullish(),
+  partidaId: uuid.nullish(),
+  categoria: z.enum(CATEGORIAS_GASTO).default('material'),
+  proveedor: textoCorto.nullish(),
+  descripcion: textoLargo.nullish(),
+  metodoPago: z.enum(METODOS_PAGO).default('transferencia'),
+});
+export type EntradaCompra = z.input<typeof EntradaCompra>;
+
+/**
+ * Una compra de la oficina para una obra (D-063; legacy: duGasto): el dueño o el administrador la registra con su
+ * proveedor, qué se compró, el monto, el día, cómo se pagó y, si se sabe, la partida; sin partida va a Generales de
+ * obra. El PM nunca la ve. Errores: `faltan` (proveedor, descripción), `monto_invalido`, `dia_futuro`,
+ * `obra_no_encontrada`, `obra_cerrada_gastos`, `partida_de_otra_obra`, `falta_tipo_generales`, `solo_dueno`.
+ */
+export async function registrarCompraOficina(
+  tx: Tx,
+  entrada: EntradaCompra,
+  ahora = new Date(),
+): Promise<{ gastoId: string; folio: string }> {
+  const e = validarEntrada(EntradaCompra, entrada);
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  exigir([
+    [e.proveedor?.trim(), 'proveedor'],
+    [e.descripcion?.trim(), 'descripcion'],
+  ]);
+  const monto = Number(e.monto);
+  if (!(monto > 0) || monto >= 1e10) throw new ErrorDeNegocio('monto_invalido');
+  const elDia = e.dia ?? s.hoy;
+  if (elDia > s.hoy) throw new ErrorDeNegocio('dia_futuro');
+  const [obra] = await tx<{ id: string }[]>`select id from obras where id = ${e.obraId}`;
+  if (!obra) throw new ErrorDeNegocio('obra_no_encontrada');
+  const [cerrada] = await tx`select 1 from obras_cerradas where obra_id = ${e.obraId}`;
+  if (cerrada) throw new ErrorDeNegocio('obra_cerrada_gastos');
+
+  let espacioId: string;
+  if (e.partidaId) {
+    const [p] = await tx<{ espacio_id: string }[]>`
+      select espacio_id from partidas_obra where id = ${e.partidaId} and obra_id = ${e.obraId}`;
+    if (!p) throw new ErrorDeNegocio('partida_de_otra_obra');
+    espacioId = p.espacio_id;
+  } else {
+    const [g] = await tx<{ id: string }[]>`
+      select e.id from espacios e join tipos_espacio t on t.id = e.tipo_espacio_id
+      where e.obra_id = ${e.obraId} and t.es_generales`;
+    if (!g) throw new ErrorDeNegocio('falta_tipo_generales');
+    espacioId = g.id;
+  }
+  const [g] = await tx<{ id: string; folio: string }[]>`
+    insert into gastos (empresa_id, obra_id, espacio_id, partida_obra_id, dia, categoria, proveedor, descripcion,
+                        monto, metodo_pago, origen)
+    values (${s.empresaId}, ${e.obraId}, ${espacioId}, ${e.partidaId ?? null}, ${elDia}, ${e.categoria},
+            ${e.proveedor!.trim()}, ${e.descripcion!.trim()}, ${monto}, ${e.metodoPago}, 'oficina')
+    returning id, folio`;
+  return { gastoId: g!.id, folio: g!.folio };
 }

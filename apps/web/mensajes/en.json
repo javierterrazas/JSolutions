@@ -118,7 +118,8 @@
       "proveedor": "vendor",
       "nombre": "name",
       "tipo_pago": "how they are paid",
-      "tarifa": "pay"
+      "tarifa": "pay",
+      "descripcion": "what was bought"
     },
     "solo_pm": "Only the job's PM closes the day.",
     "dia_ya_cerrado": "That day is already closed.",
@@ -180,7 +181,9 @@
     "trabajador_repetido": "There is already an active worker with that name: the PM could not tell them apart.",
     "tarifa_invalida": "Pay has to be more than zero.",
     "tipo_pago_con_registros": "They already have days recorded: how they are paid can no longer change.",
-    "tarifa_anterior": "The new pay cannot start before the last change."
+    "tarifa_anterior": "The new pay cannot start before the last change.",
+    "dia_futuro": "The date can't be after today.",
+    "obra_cerrada_gastos": "That job is already closed: no more expenses can be recorded."
   },
   "obras": {
     "titulo": "Jobs",
@@ -787,6 +790,27 @@
       "clima": "Weather",
       "cliente_no_disponible": "Client not available",
       "otro": "Other"
+    },
+    "registrarCompra": "Record purchase"
+  },
+  "compra": {
+    "titulo": "Record purchase",
+    "volver": "Back to job status",
+    "obra": "{folio} · {cliente}",
+    "dia": "Purchase date",
+    "metodo": "How it was paid",
+    "recibo": "Receipt (optional)",
+    "registrar": "Record purchase",
+    "registrando": "Recording…",
+    "registrada": "Purchase recorded: {folio}.",
+    "otra": "Record another purchase",
+    "metodos": {
+      "transferencia": "Bank transfer",
+      "tarjeta": "Card",
+      "cheque": "Check",
+      "zelle": "Zelle",
+      "efectivo": "Cash",
+      "tarjeta_empresa": "Company card"
     }
   }
 }

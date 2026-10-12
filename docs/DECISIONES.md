@@ -1154,3 +1154,16 @@ se abre al tocar la obra en "Obras".
 - **En la lista de "Obras"**, de cada obra activa: el avance, el presupuesto usado con su color y el atraso
   (`resumenDeObras`).
 - **Lleva dinero:** solo el dueño o el administrador.
+
+## D-063 · Las compras de la oficina
+
+**Decisión del dueño:** el dueño o el administrador registra en una obra lo que compró la oficina. Desde el
+seguimiento de la obra (D-062), "Registrar compra" (`/obras/[id]/compra`; legacy: `duGasto`).
+- **La compra:** monto, día (hoy por omisión; no después de hoy), partida (opcional: sin ella va a Generales de obra,
+  como la del PM), categoría, proveedor, qué se compró, cómo se pagó (transferencia, tarjeta, cheque, Zelle, efectivo
+  o tarjeta de la empresa) y la foto del recibo (opcional). Se guarda como gasto de `origen = 'oficina'`
+  (`registrarCompraOficina`), sin la revisión de las compras del PM ni su límite. No en una obra ya cerrada.
+- **Va directo**, sin la cola del teléfono: la oficina tiene señal. La compra y su recibo en una transacción.
+- **Cuenta** en el presupuesto de la obra (material) y en su día a día. El día a día muestra también los días con
+  gastos aunque no tengan cierre, incluidos los de antes del arranque: el material se compra antes de empezar.
+- **El PM nunca la ve**, ni su recibo (RLS de gastos y de fotos, como antes).
