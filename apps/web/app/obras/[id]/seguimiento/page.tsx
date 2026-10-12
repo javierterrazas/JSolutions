@@ -63,6 +63,12 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
           estado: to(`estado.${s.obra.estado}` as never),
         })}
       </p>
+      <Link
+        href={`/obras/${s.obra.id}/compra`}
+        className={`${estilos.boton} flex items-center justify-center`}
+      >
+        {t('registrarCompra')}
+      </Link>
       <div className="grid grid-cols-2 gap-2">
         <Link
           href={`/obras/${s.obra.id}/presupuesto`}

@@ -414,7 +414,8 @@ export async function seguimientoDeObra(
   }
   const trabajadores = [...porTrabajador.values()].sort((a, b) => b.costo - a.costo);
 
-  // el día a día: los días cerrados y los laborables que faltaron, desde el inicio hasta hoy (o la entrega)
+  // el día a día: los días cerrados, los laborables que faltaron desde el inicio hasta hoy (o la entrega), y los
+  // días con gastos, también los de antes del arranque (el material se compra antes de empezar)
   const [entrega] = await tx<{ dia: Dia }[]>`
     select to_char(fecha_entrega, 'YYYY-MM-DD') as dia from entregas where obra_id = ${e.obraId}
     order by fecha_entrega desc limit 1`;
@@ -437,7 +438,9 @@ export async function seguimientoDeObra(
   const todos: Dia[] = [];
   for (let d = hasta; d >= c.o.inicio; d = sumarDias(d, -1))
     if (porDia.has(d) || (arranco && esLaborable(d, s.calendario))) todos.push(d);
-  for (const b of bitacora) if (!todos.includes(b.dia)) todos.push(b.dia);
+  const gastosObra = l.gastos.filter((g) => g.obra_id === e.obraId);
+  for (const d of [...bitacora.map((b) => b.dia), ...gastosObra.map((g) => g.dia)])
+    if (!todos.includes(d)) todos.push(d);
   todos.sort((a, b) => (a < b ? 1 : -1));
   const pagina = todos.slice(e.pagina * DIAS_POR_PAGINA, (e.pagina + 1) * DIAS_POR_PAGINA);
   const ids = pagina.map((d) => porDia.get(d)?.id).filter((x): x is string => !!x);
@@ -462,7 +465,6 @@ export async function seguimientoDeObra(
         select ref_id, count(*)::int as n from fotos where ref_tipo = 'bitacora' and ref_id = any(${ids})
         group by ref_id`
     : [];
-  const gastosObra = l.gastos.filter((g) => g.obra_id === e.obraId);
 
   return {
     hoy: s.hoy,
