@@ -21,7 +21,11 @@
   "sinAcceso": {
     "titulo": "Este celular no tiene acceso",
     "texto": "Para entrar, pide al dueño una invitación y ábrela en este celular.",
-    "baja": "Si ya entrabas aquí, pudieron quitar este celular o darte de baja."
+    "baja": "Si ya entrabas aquí, pudieron quitar este celular o darte de baja.",
+    "pegar": "¿Ya te llegó la invitación? Si instalaste la app en el iPhone, copia el enlace y pégalo aquí:",
+    "pegarEjemplo": "https://…/invitacion/…",
+    "noEsInvitacion": "Eso no es un enlace de invitación. Cópialo completo del mensaje.",
+    "abrirInvitacion": "Abrir la invitación"
   },
   "invitacion": {
     "titulo": "Tu invitación",

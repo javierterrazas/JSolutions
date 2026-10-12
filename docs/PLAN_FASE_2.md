@@ -198,6 +198,9 @@ aprobar los gastos en revisión y contestar los avisos.
     difíciles y bloqueo que crece, quién reinvita al dueño, tope de los textos, CSP y HSTS).
 - El piloto: un PM, una obra, al menos 2 semanas, en paralelo con el sistema actual. Se mide el tiempo de cierre y
   se comparan los datos.
+  - **7c** — preparado (2026-10-11): la guía en [PILOTO.md](PILOTO.md); el envío ya no espera para siempre con señal
+    muy mala (D-056); la invitación se pega dentro de la app instalada del iPhone, y `exportar-obra.ts` saca la obra
+    con las hojas del libro actual para compararla (D-057). Falta que el dueño lo arranque.
 
 ## Riesgos
 

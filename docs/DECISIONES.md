@@ -1068,3 +1068,14 @@ conecta puede no terminar nunca, y el PM se quedaba viendo "Cerrando…".
   tiempo. La clave de envío (D-042) ya cubría que llegaran una tras otra. Si llegan juntas, la segunda choca con la
   clave o con "un cierre por día" al guardarse; el servidor lo intenta en un savepoint y, si el que ganó es el mismo
   cierre, lo devuelve. Si es otro cierre del mismo día, es `dia_ya_cerrado` y no un error de la base.
+
+## D-057 · Lo que se preparó para el piloto
+
+El piloto (paso 7c) lo llevan el dueño y un PM en una obra real; la guía está en [PILOTO.md](PILOTO.md). Para él:
+- **La invitación se puede pegar dentro de la app.** En el iPhone, la app instalada en la pantalla de inicio no
+  comparte las cookies de Safari y no tiene barra de direcciones: abrir la invitación desde WhatsApp verificaba
+  Safari, y la app seguía "sin acceso". La pantalla sin acceso tiene ahora un campo para pegar el enlace (o el mensaje
+  completo; `tokenDeInvitacion` saca el token) y abrirlo ahí.
+- **Exportar una obra para compararla** (`scripts/exportar-obra.ts`): un .xlsx con las hojas y columnas del libro
+  actual, y una hoja con cada día desde el inicio (si se cerró, cuándo llegó y si fue tardío). Solo lee, con la
+  conexión directa a la base. Lleva los gastos con su monto: es para el dueño.

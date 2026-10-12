@@ -155,6 +155,7 @@ node --env-file=.env.nube packages/servidor/scripts/alta-empresa.mjs …        
 pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/cargar-libro.ts …     cargarle su libro (D-039)
 pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/invitar-de-nuevo.ts … reinvitar a un miembro (D-038)
 pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/probar-conexion.ts    comprobar DATABASE_URL (solo lee)
+pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/exportar-obra.ts …    exportar una obra para el piloto (D-057)
 ```
 
 ## Documentos
