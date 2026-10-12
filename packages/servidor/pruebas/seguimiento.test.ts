@@ -1,0 +1,107 @@
+// El seguimiento de una obra para el dueño (D-062), con los datos de supabase/seed.sql. OB-001 de Carlos: el baño
+// tiene la demolición terminada (peso 2 de 5) y presupuestados $1,500 en Demolición; se gastaron $120 (Home Depot,
+// Generales) y $2,500 (Ferguson, baño) en material, 8 horas de Pedro a $22.50 y órdenes de trabajo por $2,000 y $300.
+// "Hoy" es el lunes 12 de octubre de 2026 en Austin.
+import { afterAll, describe, expect, it } from 'vitest';
+import { cambiarTarifa, resumenDeObras, seguimientoDeObra, semaforoDePresupuesto } from '../src/index';
+import { codigo, como, enAustin, OBRAS, probarComo, servidor, USUARIOS } from './apoyo';
+
+afterAll(() => servidor.sql.end());
+
+const LUNES = enAustin('2026-10-12', 9);
+
+describe('el seguimiento de una obra', () => {
+  it('cómo va: avance, en qué etapa va cada espacio y el plazo', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const s = (await seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!;
+      expect(s.obra).toMatchObject({
+        folio: 'OB-001',
+        pm: 'Carlos Méndez',
+        estado: 'en_obra',
+        inicio: '2026-10-05',
+        entregaComprometida: '2026-10-31',
+        atraso: 0,
+      });
+      expect(s.avance).toEqual({ pct: 0.4, curso: 0, terminadas: 1, total: 2 });
+      expect(s.espacios.find((e) => e.nombre === 'Baño principal')).toMatchObject({
+        pct: 0.4,
+        estado: 'en_curso',
+        etapa: { es: 'Plomería', en: 'Plumbing' },
+        enCurso: [],
+      });
+    }));
+
+  it('el presupuesto contra lo gastado, por etapa: material, cuadrilla a su tarifa del día y subcontratos', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const s = (await seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!;
+      expect(s.presupuesto).toMatchObject({ total: 1500, gastado: 5100, usado: 3.4, semaforo: 'rojo' });
+      const demolicion = s.presupuesto.porEtapa.find((x) => x.etapa?.es === 'Demolición')!;
+      expect(demolicion).toMatchObject({
+        espacio: 'Baño principal',
+        presupuesto: 1500,
+        cuadrilla: 180,
+        total: 180,
+      });
+      expect(s.presupuesto.porEtapa.find((x) => x.etapa?.es === 'Plomería')).toMatchObject({ sub: 2300 });
+      expect(s.cuadrilla).toEqual({
+        horas: 8,
+        dias: 0,
+        costo: 180,
+        porTrabajador: [{ nombre: 'Pedro', tipoPago: 'hora', cantidad: 8, costo: 180 }],
+      });
+
+      // un aumento desde hoy no cambia lo ya trabajado (D-031)
+      const [pedro] = await tx<{ id: string }[]>`select id from trabajadores where nombre = 'Pedro'`;
+      await cambiarTarifa(tx, { trabajadorId: pedro!.id, tarifa: 30 }, LUNES);
+      expect((await seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!.cuadrilla.costo).toBe(180);
+    }));
+
+  it('el día a día: lo que capturó el PM cada día, y los días laborables que no se cerraron', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const s = (await seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!;
+      // del lunes 12 al lunes 5, sin el domingo
+      expect(s.dias.map((d) => d.dia)).toEqual([
+        '2026-10-12',
+        '2026-10-10',
+        '2026-10-09',
+        '2026-10-08',
+        '2026-10-07',
+        '2026-10-06',
+        '2026-10-05',
+      ]);
+      expect(s.dias[0]).toMatchObject({ folio: null, partidas: [], cuadrilla: [] });
+      expect(s.dias.at(-1)).toMatchObject({
+        folio: 'BIT-0001',
+        partidas: [
+          { espacio: 'Baño principal', partida: { es: 'Demolición y retiro de escombro' }, terminada: true },
+        ],
+        cuadrilla: [{ nombre: 'Pedro', tipoPago: 'hora', cantidad: 8, costo: 180 }],
+        subs: [{ sub: 'Plomería Rápida', llego: true }],
+        gastos: [
+          { proveedor: 'Home Depot', monto: 120, origen: 'pm' },
+          { proveedor: 'Ferguson', monto: 2500, origen: 'oficina' },
+        ],
+        fotos: 1,
+      });
+      expect(s.hayMasDias).toBe(false);
+    }));
+
+  it('la lista de obras trae de cada una su avance, presupuesto usado y atraso; el PM no ve nada de esto', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const r = await resumenDeObras(tx, LUNES);
+      expect(r.get(OBRAS.a1Carlos)).toEqual({ avance: 0.4, usado: 3.4, semaforo: 'rojo', atraso: 0 });
+      expect(r.has(OBRAS.a3Entregada)).toBe(false);
+      await como(tx, USUARIOS.carlos);
+      expect(await codigo(tx, () => seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))).toBe(
+        'solo_dueno',
+      );
+      expect(await codigo(tx, () => resumenDeObras(tx, LUNES))).toBe('solo_dueno');
+    }));
+
+  it('el semáforo del presupuesto: rojo si ya se pasó, amarillo si se gasta más rápido de lo que avanza', () => {
+    expect(semaforoDePresupuesto(1200, 1000, 0.9)).toBe('rojo');
+    expect(semaforoDePresupuesto(600, 1000, 0.4)).toBe('amarillo');
+    expect(semaforoDePresupuesto(500, 1000, 0.4)).toBe('verde');
+    expect(semaforoDePresupuesto(100, 0, 0)).toBeNull();
+  });
+});

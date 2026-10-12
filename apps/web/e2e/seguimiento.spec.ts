@@ -1,0 +1,54 @@
+// El seguimiento de una obra para el dueño (D-062), con OB-001 del seed: el baño con la demolición terminada, $1,500
+// presupuestados y $5,100 gastados (ya se pasó), y el cierre del 5 de octubre con Pedro 8 horas. Otras pruebas pueden
+// haber cerrado más días antes que esta: lo que se revisa no depende de eso.
+import { expect, test } from '@playwright/test';
+import { entrar, es, OBRAS, t } from './apoyo';
+
+test('el dueño ve cómo va la obra: avance, etapa, presupuesto por etapa, cuadrilla y el día a día', async ({
+  page,
+}) => {
+  await entrar(page, 'dueno');
+  await page.getByRole('link', { name: es.inicio.obras, exact: true }).click();
+  const tarjeta = page.getByRole('link', { name: /OB-001 · Familia García/ });
+  await expect(tarjeta).toContainText(/\d+% terminado · presupuesto \d+%/);
+
+  await tarjeta.click();
+  await expect(page).toHaveURL(new RegExp(`/obras/${OBRAS.carlos}/seguimiento$`));
+  await expect(page.getByRole('heading', { level: 1, name: 'OB-001 · Familia García' })).toBeVisible();
+  await expect(page.getByText(/\d+% terminado/).first()).toBeVisible();
+  await expect(page.getByText(es.seguimiento.semaforo.rojo)).toBeVisible();
+
+  for (const seccion of ['espacios', 'porEtapa', 'cuadrilla', 'diaADia'] as const)
+    await expect(page.getByRole('heading', { level: 2, name: es.seguimiento[seccion] })).toBeVisible();
+  await expect(
+    page.getByText(t.es('seguimiento.etapaDe', { espacio: 'Baño principal', etapa: 'Demolición' }), {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText(/^Pedro · \d+ horas$/)).toBeVisible();
+
+  // el día a día llega hasta el arranque: en la última página está el cierre del 5 de octubre
+  while (await page.getByRole('link', { name: es.seguimiento.anteriores }).isVisible())
+    await page.getByRole('link', { name: es.seguimiento.anteriores }).click();
+  const primerDia = page.locator('li').filter({ hasText: 'BIT-0001' });
+  await expect(primerDia).toContainText(
+    t.es('seguimiento.partidaTerminada', {
+      espacio: 'Baño principal',
+      partida: 'Demolición y retiro de escombro',
+    }),
+  );
+  await expect(primerDia).toContainText(
+    t.es('seguimiento.gastoOficina', { proveedor: 'Ferguson', monto: '$2,500.00' }),
+  );
+  await expect(primerDia).toContainText(t.es('seguimiento.llego', { sub: 'Plomería Rápida' }));
+
+  // y lleva a capturar el presupuesto y a las fotos
+  await page.getByRole('link', { name: es.obras.presupuesto }).click();
+  await expect(page).toHaveURL(new RegExp(`/obras/${OBRAS.carlos}/presupuesto$`));
+});
+
+test('el PM no entra al seguimiento', async ({ page }) => {
+  await entrar(page, 'pm');
+  await page.goto(`/obras/${OBRAS.carlos}/seguimiento`);
+  await expect(page).not.toHaveURL(/seguimiento/);
+});
