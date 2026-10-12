@@ -1,7 +1,8 @@
 // El álbum de fotos de una obra (fase 2, paso 6f; legacy: vFotos de PM.html): por día, cada registro con sus fotos,
 // lo más nuevo primero y por páginas (?pagina=). Lo ven el PM de la obra y el dueño; cada quien solo las fotos que
-// puede ver (RLS). Las fotos se abren por /fotos/[id], con un enlace firmado de pocos minutos.
-import { albumDeObra, type RegistroDelAlbum } from '@ijm/servidor';
+// puede ver (RLS). El PM ve también el de sus obras terminadas mientras dura la garantía (D-060). Las fotos se abren
+// por /fotos/[id], con un enlace firmado de pocos minutos.
+import { albumDeObra, albumEnGarantia, type RegistroDelAlbum } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -13,12 +14,19 @@ export default async function Album({ params, searchParams }: PageProps<'/obras/
   const consulta = await searchParams;
   const pagina = Math.max(0, Math.min(1000, Number(consulta.pagina) || 0));
   const acceso = await exigirAcceso();
-  const r = await comoMiembro((tx) => albumDeObra(tx, { obraId: id, pagina }), acceso);
+  const pm = acceso.yo.rol === 'pm';
+  const activa = await comoMiembro((tx) => albumDeObra(tx, { obraId: id, pagina }), acceso);
+  // una obra que el PM ya no ve: la terminada en garantía, de solo lectura
+  const terminada =
+    activa.ok && !activa.datos && pm
+      ? await comoMiembro((tx) => albumEnGarantia(tx, { obraId: id, pagina }), acceso)
+      : null;
+  const r = terminada ?? activa;
   if (!r.ok || !r.datos) notFound();
   const a = r.datos;
   const [t, formato, idioma] = await Promise.all([getTranslations('album'), getFormatter(), getLocale()]);
   const nombre = (n: { es: string; en: string | null }) => (idioma === 'en' ? n.en : null) ?? n.es;
-  const volver = acceso.yo.rol === 'pm' ? '/' : '/obras';
+  const volver = terminada ? '/obras/terminadas' : pm ? '/' : '/obras';
 
   // por día, en el orden en que llegan (lo más nuevo primero)
   const dias: { dia: string; registros: RegistroDelAlbum[] }[] = [];

@@ -11,7 +11,8 @@
     "obras": "Jobs",
     "catalogo": "Catalog",
     "gastosPorRevisar": "{n, plural, one {# purchase to review} other {# purchases to review}}",
-    "avisosPorContestar": "{n, plural, one {# alert to answer} other {# alerts to answer}}"
+    "avisosPorContestar": "{n, plural, one {# alert to answer} other {# alerts to answer}}",
+    "terminadas": "Finished jobs ({n})"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -662,5 +663,18 @@
       "diseno": "design",
       "otro": "other"
     }
+  },
+  "terminadas": {
+    "titulo": "Finished jobs",
+    "volver": "Back to home",
+    "ayuda": "The ones you delivered, while their warranty lasts. Their photos help on a warranty visit: they show what got covered.",
+    "vacio": "You have no jobs under warranty.",
+    "obra": "{folio} · {cliente}",
+    "entregada": "Delivered {dia}",
+    "aTiempo": "on time",
+    "tarde": "{n, plural, one {# day late} other {# days late}}",
+    "garantia": "Warranty until {dia}",
+    "diasCerrados": "{n, plural, one {# day closed} other {# days closed}}",
+    "verFotos": "See the photos"
   }
 }

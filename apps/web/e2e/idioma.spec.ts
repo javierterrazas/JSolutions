@@ -19,8 +19,9 @@ const PANTALLAS_DEL_PM = ['', 'cierre', 'calidad', 'gasto', 'aviso', 'ordenes', 
 
 test('el PM con el inglés guardado ve todo en inglés', async ({ page }) => {
   await entrar(page, 'pmIngles');
-  for (const p of PANTALLAS_DEL_PM) {
-    const ruta = p ? `/obras/${OBRAS.luis}/${p}` : '/';
+  for (const p of [...PANTALLAS_DEL_PM, 'terminadas']) {
+    // sus obras terminadas es una página aparte (aunque Luis no tenga ninguna)
+    const ruta = p === 'terminadas' ? '/obras/terminadas' : p ? `/obras/${OBRAS.luis}/${p}` : '/';
     await page.goto(ruta);
     await expect(page.locator('html'), ruta).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('heading', { level: 1 }), ruta).toBeVisible();

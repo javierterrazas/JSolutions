@@ -1103,3 +1103,17 @@ con trabajo se cierra con o sin fotos; si el PM toma alguna, se sube después co
 evidencia que protege ante un reclamo o una garantía queda en las inspecciones (sus preguntas críticas) y en las dos
 fotos de la prueba de inundación, que siguen siendo obligatorias. **Diferencia con el legacy**, que exigía al menos
 una foto en cada cierre con trabajo (`falta_foto`).
+
+## D-060 · Las obras terminadas del PM, mientras dura su garantía
+
+**Decisión del dueño:** el PM ve sus obras ya entregadas mientras dura su garantía (`entregas.garantia_vence`), con
+sus fotos: en una visita de garantía, las fotos muestran lo que quedó tapado sin abrir muros. Más atrás ya no le
+sirve para trabajar.
+- **Qué ve.** En "Obras terminadas" (`/obras/terminadas`; el inicio la ofrece si tiene alguna): cada obra con su
+  dirección, cuándo se entregó contra lo comprometido, hasta cuándo dura la garantía y cuántos días se cerraron. Y su
+  álbum, el mismo de las obras activas (D-053), con las mismas reglas de fotos: nunca órdenes de cambio ni compras de
+  la oficina, y de los gastos y los avisos solo los suyos. Sin dinero.
+- **Solo lectura, y RLS no se toca.** El PM sigue sin ver la obra entregada (D-017): no puede capturar, corregir ni
+  leer nada más de ella. Lo contestan funciones de la base del miembro de la sesión, como las del inicio (D-040):
+  `mis_obras_en_garantia()` y `album_en_garantia()`; `/fotos/[id]` abre también las de `fotos_en_garantia()`.
+- **Diferencia con el legacy**, donde el PM dejaba de ver la obra al entregarla.

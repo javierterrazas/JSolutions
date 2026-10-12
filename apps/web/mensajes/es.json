@@ -11,7 +11,8 @@
     "obras": "Obras",
     "catalogo": "Catálogo",
     "gastosPorRevisar": "{n, plural, one {# compra por revisar} other {# compras por revisar}}",
-    "avisosPorContestar": "{n, plural, one {# aviso por contestar} other {# avisos por contestar}}"
+    "avisosPorContestar": "{n, plural, one {# aviso por contestar} other {# avisos por contestar}}",
+    "terminadas": "Obras terminadas ({n})"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -662,5 +663,18 @@
       "diseno": "diseño",
       "otro": "otro"
     }
+  },
+  "terminadas": {
+    "titulo": "Obras terminadas",
+    "volver": "Volver al inicio",
+    "ayuda": "Las que entregaste, mientras dura su garantía. Sus fotos sirven en una visita de garantía: muestran lo que quedó tapado.",
+    "vacio": "No tienes obras en garantía.",
+    "obra": "{folio} · {cliente}",
+    "entregada": "Entregada el {dia}",
+    "aTiempo": "a tiempo",
+    "tarde": "{n, plural, one {# día tarde} other {# días tarde}}",
+    "garantia": "Garantía hasta el {dia}",
+    "diasCerrados": "{n, plural, one {# día cerrado} other {# días cerrados}}",
+    "verFotos": "Ver las fotos"
   }
 }
