@@ -1029,3 +1029,30 @@ Una revisión independiente (paso 7b) encontró cuatro huecos que se corrigen aq
 - **Un gasto que el PM corrige arriba de su límite vuelve a la revisión del dueño** (decisión del dueño). Lo hace la
   base (`revisar_gasto_corregido`): el PM no puede cambiar `revision`, así que tampoco puede quitarse de ella. Queda
   en el rastro de la corrección. **Diferencia con el legacy**, que no lo revisaba.
+
+## D-055 · Los hallazgos menores de la revisión de seguridad
+
+Lo que quedaba de la revisión del paso 7b (después de D-054 y de apagar la API de datos, D-038):
+- **PIN más difíciles de adivinar** (`validarPin`). Además del dígito repetido y la escalera de 1 en 1 del legacy, se
+  rechazan: la escalera de 2 en 2 (2468, 1357), los de solo dos dígitos distintos (1212, 1122, 2000), de 4 dígitos
+  un año (1940 a 2039), de 6 una mitad repetida (123123) o tres pares (112233), y los más usados del teclado (2580,
+  147258…). Vale para los PIN que se elijan de aquí en adelante; los que ya existen siguen sirviendo. **Diferencia
+  con el legacy.**
+- **El bloqueo del PIN crece.** 5 intentos fallidos seguidos bloquean 15 minutos, como el legacy; si sigue fallando
+  sin un PIN bueno en medio, el siguiente bloqueo es de 1 hora y los demás de 24 horas (`dispositivos.bloqueos`,
+  `entrar_con_pin`). Antes se podían probar 20 PIN por hora con el celular en la mano; ahora unos 5 al día. Sin señal,
+  el PIN local sigue en 15 minutos: su huella se puede atacar sin el bloqueo (D-054). **Diferencia con el legacy.**
+- **Al dueño y a los administradores solo los reinvita el dueño.** Reinvitar a alguien y canjear uno mismo la
+  invitación es entrar como esa persona; un administrador podía hacerlo con el dueño. Cada quien puede reinvitarse a
+  sí mismo, y a los PMs los siguen reinvitando el dueño o un administrador (queda en `invitaciones.creado_por`).
+- **Los textos tienen tope**: 200 caracteres los cortos (nombres, proveedor, cliente) y 2,000 los largos
+  (descripciones, notas, motivos), también en las correcciones. Más largo es `datos_invalidos`.
+- **Una clave de envío repetida en otra obra** es un error de negocio y no uno de la base: la cola la saca con su
+  razón en lugar de reintentarla para siempre (D-043).
+- **Cabeceras:** HSTS, y una política de contenido (CSP) que solo deja cargar lo de la app y las fotos de Storage.
+  Las pruebas de pantalla revisan que ninguna pantalla del PM ni del dueño choque con ella. Next pone su código en la
+  página, así que lleva `'unsafe-inline'`; solo en producción, porque `next dev` usa eval.
+
+**Se quedan así:** que al revocar un celular no se cierre al instante una sesión de Auth que Supabase no deje
+borrar (con la API apagada, esa sesión ya no lee nada); que al canjear en un celular la invitación de otro miembro
+el celular anterior siga en Equipo hasta que el dueño lo quite; y la llave foránea simple de `corrige_a`.

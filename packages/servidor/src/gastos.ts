@@ -9,7 +9,7 @@ import { diaDeCaptura, ErrorDeNegocio, estadoDePartida, exigir, validarDiaDeCapt
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import type { Nombre } from './consultas-obra';
-import { uuid, validarEntrada } from './entrada';
+import { instante, textoCorto, textoLargo, uuid, validarEntrada } from './entrada';
 import { exigirDueno, leerSesion } from './sesion';
 
 export const CATEGORIAS_GASTO = [
@@ -26,12 +26,12 @@ const EntradaGasto = z.object({
   obraId: uuid,
   claveEnvio: uuid,
   /** Cuándo lo capturó el teléfono (ISO): decide el día del gasto aunque llegue después. */
-  capturado: z.string().nullish(),
+  capturado: instante.nullish(),
   monto: z.number().nullish(),
   partidaId: uuid.nullish(),
   categoria: z.enum(CATEGORIAS_GASTO).default('material'),
-  proveedor: z.string().nullish(),
-  descripcion: z.string().nullish(),
+  proveedor: textoCorto.nullish(),
+  descripcion: textoLargo.nullish(),
   /** Cuántas fotos del recibo vienen detrás (0 o 1). */
   recibo: z.number().int().min(0).max(1).default(0),
 });

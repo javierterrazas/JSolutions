@@ -9,29 +9,29 @@ import {
 } from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
-import { dia, uuid, validarEntrada } from './entrada';
+import { dia, textoCorto, textoLargo, uuid, validarEntrada } from './entrada';
 import { exigirDueno, leerSesion } from './sesion';
 
 const EntradaObra = z.object({
-  cliente: z.string().nullish(),
-  telefono: z.string().nullish(),
-  direccion: z.string().nullish(),
+  cliente: textoCorto.nullish(),
+  telefono: z.string().max(40).nullish(),
+  direccion: textoCorto.nullish(),
   pmId: uuid.nullish(),
   inicio: dia.nullish(),
   finEstimada: dia.nullish(),
   contrato: z.number().nullish(),
-  notas: z.string().nullish(),
+  notas: textoLargo.nullish(),
   espacios: z
     .array(
       z.object({
         tipoEspacioId: uuid,
-        nombre: z.string().nullish(),
+        nombre: textoCorto.nullish(),
         pies2: z.number().nonnegative().nullish(),
         piesLineales: z.number().nonnegative().nullish(),
       }),
     )
     .default([]),
-  confirmado: z.array(z.string()).default([]),
+  confirmado: z.array(z.string().max(40)).max(10).default([]),
 });
 export type EntradaObra = z.input<typeof EntradaObra>;
 
@@ -167,7 +167,7 @@ export async function crearObra(tx: Tx, entrada: EntradaObra, ahora = new Date()
 const EntradaEspacio = z.object({
   obraId: uuid,
   tipoEspacioId: uuid,
-  nombre: z.string().nullish(),
+  nombre: textoCorto.nullish(),
   pies2: z.number().nonnegative().nullish(),
 });
 

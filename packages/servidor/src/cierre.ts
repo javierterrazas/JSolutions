@@ -13,9 +13,10 @@ import {
   validarCuadrilla,
   validarDiaDeCaptura,
 } from '@ijm/core';
+import postgres from 'postgres';
 import { z } from 'zod';
 import type { Tx } from './conexion';
-import { dia, uuid, validarEntrada } from './entrada';
+import { dia, instante, motivo, textoLargo, uuid, validarEntrada } from './entrada';
 import { anularCierre } from './correcciones';
 import { leerSesion } from './sesion';
 
@@ -24,10 +25,10 @@ const EntradaCierre = z.object({
   /** El día olvidado que el PM cierra tarde (solo los últimos 2 laborables). */
   tardio: dia.nullish(),
   /** Cuándo se capturó en el teléfono (sin señal se envía después): ISO 8601. */
-  capturado: z.string().nullish(),
+  capturado: instante.nullish(),
   sinTrabajo: z.boolean().default(false),
   motivo: z.enum(MOTIVOS_SIN_TRABAJO).nullish(),
-  incidencia: z.string().nullish(),
+  incidencia: textoLargo.nullish(),
   partidas: z.array(uuid).default([]),
   terminadas: z.array(uuid).default([]),
   cuadrilla: z
@@ -182,7 +183,15 @@ export async function cerrarDia(
     values (${s.empresaId}, ${e.obraId}, ${elDia}, ${e.sinTrabajo}, ${e.sinTrabajo ? e.motivo! : null},
             ${e.incidencia ?? null}, ${tardio}, ${fotosComprometidas}, ${e.claveEnvio ?? null},
             ${correccion?.corrigeA ?? null})
-    returning id, folio`;
+    returning id, folio`.catch((err: unknown) => {
+    // la clave ya es de un cierre de otra obra (que este usuario quizá no ve): no es un reintento, y reintentarlo no
+    // lo arregla; es un error de negocio, para que la cola lo saque y lo de atrás siga (D-055)
+    if (err instanceof postgres.PostgresError && err.constraint_name === 'bitacora_clave_envio_unica')
+      throw new ErrorDeNegocio('datos_invalidos', {
+        problemas: [{ campo: 'claveEnvio', problema: 'repetida' }],
+      });
+    throw err;
+  });
   const bitacoraId = bit!.id;
   if (partidasDelDia.length) {
     await tx`insert into bitacora_partidas ${tx(
@@ -277,7 +286,7 @@ export async function cierreDeClave(tx: Tx, claveEnvio: string): Promise<string 
 
 const EntradaCorreccion = EntradaCierre.omit({ obraId: true, tardio: true, capturado: true }).extend({
   bitacoraId: uuid,
-  motivo: z.string(),
+  motivo,
 });
 export type EntradaCorreccionCierre = z.input<typeof EntradaCorreccion>;
 

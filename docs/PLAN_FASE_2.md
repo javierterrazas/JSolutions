@@ -193,10 +193,9 @@ aprobar los gastos en revisión y contestar los avisos.
 - Una revisión independiente de la seguridad de lo nuevo (sesión guardada, PIN, cola).
   - **7b** — hecha (2026-10-10), por un revisor sin el contexto del trabajo. Corregido (D-054): la huella del PIN solo
     en el teléfono del PM, el día de una captura no más atrás que un cierre tardío, la cola por miembro, y un gasto
-    corregido arriba del límite vuelve a revisión. **Pendiente:** la API de datos de Supabase deja leer con solo la
-    sesión de Auth, sin celular ni PIN (más amplio que el límite de D-038): la app no la usa, así que se apaga en la
-    nube, y las sesiones de Auth llevan tiempo máximo. Y los hallazgos bajos: PIN comunes y bloqueo que crece,
-    reinvitar al dueño o a otro admin, revocar sin corte inmediato, largo máximo de los textos, CSP y HSTS.
+    corregido arriba del límite vuelve a revisión. Después (2026-10-11): se apagó la API de datos en la nube y los
+    scripts de administración van directo a la base (D-038), y los hallazgos menores quedaron en D-055 (PIN más
+    difíciles y bloqueo que crece, quién reinvita al dueño, tope de los textos, CSP y HSTS).
 - El piloto: un PM, una obra, al menos 2 semanas, en paralelo con el sistema actual. Se mide el tiempo de cierre y
   se comparan los datos.
 

@@ -10,13 +10,13 @@ import {
 } from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
-import { uuid, validarEntrada } from './entrada';
+import { motivo, uuid, validarEntrada } from './entrada';
 import { exigirDueno, leerSesion } from './sesion';
 
 const EntradaPresupuesto = z.object({
   obraId: uuid,
   lineas: z.array(z.object({ espacioId: uuid, etapaId: uuid.nullable(), monto: z.number() })),
-  motivo: z.string().default('Presupuesto actualizado'),
+  motivo: motivo.default('Presupuesto actualizado'),
 });
 export type EntradaPresupuesto = z.input<typeof EntradaPresupuesto>;
 

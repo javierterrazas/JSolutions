@@ -13,7 +13,7 @@ const codigo = (fn: () => void) => {
 
 describe('validar el PIN', () => {
   it('el PM usa 4 dígitos; el dueño y el administrador, 6', () => {
-    expect(codigo(() => validarPin('2468', 'pm'))).toBeNull();
+    expect(codigo(() => validarPin('5170', 'pm'))).toBeNull();
     expect(codigo(() => validarPin('482915', 'dueno'))).toBeNull();
     expect(codigo(() => validarPin('482915', 'admin'))).toBeNull();
     expect(codigo(() => validarPin('482915', 'pm'))).toEqual(['pin_invalido', { largo: 4 }]);
@@ -39,10 +39,40 @@ describe('validar el PIN', () => {
       ).toEqual(['pin_debil', undefined]);
   });
 
-  it('los parecidos sí valen', () => {
-    for (const pin of ['1235', '2468', '1122', '0101', '9870'])
+  it('rechaza también los más usados (D-055): de 2 en 2, dos dígitos, un año, mitades o pares, el teclado', () => {
+    for (const pin of [
+      '2468',
+      '1357',
+      '8642',
+      '1212',
+      '1122',
+      '0101',
+      '6969',
+      '2000',
+      '1987',
+      '2024',
+      '2580',
+    ])
       expect(
         codigo(() => validarPin(pin, 'pm')),
+        pin,
+      ).toEqual(['pin_debil', undefined]);
+    for (const pin of ['121212', '112211', '123123', '112233', '147258'])
+      expect(
+        codigo(() => validarPin(pin, 'dueno')),
+        pin,
+      ).toEqual(['pin_debil', undefined]);
+  });
+
+  it('los parecidos sí valen', () => {
+    for (const pin of ['1235', '5170', '3859', '9870', '0471', '1939', '2040'])
+      expect(
+        codigo(() => validarPin(pin, 'pm')),
+        pin,
+      ).toBeNull();
+    for (const pin of ['482915', '193046', '123124'])
+      expect(
+        codigo(() => validarPin(pin, 'dueno')),
         pin,
       ).toBeNull();
   });

@@ -1,4 +1,5 @@
 // Lo de cualquier pantalla del PM en el teléfono:
+// - la política de contenido (CSP) no bloquea nada de la app (D-055);
 // - se desliza hasta abajo y de regreso, sin nada que se salga a los lados (legacy/pruebas/prueba_scroll.py: allá el
 //   problema era el marco de Apps Script; aquí, que una pantalla larga se pueda recorrer completa con el dedo);
 // - los textos de ejemplo de los campos cambian con el idioma (prueba_placeholder.py).
@@ -16,13 +17,21 @@ const desplazamiento = (page: Page) =>
     ancho: document.documentElement.scrollWidth - window.innerWidth,
   }));
 
-test('cada pantalla del PM se recorre completa, sin salirse a los lados', async ({ page }) => {
+test('cada pantalla del PM se recorre completa, sin salirse a los lados ni chocar con el CSP', async ({
+  page,
+}) => {
+  // lo que el navegador bloquea por la política de contenido (D-055) sale en la consola
+  const bloqueado: string[] = [];
+  page.on('console', (m) => {
+    if (/Content Security Policy/i.test(m.text())) bloqueado.push(`${page.url()}: ${m.text()}`);
+  });
   await entrar(page, 'pm');
   for (const ruta of PANTALLAS) {
     await page.goto(ruta);
     await expect(page.getByRole('heading', { level: 1 }), ruta).toBeVisible();
     expect((await desplazamiento(page)).ancho, `${ruta}: nada se sale a los lados`).toBeLessThanOrEqual(0);
   }
+  expect(bloqueado).toEqual([]);
 
   // el inicio es largo: hasta abajo llega al idioma, y un gesto hacia arriba regresa
   await page.goto('/');
@@ -34,6 +43,28 @@ test('cada pantalla del PM se recorre completa, sin salirse a los lados', async 
   await expect(page.getByRole('navigation', { name: es.idioma.etiqueta })).toBeInViewport();
   await page.mouse.wheel(0, -350);
   await expect.poll(async () => (await desplazamiento(page)).y).toBeLessThan(max - 300);
+});
+
+test('las pantallas del dueño tampoco chocan con el CSP', async ({ page }) => {
+  const bloqueado: string[] = [];
+  page.on('console', (m) => {
+    if (/Content Security Policy/i.test(m.text())) bloqueado.push(`${page.url()}: ${m.text()}`);
+  });
+  await entrar(page, 'dueno');
+  for (const ruta of [
+    '/obras',
+    '/obras/nueva',
+    `/obras/${OBRAS.carlos}/presupuesto`,
+    '/equipo',
+    '/catalogo',
+    '/gastos',
+    '/avisos',
+    `/obras/${OBRAS.carlos}/album`,
+  ]) {
+    await page.goto(ruta);
+    await expect(page.getByRole('heading', { level: 1 }), ruta).toBeVisible();
+  }
+  expect(bloqueado).toEqual([]);
 });
 
 /** Los textos de un idioma, todos en una lista. */

@@ -6,7 +6,12 @@ import { z } from 'zod';
 
 export const uuid = z.string().uuid();
 export const dia = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dia_invalido');
-export const motivo = z.string();
+/** Un texto corto, como un nombre o un proveedor; y uno largo, como una descripción o unas notas. */
+export const textoCorto = z.string().max(200);
+export const textoLargo = z.string().max(2000);
+export const motivo = textoLargo;
+/** La hora en que el teléfono capturó algo (ISO). */
+export const instante = z.string().max(40);
 
 /** Valida `datos` contra `esquema`, o lanza datos_invalidos con cada problema. */
 export function validarEntrada<T>(esquema: z.ZodType<T>, datos: unknown): T {

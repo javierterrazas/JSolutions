@@ -51,7 +51,7 @@ const EntradaFoto = z.object({
   refTipo: z.enum(TIPOS),
   refId: uuid,
   indice: z.number().int().positive(),
-  ruta: z.string().min(1),
+  ruta: z.string().min(1).max(300),
   tomadaEn: z.string().datetime({ offset: true }).nullish(),
 });
 export type EntradaFoto = z.input<typeof EntradaFoto>;

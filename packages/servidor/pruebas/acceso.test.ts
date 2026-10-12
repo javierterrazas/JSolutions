@@ -6,6 +6,7 @@ import {
   canjearInvitacion,
   cambiarActivo,
   cerrarDispositivo,
+  conectarServidor,
   entrarConPin,
   equipo,
   estadoDispositivo,
@@ -26,6 +27,7 @@ import {
   codigo,
   como,
   DOMINIO_DE_PRUEBA,
+  EMPRESA_A,
   MIEMBROS,
   probarComo,
   servidor,
@@ -145,6 +147,40 @@ describe('canjear la invitación', () => {
       expect(await canjear(segunda.token)).toBe('invitacion_invalida');
     }));
 
+  it('al dueño y a los administradores solo los reinvita el dueño; cada quien se reinvita a sí mismo (D-055)', async () => {
+    // la empresa A no tiene administrador: la prueba le da uno al usuario sin empresa del seed, como postgres
+    const admin = conectarServidor(
+      process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres',
+      1,
+    );
+    const REVERTIR = new Error('revertir');
+    const SIN_EMPRESA = 'c0000000-0000-4000-8000-000000000001';
+    try {
+      await admin.sql.begin(async (tx) => {
+        const [nuevo] = await tx<{ id: string }[]>`
+          insert into miembros (empresa_id, user_id, rol, nombre, idioma)
+          values (${EMPRESA_A}, ${SIN_EMPRESA}, 'admin', 'Admin de prueba', 'es') returning id`;
+        const adminId = nuevo!.id;
+        await como(tx, SIN_EMPRESA);
+        expect(await codigo(tx, () => reinvitar(tx, { miembroId: MIEMBROS.duenoA }))).toBe(
+          'miembro_invalido',
+        );
+        // a un PM y a sí mismo, sí
+        await reinvitar(tx, { miembroId: MIEMBROS.carlos });
+        await reinvitar(tx, { miembroId: adminId });
+        // el dueño, a todos
+        await como(tx, USUARIOS.duenoA);
+        await reinvitar(tx, { miembroId: adminId });
+        await reinvitar(tx, { miembroId: MIEMBROS.duenoA });
+        throw REVERTIR;
+      });
+    } catch (e) {
+      if (e !== REVERTIR) throw e;
+    } finally {
+      await admin.sql.end();
+    }
+  });
+
   it('el PM no reinvita a nadie; no se reinvita a un miembro de otra empresa', () =>
     probarComo(USUARIOS.carlos, async (tx) => {
       expect(await codigo(tx, () => reinvitar(tx, { miembroId: MIEMBROS.carlos }))).toBe('solo_dueno');
@@ -160,10 +196,10 @@ describe('el PIN', () => {
       expect(await estadoDispositivo(tx, llave)).toBe('sin_pin');
       expect(await codigo(tx, () => fijarPin(tx, { ...llave, pin: '482915' }))).toBe('pin_invalido');
       expect(await codigo(tx, () => fijarPin(tx, { ...llave, pin: '1234' }))).toBe('pin_debil');
-      const { hasta } = await fijarPin(tx, { ...llave, pin: '2468' });
+      const { hasta } = await fijarPin(tx, { ...llave, pin: '5170' });
       expect((hasta.getTime() - Date.now()) / 3600_000).toBeCloseTo(16, 0);
       expect(await estadoDispositivo(tx, llave)).toBe('abierto');
-      expect(await codigo(tx, () => fijarPin(tx, { ...llave, pin: '1357' }))).toBe('pin_ya_fijado');
+      expect(await codigo(tx, () => fijarPin(tx, { ...llave, pin: '3859' }))).toBe('pin_ya_fijado');
     }));
 
   it('el dueño usa 6 dígitos y su sesión dura 12 horas', () =>
@@ -173,7 +209,7 @@ describe('el PIN', () => {
       const c = await canjearInvitacion(tx, { token: inv.token });
       await como(tx, c.userId);
       const llave = { dispositivoId: c.dispositivoId, secreto: c.secreto };
-      expect(await codigo(tx, () => fijarPin(tx, { ...llave, pin: '2468' }))).toBe('pin_invalido');
+      expect(await codigo(tx, () => fijarPin(tx, { ...llave, pin: '5170' }))).toBe('pin_invalido');
       const { hasta } = await fijarPin(tx, { ...llave, pin: '482915' });
       expect((hasta.getTime() - Date.now()) / 3600_000).toBeCloseTo(12, 0);
     }));
@@ -181,7 +217,7 @@ describe('el PIN', () => {
   it('cerrado, pide el PIN: el bueno lo abre; 5 fallidos seguidos bloquean, aunque luego llegue el bueno', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const { llave } = await pmConCelular(tx);
-      await fijarPin(tx, { ...llave, pin: '2468' });
+      await fijarPin(tx, { ...llave, pin: '5170' });
       await cerrarDispositivo(tx, llave);
       expect(await estadoDispositivo(tx, llave)).toBe('cerrado');
 
@@ -189,7 +225,7 @@ describe('el PIN', () => {
         resultado: 'pin_incorrecto',
         quedan: 4,
       });
-      expect(await entrarConPin(tx, { ...llave, pin: '2468' })).toMatchObject({ resultado: 'ok' });
+      expect(await entrarConPin(tx, { ...llave, pin: '5170' })).toMatchObject({ resultado: 'ok' });
       expect(await estadoDispositivo(tx, llave)).toBe('abierto');
 
       // el bueno reinicia la cuenta; un fallido cierra lo que estaba abierto
@@ -200,22 +236,66 @@ describe('el PIN', () => {
         });
       expect(await estadoDispositivo(tx, llave)).toBe('cerrado');
       expect(await entrarConPin(tx, { ...llave, pin: '9999' })).toMatchObject({ resultado: 'pin_bloqueado' });
-      expect(await entrarConPin(tx, { ...llave, pin: '2468' })).toMatchObject({ resultado: 'pin_bloqueado' });
+      expect(await entrarConPin(tx, { ...llave, pin: '5170' })).toMatchObject({ resultado: 'pin_bloqueado' });
       expect(await estadoDispositivo(tx, llave)).toBe('cerrado');
     }));
+
+  it('cada bloqueo seguido dura más: 15 minutos, 1 hora y 24 horas; un PIN bueno vuelve a empezar (D-055)', async () => {
+    // para que "pase el tiempo" entre bloqueos hace falta mover bloqueado_hasta, que nadie de la app puede tocar: la
+    // prueba entra como postgres, toma la identidad como siempre, y la deja (reset role) solo para eso
+    const admin = conectarServidor(
+      process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres',
+      1,
+    );
+    const REVERTIR = new Error('revertir');
+    try {
+      await admin.sql.begin(async (tx) => {
+        const { userId, llave } = await pmConCelular(tx);
+        await fijarPin(tx, { ...llave, pin: '5170' });
+        const bloquear = async () => {
+          for (let i = 0; i < 4; i++) await entrarConPin(tx, { ...llave, pin: '9999' });
+          const r = await entrarConPin(tx, { ...llave, pin: '9999' });
+          expect(r.resultado).toBe('pin_bloqueado');
+          const [ya] = await tx<{ ahora: Date }[]>`select now() as ahora`;
+          return (new Date((r as { hasta: string }).hasta).getTime() - ya!.ahora.getTime()) / 60_000;
+        };
+        const pasaElBloqueo = async () => {
+          await tx`reset role`;
+          await tx`update dispositivos set bloqueado_hasta = now() - interval '1 second' where id = ${llave.dispositivoId}`;
+          await como(tx, userId);
+        };
+        expect(await bloquear()).toBeCloseTo(15, 5);
+        await pasaElBloqueo();
+        expect(await bloquear()).toBeCloseTo(60, 5);
+        await pasaElBloqueo();
+        expect(await bloquear()).toBeCloseTo(24 * 60, 5);
+        await pasaElBloqueo();
+        expect(await bloquear()).toBeCloseTo(24 * 60, 5);
+        // el PIN bueno reinicia la cuenta: el siguiente bloqueo vuelve a ser de 15 minutos
+        await pasaElBloqueo();
+        expect(await entrarConPin(tx, { ...llave, pin: '5170' })).toMatchObject({ resultado: 'ok' });
+        expect(await bloquear()).toBeCloseTo(15, 5);
+        throw REVERTIR;
+      });
+    } catch (e) {
+      if (e !== REVERTIR) throw e;
+    } finally {
+      await admin.sql.end();
+    }
+  });
 
   it('otro aparato sin invitación no entra: ni sin llave, ni con la llave equivocada, ni con la de otro', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const { llave } = await pmConCelular(tx);
-      await fijarPin(tx, { ...llave, pin: '2468' });
+      await fijarPin(tx, { ...llave, pin: '5170' });
       const otro = { dispositivoId: llave.dispositivoId, secreto: 'y'.repeat(43) };
       expect(await estadoDispositivo(tx, otro)).toBe('invalido');
-      expect(await entrarConPin(tx, { ...otro, pin: '2468' })).toEqual({ resultado: 'dispositivo_invalido' });
+      expect(await entrarConPin(tx, { ...otro, pin: '5170' })).toEqual({ resultado: 'dispositivo_invalido' });
       expect(await estadoDispositivo(tx, { dispositivoId: 'no', secreto: 'no' })).toBe('invalido');
       // la llave buena, en manos de otro usuario
       await como(tx, USUARIOS.carlos);
       expect(await estadoDispositivo(tx, llave)).toBe('invalido');
-      expect(await entrarConPin(tx, { ...llave, pin: '2468' })).toEqual({
+      expect(await entrarConPin(tx, { ...llave, pin: '5170' })).toEqual({
         resultado: 'dispositivo_invalido',
       });
     }));
@@ -225,12 +305,12 @@ describe('quitar un celular y dar de baja', () => {
   it('el dueño quita el celular de un PM: deja de servir en ese instante', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const { userId, llave } = await pmConCelular(tx);
-      await fijarPin(tx, { ...llave, pin: '2468' });
+      await fijarPin(tx, { ...llave, pin: '5170' });
       await como(tx, USUARIOS.duenoA);
       await revocarDispositivo(tx, { dispositivoId: llave.dispositivoId });
       await como(tx, userId);
       expect(await estadoDispositivo(tx, llave)).toBe('invalido');
-      expect(await entrarConPin(tx, { ...llave, pin: '2468' })).toEqual({
+      expect(await entrarConPin(tx, { ...llave, pin: '5170' })).toEqual({
         resultado: 'dispositivo_invalido',
       });
     }));
@@ -251,7 +331,7 @@ describe('quitar un celular y dar de baja', () => {
   it('el PM dado de baja con la sesión abierta pierde el acceso en ese instante; reactivado, vuelve', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const { userId, llave } = await pmConCelular(tx);
-      await fijarPin(tx, { ...llave, pin: '2468' });
+      await fijarPin(tx, { ...llave, pin: '5170' });
       const { miembroId } = await quienSoy(tx);
       await como(tx, USUARIOS.duenoA);
       await cambiarActivo(tx, { miembroId, activo: false });

@@ -12,7 +12,7 @@ import {
 } from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
-import { uuid, validarEntrada } from './entrada';
+import { motivo, textoLargo, uuid, validarEntrada } from './entrada';
 import { leerSesion, type Sesion } from './sesion';
 
 /** La columna de estado de cada tabla anulable. */
@@ -98,10 +98,14 @@ async function dejarRastro(
 }
 
 const EntradaCorreccion = z.object({
-  tabla: z.string(),
+  tabla: z.string().max(40),
   registroId: uuid,
-  cambios: z.record(z.string(), z.unknown()),
-  motivo: z.string(),
+  // un texto que cambia, con el mismo tope que al capturarlo
+  cambios: z.record(
+    z.string().max(60),
+    z.unknown().refine((v) => typeof v !== 'string' || textoLargo.safeParse(v).success),
+  ),
+  motivo,
 });
 
 /**
@@ -159,7 +163,7 @@ export async function corregir(
   return { cambios: cambios.length };
 }
 
-const EntradaAnulacion = z.object({ tabla: z.string(), registroId: uuid, motivo: z.string() });
+const EntradaAnulacion = z.object({ tabla: z.string().max(40), registroId: uuid, motivo });
 
 /**
  * Anula un registro: queda, pero sale de todos los cálculos. Anular lo ya anulado no hace nada. Un pago anulado

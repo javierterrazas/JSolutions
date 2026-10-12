@@ -7,7 +7,7 @@
 import { ErrorDeNegocio } from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
-import { uuid, validarEntrada } from './entrada';
+import { textoLargo, uuid, validarEntrada } from './entrada';
 import { exigirDueno, leerSesion } from './sesion';
 
 export const TIPOS_AVISO = ['material', 'cliente', 'sub', 'condicion_oculta', 'diseno', 'otro'] as const;
@@ -22,7 +22,7 @@ const EntradaAviso = z.object({
   obraId: uuid,
   claveEnvio: uuid,
   tipo: z.enum(TIPOS_AVISO).default('otro'),
-  descripcion: z.string().nullish(),
+  descripcion: textoLargo.nullish(),
   /** Si hay gente parada. El legacy lo da por hecho si no se dice. */
   detiene: z.boolean().default(true),
   /** Cuántas fotos vienen detrás. */
