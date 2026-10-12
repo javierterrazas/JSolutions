@@ -82,6 +82,10 @@ describe('registrar un gasto', () => {
     probarComo(USUARIOS.carlos, async (tx) => {
       expect(await codigo(tx, () => registrarGasto(tx, gasto({ proveedor: ' ' })))).toBe('faltan');
       expect(await codigo(tx, () => registrarGasto(tx, gasto({ monto: 0 })))).toBe('monto_invalido');
+      // los textos tienen tope (D-055)
+      expect(await codigo(tx, () => registrarGasto(tx, gasto({ proveedor: 'x'.repeat(201) })))).toBe(
+        'datos_invalidos',
+      );
       expect(await codigo(tx, () => registrarGasto(tx, gasto({ obraId: OBRAS.a2Luis })))).toBe(
         'obra_no_encontrada',
       );

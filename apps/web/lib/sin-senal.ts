@@ -125,7 +125,8 @@ export function revisarPinLocal(
     };
   const intentos = p.intentos + 1;
   if (intentos >= MAX_INTENTOS_PIN) {
-    const hasta = new Date(ahora.getTime() + MINUTOS_BLOQUEO_PIN * 60_000).toISOString();
+    // sin señal, el primer bloqueo siempre: la huella del teléfono se puede atacar sin él (D-054)
+    const hasta = new Date(ahora.getTime() + MINUTOS_BLOQUEO_PIN[0] * 60_000).toISOString();
     return {
       pin: { ...p, intentos: 0, bloqueadoHasta: hasta, abiertoHasta: null },
       resultado: { ok: false, codigo: 'pin_bloqueado', datos: { hasta } },

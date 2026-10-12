@@ -83,7 +83,7 @@
     "dispositivo_invalido": "This phone no longer has access.",
     "invitacion_invalida": "This invitation no longer works.",
     "pin_invalido": "The PIN has {largo} digits, numbers only.",
-    "pin_debil": "That PIN is too easy to guess: don't repeat one number or use a run like 1234.",
+    "pin_debil": "That PIN is too easy to guess (like 1234, 2468, 1212, 2580 or a year). Choose another.",
     "pin_no_coincide": "The two PINs don't match.",
     "pin_ya_fijado": "This phone already has a PIN.",
     "pin_incorrecto": "Wrong PIN.",

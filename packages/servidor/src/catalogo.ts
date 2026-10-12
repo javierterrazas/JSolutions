@@ -6,10 +6,10 @@ import { ErrorDeNegocio, partidasDeTipoNuevo, type Responsable } from '@ijm/core
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import type { Nombre } from './consultas-obra';
-import { uuid, validarEntrada } from './entrada';
+import { textoCorto, uuid, validarEntrada } from './entrada';
 import { exigirDueno, leerSesion } from './sesion';
 
-const nombreEn = z.string().nullish();
+const nombreEn = textoCorto.nullish();
 /** Lo opcional en inglés: vacío es null (D-015). */
 const enIngles = (n: string | null | undefined) => n?.trim() || null;
 
@@ -159,9 +159,9 @@ async function insertarTipo(tx: Tx, empresaId: string, nombre: string, en: strin
 }
 
 const EntradaTipoNuevo = z.object({
-  nombre: z.string().nullish(),
+  nombre: textoCorto.nullish(),
   nombreEn,
-  partidas: z.array(z.string()).default([]),
+  partidas: z.array(textoCorto).max(200).default([]),
   tamano: z.number().positive().max(9999).nullish(),
 });
 
@@ -256,7 +256,7 @@ export async function cambiarActivoTipo(
 const EntradaPartida = z.object({
   partidaId: uuid.nullish(),
   tipoId: uuid,
-  nombre: z.string().nullish(),
+  nombre: textoCorto.nullish(),
   nombreEn,
   orden: z.number().int().min(0).max(9999).nullish(),
   peso: z.number().positive().max(9999).nullish(),
@@ -360,7 +360,7 @@ export async function cambiarActivaPartida(
 
 // ------------------------------------------------------------------ etapas
 
-const EntradaEtapa = z.object({ nombre: z.string().nullish(), nombreEn });
+const EntradaEtapa = z.object({ nombre: textoCorto.nullish(), nombreEn });
 
 /**
  * Una etapa nueva del presupuesto: un tipo de trabajo (Pintura). Va al final. Errores: `etapa_sin_nombre`,

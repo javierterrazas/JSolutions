@@ -83,7 +83,7 @@
     "dispositivo_invalido": "Este celular ya no tiene acceso.",
     "invitacion_invalida": "Esta invitación ya no sirve.",
     "pin_invalido": "El PIN lleva {largo} dígitos, solo números.",
-    "pin_debil": "Ese PIN es muy fácil de adivinar: no repitas un número ni uses una escalera como 1234.",
+    "pin_debil": "Ese PIN es muy fácil de adivinar (como 1234, 2468, 1212, 2580 o un año). Elige otro.",
     "pin_no_coincide": "Los dos PIN no son iguales.",
     "pin_ya_fijado": "Este celular ya tiene PIN.",
     "pin_incorrecto": "PIN incorrecto.",

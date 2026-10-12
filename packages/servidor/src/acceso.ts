@@ -145,7 +145,10 @@ export async function fijarPin(
   entrada: Llave & { pin: string },
   ahora = new Date(),
 ): Promise<{ hasta: Date }> {
-  const { dispositivoId, secreto, pin } = validarEntrada(EntradaLlave.extend({ pin: z.string() }), entrada);
+  const { dispositivoId, secreto, pin } = validarEntrada(
+    EntradaLlave.extend({ pin: z.string().max(12) }),
+    entrada,
+  );
   validarPin(pin, (await leerSesion(tx, ahora)).rol);
   const [r] = await enLaBase(
     () => tx<{ hasta: Date }[]>`select public.fijar_pin(${dispositivoId}, ${secreto}, ${pin}) as hasta`,

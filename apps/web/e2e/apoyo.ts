@@ -26,9 +26,9 @@ export const t = {
 
 /** Los miembros del seed (supabase/seed.sql) con los que entran las pruebas, con un PIN que la base acepta. */
 export const MIEMBROS = {
-  pm: { correo: 'pm1@empresa-a.test', nombre: 'Carlos Méndez', pin: '2468', idioma: 'es' },
+  pm: { correo: 'pm1@empresa-a.test', nombre: 'Carlos Méndez', pin: '5170', idioma: 'es' },
   /** el PM que tiene guardado el inglés */
-  pmIngles: { correo: 'pm2@empresa-a.test', nombre: 'Luis Ramírez', pin: '1357', idioma: 'en' },
+  pmIngles: { correo: 'pm2@empresa-a.test', nombre: 'Luis Ramírez', pin: '3859', idioma: 'en' },
   dueno: { correo: 'dueno@empresa-a.test', nombre: 'Javier', pin: '482915', idioma: 'es' },
 } as const;
 

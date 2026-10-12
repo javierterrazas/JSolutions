@@ -2014,6 +2014,7 @@ export const dispositivos = pgTable(
     secreto_hash: text(),
     desbloqueado_hasta: timestamp({ withTimezone: true, mode: 'string' }),
     sesion_id: uuid(),
+    bloqueos: smallint().default(0).notNull(),
   },
   (table) => [
     index('dispositivos_empresa_id_miembro_id_idx').using(
@@ -2040,6 +2041,7 @@ export const dispositivos = pgTable(
     }),
     pgPolicy('cada quien lee sus dispositivos', { as: 'permissive', for: 'select', to: ['authenticated'] }),
     check('dispositivos_check', sql`(revocado_en IS NULL) = (revocado_por IS NULL)`),
+    check('dispositivos_bloqueos_check', sql`bloqueos >= 0`),
     check('dispositivos_intentos_fallidos_check', sql`intentos_fallidos >= 0`),
     check('dispositivos_nombre_check', sql`btrim(nombre) <> ''::text`),
     check('dispositivos_secreto_hash_check', sql`secreto_hash ~ '^[0-9a-f]{64}$'::text`),

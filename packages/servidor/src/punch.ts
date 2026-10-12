@@ -7,7 +7,7 @@
 import { type Dia, ErrorDeNegocio, sumarLaborables } from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
-import { uuid, validarEntrada } from './entrada';
+import { textoCorto, textoLargo, uuid, validarEntrada } from './entrada';
 import { leerSesion, type Sesion } from './sesion';
 
 export const ORIGENES_PUNCH = ['defecto', 'cambio_alcance', 'expectativa'] as const;
@@ -128,9 +128,9 @@ export async function datosParaEntrega(
 
 const EntradaPunch = z.object({
   obraId: uuid,
-  item: z.string().nullish(),
+  item: textoLargo.nullish(),
   origen: z.enum(ORIGENES_PUNCH).default('defecto'),
-  responsable: z.string().nullish(),
+  responsable: textoCorto.nullish(),
 });
 
 /**

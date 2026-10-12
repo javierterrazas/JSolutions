@@ -101,6 +101,19 @@ describe('cerrar el día', () => {
         ),
       ).toBe('dia_ya_cerrado');
       expect(await cierreDeClave(tx, '7b0c3f7e-1a2b-4c3d-8e9f-001122334477')).toBeNull();
+
+      // la misma clave en una obra de otro PM, que no ve ese cierre: se rechaza, no se queda reintentando (D-055)
+      await como(tx, USUARIOS.luis);
+      const otra = await datosDe(tx, OBRAS.a2Luis);
+      expect(
+        await codigo(tx, () =>
+          cerrarDia(
+            tx,
+            { obraId: OBRAS.a2Luis, partidas: [otra.rough.id], fotosPorSubir: 1, claveEnvio: clave },
+            LUNES,
+          ),
+        ),
+      ).toBe('datos_invalidos');
     }));
 
   it('un día sin trabajo se reporta con su motivo, sin partidas ni fotos', () =>
