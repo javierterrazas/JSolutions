@@ -12,7 +12,8 @@
     "catalogo": "Catálogo",
     "gastosPorRevisar": "{n, plural, one {# compra por revisar} other {# compras por revisar}}",
     "avisosPorContestar": "{n, plural, one {# aviso por contestar} other {# avisos por contestar}}",
-    "terminadas": "Obras terminadas ({n})"
+    "terminadas": "Obras terminadas ({n})",
+    "cuadrilla": "Cuadrilla"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -114,7 +115,10 @@
       "fecha_inicio": "fecha de inicio",
       "fecha_entrega": "fecha de entrega",
       "contrato": "contrato",
-      "proveedor": "proveedor"
+      "proveedor": "proveedor",
+      "nombre": "nombre",
+      "tipo_pago": "cómo cobra",
+      "tarifa": "salario"
     },
     "solo_pm": "Solo el PM de la obra cierra el día.",
     "dia_ya_cerrado": "Ese día ya está cerrado.",
@@ -172,7 +176,11 @@
     "orden_ya_confirmada": "Esa orden ya estaba confirmada.",
     "punch_sin_detalle": "Escribe qué señaló el cliente.",
     "punch_no_encontrado": "Ese detalle ya no está pendiente.",
-    "medida_invalida": "Captura los pies² del espacio."
+    "medida_invalida": "Captura los pies² del espacio.",
+    "trabajador_repetido": "Ya hay un trabajador activo con ese nombre: el PM no los distinguiría en el cierre.",
+    "tarifa_invalida": "El salario tiene que ser mayor que cero.",
+    "tipo_pago_con_registros": "Ya tiene días anotados: cómo cobra ya no se puede cambiar.",
+    "tarifa_anterior": "El salario nuevo no puede empezar antes del último cambio."
   },
   "obras": {
     "titulo": "Obras",
@@ -676,5 +684,39 @@
     "garantia": "Garantía hasta el {dia}",
     "diasCerrados": "{n, plural, one {# día cerrado} other {# días cerrados}}",
     "verFotos": "Ver las fotos"
+  },
+  "cuadrilla": {
+    "titulo": "Cuadrilla",
+    "volver": "Volver",
+    "ayuda": "Tus trabajadores, su puesto y su salario. El PM los ve en el cierre del día (nombre, puesto y si cobran por hora o por día), nunca su salario.",
+    "vacio": "Todavía no tienes trabajadores activos.",
+    "agregar": "Agregar trabajador",
+    "nombre": "Nombre",
+    "puesto": "Puesto u oficio",
+    "puestoEjemplo": "Oficial, ayudante, plomero…",
+    "tipoPago": "Cobra",
+    "porHora": "Por hora",
+    "porDia": "Por día",
+    "tipoFijo": "Ya tiene días anotados: cómo cobra ya no cambia.",
+    "telefono": "Teléfono (opcional)",
+    "salario": "Salario ($)",
+    "guardar": "Guardar",
+    "cancelar": "Cancelar",
+    "editar": "Editar",
+    "cambiarSalario": "Salario",
+    "porHoraMonto": "{monto} por hora",
+    "porDiaMonto": "{monto} por día",
+    "sinSalario": "Sin salario",
+    "dias": "{n, plural, =0 {Sin días anotados} one {# día anotado} other {# días anotados}}",
+    "proximo": "Desde el {dia}: {salario}",
+    "nuevoPorHora": "Nuevo salario por hora ($)",
+    "nuevoPorDia": "Nuevo salario por día ($)",
+    "desde": "Desde",
+    "salarioAyuda": "Lo trabajado antes de esa fecha se queda con el salario de entonces.",
+    "historial": "Salarios",
+    "desdeFecha": "{salario} desde el {dia}",
+    "darDeBaja": "Dar de baja",
+    "reactivar": "Reactivar",
+    "dadosDeBaja": "Dados de baja"
   }
 }
