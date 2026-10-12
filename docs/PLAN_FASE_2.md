@@ -201,6 +201,8 @@ aprobar los gastos en revisión y contestar los avisos.
   - **7c** — preparado (2026-10-11): la guía en [PILOTO.md](PILOTO.md); el envío ya no espera para siempre con señal
     muy mala (D-056); la invitación se pega dentro de la app instalada del iPhone, y `exportar-obra.ts` saca la obra
     con las hojas del libro actual para compararla (D-057). Falta que el dueño lo arranque.
+    Antes de arrancar, el dueño pidió una app del PM más sencilla: la inspección pide foto solo en las 9 preguntas
+    críticas, una por cada una que se cumple (D-058).
 
 ## Riesgos
 

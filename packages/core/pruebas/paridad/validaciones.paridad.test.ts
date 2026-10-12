@@ -361,8 +361,10 @@ describe('paridad del cierre del día con el legacy', () => {
                 cuadrillaDe(libro),
               );
             }); // prettier-ignore
-            expect(c.codigo, `${hoy} ${obra.id} ${JSON.stringify(caso).slice(0, 160)}`).toBe(l.codigo);
             vistos.set(l.codigo ?? 'ok', (vistos.get(l.codigo ?? 'ok') ?? 0) + 1);
+            // diferencia intencional (D-059): la foto del cierre es opcional; el legacy la exigía
+            if (l.codigo === 'falta_foto') continue;
+            expect(c.codigo, `${hoy} ${obra.id} ${JSON.stringify(caso).slice(0, 160)}`).toBe(l.codigo);
           }
         }
       }
@@ -481,6 +483,12 @@ describe('paridad de la calidad con el legacy', () => {
                   exigePruebaAgua: /^PC3\b/i.test(hito), pruebaAguaSinFugas: sinFugas,
                 }),
               ); // prettier-ignore
+              if (l.codigo === 'inspeccion_sin_foto') {
+                // diferencia intencional (D-058): sin fotos, el legacy rechazaba toda inspección; aquí solo la que
+                // cumple una pregunta que pide foto, y eso lo prueban las de unidad
+                vistos.set(l.codigo, (vistos.get(l.codigo) ?? 0) + 1);
+                continue;
+              }
               expect(
                 c.codigo,
                 `${d} ${obra.id} ${area.id} ${hito} ${JSON.stringify(caso).slice(0, 80)}`,

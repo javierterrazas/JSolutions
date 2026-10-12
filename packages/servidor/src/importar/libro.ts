@@ -9,7 +9,7 @@
 //   registro, la prueba de agua se marca en su columna, y trae nombres en inglés, días laborables y feriados.
 // En los dos, "SI" es sí, los renglones que empiezan con EJEMPLO no se cargan, y el oficio de una partida se empata
 // con el de un sub por texto, como el legacy.
-import { ErrorDeNegocio, METAS_POR_OMISION, type ClaveIndicador } from '@ijm/core';
+import { ErrorDeNegocio, METAS_POR_OMISION, pideFoto, type ClaveIndicador } from '@ijm/core';
 import { corregirAcentos } from './acentos';
 import { MARCA_EJEMPLO } from './plantilla';
 import type { Libro } from './xlsx';
@@ -272,7 +272,8 @@ export function datosDelLibro(original: Libro): DatosDelLibro {
     orden: Number(r[1]) || 0,
     texto_es: texto(r[2]),
     texto_en: opcional(r[5]),
-    requiere_foto: si(r[3]),
+    // la foto, solo donde protege: en las preguntas estándar, las críticas; en las suyas, lo que diga el libro (D-058)
+    requiere_foto: pideFoto(texto(r[2]), si(r[3])),
   }));
 
   // las partidas de cada tipo de espacio

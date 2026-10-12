@@ -1,7 +1,8 @@
 'use client';
 // Las preguntas del punto de control y sus fotos (legacy: vInspeccion y guardarInspeccion de PM.html). Se marca lo
 // que sí cumple; "No aplica" saca la pregunta del total, pero queda registrada; lo que quede sin marcar es un
-// defecto. Al menos una foto: lo que se cubre hoy no se vuelve a ver.
+// defecto. La foto, solo donde protege (D-058): una por cada pregunta marcada "requiere foto" que cumple; si no hay
+// ninguna así, la inspección se guarda sin fotos.
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { startTransition, useActionState, useState } from 'react';
@@ -29,12 +30,13 @@ export function FormularioInspeccion({
     setRespuestas((rs) => ({ ...rs, [id]: rs[id] === r ? null : r }));
   const aplican = puntos.filter((p) => respuestas[p.id] !== 'no_aplica');
   const defectos = aplican.filter((p) => respuestas[p.id] !== 'cumple');
+  const piden = puntos.filter((p) => p.requiereFoto && respuestas[p.id] === 'cumple').length;
 
   function guardar() {
     setAviso(null);
     // como el legacy: lo que el teléfono ya sabe se dice antes de enviar; el servidor lo vuelve a revisar
     if (!aplican.length) return setAviso(t('ningunoAplica'));
-    if (!fotos.length) return setAviso(t('sinFotos'));
+    if (fotos.length < piden) return setAviso(t('fotosFaltan', { n: piden - fotos.length }));
     if (defectos.length && !window.confirm(t('confirmarDefectos', { n: defectos.length }))) return;
     const f = new FormData();
     for (const p of puntos) {
@@ -113,7 +115,9 @@ export function FormularioInspeccion({
       </fieldset>
       <fieldset className={`${estilos.tarjeta} flex flex-col gap-3`}>
         <legend className="px-1 font-semibold text-marca">{t('fotos')}</legend>
-        <p className="text-sm text-slate-600">{t('fotosAyuda')}</p>
+        <p className="text-sm text-slate-600">
+          {piden ? t('fotosPiden', { n: piden }) : t('fotosOpcionales')}
+        </p>
         <CampoFotos fotos={fotos} alCambiar={setFotos} />
       </fieldset>
       {aviso ? (
