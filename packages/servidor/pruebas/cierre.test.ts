@@ -1,10 +1,12 @@
 // Cerrar el día (adaptadas de legacy/pruebas/prueba_escritura.js, prueba_tardio.js y prueba_pordia.js), a nombre
 // de los PMs de prueba, contra la base local. "Hoy" es el lunes 12 de octubre de 2026 en Austin.
+import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
   cerrarDia,
   cierreDeClave,
   cierreParaCorregir,
+  conectarServidor,
   corregirCierre,
   crearObra,
   guardarPresupuesto,
@@ -219,6 +221,48 @@ describe('el día y el cierre tardío', () => {
       // el viernes sí: un cierre que se quedó en la cola sin señal el fin de semana
       expect((await cerrarDia(tx, capturado('2026-10-09T17:00:00-05:00'), LUNES)).dia).toBe('2026-10-09');
     }));
+});
+
+describe('el mismo cierre dos veces a la vez', () => {
+  // el envío que tardó con mala señal y su copia de la cola llegan juntos: se guarda uno, y los dos reciben ese. Las
+  // transacciones se confirman de verdad, así que la prueba borra lo suyo al final, como postgres.
+  const admin = conectarServidor(
+    process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres',
+    1,
+  );
+  afterAll(() => admin.sql.end());
+
+  it('con la misma clave se guarda una vez; con otra clave, el segundo es "ese día ya está cerrado"', async () => {
+    const [p] = await admin.sql<{ id: string }[]>`
+      select id from partidas_obra where obra_id = ${OBRAS.a1Carlos} and nombre_es = 'Rough de plomería'`;
+    const enviar = (clave: string) =>
+      servidor.sql.begin(async (tx) => {
+        await como(tx, USUARIOS.carlos);
+        return cerrarDia(
+          tx,
+          { obraId: OBRAS.a1Carlos, partidas: [p!.id], fotosPorSubir: 1, claveEnvio: clave },
+          LUNES,
+        );
+      });
+    const clave = randomUUID();
+    try {
+      const [a, b] = await Promise.all([enviar(clave), enviar(clave)]);
+      expect(b.bitacoraId).toBe(a.bitacoraId);
+      const [c, d] = await Promise.allSettled([enviar(randomUUID()), enviar(randomUUID())]);
+      for (const r of [c, d])
+        expect(r.status === 'rejected' && (r.reason as { codigo?: string }).codigo).toBe('dia_ya_cerrado');
+      const [n] = await admin.sql`select count(*)::int as n from bitacora where clave_envio = ${clave}`;
+      expect(n).toEqual({ n: 1 });
+    } finally {
+      const dia = '2026-10-12';
+      const ids = admin.sql`select id from bitacora where obra_id = ${OBRAS.a1Carlos} and dia = ${dia}`;
+      await admin.sql`delete from avance where bitacora_id in (${ids})`;
+      await admin.sql`delete from bitacora_partidas where bitacora_id in (${ids})`;
+      await admin.sql`delete from mano_obra where bitacora_id in (${ids})`;
+      await admin.sql`delete from bitacora_subs where bitacora_id in (${ids})`;
+      await admin.sql`delete from bitacora where obra_id = ${OBRAS.a1Carlos} and dia = ${dia}`;
+    }
+  });
 });
 
 describe('calidad y cuadrilla al cerrar', () => {

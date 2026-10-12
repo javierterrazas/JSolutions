@@ -1,6 +1,14 @@
 // La cola sin señal, con los casos de legacy/pruebas/prueba_cola.js y los de las fotos de un cierre.
-import { describe, expect, it } from 'vitest';
-import { type Almacen, type ElementoCola, procesarCola, type Rechazo, type Respuesta } from './cola';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  type Almacen,
+  conLimite,
+  type ElementoCola,
+  ESPERA_ENVIO_MS,
+  procesarCola,
+  type Rechazo,
+  type Respuesta,
+} from './cola';
 
 function almacenDePrueba(inicial: ElementoCola[]) {
   let cola = [...inicial];
@@ -149,5 +157,32 @@ describe('la cola sin señal', () => {
     hayRed = true;
     expect(await procesarCola(a.almacen, s.enviar)).toBe('vacia');
     expect(s.recibidos).toEqual(['lunes', 'f1']);
+  });
+});
+
+describe('el límite de espera de un envío (D-056)', () => {
+  it('lo que no contesta a tiempo falla como un error de red; lo que contesta, pasa igual', async () => {
+    vi.useFakeTimers();
+    try {
+      await expect(conLimite(Promise.resolve('ok'))).resolves.toBe('ok');
+      const nunca = conLimite(new Promise<string>(() => {}));
+      vi.advanceTimersByTime(ESPERA_ENVIO_MS);
+      await expect(nunca).rejects.toThrow('sin respuesta');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('la cola se detiene como sin señal, sin perder nada, cuando el servidor no contesta', async () => {
+    vi.useFakeTimers();
+    try {
+      const { almacen, cola } = almacenDePrueba([cierre('a', 1)]);
+      const fin = procesarCola(almacen, () => conLimite(new Promise<Respuesta>(() => {})));
+      await vi.advanceTimersByTimeAsync(ESPERA_ENVIO_MS);
+      await expect(fin).resolves.toBe('sin_red');
+      expect(cola()).toEqual([expect.objectContaining({ id: 'a', intentos: 1 })]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

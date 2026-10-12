@@ -1056,3 +1056,15 @@ Lo que quedaba de la revisión del paso 7b (después de D-054 y de apagar la API
 **Se quedan así:** que al revocar un celular no se cierre al instante una sesión de Auth que Supabase no deje
 borrar (con la API apagada, esa sesión ya no lee nada); que al canjear en un celular la invitación de otro miembro
 el celular anterior siga en Equipo hasta que el dueño lo quite; y la llave foránea simple de `corrige_a`.
+
+## D-056 · Con señal muy mala, el envío no espera para siempre
+
+Pendiente desde el paso 5b, y lo primero que encontraría el piloto en una obra con poca señal: una petición que casi
+conecta puede no terminar nunca, y el PM se quedaba viendo "Cerrando…".
+- **El límite.** El cierre, el gasto y el aviso esperan al servidor 20 segundos (`conLimite`, `ESPERA_ENVIO_MS`).
+  Pasado ese tiempo se dan por perdidos y quedan en la cola, como sin señal. La cola tiene el mismo límite, para no
+  quedarse en "Enviando…"; una foto, que pesa más, espera 90.
+- **No se duplica.** La petición que tardó puede llegar de todos modos, y la copia de la cola después o al mismo
+  tiempo. La clave de envío (D-042) ya cubría que llegaran una tras otra. Si llegan juntas, la segunda choca con la
+  clave o con "un cierre por día" al guardarse; el servidor lo intenta en un savepoint y, si el que ganó es el mismo
+  cierre, lo devuelve. Si es otro cierre del mismo día, es `dia_ya_cerrado` y no un error de la base.

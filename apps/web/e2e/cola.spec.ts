@@ -191,6 +191,36 @@ test('en un teléfono que pasa a otro PM, lo pendiente del primero se aparta y s
   await expect.poll(() => cierresDeHoy(obraId), { timeout: 40_000 }).toEqual([1]);
 });
 
+test('con señal muy mala el cierre no se queda esperando: a los 20 segundos va a la cola, y se guarda una vez (D-056)', async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const obraId = await obraNueva(browser, 'Familia Señal Mala');
+  await entrar(page, 'pm');
+  await llenarCierre(page, obraId, 1);
+
+  // el servidor tarda 25 segundos en contestar el cierre (pero lo guarda)
+  let tardado = false;
+  await page.route('**/*', async (route) => {
+    if (tardado || !esAccion(route.request(), 'claveEnvio')) return route.continue();
+    tardado = true;
+    await new Promise((listo) => setTimeout(listo, 25_000));
+    await route.continue().catch(() => {});
+  });
+  const inicio = Date.now();
+  await page.getByRole('button', { name: es.cierre.cerrar }).click();
+  await expect(page.getByRole('status')).toHaveText(es.cierre.guardadoSinRed, { timeout: 30_000 });
+  expect(Date.now() - inicio, 'no esperó al servidor').toBeLessThan(25_000);
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+
+  // ya con señal, el inicio envía lo de la cola: un solo cierre, aunque el lento también haya llegado
+  await page.getByRole('link', { name: es.cierre.volver }).last().click();
+  await expect(porEnviar(page)).toHaveCount(0, { timeout: 60_000 });
+  await expect.poll(() => cierresDeHoy(obraId), { timeout: 30_000 }).toEqual([1]);
+  await expect(page.getByRole('button', { name: es.cola.entendido })).toHaveCount(0);
+});
+
 test('las fotos del cierre se suben después, aunque el PM cierre la app', async ({ context, browser }) => {
   const obraId = await obraNueva(browser, 'Familia Fotos Después');
   let page = await context.newPage();

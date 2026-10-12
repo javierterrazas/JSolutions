@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { enviarAviso } from '@/app/acciones/cola';
-import type { ElementoCola } from '@/lib/cola';
+import { conLimite, type ElementoCola } from '@/lib/cola';
 import { encolar, enviarPendientes, siguienteN } from '@/lib/cola-telefono';
 import { CampoFotos, type FotoTomada } from '../../../componentes/campo-fotos';
 import { estilos } from '../../../componentes/marco';
@@ -81,7 +81,8 @@ export function FormularioAviso({
 
       let r: Awaited<ReturnType<typeof enviarAviso>>;
       try {
-        r = await enviarAviso(entrada);
+        // con señal muy mala no se espera para siempre: pasado el límite, a la cola (D-056)
+        r = await conLimite(enviarAviso(entrada));
       } catch {
         await todoALaCola('sin_red');
         return;
