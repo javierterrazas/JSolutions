@@ -92,10 +92,11 @@ describe('la inspección', () => {
       ]);
     }));
 
-  it('lo que no se marca es defecto; "No aplica" sale del total; sin ninguna que aplique o sin fotos, nada', () =>
+  it('lo que no se marca es defecto; "No aplica" sale del total; sin ninguna que aplique, o sin la foto de la crítica cumplida, nada', () =>
     probarComo(USUARIOS.carlos, async (tx) => {
       const i = await ids(tx);
-      const base = { obraId: OBRAS.a1Carlos, espacioId: i.bano, hitoId: i.pc1, fotos: 1 };
+      // con defectos, sin fotos: la foto solo la pide la pregunta crítica que se cumple (D-058)
+      const base = { obraId: OBRAS.a1Carlos, espacioId: i.bano, hitoId: i.pc1, fotos: 0 };
       const r = await registrarInspeccion(tx, base);
       expect(r).toMatchObject({ resultado: 'con_defectos', defectos: 1 });
       const [insp] = await tx`select puntos_ok, puntos_total from inspecciones where id = ${r.inspeccionId}`;

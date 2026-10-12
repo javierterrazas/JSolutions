@@ -1079,3 +1079,19 @@ El piloto (paso 7c) lo llevan el dueño y un PM en una obra real; la guía está
 - **Exportar una obra para compararla** (`scripts/exportar-obra.ts`): un .xlsx con las hojas y columnas del libro
   actual, y una hoja con cada día desde el inicio (si se cerró, cuándo llegó y si fue tardío). Solo lee, con la
   conexión directa a la base. Lleva los gastos con su monto: es para el dueño.
+
+## D-058 · La foto de las inspecciones, solo donde protege
+
+**Decisión del dueño:** la app del PM tiene que ser lo más sencilla posible, y la inspección pedía demasiadas fotos.
+Que las pida solo cuando son estrictamente necesarias: lo que protege a la empresa ante un reclamo o una garantía.
+- **Qué preguntas piden foto.** De las 38 preguntas estándar de PC1 a PC5, solo las 9 críticas del legacy ("Foto
+  solo en lo crítico", `FOTO_CRITICA_`): cómo estaba antes de empezar (estructura sin daño por agua ni termita, la
+  plomería existente), lo que se tapa y no se vuelve a ver (la prueba de presión, la panorámica de cada muro antes de
+  cubrir, el refuerzo de la impermeabilización, el desagüe con brida, los gabinetes anclados) y cómo se entregó (la
+  plomería sin fugas, las fotos finales). La prueba de inundación lleva sus propias dos fotos, como antes. Las
+  preguntas que agregó la empresa piden foto si ella lo dijo (`pideFoto`). El libro de IJM la pedía en 25; una
+  migración las deja en las 9 (`20261014000100_fotos_criticas.sql`), y cargar un libro aplica la misma regla.
+- **Cuándo la pide la inspección.** Una foto por cada pregunta que pide foto, aplica y se marca como cumplida
+  (`fotosQuePide`). Una inspección sin ninguna así, o con defecto en ellas, se guarda sin fotos; se pueden agregar si
+  el PM quiere. La pantalla dice cuántas faltan y de qué.
+- **Diferencia con el legacy**, que pedía al menos una foto en toda inspección.

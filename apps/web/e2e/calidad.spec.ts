@@ -42,12 +42,17 @@ test('la inspección: No aplica, un defecto y aprobarla otra vez', async ({ page
   await expect(pregunta).toHaveAttribute('aria-pressed', 'true');
   await expect(pregunta).toContainText('✓');
 
-  // sin marcar es un defecto; sin fotos no se guarda
+  // marcada como cumple, la pregunta crítica pide su foto (D-058)
+  await expect(page.getByText(t.es('calidad.fotosPiden', { n: 1 }))).toBeVisible();
+  await guardar.click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: t.es('calidad.fotosFaltan', { n: 1 }) }),
+  ).toBeVisible();
+
+  // sin marcar es un defecto: entonces ya no pide foto, y se guarda sin ella
   await pregunta.click();
   await expect(pregunta).toHaveAttribute('aria-pressed', 'false');
-  await guardar.click();
-  await expect(page.getByRole('alert').filter({ hasText: es.calidad.sinFotos })).toBeVisible();
-  await tomarFoto(page);
+  await expect(page.getByText(es.calidad.fotosOpcionales)).toBeVisible();
   let pregunto = '';
   page.once('dialog', (d) => {
     pregunto = d.message();

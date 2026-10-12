@@ -1,6 +1,13 @@
 // Validaciones y calidad con el calendario real de la empresa y los casos que los datos del legacy no cubren.
 import { describe, expect, it } from 'vitest';
-import { calificarInspeccion, cerrarPruebaAgua, exigirInspecciones, puntosConFoto } from './calidad';
+import {
+  calificarInspeccion,
+  cerrarPruebaAgua,
+  exigirInspecciones,
+  fotosQuePide,
+  pideFoto,
+  puntosConFoto,
+} from './calidad';
 import { ErrorDeNegocio } from './errores';
 import { CALENDARIO_LEGACY, CALENDARIO_POR_DEFECTO, calendario } from './fechas';
 import {
@@ -227,8 +234,36 @@ describe('calidad', () => {
     expect(puntosConFoto(puntos, ['p3'])).toEqual(['p1']);
   });
 
+  it('la foto, solo donde protege (D-058): una por cada pregunta que la pide y se cumple', () => {
+    const base = { puntos, noAplica: [], exigePruebaAgua: false, pruebaAguaSinFugas: false };
+    // sin ninguna pregunta que pida foto cumplida: se registra sin fotos (aquí, con defectos)
+    expect(calificarInspeccion({ ...base, cumple: ['p2'], fotos: 0 }).resultado).toBe('con_defectos');
+    // dos que piden foto y se cumplen: dos fotos
+    expect(fotosQuePide(puntos, ['p1', 'p2', 'p3'], [])).toEqual(['p1', 'p3']);
+    expect(error(() => calificarInspeccion({ ...base, cumple: ['p1', 'p2', 'p3'], fotos: 1 }))).toMatchObject(
+      {
+        codigo: 'inspeccion_sin_foto',
+        datos: { piden: 2 },
+      },
+    );
+    expect(calificarInspeccion({ ...base, cumple: ['p1', 'p2', 'p3'], fotos: 2 }).resultado).toBe('aprobado');
+    // la que no aplica no pide foto
+    expect(calificarInspeccion({ ...base, cumple: ['p1', 'p2'], noAplica: ['p3'], fotos: 1 }).resultado).toBe(
+      'aprobado',
+    );
+  });
+
+  it('qué preguntas piden foto: de las estándar, las 9 críticas, con o sin acentos; las de la empresa, lo suyo', () => {
+    expect(pideFoto('Prueba de presión de plomería sostenida', false)).toBe(true);
+    expect(pideFoto('Estructura visible sin dano por agua ni termita', false)).toBe(true);
+    expect(pideFoto('Tile a nivel, a plomo y con juntas alineadas', true)).toBe(false);
+    expect(pideFoto('  silicon parejo en todas las uniones ', true)).toBe(false);
+    expect(pideFoto('Foto del medidor de agua', true)).toBe(true);
+    expect(pideFoto('Foto del medidor de agua', false)).toBe(false);
+  });
+
   it('PC3: con defectos se registra aunque no haya prueba de agua; aprobada, no', () => {
-    const pc3 = { puntos, noAplica: [], fotos: 1, exigePruebaAgua: true, pruebaAguaSinFugas: false };
+    const pc3 = { puntos, noAplica: [], fotos: 2, exigePruebaAgua: true, pruebaAguaSinFugas: false };
     expect(calificarInspeccion({ ...pc3, cumple: ['p1'] }).resultado).toBe('con_defectos');
     expect(error(() => calificarInspeccion({ ...pc3, cumple: ['p1', 'p2', 'p3'] }))?.codigo).toBe(
       'falta_prueba_agua',

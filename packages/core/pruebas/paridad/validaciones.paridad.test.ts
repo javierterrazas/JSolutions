@@ -481,6 +481,12 @@ describe('paridad de la calidad con el legacy', () => {
                   exigePruebaAgua: /^PC3\b/i.test(hito), pruebaAguaSinFugas: sinFugas,
                 }),
               ); // prettier-ignore
+              if (l.codigo === 'inspeccion_sin_foto') {
+                // diferencia intencional (D-058): sin fotos, el legacy rechazaba toda inspección; aquí solo la que
+                // cumple una pregunta que pide foto, y eso lo prueban las de unidad
+                vistos.set(l.codigo, (vistos.get(l.codigo) ?? 0) + 1);
+                continue;
+              }
               expect(
                 c.codigo,
                 `${d} ${obra.id} ${area.id} ${hito} ${JSON.stringify(caso).slice(0, 80)}`,

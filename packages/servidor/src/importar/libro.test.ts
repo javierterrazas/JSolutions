@@ -61,6 +61,20 @@ describe('el libro de ejemplo', () => {
     expect(d.partidas.filter((x) => x.hito).every((x) => d.hitos.some((h) => h.clave === x.hito))).toBe(true);
   });
 
+  it('la foto, solo en las 9 preguntas críticas, aunque el libro la pida en todas; las propias, lo que diga (D-058)', () => {
+    const l = libro();
+    const lista = l.Checklist_Calidad!;
+    for (const r of lista.slice(1)) if (String(r[2] ?? '').trim()) r[3] = 'SI';
+    lista.push(['PC5 Pre-entrega', 99, 'Foto del medidor de agua', 'SI']);
+    const conFoto = datosDelLibro(l)
+      .puntos.filter((x) => x.requiere_foto)
+      .map((x) => x.texto_es);
+    expect(conFoto).toHaveLength(10);
+    expect(conFoto).toContain('Prueba de presión de plomería sostenida');
+    expect(conFoto).toContain('Foto del medidor de agua');
+    expect(conFoto).not.toContain('Tile a nivel, a plomo y con juntas alineadas');
+  });
+
   it('subcontratistas con sus papeles, y la licencia que pide Texas por oficio', () => {
     expect(d.subcontratistas).toHaveLength(6);
     expect(d.subcontratistas[0]).toEqual({
