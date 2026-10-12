@@ -11,7 +11,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { enviarGasto } from '@/app/acciones/cola';
-import type { ElementoCola } from '@/lib/cola';
+import { conLimite, type ElementoCola } from '@/lib/cola';
 import { encolar, enviarPendientes, siguienteN } from '@/lib/cola-telefono';
 import { formatoDinero } from '@/lib/dinero';
 import { CampoFotos, type FotoTomada } from '../../../componentes/campo-fotos';
@@ -110,7 +110,8 @@ export function FormularioGasto({
 
       let r: Awaited<ReturnType<typeof enviarGasto>>;
       try {
-        r = await enviarGasto(entrada);
+        // con señal muy mala no se espera para siempre: pasado el límite, a la cola (D-056)
+        r = await conLimite(enviarGasto(entrada));
       } catch {
         await todoALaCola('sin_red');
         return;

@@ -1056,3 +1056,26 @@ Lo que quedaba de la revisión del paso 7b (después de D-054 y de apagar la API
 **Se quedan así:** que al revocar un celular no se cierre al instante una sesión de Auth que Supabase no deje
 borrar (con la API apagada, esa sesión ya no lee nada); que al canjear en un celular la invitación de otro miembro
 el celular anterior siga en Equipo hasta que el dueño lo quite; y la llave foránea simple de `corrige_a`.
+
+## D-056 · Con señal muy mala, el envío no espera para siempre
+
+Pendiente desde el paso 5b, y lo primero que encontraría el piloto en una obra con poca señal: una petición que casi
+conecta puede no terminar nunca, y el PM se quedaba viendo "Cerrando…".
+- **El límite.** El cierre, el gasto y el aviso esperan al servidor 20 segundos (`conLimite`, `ESPERA_ENVIO_MS`).
+  Pasado ese tiempo se dan por perdidos y quedan en la cola, como sin señal. La cola tiene el mismo límite, para no
+  quedarse en "Enviando…"; una foto, que pesa más, espera 90.
+- **No se duplica.** La petición que tardó puede llegar de todos modos, y la copia de la cola después o al mismo
+  tiempo. La clave de envío (D-042) ya cubría que llegaran una tras otra. Si llegan juntas, la segunda choca con la
+  clave o con "un cierre por día" al guardarse; el servidor lo intenta en un savepoint y, si el que ganó es el mismo
+  cierre, lo devuelve. Si es otro cierre del mismo día, es `dia_ya_cerrado` y no un error de la base.
+
+## D-057 · Lo que se preparó para el piloto
+
+El piloto (paso 7c) lo llevan el dueño y un PM en una obra real; la guía está en [PILOTO.md](PILOTO.md). Para él:
+- **La invitación se puede pegar dentro de la app.** En el iPhone, la app instalada en la pantalla de inicio no
+  comparte las cookies de Safari y no tiene barra de direcciones: abrir la invitación desde WhatsApp verificaba
+  Safari, y la app seguía "sin acceso". La pantalla sin acceso tiene ahora un campo para pegar el enlace (o el mensaje
+  completo; `tokenDeInvitacion` saca el token) y abrirlo ahí.
+- **Exportar una obra para compararla** (`scripts/exportar-obra.ts`): un .xlsx con las hojas y columnas del libro
+  actual, y una hoja con cada día desde el inicio (si se cerró, cuándo llegó y si fue tardío). Solo lee, con la
+  conexión directa a la base. Lleva los gastos con su monto: es para el dueño.

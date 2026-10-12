@@ -21,7 +21,11 @@
   "sinAcceso": {
     "titulo": "This phone doesn't have access",
     "texto": "To get in, ask the owner for an invitation and open it on this phone.",
-    "baja": "If you used to sign in here, this phone may have been removed or your access turned off."
+    "baja": "If you used to sign in here, this phone may have been removed or your access turned off.",
+    "pegar": "Already got your invitation? If you installed the app on an iPhone, copy the link and paste it here:",
+    "pegarEjemplo": "https://…/invitacion/…",
+    "noEsInvitacion": "That's not an invitation link. Copy the whole link from the message.",
+    "abrirInvitacion": "Open the invitation"
   },
   "invitacion": {
     "titulo": "Your invitation",

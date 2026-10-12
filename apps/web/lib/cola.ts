@@ -93,6 +93,31 @@ export interface Almacen {
 /** Cómo terminó una pasada: se vació, se quedó esperando la señal, o espera a que el PM vuelva a entrar. */
 export type FinDeCola = 'vacia' | 'sin_red' | 'sin_sesion';
 
+/**
+ * Cuánto se espera al servidor (D-056). Con señal muy mala una petición puede no terminar nunca: pasado este tiempo
+ * se da por perdida y lo capturado queda en la cola. Si de todos modos llega, su clave de envío evita guardarlo dos
+ * veces. Una foto pesa más y tarda más en subir.
+ */
+export const ESPERA_ENVIO_MS = 20_000;
+export const ESPERA_FOTO_MS = 90_000;
+
+/** La respuesta, o un error si no llega en `ms` (como uno de red). */
+export function conLimite<T>(envio: Promise<T>, ms = ESPERA_ENVIO_MS): Promise<T> {
+  return new Promise<T>((listo, falla) => {
+    const reloj = setTimeout(() => falla(new Error('sin respuesta')), ms);
+    envio.then(
+      (r) => {
+        clearTimeout(reloj);
+        listo(r);
+      },
+      (e: unknown) => {
+        clearTimeout(reloj);
+        falla(e);
+      },
+    );
+  });
+}
+
 /** El código con que el servidor dice que la sesión ya no sirve: el PM tiene que volver a entrar. */
 export const SIN_SESION = 'sesion';
 

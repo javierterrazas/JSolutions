@@ -1,7 +1,7 @@
 // El PIN en pantalla (legacy/pruebas/prueba_pin.py): se escribe oculto con el teclado numérico, el ojo lo muestra
 // y lo vuelve a ocultar sin borrarlo, en los dos idiomas; y con él se entra y se vuelve a entrar después de salir.
 import { expect, test } from '@playwright/test';
-import { datosDelTelefono, en, es, MIEMBROS, verificarCelular, type Quien } from './apoyo';
+import { datosDelTelefono, en, es, invitacion, MIEMBROS, verificarCelular, type Quien } from './apoyo';
 
 for (const quien of ['pm', 'dueno'] as const satisfies readonly Quien[]) {
   test(`el PIN del ${quien}`, async ({ page }) => {
@@ -62,3 +62,21 @@ for (const quien of ['pm', 'dueno'] as const satisfies readonly Quien[]) {
     else expect(datos.filter((c) => c.startsWith('pin'))).toEqual([]);
   });
 }
+
+test('en la app instalada del iPhone, que no comparte las cookies de Safari, la invitación se pega (D-057)', async ({
+  page,
+}) => {
+  // un teléfono sin acceso cae en "sin acceso", y ahí pega el mensaje de WhatsApp tal cual
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: es.sinAcceso.titulo })).toBeVisible();
+  const campo = page.getByRole('textbox', { name: es.sinAcceso.pegar });
+  await campo.fill('hola, no es una invitación');
+  await page.getByRole('button', { name: es.sinAcceso.abrirInvitacion }).click();
+  await expect(page.getByRole('alert').filter({ hasText: es.sinAcceso.noEsInvitacion })).toBeVisible();
+
+  const token = await invitacion('pm');
+  await campo.fill(`Hola Carlos, tu invitación: http://localhost/invitacion/${token} (vale 7 días)`);
+  await page.getByRole('button', { name: es.sinAcceso.abrirInvitacion }).click();
+  await page.getByRole('button', { name: es.invitacion.boton }).click();
+  await expect(page).toHaveURL(/\/pin\/nuevo$/);
+});

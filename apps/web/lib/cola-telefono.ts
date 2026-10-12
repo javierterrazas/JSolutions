@@ -6,7 +6,15 @@
 // vuelva a entrar aquí.
 import { enviarAviso, enviarCierre, enviarFoto, enviarGasto } from '@/app/acciones/cola';
 import { guardar, leer, quitar, todos } from './almacen';
-import { type Almacen, type ElementoCola, type FinDeCola, procesarCola, type Rechazo } from './cola';
+import {
+  type Almacen,
+  conLimite,
+  type ElementoCola,
+  ESPERA_FOTO_MS,
+  type FinDeCola,
+  procesarCola,
+  type Rechazo,
+} from './cola';
 
 const oyentes = new Set<() => void>();
 const avisar = () => oyentes.forEach((f) => f());
@@ -73,14 +81,15 @@ export async function encolar(...elementos: ElementoCola[]) {
 export let ultimoFin: FinDeCola | null = null;
 let enCurso: Promise<FinDeCola> | null = null;
 
+/** Un envío de la cola, con su límite de espera: si no contesta, la cola se detiene como sin señal. */
 function enviar(e: ElementoCola) {
-  if (e.tipo === 'cierre') return enviarCierre(e.entrada);
-  if (e.tipo === 'gasto') return enviarGasto(e.entrada);
-  if (e.tipo === 'aviso') return enviarAviso(e.entrada);
+  if (e.tipo === 'cierre') return conLimite(enviarCierre(e.entrada));
+  if (e.tipo === 'gasto') return conLimite(enviarGasto(e.entrada));
+  if (e.tipo === 'aviso') return conLimite(enviarAviso(e.entrada));
   const f = new FormData();
   f.set('foto', e.foto, `foto-${e.indice}.jpg`);
   f.set('tomadaEn', e.tomadaEn);
-  return enviarFoto(e.clave, e.indice, f, e.de ?? 'cierre');
+  return conLimite(enviarFoto(e.clave, e.indice, f, e.de ?? 'cierre'), ESPERA_FOTO_MS);
 }
 
 /** Envía lo pendiente, en orden. Si ya se está enviando, espera esa misma pasada. */

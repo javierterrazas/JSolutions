@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { enviarCierre } from '@/app/acciones/cola';
 import { corregirElCierre } from '@/app/acciones/correccion';
-import type { ElementoCola } from '@/lib/cola';
+import { conLimite, type ElementoCola } from '@/lib/cola';
 import { alCambiar, encolar, enviarPendientes, pendientes, siguienteN } from '@/lib/cola-telefono';
 import { comprimirFoto } from '@/lib/comprimir';
 import { estilos } from '../../../componentes/marco';
@@ -207,7 +207,8 @@ export function FormularioCierre({
 
       let r: Awaited<ReturnType<typeof enviarCierre>>;
       try {
-        r = await enviarCierre(entrada);
+        // con señal muy mala no se espera para siempre: pasado el límite, a la cola (D-056)
+        r = await conLimite(enviarCierre(entrada));
       } catch {
         // sin señal: el cierre y sus fotos quedan en el teléfono y se envían solos cuando haya
         await todoALaCola('sin_red');

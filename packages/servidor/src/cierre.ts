@@ -59,6 +59,27 @@ interface Correccion {
   readonly fotosPrevias: number;
 }
 
+/** El cierre de esa obra que ya llegó con esa clave de envío, como lo devuelve cerrarDia; null si no ha llegado. */
+async function cierreRecibido(tx: Tx, obraId: string, clave: string): Promise<ResultadoCierre | null> {
+  const [ya] = await tx<
+    { id: string; folio: string; dia: Dia; tardio: boolean; fotos: number; cuadrilla: string }[]
+  >`
+    select b.id, b.folio, b.dia, b.tardio, b.fotos_comprometidas as fotos,
+           coalesce((select sum(m.cantidad) from mano_obra m
+                     where m.bitacora_id = b.id and m.estado = 'vigente'), 0) as cuadrilla
+    from bitacora b where b.obra_id = ${obraId} and b.clave_envio = ${clave}`;
+  return ya
+    ? {
+        bitacoraId: ya.id,
+        folio: ya.folio,
+        dia: ya.dia,
+        tardio: ya.tardio,
+        fotosComprometidas: ya.fotos,
+        cuadrilla: Number(ya.cuadrilla),
+      }
+    : null;
+}
+
 export async function cerrarDia(
   tx: Tx,
   entrada: EntradaCierre,
@@ -73,22 +94,8 @@ export async function cerrarDia(
 
   // un reintento del mismo cierre: el servidor ya lo guardó y la respuesta no llegó al teléfono (D-042)
   if (e.claveEnvio) {
-    const [ya] = await tx<
-      { id: string; folio: string; dia: Dia; tardio: boolean; fotos: number; cuadrilla: string }[]
-    >`
-      select b.id, b.folio, b.dia, b.tardio, b.fotos_comprometidas as fotos,
-             coalesce((select sum(m.cantidad) from mano_obra m
-                       where m.bitacora_id = b.id and m.estado = 'vigente'), 0) as cuadrilla
-      from bitacora b where b.obra_id = ${e.obraId} and b.clave_envio = ${e.claveEnvio}`;
-    if (ya)
-      return {
-        bitacoraId: ya.id,
-        folio: ya.folio,
-        dia: ya.dia,
-        tardio: ya.tardio,
-        fotosComprometidas: ya.fotos,
-        cuadrilla: Number(ya.cuadrilla),
-      };
+    const ya = await cierreRecibido(tx, e.obraId, e.claveEnvio);
+    if (ya) return ya;
   }
 
   // el día: el olvidado (con su ventana), o el de la captura
@@ -177,21 +184,34 @@ export async function cerrarDia(
   );
 
   // ---------------------------------------------------------------- escribir
-  const [bit] = await tx<{ id: string; folio: string }[]>`
+  // en un savepoint: si la clave choca, la transacción sigue viva para buscar quién la tiene
+  const insertar = () =>
+    tx.savepoint(
+      (sp) => sp<{ id: string; folio: string }[]>`
     insert into bitacora (empresa_id, obra_id, dia, sin_trabajo, motivo_sin_trabajo, incidencia, tardio, fotos_comprometidas,
                           clave_envio, corrige_a)
     values (${s.empresaId}, ${e.obraId}, ${elDia}, ${e.sinTrabajo}, ${e.sinTrabajo ? e.motivo! : null},
             ${e.incidencia ?? null}, ${tardio}, ${fotosComprometidas}, ${e.claveEnvio ?? null},
             ${correccion?.corrigeA ?? null})
-    returning id, folio`.catch((err: unknown) => {
-    // la clave ya es de un cierre de otra obra (que este usuario quizá no ve): no es un reintento, y reintentarlo no
-    // lo arregla; es un error de negocio, para que la cola lo saque y lo de atrás siga (D-055)
-    if (err instanceof postgres.PostgresError && err.constraint_name === 'bitacora_clave_envio_unica')
-      throw new ErrorDeNegocio('datos_invalidos', {
-        problemas: [{ campo: 'claveEnvio', problema: 'repetida' }],
-      });
-    throw err;
-  });
+    returning id, folio`,
+    );
+  let bit: { id: string; folio: string } | undefined;
+  try {
+    [bit] = await insertar();
+  } catch (err) {
+    const choca = err instanceof postgres.PostgresError ? err.constraint_name : undefined;
+    if (choca !== 'bitacora_clave_envio_unica' && choca !== 'bitacora_un_cierre_por_dia') throw err;
+    // el mismo cierre llegó dos veces a la vez (el envío que tardó y su copia de la cola): el que ganó es este
+    const ya = e.claveEnvio ? await cierreRecibido(tx, e.obraId, e.claveEnvio) : null;
+    if (ya) return ya;
+    // otro cierre del mismo día ganó la carrera (D-022)
+    if (choca === 'bitacora_un_cierre_por_dia') throw new ErrorDeNegocio('dia_ya_cerrado', { dia: elDia });
+    // la clave es de un cierre de otra obra (que este usuario quizá no ve): no es un reintento, y reintentarlo no lo
+    // arregla; es un error de negocio, para que la cola lo saque y lo de atrás siga (D-055)
+    throw new ErrorDeNegocio('datos_invalidos', {
+      problemas: [{ campo: 'claveEnvio', problema: 'repetida' }],
+    });
+  }
   const bitacoraId = bit!.id;
   if (partidasDelDia.length) {
     await tx`insert into bitacora_partidas ${tx(
