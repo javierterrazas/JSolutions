@@ -6,9 +6,13 @@
 import { expect, type Page, test } from '@playwright/test';
 import { en, entrar, es, OBRAS } from './apoyo';
 
-const PANTALLAS = ['', 'cierre', 'calidad', 'gasto', 'aviso', 'ordenes', 'entrega', 'album'].map((p) =>
-  p ? `/obras/${OBRAS.carlos}/${p}` : '/',
-);
+const PANTALLAS = [
+  ...['', 'cierre', 'calidad', 'gasto', 'aviso', 'ordenes', 'entrega', 'album'].map((p) =>
+    p ? `/obras/${OBRAS.carlos}/${p}` : '/',
+  ),
+  '/obras/terminadas',
+  `/obras/${OBRAS.carlosEntregada}/album`,
+];
 
 const desplazamiento = (page: Page) =>
   page.evaluate(() => ({

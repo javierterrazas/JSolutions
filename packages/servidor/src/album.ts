@@ -119,3 +119,110 @@ export async function albumDeObra(
     hayMas: grupos.length > REGISTROS_POR_PAGINA,
   };
 }
+
+// ------------------------------------------------------------------ las obras terminadas del PM, en garantía
+/** Una obra entregada del PM con la garantía vigente (D-060): sin dinero. */
+export interface ObraEnGarantia {
+  readonly id: string;
+  readonly folio: string;
+  readonly cliente: string;
+  readonly direccion: string;
+  readonly inicio: Dia | null;
+  readonly entregaComprometida: Dia | null;
+  readonly entregada: Dia;
+  readonly garantiaVence: Dia;
+  /** Días de atraso contra la entrega comprometida; 0 si se entregó a tiempo. */
+  readonly atraso: number;
+  readonly diasCerrados: number;
+}
+
+const diasEntre = (de: Dia, a: Dia) =>
+  Math.round((Date.parse(`${a}T12:00:00Z`) - Date.parse(`${de}T12:00:00Z`)) / 86_400_000);
+
+/**
+ * Las obras terminadas del PM de la sesión mientras dura su garantía, lo más reciente primero. La base revisa que
+ * sean suyas, entregadas y en garantía (mis_obras_en_garantia); al dueño no le aplica: él ve todas en Obras.
+ */
+export async function obrasEnGarantia(tx: Tx, ahora = new Date()): Promise<ObraEnGarantia[]> {
+  const s = await leerSesion(tx, ahora);
+  if (s.rol !== 'pm') return [];
+  const filas = await tx<
+    {
+      id: string;
+      folio: string;
+      cliente: string;
+      direccion: string;
+      inicio: Dia | null;
+      comprometida: Dia | null;
+      entregada: Dia;
+      vence: Dia;
+      dias: number;
+    }[]
+  >`
+    select id, folio, cliente, direccion, to_char(inicio, 'YYYY-MM-DD') as inicio,
+           to_char(entrega_comprometida, 'YYYY-MM-DD') as comprometida, to_char(entregada, 'YYYY-MM-DD') as entregada,
+           to_char(garantia_vence, 'YYYY-MM-DD') as vence, dias_cerrados as dias
+    from public.mis_obras_en_garantia()`;
+  return filas.map((o) => ({
+    id: o.id,
+    folio: o.folio,
+    cliente: o.cliente,
+    direccion: o.direccion,
+    inicio: o.inicio,
+    entregaComprometida: o.comprometida,
+    entregada: o.entregada,
+    garantiaVence: o.vence,
+    atraso: o.comprometida ? Math.max(0, diasEntre(o.comprometida, o.entregada)) : 0,
+    diasCerrados: o.dias,
+  }));
+}
+
+/**
+ * El álbum de una obra terminada del PM, mientras dura su garantía (D-060): el mismo que albumDeObra, pero de una obra
+ * que RLS ya no le deja ver. Solo lectura. Null si no es suya, no está entregada o ya venció su garantía.
+ */
+export async function albumEnGarantia(
+  tx: Tx,
+  entrada: { obraId: string; pagina?: number },
+  ahora = new Date(),
+): Promise<Album | null> {
+  const e = validarEntrada(
+    z.object({ obraId: uuid, pagina: z.number().int().min(0).max(1000).default(0) }),
+    entrada,
+  );
+  const s = await leerSesion(tx, ahora);
+  if (s.rol !== 'pm') return null;
+  const [obra] = (await obrasEnGarantia(tx, ahora)).filter((o) => o.id === e.obraId);
+  if (!obra) return null;
+  const grupos = await tx<
+    {
+      ref_tipo: TipoRegistroAlbum;
+      ref_id: string;
+      ultima: Date;
+      fotos: string[];
+      dia: Dia | null;
+      folio: string | null;
+      titulo_es: string | null;
+      titulo_en: string | null;
+      detalle: string | null;
+      resultado: string | null;
+    }[]
+  >`
+    select ref_tipo, ref_id, ultima, fotos, to_char(dia, 'YYYY-MM-DD') as dia, folio, titulo_es, titulo_en, detalle,
+           resultado
+    from public.album_en_garantia(${e.obraId}, ${REGISTROS_POR_PAGINA + 1}, ${e.pagina * REGISTROS_POR_PAGINA})`;
+  return {
+    obra: { id: obra.id, folio: obra.folio, cliente: obra.cliente },
+    registros: grupos.slice(0, REGISTROS_POR_PAGINA).map((g) => ({
+      tipo: g.ref_tipo,
+      id: g.ref_id,
+      dia: g.dia ?? diaEnZona(g.ultima, s.zona),
+      folio: g.folio,
+      titulo: g.titulo_es ? { es: g.titulo_es, en: g.titulo_en } : null,
+      detalle: g.detalle,
+      resultado: g.resultado,
+      fotos: g.fotos,
+    })),
+    hayMas: grupos.length > REGISTROS_POR_PAGINA,
+  };
+}

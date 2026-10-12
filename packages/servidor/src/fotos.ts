@@ -111,7 +111,14 @@ export async function enlaceDeFoto(
   firmar: FirmarEnlace,
 ): Promise<{ url: string; segundos: number }> {
   validarEntrada(uuid, fotoId);
-  const [f] = await tx<{ ruta: string }[]>`select storage_path as ruta from fotos where id = ${fotoId}`;
+  // la que RLS deja ver; o, para el PM, una de sus obras terminadas mientras dura la garantía (D-060)
+  const [f] = await tx<{ ruta: string }[]>`
+    select storage_path as ruta from fotos where id = ${fotoId}
+    union all
+    select f.storage_path from public.obras_del_pm_en_garantia() o(id)
+      cross join lateral public.fotos_en_garantia(o.id) f
+    where f.id = ${fotoId}
+    limit 1`;
   if (!f) throw new ErrorDeNegocio('foto_no_encontrada');
   return { url: await firmar(f.ruta, SEGUNDOS_ENLACE), segundos: SEGUNDOS_ENLACE };
 }

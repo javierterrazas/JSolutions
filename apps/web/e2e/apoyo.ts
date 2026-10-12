@@ -39,6 +39,8 @@ export const FOTO = fileURLToPath(new URL('../../../legacy/pruebas/f_general.jpg
 export const OBRAS = {
   carlos: 'a2000000-0000-4000-8000-000000000001',
   luis: 'a2000000-0000-4000-8000-000000000002',
+  /** de Carlos, ya entregada: el seed le pone garantía hasta el 2027-10-30 */
+  carlosEntregada: 'a2000000-0000-4000-8000-000000000003',
 } as const;
 export type Quien = keyof typeof MIEMBROS;
 

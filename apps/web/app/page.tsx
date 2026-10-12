@@ -1,4 +1,4 @@
-import { avisosAbiertos, copiaSinSenal, gastosEnRevision, inicioDelPm } from '@ijm/servidor';
+import { avisosAbiertos, copiaSinSenal, gastosEnRevision, inicioDelPm, obrasEnGarantia } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
@@ -16,6 +16,8 @@ export default async function Inicio() {
   const pm = yo.rol === 'pm' ? await comoMiembro((tx) => inicioDelPm(tx), acceso) : null;
   // la copia para abrir la app sin señal (D-047)
   const copia = yo.rol === 'pm' ? await comoMiembro((tx) => copiaSinSenal(tx), acceso) : null;
+  // sus obras terminadas en garantía, con sus fotos (D-060)
+  const terminadas = yo.rol === 'pm' ? await comoMiembro((tx) => obrasEnGarantia(tx), acceso) : null;
   // las compras del PM arriba de su límite que el dueño tiene que revisar (D-049)
   const enRevision = yo.rol !== 'pm' ? await comoMiembro((tx) => gastosEnRevision(tx), acceso) : null;
   const porRevisar = enRevision?.ok ? enRevision.datos.length : 0;
@@ -28,6 +30,14 @@ export default async function Inicio() {
       {yo.rol === 'pm' ? <EstadoCola /> : null}
       {pm?.ok ? <InicioDelPm datos={pm.datos} /> : null}
       {pm && !pm.ok ? <MensajeError problema={pm} /> : null}
+      {terminadas?.ok && terminadas.datos.length ? (
+        <Link
+          href="/obras/terminadas"
+          className={`${estilos.botonSecundario} flex items-center justify-center`}
+        >
+          {t('terminadas', { n: terminadas.datos.length })}
+        </Link>
+      ) : null}
       {yo.rol !== 'pm' ? (
         <>
           {avisos.length ? (
