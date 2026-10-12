@@ -59,6 +59,7 @@ test('las pantallas del dueño tampoco chocan con el CSP', async ({ page }) => {
     '/obras',
     '/obras/nueva',
     `/obras/${OBRAS.carlos}/presupuesto`,
+    `/obras/${OBRAS.carlos}/seguimiento`,
     '/equipo',
     '/cuadrilla',
     '/catalogo',

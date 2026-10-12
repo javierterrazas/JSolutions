@@ -1133,3 +1133,24 @@ baja, y asignarles su salario y su puesto. Es "Cuadrilla" (`/cuadrilla`), junto 
 - **Dar de baja** lo quita del cierre del PM; lo que trabajó se queda. Se puede reactivar.
 - **La muralla:** el salario solo lo ven el dueño y el administrador (RLS de `tarifas_trabajador`); el PM ve el
   nombre, el puesto y cómo cobra, para anotarlo en el cierre.
+
+## D-062 · El seguimiento de una obra, para el dueño
+
+**Decisión del dueño:** ver en el día a día cómo va cada obra: en qué etapa va, si va dentro del presupuesto y cuántas
+horas se han trabajado. Es la primera pantalla del dueño de la fase 3, adelantada: `/obras/[id]/seguimiento`, que
+se abre al tocar la obra en "Obras".
+- **Cómo va:** el avance ponderado (`avanceDeObra`), las partidas terminadas, la entrega comprometida (con los días de
+  las órdenes de cambio autorizadas) contra la prevista (`cronogramaObra`) y el atraso; y de cada espacio, su avance y
+  en qué va: las partidas en curso y su etapa, o la etapa que sigue.
+- **El presupuesto contra lo gastado**, por espacio y etapa (`costosPorEtapa`, con paridad): material (los gastos
+  vigentes, del PM y de la oficina), cuadrilla (sus horas o días por la tarifa vigente ese día, D-031) y
+  subcontratos (las órdenes de trabajo no canceladas, por su precio). **El semáforo** (`semaforoDePresupuesto`): rojo
+  si lo gastado ya pasó el presupuesto; amarillo si lo usado le lleva más de 10 puntos al avance (se gasta más rápido
+  de lo que avanza); verde si no.
+- **La cuadrilla:** horas y días en total y por trabajador, con su costo.
+- **El día a día**, lo más reciente primero y de 14 en 14 días: cada día cerrado con sus partidas (las terminadas
+  marcadas), quién estuvo y cuánto costó, si llegó el sub, los gastos (del PM y de la oficina), las notas y las fotos;
+  y los días laborables desde el arranque que no se cerraron.
+- **En la lista de "Obras"**, de cada obra activa: el avance, el presupuesto usado con su color y el atraso
+  (`resumenDeObras`).
+- **Lleva dinero:** solo el dueño o el administrador.
