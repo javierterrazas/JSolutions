@@ -1117,3 +1117,19 @@ sirve para trabajar.
   leer nada más de ella. Lo contestan funciones de la base del miembro de la sesión, como las del inicio (D-040):
   `mis_obras_en_garantia()` y `album_en_garantia()`; `/fotos/[id]` abre también las de `fotos_en_garantia()`.
 - **Diferencia con el legacy**, donde el PM dejaba de ver la obra al entregarla.
+
+## D-061 · La cuadrilla, para el dueño
+
+**Decisión del dueño:** en la app del dueño, un apartado para los trabajadores de la empresa: darlos de alta y de
+baja, y asignarles su salario y su puesto. Es "Cuadrilla" (`/cuadrilla`), junto a "Equipo" (los PMs).
+- **Cada trabajador:** nombre, puesto u oficio (texto libre, con los que ya existen como sugerencia), cómo cobra (por
+  hora o por día), teléfono y salario. El nombre no se repite entre los activos: el PM los distingue por nombre en el
+  cierre.
+- **El salario tiene historial** (D-031): cambiarlo agrega uno desde una fecha (hoy, si no se dice), y lo trabajado
+  antes se queda con el de entonces. No va más atrás del último cambio; el del mismo día se corrige y queda en
+  `correcciones`. **Diferencia con el legacy**, que guardaba una sola tarifa y la sobrescribía.
+- **Cómo cobra no cambia si ya tiene días anotados:** sus horas se leerían como días, o al revés. Para ese caso, se da
+  de baja y se da de alta otra vez.
+- **Dar de baja** lo quita del cierre del PM; lo que trabajó se queda. Se puede reactivar.
+- **La muralla:** el salario solo lo ven el dueño y el administrador (RLS de `tarifas_trabajador`); el PM ve el
+  nombre, el puesto y cómo cobra, para anotarlo en el cierre.

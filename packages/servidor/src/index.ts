@@ -11,6 +11,7 @@ export * from './consultas-obra';
 export * from './inicio-pm';
 export * from './pantalla-cierre';
 export * from './calidad';
+export * from './cuadrilla';
 export * from './gastos';
 export * from './avisos';
 export * from './ordenes';
