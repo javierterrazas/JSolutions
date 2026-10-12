@@ -1095,3 +1095,11 @@ Que las pida solo cuando son estrictamente necesarias: lo que protege a la empre
   (`fotosQuePide`). Una inspección sin ninguna así, o con defecto en ellas, se guarda sin fotos; se pueden agregar si
   el PM quiere. La pantalla dice cuántas faltan y de qué.
 - **Diferencia con el legacy**, que pedía al menos una foto en toda inspección.
+
+## D-059 · La foto del cierre del día es opcional
+
+**Decisión del dueño**, con D-058 y por la misma razón: la app del PM tiene que ser lo más sencilla posible. Un día
+con trabajo se cierra con o sin fotos; si el PM toma alguna, se sube después como siempre (D-041, D-043). La
+evidencia que protege ante un reclamo o una garantía queda en las inspecciones (sus preguntas críticas) y en las dos
+fotos de la prueba de inundación, que siguen siendo obligatorias. **Diferencia con el legacy**, que exigía al menos
+una foto en cada cierre con trabajo (`falta_foto`).

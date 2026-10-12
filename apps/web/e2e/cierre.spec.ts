@@ -100,13 +100,12 @@ test('el cierre tardío desde el inicio, el día sin trabajo y el de hoy', async
     await expect(pendientes).toHaveCount(0);
   }
 
-  // y el de hoy
+  // y el de hoy, sin foto: es opcional (D-059)
   await page.getByRole('link', { name: es.inicioPm.cerrarDia }).click();
   await expect(page.getByRole('heading', { name: es.cierre.titulo })).toBeVisible();
   await trabajador(page, es.cierre.cuadrilla, 'Juan')
     .getByRole('combobox')
     .selectOption({ label: es.cierre.diaCompleto });
-  await tomarFoto(page);
   await page.getByRole('button', { name: es.cierre.cerrar }).click();
   await expect(page.getByRole('status')).toHaveText(es.cierre.listo);
   await page.getByRole('link', { name: es.cierre.volver }).last().click();

@@ -131,7 +131,6 @@ describe('cerrar el día', () => {
       const d = await datosDe(tx, OBRAS.a1Carlos);
       const antes = (await tx`select count(*)::int as n from bitacora`)[0]!.n;
       const base = { obraId: OBRAS.a1Carlos, partidas: [d.rough.id], fotosPorSubir: 1 };
-      expect(await codigo(tx, () => cerrarDia(tx, { ...base, fotosPorSubir: 0 }, LUNES))).toBe('falta_foto');
       expect(await codigo(tx, () => cerrarDia(tx, { ...base, partidas: [] }, LUNES))).toBe('faltan_partidas');
       expect(await codigo(tx, () => cerrarDia(tx, { ...base, sinTrabajo: true }, LUNES))).toBe(
         'falta_motivo_sin_trabajo',
@@ -404,7 +403,14 @@ describe('corregir un cierre (D-044)', () => {
       expect(rastro).toEqual({ accion: 'anular', motivo: 'Faltó anotar a Juan' });
     }));
 
-  it('sin una foto subida ni nueva, la corrección pide foto como cualquier cierre', () =>
+  it('sin fotos también se cierra el día, y se corrige (D-059)', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const d = await datosDe(tx, OBRAS.a1Carlos);
+      const r = await cerrarDia(tx, { obraId: OBRAS.a1Carlos, partidas: [d.rough.id] }, LUNES);
+      expect(r).toMatchObject({ dia: '2026-10-12', fotosComprometidas: 0 });
+    }));
+
+  it('una corrección sin fotos nuevas se guarda, como cualquier cierre (D-059)', () =>
     probarComo(USUARIOS.carlos, async (tx) => {
       const d = await datosDe(tx, OBRAS.a1Carlos);
       const r = await cerrarDia(
@@ -412,15 +418,12 @@ describe('corregir un cierre (D-044)', () => {
         { obraId: OBRAS.a1Carlos, partidas: [d.rough.id], fotosPorSubir: 1 },
         AHORA,
       );
-      expect(
-        await codigo(tx, () =>
-          corregirCierre(
-            tx,
-            { bitacoraId: r.bitacoraId, motivo: 'Se me olvidó una partida', partidas: [d.rough.id] },
-            AHORA,
-          ),
-        ),
-      ).toBe('falta_foto');
+      const c = await corregirCierre(
+        tx,
+        { bitacoraId: r.bitacoraId, motivo: 'Se me olvidó una partida', partidas: [d.rough.id] },
+        AHORA,
+      );
+      expect(c.bitacoraId).not.toBe(r.bitacoraId);
     }));
 
   it('después de 48 horas ya no lo corrige el PM; el de otro PM ni lo encuentra', () =>

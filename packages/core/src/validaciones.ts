@@ -245,9 +245,8 @@ export type MotivoSinTrabajo = (typeof MOTIVOS_SIN_TRABAJO)[number];
 
 /**
  * Lo que un cierre de día necesita, antes de revisar calidad y cuadrilla. Un día sin trabajo también se reporta,
- * con su motivo. Las fotos pueden venir con el cierre o comprometerse para después (hasta 10).
- * Errores: `falta_motivo_sin_trabajo`, `obra_sin_presupuesto`, `falta_foto`, `faltan_partidas`,
- * `orden_de_otra_obra`.
+ * con su motivo. Las fotos son opcionales (D-059): pueden venir con el cierre o comprometerse para después (hasta 10).
+ * Errores: `falta_motivo_sin_trabajo`, `obra_sin_presupuesto`, `faltan_partidas`, `orden_de_otra_obra`.
  */
 export function validarCierreDia(c: {
   readonly sinTrabajo: boolean;
@@ -265,7 +264,6 @@ export function validarCierreDia(c: {
     if (!MOTIVOS_SIN_TRABAJO.includes(c.motivo as MotivoSinTrabajo))
       throw new ErrorDeNegocio('falta_motivo_sin_trabajo');
   } else {
-    if (!c.fotos && !porSubir) throw new ErrorDeNegocio('falta_foto');
     if (!c.partidas.length) throw new ErrorDeNegocio('faltan_partidas');
   }
   const ajena = c.ordenesReportadas.find((o) => !c.ordenesDeLaObra.has(o));
