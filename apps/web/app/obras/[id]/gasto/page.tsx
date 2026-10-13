@@ -2,7 +2,6 @@
 // recibo de los que no lo tienen, y corregir o anular lo que capturó en las últimas 48 horas.
 import { datosParaGasto } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
 import { Marco } from '../../../componentes/marco';
@@ -27,11 +26,11 @@ export default async function Gasto({ params }: PageProps<'/obras/[id]/gasto'>) 
   const lista = [...d.sinRecibo, ...d.recientes.filter((g) => g.conRecibo)];
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
-      <p className="text-slate-700">{t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}</p>
+    <Marco
+      titulo={t('titulo')}
+      subtitulo={t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}
+      volver={{ href: '/', texto: t('volver') }}
+    >
       <FormularioGasto datos={{ obraId: d.obra.id, folio: d.obra.folio, limite: d.limite, espacios }} />
       {lista.length ? (
         <section className="mt-4 flex flex-col gap-3">

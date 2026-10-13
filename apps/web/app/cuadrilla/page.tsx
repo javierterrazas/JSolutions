@@ -3,7 +3,6 @@
 // cierre del día, nunca su salario.
 import { cuadrilla } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
@@ -22,10 +21,7 @@ export default async function Cuadrilla() {
   const puestos = [...new Set(todos.map((x) => x.puesto).filter((p): p is string => !!p))].sort();
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
       {!r.ok ? <MensajeError problema={r} /> : null}
       <datalist id="puestos">

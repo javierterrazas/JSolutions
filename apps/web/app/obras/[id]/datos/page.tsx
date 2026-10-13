@@ -2,7 +2,6 @@
 // PM. Solo el dueño o el administrador.
 import { datosDeObra } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { Marco } from '../../../componentes/marco';
@@ -16,11 +15,11 @@ export default async function DatosObra({ params }: PageProps<'/obras/[id]/datos
   const t = await getTranslations('datosObra');
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href={`/obras/${id}/seguimiento`} className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
-      <p className="text-slate-700">{r.datos.folio}</p>
+    <Marco
+      titulo={t('titulo')}
+      subtitulo={r.datos.folio}
+      volver={{ href: `/obras/${id}/seguimiento`, texto: t('volver') }}
+    >
       <FormularioDatos obra={r.datos} />
     </Marco>
   );

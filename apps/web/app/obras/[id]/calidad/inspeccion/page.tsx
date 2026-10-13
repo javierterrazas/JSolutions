@@ -2,7 +2,6 @@
 // ?espacio=…&hito=…. Si el punto exige la prueba de inundación (PC3), la muestra arriba, como el legacy.
 import { datosParaInspeccion } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
 import { Marco } from '../../../../componentes/marco';
@@ -29,13 +28,15 @@ export default async function Inspeccion({
   const nombre = (n: { es: string; en: string | null }) => (idioma === 'en' ? n.en : null) ?? n.es;
 
   return (
-    <Marco titulo={`${d.hito.clave} ${nombre(d.hito.nombre)}`}>
-      <Link href={`/obras/${d.obra.id}/calidad`} className="text-sm font-medium text-marca">
-        {t('volverCalidad')}
-      </Link>
-      <p className="text-slate-700">
-        {t('obraEspacio', { folio: d.obra.folio, cliente: d.obra.cliente, espacio: d.espacio.nombre })}
-      </p>
+    <Marco
+      titulo={`${d.hito.clave} ${nombre(d.hito.nombre)}`}
+      subtitulo={t('obraEspacio', {
+        folio: d.obra.folio,
+        cliente: d.obra.cliente,
+        espacio: d.espacio.nombre,
+      })}
+      volver={{ href: `/obras/${d.obra.id}/calidad`, texto: t('volverCalidad') }}
+    >
       {d.hito.exigePruebaAgua ? (
         <PruebaAgua
           key={`${d.prueba?.id}|${d.prueba?.resultado}`}

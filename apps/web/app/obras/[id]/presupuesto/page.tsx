@@ -1,6 +1,5 @@
 import { datosParaObraNueva, presupuestoParaCapturar } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { Marco } from '../../../componentes/marco';
@@ -20,15 +19,12 @@ export default async function Presupuesto({ params }: PageProps<'/obras/[id]/pre
     getLocale(),
   ]);
   return (
-    <Marco titulo={t('titulo', { folio: p.obra.folio })}>
-      <Link href="/obras" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
-      <p className="text-slate-700">
-        {to('encabezado', { folio: p.obra.folio, cliente: p.obra.cliente })}
-        <br />
-        <span className="text-sm text-slate-600">{to(`estado.${p.obra.estado}`)}</span>
-      </p>
+    <Marco
+      titulo={t('titulo', { folio: p.obra.folio })}
+      subtitulo={to('encabezado', { folio: p.obra.folio, cliente: p.obra.cliente })}
+      volver={{ href: '/obras', texto: t('volver') }}
+    >
+      <p className="text-sm text-slate-600">{to(`estado.${p.obra.estado}`)}</p>
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
       <FormularioPresupuesto
         obraId={p.obra.id}

@@ -3,7 +3,6 @@
 // que ya llegó, para aprobar su trabajo. Sin precios: el PM nunca ve lo que se le paga al sub.
 import { ordenesDelPm, type OrdenDelPm } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
 import { Marco, estilos } from '../../../componentes/marco';
@@ -49,11 +48,11 @@ export default async function Ordenes({ params }: PageProps<'/obras/[id]/ordenes
   );
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
-      <p className="text-slate-700">{t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}</p>
+    <Marco
+      titulo={t('titulo')}
+      subtitulo={t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}
+      volver={{ href: '/', texto: t('volver') }}
+    >
       {d.porConfirmar.length === 0 && d.porAprobar.length === 0 ? (
         <p className={estilos.tarjeta}>{t('nada')}</p>
       ) : null}

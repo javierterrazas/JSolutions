@@ -3,7 +3,6 @@
 // Una lista mínima: las pantallas del dueño llegan en la fase 3.
 import { avisosAbiertos } from '@ijm/servidor';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { ResponderAviso } from './responder-aviso';
@@ -18,10 +17,7 @@ export default async function AvisosAbiertos() {
     getFormatter(),
   ]);
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
       {lista.length === 0 ? <p className={estilos.tarjeta}>{t('ninguno')}</p> : null}
       <ul className="flex flex-col gap-3">
         {lista.map((a) => (

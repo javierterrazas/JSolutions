@@ -3,7 +3,6 @@
 // cada espacio (D-014).
 import { datosParaEntrega } from '@ijm/servidor';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
 import { Marco, estilos } from '../../../componentes/marco';
@@ -23,11 +22,11 @@ export default async function Entrega({ params }: PageProps<'/obras/[id]/entrega
   const vencidos = d.abiertos.filter((p) => p.vencido).length;
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
-      <p className="text-slate-700">{t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}</p>
+    <Marco
+      titulo={t('titulo')}
+      subtitulo={t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}
+      volver={{ href: '/', texto: t('volver') }}
+    >
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
       {vencidos ? <p className={estilos.error}>{t('vencidos', { n: vencidos })}</p> : null}
       <FormularioPunch obraId={d.obra.id} />

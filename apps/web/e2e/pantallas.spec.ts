@@ -33,6 +33,8 @@ test('cada pantalla del PM se recorre completa, sin salirse a los lados ni choca
   for (const ruta of PANTALLAS) {
     await page.goto(ruta);
     await expect(page.getByRole('heading', { level: 1 }), ruta).toBeVisible();
+    // arriba, el nombre de la empresa del PM, no el de la app (D-065)
+    await expect(page.getByText('IJM Construction', { exact: true }), ruta).toBeVisible();
     expect((await desplazamiento(page)).ancho, `${ruta}: nada se sale a los lados`).toBeLessThanOrEqual(0);
   }
   expect(bloqueado).toEqual([]);
@@ -42,7 +44,7 @@ test('cada pantalla del PM se recorre completa, sin salirse a los lados ni choca
   const { max } = await desplazamiento(page);
   expect(max, 'el inicio del seed es más largo que la pantalla').toBeGreaterThan(300);
   await page.mouse.move(200, 400);
-  for (let i = 0; i < 8; i++) await page.mouse.wheel(0, 600);
+  for (let i = 0; i < 15; i++) await page.mouse.wheel(0, 600);
   await expect.poll(async () => (await desplazamiento(page)).y).toBeGreaterThanOrEqual(max - 1);
   await expect(page.getByRole('navigation', { name: es.idioma.etiqueta })).toBeInViewport();
   await page.mouse.wheel(0, -350);

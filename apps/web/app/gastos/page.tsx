@@ -2,7 +2,6 @@
 // del administrador y duRevisarGasto). Una lista mínima: las pantallas del dueño llegan en la fase 3.
 import { gastosEnRevision } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../componentes/marco';
@@ -20,10 +19,7 @@ export default async function GastosEnRevision() {
   ]);
   const dinero = formatoDinero(idioma);
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
       {lista.length === 0 ? <p className={estilos.tarjeta}>{t('ninguno')}</p> : null}
       <ul className="flex flex-col gap-3">

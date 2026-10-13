@@ -7,7 +7,10 @@
 }
 
 @layer base {
+  /* La letra base a 18px en vez de 16 (D-065): en la obra se lee al sol y con prisa. Todo lo que se mide en rem
+     (textos, botones, espacios) crece parejo. */
   html {
+    font-size: 112.5%;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
   }

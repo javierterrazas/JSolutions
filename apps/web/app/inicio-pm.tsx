@@ -6,6 +6,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatoDinero } from '@/lib/dinero';
+import { Icono } from './componentes/iconos';
 import { estilos } from './componentes/marco';
 
 type Nombre = { es: string; en: string | null };
@@ -19,7 +20,7 @@ const FORMATOS = {
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-sm font-semibold tracking-wide text-marca/80 uppercase">{titulo}</h2>
+      <h2 className="text-xl font-bold text-marca">{titulo}</h2>
       {children}
     </section>
   );
@@ -61,8 +62,8 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
         {datos.obras.map((o) => (
           <article key={o.id} className={`${estilos.tarjeta} flex flex-col gap-2`}>
             <div className="flex items-baseline justify-between gap-2">
-              <h3 className="font-semibold">{t('encabezado', { folio: o.folio, cliente: o.cliente })}</h3>
-              <span className="text-sm text-slate-600">{t(`estado.${o.estado}`)}</span>
+              <h3 className="text-lg font-bold">{t('encabezado', { folio: o.folio, cliente: o.cliente })}</h3>
+              <span className="text-sm font-medium text-slate-700">{t(`estado.${o.estado}`)}</span>
             </div>
             <a
               href={`https://maps.google.com/?q=${encodeURIComponent(o.direccion)}`}
@@ -131,19 +132,20 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
             <div className="grid grid-cols-2 gap-2">
               {(
                 [
-                  ['gasto', 'gastoNuevo'],
-                  ['aviso', 'avisoNuevo'],
-                  ['calidad', 'calidad'],
-                  ['ordenes', 'ordenesSubs'],
-                  ['entrega', 'entregaYMedidas'],
-                  ['album', 'album'],
+                  ['gasto', 'gastoNuevo', 'gasto'],
+                  ['aviso', 'avisoNuevo', 'aviso'],
+                  ['calidad', 'calidad', 'calidad'],
+                  ['ordenes', 'ordenesSubs', 'subs'],
+                  ['entrega', 'entregaYMedidas', 'entrega'],
+                  ['album', 'album', 'fotos'],
                 ] as const
-              ).map(([ruta, texto]) => (
+              ).map(([ruta, texto, icono]) => (
                 <Link
                   key={ruta}
                   href={`/obras/${o.id}/${ruta}`}
-                  className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
+                  className={`${estilos.botonSecundario} flex min-h-20 flex-col items-center justify-center gap-1 px-2 py-2 text-center leading-tight`}
                 >
+                  <Icono nombre={icono} className="size-7" />
                   {t(texto)}
                 </Link>
               ))}
@@ -163,7 +165,7 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                   {dia(d.dia, 'semana')}
                 </p>
                 {d.partidas.length === 0 && d.llegan.length === 0 ? (
-                  <p className="text-sm text-slate-500">{t('libre')}</p>
+                  <p className="text-sm text-slate-600">{t('libre')}</p>
                 ) : null}
                 {d.partidas.map((p, i) => (
                   <p key={i} className="text-sm text-slate-700">
@@ -229,7 +231,7 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
             {datos.avisosAbiertos.map((a) => (
               <li key={a.folio} className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}>
                 <span>{t('aviso', { descripcion: a.descripcion })}</span>
-                <span className="text-slate-500">
+                <span className="text-slate-600">
                   {a.obra
                     ? t('avisoObra', { obra: a.obra, dia: dia(a.dia) })
                     : t('avisoSinObra', { dia: dia(a.dia) })}
@@ -247,7 +249,7 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
               <li key={a.folio} className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}>
                 <span className="text-slate-600">{t('aviso', { descripcion: a.descripcion })}</span>
                 <span className="font-medium">{a.respuesta}</span>
-                <span className="text-slate-500">
+                <span className="text-slate-600">
                   {a.obra
                     ? t('avisoObra', { obra: a.obra, dia: dia(a.dia) })
                     : t('avisoSinObra', { dia: dia(a.dia) })}

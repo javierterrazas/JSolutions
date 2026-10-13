@@ -1,7 +1,6 @@
 // El equipo de la empresa, para el dueño: invitar a un PM, ver los celulares de cada uno, quitar uno, dar de baja.
 import { equipo } from '@ijm/servidor';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { cambiarActivo, quitarCelular } from '../acciones/equipo';
 import { Marco, estilos } from '../componentes/marco';
@@ -16,10 +15,7 @@ export default async function Equipo() {
   const fecha = (iso: string) => formato.dateTime(new Date(iso), { dateStyle: 'medium' });
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
       <FormularioInvitar />
       <ul className="flex flex-col gap-3">
         {miembros.map((m) => (

@@ -5,6 +5,7 @@ import { esErrorDeNegocio, LARGO_PIN } from '@ijm/core';
 import { estadoDispositivo, quienSoy, type EstadoDispositivo } from '@ijm/servidor';
 import { redirect } from 'next/navigation';
 import { conLlave } from '@/lib/acceso';
+import { recordarEmpresa } from '@/lib/empresa-de-la-peticion';
 
 export async function estadoParaPin(): Promise<{
   estado: EstadoDispositivo;
@@ -16,6 +17,8 @@ export async function estadoParaPin(): Promise<{
     return await conLlave(async (tx, llave) => {
       const estado = await estadoDispositivo(tx, llave);
       const yo = await quienSoy(tx);
+      // la pantalla del PIN también lleva arriba el nombre de la empresa
+      recordarEmpresa(yo.empresa);
       return { estado, largo: LARGO_PIN[yo.rol], miembroId: yo.miembroId, esPm: yo.rol === 'pm' };
     });
   } catch (e) {

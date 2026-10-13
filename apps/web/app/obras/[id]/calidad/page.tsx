@@ -20,11 +20,11 @@ export default async function Calidad({ params }: PageProps<'/obras/[id]/calidad
   const ahora = new Date().toISOString();
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
-      <p className="text-slate-700">{t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}</p>
+    <Marco
+      titulo={t('titulo')}
+      subtitulo={t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}
+      volver={{ href: '/', texto: t('volver') }}
+    >
       {d.espacios.length === 0 ? <p className="text-slate-600">{t('sinPuntos')}</p> : null}
       {d.espacios.map((e) => (
         <section key={e.id} className="flex flex-col gap-3">

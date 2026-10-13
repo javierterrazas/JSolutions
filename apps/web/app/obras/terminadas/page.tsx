@@ -18,10 +18,7 @@ export default async function ObrasTerminadas() {
     formato.dateTime(new Date(`${d}T12:00:00`), { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
       {!r.ok ? <MensajeError problema={r} /> : null}
       {r.ok && r.datos.length === 0 ? <p className={estilos.tarjeta}>{t('vacio')}</p> : null}
