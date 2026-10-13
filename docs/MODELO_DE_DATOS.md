@@ -154,6 +154,7 @@ aquí se deduce.
 | --- | --- | --- | --- | --- |
 | `correcciones` | Correcciones | `tabla`, `registro_id`, `accion` (`editar`/`anular`/`agregar`/`quitar`/`dia_olvidado`/`medida_verificada`), `campo`, `antes`, `despues`, `motivo` (5 caracteres o más), quién y cuándo | lee | — (la escribe el servidor) |
 | `enlaces_cliente` | — (nuevo, D-066) | El enlace del portal del cliente de una obra: `token_hash` (el token solo lo ve el dueño al crearlo), `anulado_en`, `accesos`, `ultimo_acceso`; uno vigente por obra | lee, crea y anula | — |
+| `respuestas_cambio` | — (nuevo, D-067) | La respuesta del cliente a una orden de cambio: `decision` (`aprobada`/`rechazada`), `nombre`, `firma` (PNG en data URL, desde el portal), `comentario`, `desde_portal`, `ip`, `navegador`; una por orden, nunca se edita | lee y registra las de papel | — |
 
 **Lo que no se traslada:** la hoja `Errores` se reemplaza por un servicio de registro de errores; el sello
 `ULTIMO_CAMBIO` por Supabase Realtime; los respaldos y el chequeo de salud del libro por los respaldos del

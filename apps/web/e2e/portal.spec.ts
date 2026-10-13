@@ -5,7 +5,9 @@ import { entrar, es, OBRAS } from './apoyo';
 
 const PORTAL = '/cliente/enlace-de-prueba-cliente-garcia-2026';
 
-test('el cliente abre su enlace sin cuenta y ve cómo va su obra, sin dinero', async ({ page }) => {
+test('el cliente abre su enlace sin cuenta y ve cómo va su obra, sin el costo ni lo interno', async ({
+  page,
+}) => {
   const bloqueado: string[] = [];
   page.on('console', (m) => {
     if (/Content Security Policy/i.test(m.text())) bloqueado.push(m.text());
@@ -18,8 +20,8 @@ test('el cliente abre su enlace sin cuenta y ve cómo va su obra, sin dinero', a
   for (const seccion of ['espacios', 'trabajado', 'fotos'] as const)
     await expect(page.getByRole('heading', { level: 2, name: es.portal[seccion] })).toBeVisible();
   await expect(page.getByRole('img', { name: /^Foto del / }).first()).toBeVisible();
-  // nada de dinero ni de lo interno
-  await expect(page.locator('main')).not.toContainText(/\$|Pedro|Plomería Rápida|prevista/i);
+  // del dinero, solo lo que se le cobra en sus órdenes de cambio; nada del costo, del margen ni de lo interno
+  await expect(page.locator('main')).not.toContainText(/costo|margen|\$650|Pedro|Plomería Rápida|prevista/i);
   expect(bloqueado).toEqual([]);
 
   await page.goto('/cliente/un-enlace-que-no-existe-0000000');
@@ -48,6 +50,61 @@ test('el PM decide qué fotos ve el cliente desde el álbum', async ({ page, bro
   await cliente.reload();
   await expect(cliente.getByRole('img', { name: /^Foto del / }).first()).toBeVisible();
   await cliente.close();
+});
+
+test('el dueño emite una orden de cambio y el cliente la aprueba con su firma en su portal (D-067)', async ({
+  page,
+  browser,
+}) => {
+  await entrar(page, 'dueno');
+  await page.goto(`/obras/${OBRAS.carlos}/seguimiento`);
+  await page.getByRole('link', { name: es.seguimiento.cambios }).click();
+  await expect(page.getByRole('heading', { level: 1, name: es.cambios.titulo })).toBeVisible();
+
+  // sin días: no mueve la entrega de las pruebas que siguen
+  await page.locator('select[name="motivo"]').selectOption('solicitud_cliente');
+  await page.locator('textarea[name="descripcion"]').fill('Repisa de cuarzo en el nicho');
+  await page.locator('input[name="costo"]').fill('260');
+  await page.locator('input[name="precio"]').fill('350');
+  await page.getByRole('button', { name: es.cambios.emitir }).click();
+  // con margen bajo, sugiere el precio que cumple el mínimo
+  await expect(page.getByRole('alert').filter({ hasText: /Precio sugerido: \$400/ })).toBeVisible();
+  await page.getByRole('button', { name: es.cambios.usarSugerido }).click();
+  await expect(page.locator('input[name="precio"]')).toHaveValue('400');
+  await page.getByRole('button', { name: es.cambios.emitir }).click();
+  await expect(page.getByRole('status')).toContainText(/^OC-\d{4} emitida/);
+
+  // el cliente la ve en su portal, con su precio y sin el costo
+  const cliente = await browser.newPage();
+  await cliente.goto(PORTAL);
+  const orden = cliente.locator('article').filter({ hasText: 'Repisa de cuarzo en el nicho' });
+  await expect(orden).toContainText('$400.00 (impuesto incluido)');
+  await expect(orden).not.toContainText('260');
+  const aprobar = orden.getByRole('button', { name: es.portal.aprobar });
+  await orden.getByRole('textbox', { name: es.portal.nombreCompleto }).fill('Ana García');
+  // sin firma no deja aprobar
+  await expect(aprobar).toBeDisabled();
+  // el recuadro tiene que estar en pantalla: el mouse se mueve en lo que se ve
+  await orden.locator('canvas').scrollIntoViewIfNeeded();
+  const caja = (await orden.locator('canvas').boundingBox())!;
+  await cliente.mouse.move(caja.x + 20, caja.y + caja.height / 2);
+  await cliente.mouse.down();
+  await cliente.mouse.move(caja.x + caja.width / 2, caja.y + 20, { steps: 8 });
+  await cliente.mouse.move(caja.x + caja.width - 20, caja.y + caja.height - 20, { steps: 8 });
+  await cliente.mouse.up();
+  await aprobar.click();
+  await expect(cliente.locator('article').filter({ hasText: 'Repisa de cuarzo en el nicho' })).toContainText(
+    /Aprobada por Ana García el /,
+  );
+  await cliente.close();
+
+  // y el dueño ve quién la aprobó, cuándo y su firma
+  await page.reload();
+  const enLista = page.locator('li').filter({ hasText: 'Repisa de cuarzo en el nicho' });
+  await expect(enLista).toContainText(es.cambios.estados.autorizada);
+  await expect(enLista).toContainText(/Aprobada por Ana García el /);
+  await expect(enLista).toContainText(es.cambios.enPortal);
+  await expect(enLista.getByRole('img', { name: 'Firma de Ana García' })).toBeVisible();
 });
 
 test('el dueño crea un enlace nuevo para el cliente y el anterior deja de servir', async ({ page }) => {

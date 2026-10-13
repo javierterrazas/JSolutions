@@ -207,13 +207,17 @@ begin
   insert into public.ordenes_cambio (empresa_id, folio, obra_id, fecha_hallazgo, motivo, descripcion, dias_impacto,
                                      estado, autorizada_en, facturada_en, condicion_pago, aviso_id) values
     (p_empresa, 'OC-' || f || '1', p_obra, '2026-10-06', 'condicion_oculta', 'Cambiar tubería galvanizada', 2,
-     'propuesta', null, null, 'Al autorizar', aviso),
+     'propuesta', null, null, 'al_autorizar', aviso),
     (p_empresa, 'OC-' || f || '2', p_obra, '2026-10-06', 'solicitud_cliente', 'Nicho adicional en la regadera', 1,
-     'autorizada', now(), null, '50% al autorizar', null),
+     'autorizada', now(), null, 'mitad_al_autorizar', null),
     (p_empresa, 'OC-' || f || '3', p_obra, '2026-10-06', 'cambio_seleccion', 'Tile de otra colección', 0,
-     'facturada', now(), now(), 'Contra entrega', null);
+     'facturada', now(), now(), 'contra_entrega', null);
   insert into public.ordenes_cambio_montos (orden_cambio_id, empresa_id, costo_estimado, precio_cliente)
     select id, p_empresa, 650, 1000 from public.ordenes_cambio where obra_id = p_obra;
+  -- la autorizada, con la respuesta del cliente que el dueño registró (firmada en papel, D-067)
+  insert into public.respuestas_cambio (empresa_id, obra_id, orden_cambio_id, decision, nombre, desde_portal)
+    select p_empresa, p_obra, id, 'aprobada', 'Cliente de prueba', false
+    from public.ordenes_cambio where obra_id = p_obra and estado = 'autorizada';
   insert into public.no_calidad (empresa_id, folio, obra_id, tipo, causa, costo, descripcion, estado, cerrado_en)
     values (p_empresa, 'NC-0' || f, p_obra, 'retrabajo', 'error_instalacion', 180, 'Repetir una hilada de tile',
             'cerrado', now());

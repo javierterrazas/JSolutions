@@ -44,6 +44,31 @@ export interface PortalCliente {
   }[];
   /** Las fotos marcadas para el cliente, lo más nuevo primero. */
   readonly fotos: readonly { id: string; dia: Dia }[];
+  /**
+   * Sus órdenes de cambio (D-067), la más nueva primero, con lo que se le cobra (nunca el costo ni el margen), y el
+   * contrato original para saber cuánto suma su contrato.
+   */
+  readonly cambios: {
+    readonly contrato: number | null;
+    readonly ordenes: readonly CambioDelPortal[];
+  };
+}
+
+export interface CambioDelPortal {
+  readonly id: string;
+  readonly folio: string;
+  readonly motivo: string;
+  readonly descripcion: string;
+  readonly dias: number;
+  readonly condicion: string | null;
+  readonly estado: 'propuesta' | 'autorizada' | 'rechazada' | 'facturada';
+  readonly precio: number;
+  readonly respuesta: {
+    decision: 'aprobada' | 'rechazada';
+    nombre: string;
+    cuando: string;
+    comentario: string | null;
+  } | null;
 }
 
 interface Datos {
@@ -95,6 +120,14 @@ export async function portalCliente(
   const [r] = await tx<{ d: Datos | null }[]>`select public.portal_cliente(${token}, ${ahora}) as d`;
   const d = r?.d;
   if (!d) return null;
+  const [c] = await tx<
+    {
+      c: {
+        contrato: number | null;
+        ordenes: (Omit<CambioDelPortal, 'precio'> & { precio: number | string })[];
+      };
+    }[]
+  >`select public.cambios_portal_cliente(${token}) as c`;
 
   const id = d.obra.id;
   const a = avanceDeLaObra(
@@ -150,7 +183,41 @@ export async function portalCliente(
       })),
     })),
     fotos: d.fotos.map((f) => ({ id: f.id, dia: f.dia })),
+    cambios: {
+      contrato: c?.c.contrato === null || c?.c.contrato === undefined ? null : Number(c.c.contrato),
+      ordenes: (c?.c.ordenes ?? []).map((o) => ({ ...o, precio: Number(o.precio) })),
+    },
   };
+}
+
+const EntradaRespuesta = z.object({
+  token: Token,
+  ordenId: uuid,
+  decision: z.enum(['aprobada', 'rechazada']),
+  nombre: z.string().max(120),
+  /** La firma dibujada, como PNG en data URL; solo para aprobar. */
+  firma: z.string().max(300_000).nullish(),
+  comentario: z.string().max(1000).nullish(),
+  ip: z.string().max(100).nullish(),
+  navegador: z.string().max(400).nullish(),
+});
+
+/**
+ * El cliente responde, con su enlace, una orden de cambio por aprobar: aprobada (con su nombre y su firma) queda
+ * autorizada; no aprobada, rechazada. Se corre sin identidad: el token es la prueba. Errores: `enlace_invalido`,
+ * `orden_no_encontrada`, `orden_ya_respondida`, `falta_nombre`, `falta_firma`.
+ */
+export async function responderCambioCliente(
+  tx: Tx,
+  entrada: z.input<typeof EntradaRespuesta>,
+): Promise<void> {
+  const e = validarEntrada(EntradaRespuesta, entrada);
+  await deLaBase(
+    () => tx`
+      select public.responder_cambio_cliente(${e.token}, ${e.ordenId}, ${e.decision}, ${e.nombre},
+                                             ${e.firma ?? null}, ${e.comentario ?? null}, ${e.ip ?? null},
+                                             ${e.navegador ?? null})`,
+  );
 }
 
 /** Un enlace firmado de pocos minutos a una foto del portal. Error: `foto_no_encontrada` (o no se ve ahí). */
@@ -231,7 +298,16 @@ export async function marcarFotoCliente(
   await deLaBase(() => tx`select public.marcar_foto_cliente(${fotoId}, ${visible})`);
 }
 
-const DE_LA_BASE = new Set(['foto_no_encontrada', 'foto_no_permitida', 'obra_no_encontrada']);
+const DE_LA_BASE = new Set([
+  'foto_no_encontrada',
+  'foto_no_permitida',
+  'obra_no_encontrada',
+  'enlace_invalido',
+  'orden_no_encontrada',
+  'orden_ya_respondida',
+  'falta_nombre',
+  'falta_firma',
+]);
 
 async function deLaBase<T>(fn: () => Promise<T>): Promise<T> {
   try {

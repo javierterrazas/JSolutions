@@ -22,6 +22,7 @@ export * from './copia-sin-senal';
 export * from './cierre';
 export * from './fotos';
 export * from './portal';
+export * from './cambios';
 export * from './correcciones';
 export * from './acceso';
 export * from './auth';
