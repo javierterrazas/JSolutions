@@ -1,13 +1,16 @@
 // El portal del cliente (D-066): con el enlace que le mandó la empresa, el cliente ve cómo va su remodelación, sin
 // cuenta ni PIN. El avance, en qué va cada espacio, la entrega comprometida, los días trabajados del último mes y
-// las fotos que el PM o el dueño marcaron para él. Nada de dinero ni de lo interno de la obra.
-import { portalCliente, sinUsuario } from '@ijm/servidor';
+// las fotos que el PM o el dueño marcaron para él; y sus órdenes de cambio, que aprueba con su firma (D-067). Del
+// dinero, solo lo que se le cobra; nada de lo interno de la obra.
+import { type CambioDelPortal, portalCliente, sinUsuario } from '@ijm/servidor';
 import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { recordarEmpresa } from '@/lib/empresa-de-la-peticion';
+import { formatoDinero } from '@/lib/dinero';
 import { servidor } from '@/lib/servidor';
 import { Marco, estilos } from '../../componentes/marco';
+import { FirmarCambio } from './firmar-cambio';
 
 // un enlace privado: que ningún buscador lo guarde
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -24,7 +27,12 @@ function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) 
 export default async function Portal({ params }: PageProps<'/cliente/[token]'>) {
   const { token } = await params;
   const p = await sinUsuario(servidor(), (tx) => portalCliente(tx, { token })).catch(() => null);
-  const [t, formato, idioma] = await Promise.all([getTranslations('portal'), getFormatter(), getLocale()]);
+  const [t, tc, formato, idioma] = await Promise.all([
+    getTranslations('portal'),
+    getTranslations('cambios'),
+    getFormatter(),
+    getLocale(),
+  ]);
   if (!p)
     return (
       <Marco titulo={t('noDisponible')}>
@@ -40,6 +48,48 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
     formato.dateTime(new Date(`${d}T12:00:00`), { weekday: 'long', day: 'numeric', month: 'long' });
   const fecha = (d: string) => formato.dateTime(new Date(`${d}T12:00:00`), { dateStyle: 'long' });
 
+  const dinero = (n: number) => formatoDinero(idioma).format(n);
+  const condicion = (c: string | null) =>
+    c && tc.has(`condiciones.${c}` as never) ? tc(`condiciones.${c}` as never) : (c ?? '—');
+
+  // sus órdenes de cambio: las por aprobar arriba; el contrato suma las autorizadas
+  const { contrato, ordenes } = p.cambios;
+  const autorizado = ordenes
+    .filter((o) => o.estado === 'autorizada' || o.estado === 'facturada')
+    .reduce((a, o) => a + o.precio, 0);
+  const porAprobar = ordenes.filter((o) => o.estado === 'propuesta' && !o.respuesta);
+  const respondidas = ordenes.filter((o) => o.estado !== 'propuesta' || o.respuesta);
+  const Orden = ({ o, children }: { o: CambioDelPortal; children?: ReactNode }) => (
+    <article className={`${estilos.tarjeta} flex flex-col gap-2`}>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="font-semibold">{o.folio}</span>
+        <span className="text-slate-700">{tc(`motivos.${o.motivo}` as never)}</span>
+      </div>
+      <p className="text-lg text-slate-900">{o.descripcion}</p>
+      <dl className="flex flex-col gap-1 text-slate-800">
+        <div className="flex justify-between gap-3">
+          <dt className="text-slate-600">{t('precio')}</dt>
+          <dd className="text-right font-semibold">{t('precioValor', { precio: dinero(o.precio) })}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-slate-600">{t('fecha')}</dt>
+          <dd className="text-right">{o.dias ? t('mueveDias', { n: o.dias }) : t('noMueve')}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-slate-600">{t('pago')}</dt>
+          <dd className="text-right">{condicion(o.condicion)}</dd>
+        </div>
+        {contrato !== null && o.estado === 'propuesta' ? (
+          <div className="flex justify-between gap-3 border-t border-slate-100 pt-1">
+            <dt className="text-slate-600">{t('nuevoTotal')}</dt>
+            <dd className="text-right font-semibold">{dinero(contrato + autorizado + o.precio)}</dd>
+          </div>
+        ) : null}
+      </dl>
+      {children}
+    </article>
+  );
+
   // las fotos por día, en el orden en que llegan (lo más nuevo primero)
   const fotosPorDia: { dia: string; fotos: string[] }[] = [];
   for (const f of p.fotos) {
@@ -50,6 +100,17 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
 
   return (
     <Marco titulo={p.obra.cliente} subtitulo={p.obra.direccion}>
+      {porAprobar.length ? (
+        <Seccion titulo={t('porAprobar', { n: porAprobar.length })}>
+          <p className="text-slate-700">{t('porAprobarAyuda')}</p>
+          {porAprobar.map((o) => (
+            <Orden key={o.id} o={o}>
+              <FirmarCambio token={token} ordenId={o.id} />
+            </Orden>
+          ))}
+        </Seccion>
+      ) : null}
+
       <div className={`${estilos.tarjeta} flex flex-col gap-3`}>
         <p className="text-3xl font-bold text-marca">{t('avance', { pct: pct(p.avance.pct) })}</p>
         <div
@@ -140,6 +201,30 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
           </div>
         ))}
       </Seccion>
+
+      {respondidas.length ? (
+        <Seccion titulo={t('cambios')}>
+          {respondidas.map((o) => (
+            <Orden key={o.id} o={o}>
+              <p
+                className={`font-semibold ${o.estado === 'rechazada' ? 'text-slate-700' : 'text-emerald-800'}`}
+              >
+                {o.respuesta
+                  ? t(o.respuesta.decision === 'aprobada' ? 'aprobadaPor' : 'noAprobadaPor', {
+                      nombre: o.respuesta.nombre,
+                      dia: formato.dateTime(new Date(o.respuesta.cuando), { dateStyle: 'long' }),
+                    })
+                  : tc(`estados.${o.estado}` as never)}
+              </p>
+            </Orden>
+          ))}
+          {contrato !== null ? (
+            <p className="font-semibold text-slate-800">
+              {t('totalContrato', { total: dinero(contrato + autorizado) })}
+            </p>
+          ) : null}
+        </Seccion>
+      ) : null}
 
       <p className="text-sm text-slate-600">{t('privado', { empresa: p.empresa })}</p>
     </Marco>

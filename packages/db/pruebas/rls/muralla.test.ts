@@ -31,7 +31,7 @@ const TABLAS_DINERO = [
 const TABLAS_SIN_PM = [
   ...TABLAS_DINERO, 'empresas', 'configuracion', 'metas_indicadores', 'folios', 'plantillas_partida',
   'subcontratistas', 'ordenes_cambio', 'entregas', 'plan_semanal', 'historico_duraciones', 'correcciones',
-  'enlaces_cliente',
+  'enlaces_cliente', 'respuestas_cambio',
 ]; // prettier-ignore
 
 const VISTAS_PM = [

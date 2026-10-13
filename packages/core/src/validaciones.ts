@@ -270,3 +270,52 @@ export function validarCierreDia(c: {
   if (ajena) throw new ErrorDeNegocio('orden_de_otra_obra', { orden: ajena });
   return { fotosComprometidas: porSubir };
 }
+
+// ------------------------------------------------------------------ orden de cambio
+export interface DatosOrdenCambio {
+  readonly motivo: string | null;
+  readonly descripcion: string | null;
+  readonly hallazgo: string | null;
+  readonly costo: number | null;
+  readonly precio: number | null;
+  /** Ya confirmó emitirla aunque el margen salga abajo del mínimo. */
+  readonly forzar?: boolean;
+}
+
+export type ResultadoOrdenCambio =
+  | { readonly ok: true; readonly margen: number }
+  | {
+      readonly ok: false;
+      readonly confirmar: 'margen_bajo';
+      readonly margen: number;
+      readonly minimo: number;
+      /** El precio, en dólares cerrados, que deja el margen mínimo. */
+      readonly sugerido: number;
+    };
+
+/**
+ * La orden de cambio (legacy: admin/servidor.js duCrearOC). Se cobra con margen igual o mayor al del contrato: si
+ * el precio al cliente deja menos del mínimo, pide confirmar y sugiere el precio que lo cumple. Errores: `faltan`,
+ * `falta_precio`.
+ */
+export function validarOrdenCambio(datos: DatosOrdenCambio, margenMinimo: number): ResultadoOrdenCambio {
+  exigir([
+    [datos.motivo, 'motivo'],
+    [datos.descripcion, 'descripcion'],
+    [datos.hallazgo, 'fecha_hallazgo'],
+    [datos.costo, 'costo'],
+  ]);
+  const costo = Number(datos.costo) || 0;
+  const precio = Number(datos.precio) || 0;
+  if (precio <= 0) throw new ErrorDeNegocio('falta_precio');
+  const margen = 1 - costo / precio;
+  if (margen < margenMinimo && !datos.forzar)
+    return {
+      ok: false,
+      confirmar: 'margen_bajo',
+      margen,
+      minimo: margenMinimo,
+      sugerido: Math.ceil(costo / (1 - margenMinimo)),
+    };
+  return { ok: true, margen };
+}

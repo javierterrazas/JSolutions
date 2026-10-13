@@ -134,6 +134,12 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
         </Link>
       </div>
 
+      <Link
+        href={`/obras/${s.obra.id}/cambios`}
+        className={`${estilos.botonSecundario} flex items-center justify-center`}
+      >
+        {t('cambios')}
+      </Link>
       <EnlaceCliente
         obraId={s.obra.id}
         enlace={

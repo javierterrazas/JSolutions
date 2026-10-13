@@ -18,6 +18,7 @@ import {
   validarCierreTardioPM,
   validarDiaDeCaptura,
   validarCuadrilla,
+  validarOrdenCambio,
 } from './validaciones';
 
 const error = (fn: () => unknown) => {
@@ -313,5 +314,40 @@ describe('calidad', () => {
       codigo: 'prueba_incompleta',
       datos: { horas: 22.9 },
     });
+  });
+});
+
+describe('orden de cambio', () => {
+  const oc = {
+    motivo: 'condicion_oculta',
+    descripcion: 'Cambiar tubería galvanizada',
+    hallazgo: '2026-10-06',
+    costo: 650,
+    precio: 1000,
+  };
+
+  it('con el margen mínimo o más, pasa y dice su margen', () => {
+    expect(validarOrdenCambio(oc, 0.35)).toEqual({ ok: true, margen: 0.35 });
+  });
+
+  it('abajo del mínimo pide confirmar y sugiere el precio que lo cumple, como el legacy; confirmada, pasa', () => {
+    expect(validarOrdenCambio({ ...oc, precio: 900 }, 0.35)).toEqual({
+      ok: false,
+      confirmar: 'margen_bajo',
+      margen: 1 - 650 / 900,
+      minimo: 0.35,
+      sugerido: 1000,
+    });
+    expect(validarOrdenCambio({ ...oc, precio: 900, forzar: true }, 0.35).ok).toBe(true);
+  });
+
+  it('dice todo lo que falta, y sin precio al cliente no hay orden', () => {
+    expect(
+      error(() => validarOrdenCambio({ ...oc, motivo: null, descripcion: ' ', costo: null }, 0.35)),
+    ).toEqual({
+      codigo: 'faltan',
+      datos: { campos: ['motivo', 'descripcion', 'costo'] },
+    });
+    expect(error(() => validarOrdenCambio({ ...oc, precio: 0 }, 0.35))).toEqual({ codigo: 'falta_precio' });
   });
 });

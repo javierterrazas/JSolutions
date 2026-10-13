@@ -1223,3 +1223,25 @@ Las fotos que ve son solo las que marquen el PM o el dueño. (Lo siguiente: que 
 - **Cómo se protege:** el servidor consulta sin identidad, solo con funciones de la base que reciben el token y
   contestan lo de arriba (`portal_cliente`, `foto_portal_cliente`), como al canjear una invitación. Las fotos se
   abren con un enlace firmado de pocos minutos. La página no la guardan los buscadores ni instala la app del equipo.
+
+## D-067 · Las órdenes de cambio, aprobadas por el cliente con su firma
+
+**Decisión del dueño:** que el cliente apruebe las órdenes de cambio en su portal (D-066), con su firma.
+- **El dueño las emite** desde el seguimiento de la obra ("Órdenes de cambio", `/obras/[id]/cambios`; legacy:
+  `duCrearOC`): motivo, qué se va a hacer, fecha del hallazgo (no después de hoy), costo estimado, precio al cliente,
+  días que mueve la entrega y condición de pago (al aprobar, 50% al aprobar, en el siguiente avance o contra
+  entrega). **El margen mínimo** de la empresa (`validarOrdenCambio`, como el legacy): si el precio deja menos, avisa
+  y sugiere el precio que lo cumple; se puede usar el sugerido o emitirla así. No en una obra entregada. Ve el
+  contrato original, lo que suman los cambios aprobados y el total; y de cada orden, su costo, precio y margen.
+- **El cliente la aprueba en su portal:** arriba, las órdenes por aprobar, con qué se hará, el motivo, el precio
+  (impuesto incluido), los días que mueve la entrega, la condición de pago y el nuevo total de su contrato. Escribe su
+  nombre y firma con el dedo: la orden queda **autorizada**, mueve la entrega comprometida y el PM la ve para
+  ejecutarla. O "No la apruebo", con un comentario opcional: queda **rechazada**. Una sola respuesta por orden.
+- **La evidencia** (`respuestas_cambio`): quién respondió, cuándo y, desde el portal, la firma (un PNG), el IP y el
+  navegador. El dueño ve la firma en la orden. Nada se edita ni se borra.
+- **En papel:** si el cliente la firmó en papel o respondió por otro medio, el dueño registra la respuesta (quién y
+  si la aprobó).
+- **El cliente nunca ve** el costo ni el margen: del dinero, solo lo que se le cobra (el precio de cada orden y su
+  contrato). Esto amplía D-066, que no le mostraba ningún monto.
+- **La base revisa** que la orden sea de la obra del enlace y siga por aprobar (`responder_cambio_cliente`), como
+  con el resto del portal: sin sesión, el token es la prueba.

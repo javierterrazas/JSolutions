@@ -69,13 +69,24 @@ describe('el portal del cliente', () => {
       expect(p.fotos[0]!.dia).toBe('2026-10-05');
     }));
 
-  it('nada de dinero, de la cuadrilla, de lo interno ni de la fecha prevista', () =>
+  it('del dinero, solo lo que se le cobra en sus órdenes de cambio; nada de lo interno ni de la fecha prevista', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       await sinIdentidad(tx);
-      const texto = JSON.stringify(await portalCliente(tx, { token: TOKEN }, LUNES));
-      expect(texto).not.toMatch(
+      const p = (await portalCliente(tx, { token: TOKEN }, LUNES))!;
+      expect(p.cambios.contrato).toBe(24000);
+      expect(p.cambios.ordenes.map((o) => [o.descripcion, o.estado, o.precio])).toEqual(
+        expect.arrayContaining([
+          ['Cambiar tubería galvanizada', 'propuesta', 1000],
+          ['Nicho adicional en la regadera', 'autorizada', 1000],
+          ['Tile de otra colección', 'facturada', 1000],
+        ]),
+      );
+      const { cambios: _, ...resto } = p;
+      expect(JSON.stringify(resto)).not.toMatch(
         /monto|precio|costo|presupuesto|contrato|tarifa|prevista|atraso|Pedro|Juan|Plomería Rápida|Home Depot|humedad/i,
       );
+      // de las órdenes de cambio, nunca el costo ni el margen
+      expect(JSON.stringify(p.cambios)).not.toMatch(/costo|margen|650/);
     }));
 
   it('cuenta las visitas; solo el dueño ve el enlace, lo crea de nuevo (el anterior deja de servir) y lo anula', () =>

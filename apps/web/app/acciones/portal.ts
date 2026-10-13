@@ -1,9 +1,18 @@
 'use server';
 // El portal del cliente (D-066): el dueño crea o desactiva el enlace de una obra; el PM o el dueño marcan qué fotos
-// ve el cliente.
-import { anularEnlaceCliente, crearEnlaceCliente, marcarFotoCliente } from '@ijm/servidor';
+// ve el cliente; y el cliente, con su enlace, responde sus órdenes de cambio (D-067).
+import { esErrorDeNegocio } from '@ijm/core';
+import {
+  anularEnlaceCliente,
+  crearEnlaceCliente,
+  marcarFotoCliente,
+  responderCambioCliente,
+  sinUsuario,
+} from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { comoMiembro, exigirAcceso, exigirDueno, type Resultado } from '@/lib/acceso';
+import { servidor } from '@/lib/servidor';
 
 /** Crea el enlace (y anula el anterior). El token vuelve una sola vez: la base guarda su hash. */
 export async function crearEnlace(
@@ -28,4 +37,37 @@ export async function desactivarEnlace(
 export async function marcarFoto(obraId: string, fotoId: string, visible: boolean): Promise<void> {
   await comoMiembro((tx) => marcarFotoCliente(tx, { fotoId, visible }), await exigirAcceso());
   revalidatePath(`/obras/${obraId}/album`);
+}
+
+/**
+ * El cliente aprueba (con su nombre y su firma) o no aprueba una orden de cambio desde su portal. Sin sesión: el
+ * token del enlace es la prueba, y la base revisa que la orden sea de su obra y siga por aprobar. Guarda también el
+ * IP y el navegador, como evidencia.
+ */
+export async function responderCambio(
+  token: string,
+  ordenId: string,
+  _previo: Resultado | null,
+  f: FormData,
+): Promise<Resultado> {
+  const h = await headers();
+  try {
+    await sinUsuario(servidor(), (tx) =>
+      responderCambioCliente(tx, {
+        token,
+        ordenId,
+        decision: f.get('decision') === 'aprobada' ? 'aprobada' : 'rechazada',
+        nombre: String(f.get('nombre') ?? ''),
+        firma: String(f.get('firma') ?? '') || null,
+        comentario: String(f.get('comentario') ?? '') || null,
+        ip: h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
+        navegador: h.get('user-agent'),
+      }),
+    );
+  } catch (e) {
+    if (esErrorDeNegocio(e)) return { ok: false, codigo: e.codigo };
+    throw e;
+  }
+  revalidatePath(`/cliente/${token}`);
+  return { ok: true, datos: undefined };
 }
