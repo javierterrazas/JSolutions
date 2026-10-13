@@ -280,6 +280,15 @@ insert into public.fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage
          oc.empresa_id || '/' || oc.obra_id || '/orden_cambio/' || oc.id || '-1.jpg', null
   from public.ordenes_cambio oc;
 
+-- El portal del cliente (D-066): un enlace en cada empresa, con un token conocido (solo local), y la foto del cierre
+-- de cada obra marcada para el cliente.
+insert into public.enlaces_cliente (empresa_id, obra_id, token_hash) values
+  ('e000000a-0000-4000-8000-000000000000', 'a2000000-0000-4000-8000-000000000001',
+   public.hash_secreto('enlace-de-prueba-cliente-garcia-2026')),
+  ('e000000b-0000-4000-8000-000000000000', 'b2000000-0000-4000-8000-000000000001',
+   public.hash_secreto('enlace-de-prueba-cliente-perez-2026'));
+update public.fotos set para_cliente = true where ref_tipo = 'bitacora';
+
 -- Feriados (D-028): IJM descansa Thanksgiving y trabaja el 24 de diciembre; la otra empresa descansa Thanksgiving.
 insert into public.feriados (empresa_id, dia, nombre_es, nombre_en, se_trabaja) values
   ('e000000a-0000-4000-8000-000000000000', '2026-11-26', 'Día de Acción de Gracias', 'Thanksgiving', false),

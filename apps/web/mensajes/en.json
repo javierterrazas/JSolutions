@@ -678,7 +678,11 @@
       "condicion_oculta": "hidden condition",
       "diseno": "design",
       "otro": "other"
-    }
+    },
+    "ayudaCliente": "Tap “Client” on the photos you want the client to see in their portal.",
+    "paraCliente": "Show this photo to the client",
+    "cliente": "Client",
+    "loVeCliente": "✓ Client"
   },
   "terminadas": {
     "titulo": "Finished jobs",
@@ -833,5 +837,44 @@
       "efectivo": "Cash",
       "tarjeta_empresa": "Company card"
     }
+  },
+  "portal": {
+    "noDisponible": "Link not available",
+    "noDisponibleTexto": "This link is no longer active. Ask the company doing your remodel for a new one.",
+    "avance": "{pct} complete",
+    "trabajos": "{terminados} of {total} tasks complete",
+    "entrega": "Committed completion date: {dia}",
+    "entregada": "Delivered on {dia}. Warranty until {garantia}.",
+    "espacios": "How each area is going",
+    "terminado": "Complete",
+    "enCurso": "In progress: {trabajos}",
+    "sigue": "Next: {etapa}",
+    "empieza": "Starts with: {etapa}",
+    "porEmpezar": "Not started yet",
+    "trabajado": "Work done",
+    "sinDias": "No work days yet this month.",
+    "partida": "{espacio} · {partida}",
+    "partidaTerminada": "✓ {espacio} · {partida} (complete)",
+    "fotos": "Photos",
+    "sinFotos": "Photos of your project will show up here soon.",
+    "fotoDe": "Photo from {dia}",
+    "privado": "This page is private, just for you. Please do not share it. {empresa}."
+  },
+  "enlaceCliente": {
+    "titulo": "Client portal",
+    "ayuda": "A private link where the client sees progress, the completion date and the photos you or the PM select. No money or internal details.",
+    "sinEnlace": "This job has no link yet.",
+    "crear": "Create client link",
+    "crearOtro": "Create a new link",
+    "listo": "Done. Send this link to the client:",
+    "enlace": "Client link",
+    "copiar": "Copy",
+    "copiado": "Copied",
+    "compartir": "Share",
+    "unaVez": "For security, the link is only shown now. If it gets lost, create a new one: the old one stops working.",
+    "activo": "Link active since {creado}.",
+    "visto": "{n, plural, one {Opened # time} other {Opened # times}}, last on {ultimo}.",
+    "nuncaVisto": "The client has not opened it yet.",
+    "desactivar": "Turn off the link"
   }
 }

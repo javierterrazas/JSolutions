@@ -27,6 +27,8 @@ export interface RegistroDelAlbum {
   /** Para la inspección y la prueba de agua. */
   readonly resultado: string | null;
   readonly fotos: readonly string[];
+  /** Las que se ven en el portal del cliente (D-066). Vacío en el álbum de una obra en garantía. */
+  readonly paraCliente: readonly string[];
 }
 
 export interface Album {
@@ -54,8 +56,11 @@ export async function albumDeObra(
     where id = ${e.obraId} and (${s.esDuenoOAdmin} or pm_id = ${s.miembroId})`;
   if (!obra) return null;
 
-  const grupos = await tx<{ ref_tipo: TipoRegistroAlbum; ref_id: string; ultima: Date; fotos: string[] }[]>`
-    select ref_tipo, ref_id, max(creado_en) as ultima, array_agg(id order by indice) as fotos
+  const grupos = await tx<
+    { ref_tipo: TipoRegistroAlbum; ref_id: string; ultima: Date; fotos: string[]; cliente: string[] | null }[]
+  >`
+    select ref_tipo, ref_id, max(creado_en) as ultima, array_agg(id order by indice) as fotos,
+           array_agg(id order by indice) filter (where para_cliente) as cliente
     from fotos where obra_id = ${e.obraId}
     group by ref_tipo, ref_id
     order by ultima desc
@@ -64,7 +69,7 @@ export async function albumDeObra(
   const ids = (tipo: TipoRegistroAlbum) => pagina.filter((g) => g.ref_tipo === tipo).map((g) => g.ref_id);
 
   // lo que identifica a cada registro, por tipo; lo que RLS no deja leer queda sin descripción
-  type Info = Omit<RegistroDelAlbum, 'tipo' | 'id' | 'fotos' | 'dia'> & { dia: Dia | null };
+  type Info = Omit<RegistroDelAlbum, 'tipo' | 'id' | 'fotos' | 'paraCliente' | 'dia'> & { dia: Dia | null };
   const info = new Map<string, Info>();
   const vacio: Info = { dia: null, folio: null, titulo: null, detalle: null, resultado: null };
   if (ids('bitacora').length)
@@ -114,6 +119,7 @@ export async function albumDeObra(
         ...i,
         dia: i.dia ?? diaEnZona(g.ultima, s.zona),
         fotos: g.fotos,
+        paraCliente: g.cliente ?? [],
       };
     }),
     hayMas: grupos.length > REGISTROS_POR_PAGINA,
@@ -222,6 +228,7 @@ export async function albumEnGarantia(
       detalle: g.detalle,
       resultado: g.resultado,
       fotos: g.fotos,
+      paraCliente: [],
     })),
     hayMas: grupos.length > REGISTROS_POR_PAGINA,
   };

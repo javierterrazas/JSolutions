@@ -6,6 +6,8 @@ import { useEffect } from 'react';
 export function RegistrarServiceWorker() {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
+    // el portal del cliente (D-066) no es la app del equipo: no se instala ni guarda nada en su celular
+    if (location.pathname.startsWith('/cliente/')) return;
     navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).catch(() => {
       // sin service worker la app funciona igual con señal, solo que no se instala ni abre sin señal
     });
