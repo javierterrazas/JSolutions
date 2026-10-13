@@ -1,7 +1,7 @@
 // El seguimiento de una obra, para el dueño (D-062): cómo va (avance, etapa de cada espacio, plazo), el presupuesto
 // contra lo gastado por etapa, las horas de la cuadrilla y el día a día de lo que capturó el PM (?pagina=, de 14 en
 // 14 días). Lleva dinero: solo el dueño o el administrador.
-import { type Semaforo, seguimientoDeObra } from '@ijm/servidor';
+import { enlaceClienteDeObra, type Semaforo, seguimientoDeObra } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../../componentes/marco';
+import { EnlaceCliente } from './enlace-cliente';
 
 const COLOR: Record<Semaforo, string> = {
   verde: 'bg-emerald-50 text-emerald-900',
@@ -42,6 +43,9 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
   const r = await comoMiembro((tx) => seguimientoDeObra(tx, { obraId: id, pagina }), acceso);
   if (!r.ok || !r.datos) notFound();
   const s = r.datos;
+  // el enlace del portal del cliente (D-066)
+  const e = await comoMiembro((tx) => enlaceClienteDeObra(tx, { obraId: id }), acceso);
+  const enlace = e.ok && e.datos ? e.datos : null;
   const [t, to, formato, idioma] = await Promise.all([
     getTranslations('seguimiento'),
     getTranslations('obras'),
@@ -129,6 +133,19 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
           {to('album')}
         </Link>
       </div>
+
+      <EnlaceCliente
+        obraId={s.obra.id}
+        enlace={
+          enlace
+            ? {
+                creado: enlace.creado.toISOString(),
+                accesos: enlace.accesos,
+                ultimoAcceso: enlace.ultimoAcceso?.toISOString() ?? null,
+              }
+            : null
+        }
+      />
 
       {/* cómo va, de un vistazo */}
       <div className={`${estilos.tarjeta} flex flex-col gap-3`}>

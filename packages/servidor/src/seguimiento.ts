@@ -244,8 +244,32 @@ async function leerObras(tx: Tx, s: Sesion, ids: readonly string[]) {
 
 type Lectura = Awaited<ReturnType<typeof leerObras>>;
 
-/** Cómo va una obra: avance, plazo, espacios y presupuesto contra lo gastado. */
-function calcular(l: Lectura, obraId: string) {
+/** Lo que hace falta para saber cómo va una obra, sin nada de dinero: lo comparten el dueño y el portal del cliente. */
+export interface LecturaDeAvance {
+  readonly s: Pick<Sesion, 'hoy' | 'calendario'>;
+  readonly obras: readonly { id: string; inicio: Dia; fin: Dia }[];
+  readonly espacios: readonly { id: string; obra_id: string; nombre: string; generales: boolean }[];
+  readonly partidas: readonly {
+    id: string;
+    obra_id: string;
+    espacio_id: string;
+    nombre_es: string;
+    nombre_en: string | null;
+    peso: string | number;
+    dias: number;
+    responsable: Responsable;
+    oficio_id: string | null;
+    paralelo: boolean;
+    espera: number;
+    etapa_id: string | null;
+  }[];
+  readonly avance: readonly (AvanceDia & { obra_id: string })[];
+  readonly cambios: readonly { obra_id: string; dias: number }[];
+  readonly etapas: ReadonlyMap<string, Nombre>;
+}
+
+/** Cómo va una obra, sin dinero: el avance, el plazo y en qué va cada espacio. */
+export function avanceDeLaObra(l: LecturaDeAvance, obraId: string) {
   const { s } = l;
   const o = l.obras.find((x) => x.id === obraId)!;
   const espacios = l.espacios.filter((e) => e.obra_id === obraId);
@@ -312,6 +336,25 @@ function calcular(l: Lectura, obraId: string) {
     };
   });
 
+  return {
+    o,
+    av,
+    terminadas: partidas.filter((p) => estadoDe(p.id) === 'terminada').length,
+    total: partidas.length,
+    entregaComprometida: comprometida,
+    entregaPrevista: cronograma.prevFin,
+    atraso: atrasoPrevisto(comprometida, cronograma.prevFin, s.calendario),
+    espacios: espaciosSeg,
+  };
+}
+
+/** Cómo va una obra: avance, plazo, espacios y presupuesto contra lo gastado. */
+function calcular(l: Lectura, obraId: string) {
+  const a = avanceDeLaObra(l, obraId);
+  const o = l.obras.find((x) => x.id === obraId)!;
+  const espacios = l.espacios.filter((e) => e.obra_id === obraId);
+  const partidas = l.partidas.filter((p) => p.obra_id === obraId);
+
   const cargos: Cargo[] = [
     ...l.gastos
       .filter((g) => g.obra_id === obraId)
@@ -356,19 +399,13 @@ function calcular(l: Lectura, obraId: string) {
   const gastado = costos.reduce((a, c) => a + c.total, 0);
 
   return {
+    ...a,
     o,
-    av,
-    terminadas: partidas.filter((p) => estadoDe(p.id) === 'terminada').length,
-    total: partidas.length,
-    entregaComprometida: comprometida,
-    entregaPrevista: cronograma.prevFin,
-    atraso: atrasoPrevisto(comprometida, cronograma.prevFin, s.calendario),
-    espacios: espaciosSeg,
     presupuesto: {
       total,
       gastado,
       usado: total ? gastado / total : null,
-      semaforo: semaforoDePresupuesto(gastado, total, av.pct),
+      semaforo: semaforoDePresupuesto(gastado, total, a.av.pct),
       porEtapa: costos.map((c) => ({
         espacio: nombreEspacio.get(c.espacioId) ?? '',
         etapa: c.etapaId ? (l.etapas.get(c.etapaId) ?? null) : null,
@@ -380,7 +417,6 @@ function calcular(l: Lectura, obraId: string) {
         desvio: c.desvio,
       })),
     },
-    nombre,
   };
 }
 

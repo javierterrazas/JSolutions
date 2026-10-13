@@ -678,7 +678,11 @@
       "condicion_oculta": "condición oculta",
       "diseno": "diseño",
       "otro": "otro"
-    }
+    },
+    "ayudaCliente": "Toca «Cliente» en las fotos que quieras que el cliente vea en su portal.",
+    "paraCliente": "Mostrar esta foto al cliente",
+    "cliente": "Cliente",
+    "loVeCliente": "✓ Cliente"
   },
   "terminadas": {
     "titulo": "Obras terminadas",
@@ -833,5 +837,44 @@
       "efectivo": "Efectivo",
       "tarjeta_empresa": "Tarjeta de la empresa"
     }
+  },
+  "portal": {
+    "noDisponible": "Enlace no disponible",
+    "noDisponibleTexto": "Este enlace ya no está activo. Pídale uno nuevo a la empresa que hace su remodelación.",
+    "avance": "{pct} terminado",
+    "trabajos": "{terminados} de {total} trabajos terminados",
+    "entrega": "Entrega comprometida: {dia}",
+    "entregada": "Entregada el {dia}. Garantía hasta el {garantia}.",
+    "espacios": "Cómo va cada espacio",
+    "terminado": "Terminado",
+    "enCurso": "En proceso: {trabajos}",
+    "sigue": "Sigue: {etapa}",
+    "empieza": "Empieza con: {etapa}",
+    "porEmpezar": "Por empezar",
+    "trabajado": "Lo que se ha trabajado",
+    "sinDias": "Todavía no hay días trabajados este mes.",
+    "partida": "{espacio} · {partida}",
+    "partidaTerminada": "✓ {espacio} · {partida} (terminado)",
+    "fotos": "Fotos",
+    "sinFotos": "Pronto verá aquí las fotos de su obra.",
+    "fotoDe": "Foto del {dia}",
+    "privado": "Esta página es privada, solo para usted. No la comparta. {empresa}."
+  },
+  "enlaceCliente": {
+    "titulo": "Portal del cliente",
+    "ayuda": "Un enlace privado donde el cliente ve el avance, la entrega y las fotos que marquen el PM o tú. No ve dinero ni nada interno.",
+    "sinEnlace": "Esta obra todavía no tiene enlace.",
+    "crear": "Crear enlace para el cliente",
+    "crearOtro": "Crear un enlace nuevo",
+    "listo": "Listo. Mándale este enlace al cliente:",
+    "enlace": "Enlace del cliente",
+    "copiar": "Copiar",
+    "copiado": "Copiado",
+    "compartir": "Compartir",
+    "unaVez": "Por seguridad, el enlace solo se muestra ahora. Si se pierde, crea uno nuevo: el anterior deja de servir.",
+    "activo": "Enlace activo desde el {creado}.",
+    "visto": "{n, plural, one {Abierto # vez} other {Abierto # veces}}, la última el {ultimo}.",
+    "nuncaVisto": "El cliente todavía no lo abre.",
+    "desactivar": "Desactivar el enlace"
   }
 }

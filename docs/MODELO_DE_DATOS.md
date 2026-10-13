@@ -117,7 +117,7 @@ La etiqueta de la obra ("Baño + Closet") y los pies² totales no se guardan: sa
 | `inspeccion_respuestas` | Calidad.defectos y no_aplica | por pregunta: `respuesta` (`cumple`/`no_cumple`/`no_aplica`) y el texto de la pregunta como estaba ese día | lee | lee y crea |
 | `pruebas_agua` | Pruebas_Agua | `espacio_id`, `inicio`, `fin`, `resultado` (`en_curso`/`sin_fugas`/`con_fuga`); una en curso por espacio. Las horas se calculan | lee | lee y crea |
 | `punch_list` | Punch_List | `folio`, `item`, `origen` (`defecto`/`cambio_alcance`/`expectativa`), `responsable`, `fecha_compromiso`, `estado`, `cerrado_en` | lee y escribe | lee y escribe |
-| `fotos` | todos los `*_url` y `fotos_pendientes` | `ref_tipo`, `ref_id` (un registro de la misma obra), `indice`, `storage_path` (`empresa/obra/…`), `tomada_en`; **`unique (empresa_id, ref_tipo, ref_id, indice)`** | lee y sube | las de sus obras, salvo recibos de la oficina y órdenes de cambio; sube en sus obras |
+| `fotos` | todos los `*_url` y `fotos_pendientes` | `ref_tipo`, `ref_id` (un registro de la misma obra), `indice`, `storage_path` (`empresa/obra/…`), `tomada_en`, `para_cliente` (se ve en el portal del cliente, D-066; solo las del trabajo); **`unique (empresa_id, ref_tipo, ref_id, indice)`** | lee y sube | las de sus obras, salvo recibos de la oficina y órdenes de cambio; sube en sus obras |
 
 Las fotos pendientes de un cierre son `bitacora.fotos_comprometidas` menos las fotos que llegaron. El número
 (`indice`) garantiza que un reintento sin señal no duplique una foto. Las fotos de la prueba de agua: índice 1
@@ -153,6 +153,7 @@ aquí se deduce.
 | Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
 | `correcciones` | Correcciones | `tabla`, `registro_id`, `accion` (`editar`/`anular`/`agregar`/`quitar`/`dia_olvidado`/`medida_verificada`), `campo`, `antes`, `despues`, `motivo` (5 caracteres o más), quién y cuándo | lee | — (la escribe el servidor) |
+| `enlaces_cliente` | — (nuevo, D-066) | El enlace del portal del cliente de una obra: `token_hash` (el token solo lo ve el dueño al crearlo), `anulado_en`, `accesos`, `ultimo_acceso`; uno vigente por obra | lee, crea y anula | — |
 
 **Lo que no se traslada:** la hoja `Errores` se reemplaza por un servicio de registro de errores; el sello
 `ULTIMO_CAMBIO` por Supabase Realtime; los respaldos y el chequeo de salud del libro por los respaldos del

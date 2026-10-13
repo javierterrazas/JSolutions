@@ -1201,3 +1201,25 @@ volver más notorio y, arriba, el nombre de la empresa que usa el sistema, no el
   el teléfono no cambia.
 - **En el inicio del PM**, los títulos de sección más grandes, y los seis botones de cada obra con su ícono; "Subs"
   pasa a "Subcontratistas".
+
+## D-066 · El portal del cliente
+
+**Decisión del dueño:** darle valor al cliente de cada empresa: un lugar donde vea el avance de su remodelación.
+Las fotos que ve son solo las que marquen el PM o el dueño. (Lo siguiente: que apruebe ahí las órdenes de cambio.)
+- **Un enlace privado por obra** (`/cliente/[token]`), sin cuenta ni PIN; el cliente lo abre en su celular. El dueño
+  lo crea desde el seguimiento de la obra ("Portal del cliente") y lo copia o comparte. **El enlace se ve una sola
+  vez**: la base guarda solo el hash del token, como en las invitaciones. Si se pierde, se crea otro y el anterior
+  deja de servir; también se puede desactivar. El dueño ve cuántas veces se abrió y cuándo.
+- **Lo que ve el cliente:** el avance de la obra, cada espacio con su avance y en qué va (las mismas reglas del
+  seguimiento, `avanceDeLaObra`), la entrega comprometida (con los días de las órdenes de cambio autorizadas) o, ya
+  entregada, el día de entrega y hasta cuándo dura la garantía; los días trabajados del último mes con sus partidas
+  (las terminadas marcadas), y las fotos marcadas para él, por día. En español o inglés, según su celular.
+- **Lo que nunca ve:** dinero (contrato, presupuesto, gastos, cuadrilla, subs), la fecha prevista ni el atraso, los
+  días sin trabajo ni sus motivos, las notas e incidencias del PM, los avisos, los recibos ni las fotos sin marcar.
+- **Las fotos para el cliente** (`fotos.para_cliente`): en el álbum de la obra, el PM (mientras la obra es suya) o el
+  dueño tocan "Cliente" en cada foto. Solo las del trabajo: cierres, inspecciones, pruebas de agua y la lista de
+  entrega; nunca recibos, avisos ni órdenes de cambio (`marcar_foto_cliente` lo revisa en la base).
+- **Cuánto dura:** mientras la obra no se entregue y, entregada, hasta que vence su garantía.
+- **Cómo se protege:** el servidor consulta sin identidad, solo con funciones de la base que reciben el token y
+  contestan lo de arriba (`portal_cliente`, `foto_portal_cliente`), como al canjear una invitación. Las fotos se
+  abren con un enlace firmado de pocos minutos. La página no la guardan los buscadores ni instala la app del equipo.
