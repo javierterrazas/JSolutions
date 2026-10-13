@@ -203,7 +203,8 @@
     "seguimiento": "Ver cómo va",
     "resumen": "{avance} terminado · presupuesto {usado}",
     "resumenSinPresupuesto": "{avance} terminado",
-    "tarde": "{n, plural, one {# día tarde} other {# días tarde}}"
+    "tarde": "{n, plural, one {# día tarde} other {# días tarde}}",
+    "entrega": " · entrega {fecha}"
   },
   "obraNueva": {
     "titulo": "Nueva obra",
@@ -778,7 +779,6 @@
     "fotos": "{n, plural, one {# foto} other {# fotos}}",
     "folio": "{folio}",
     "folioTardio": "{folio} · tardío",
-    "linea": "{direccion} · PM: {pm} · {estado}",
     "etapaDe": "{espacio} · {etapa}",
     "recientes": "Más recientes",
     "anteriores": "Días anteriores",
@@ -791,7 +791,28 @@
       "cliente_no_disponible": "El cliente no estaba",
       "otro": "Otro"
     },
-    "registrarCompra": "Registrar compra"
+    "registrarCompra": "Registrar compra",
+    "datos": "Datos de la obra",
+    "cliente": "Cliente",
+    "telefono": "Teléfono",
+    "direccion": "Dirección",
+    "pmTitulo": "PM",
+    "estado": "Estado",
+    "inicio": "Inicio",
+    "entrega": "Entrega",
+    "entregaOriginal": "Originalmente {dia}; se movió por órdenes de cambio.",
+    "contrato": "Contrato",
+    "notas": "Notas:",
+    "corregir": "Corregir"
+  },
+  "datosObra": {
+    "titulo": "Datos de la obra",
+    "volver": "Volver al seguimiento",
+    "inactivo": "{nombre} (ya no está activo)",
+    "cambioDePm": "El PM anterior deja de ver esta obra y el nuevo la ve desde ahora. Lo que ya se capturó se queda en la obra.",
+    "cancelar": "Cancelar",
+    "guardar": "Guardar",
+    "guardando": "Guardando…"
   },
   "compra": {
     "titulo": "Registrar compra",

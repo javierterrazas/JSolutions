@@ -1,7 +1,14 @@
 // Crear obra y guardar su presupuesto (adaptadas de legacy/pruebas/prueba_obligatorios.js y prueba_presupuesto.js),
 // a nombre de usuarios reales, contra la base local.
 import { afterAll, describe, expect, it } from 'vitest';
-import { agregarEspacio, crearObra, guardarPresupuesto, type Tx } from '../src/index';
+import {
+  agregarEspacio,
+  crearObra,
+  datosDeObra,
+  editarDatosObra,
+  guardarPresupuesto,
+  type Tx,
+} from '../src/index';
 import { codigo, como, EMPRESA_A, MIEMBROS, OBRAS, probarComo, servidor, USUARIOS } from './apoyo';
 
 afterAll(() => servidor.sql.end());
@@ -198,5 +205,69 @@ describe('agregar un espacio a una obra que ya existe', () => {
           agregarEspacio(tx, { obraId: OBRAS.a1Carlos, tipoEspacioId: tipo, pies2: 20 }),
         ),
       ).toBe('solo_dueno');
+    }));
+});
+
+describe('corregir los datos de una obra y cambiarle el PM (D-064)', () => {
+  const corregidos = {
+    obraId: OBRAS.a1Carlos,
+    cliente: '  Familia García Ruiz ',
+    telefono: '(512) 555-0199',
+    direccion: '1210 Oak St, Austin, TX',
+    pmId: MIEMBROS.carlos,
+    notas: 'Portón por la calle de atrás',
+  };
+
+  it('corrige cliente, teléfono, dirección y notas; trae los datos y los PMs para elegir', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const antes = (await datosDeObra(tx, { obraId: OBRAS.a1Carlos }))!;
+      expect(antes).toMatchObject({ folio: 'OB-001', cliente: 'Familia García', pmId: MIEMBROS.carlos });
+      expect(antes.pms.map((p) => p.id).sort()).toEqual([MIEMBROS.carlos, MIEMBROS.luis].sort());
+
+      expect(await editarDatosObra(tx, corregidos)).toEqual({ cambioDePm: false });
+      expect(await datosDeObra(tx, { obraId: OBRAS.a1Carlos })).toMatchObject({
+        cliente: 'Familia García Ruiz',
+        telefono: '(512) 555-0199',
+        direccion: '1210 Oak St, Austin, TX',
+        notas: 'Portón por la calle de atrás',
+      });
+      // sin notas, quedan vacías
+      await editarDatosObra(tx, { ...corregidos, notas: '  ' });
+      expect((await datosDeObra(tx, { obraId: OBRAS.a1Carlos }))!.notas).toBeNull();
+    }));
+
+  it('con otro PM, el nuevo ve la obra y el anterior deja de verla; lo capturado se queda', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const [antes] = await tx<{ n: number }[]>`
+        select count(*)::int as n from bitacora where obra_id = ${OBRAS.a1Carlos}`;
+      expect(await editarDatosObra(tx, { ...corregidos, pmId: MIEMBROS.luis })).toEqual({ cambioDePm: true });
+      const [despues] = await tx<{ n: number }[]>`
+        select count(*)::int as n from bitacora where obra_id = ${OBRAS.a1Carlos}`;
+      expect(despues!.n).toBe(antes!.n);
+      await como(tx, USUARIOS.luis);
+      expect(await tx`select id from obras where id = ${OBRAS.a1Carlos}`).toHaveLength(1);
+      await como(tx, USUARIOS.carlos);
+      expect(await tx`select id from obras where id = ${OBRAS.a1Carlos}`).toHaveLength(0);
+    }));
+
+  it('pide lo mismo que el alta; el PM nuevo tiene que estar activo; el PM no corrige obras', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      expect(
+        await codigo(tx, () => editarDatosObra(tx, { ...corregidos, cliente: ' ', direccion: '' })),
+      ).toBe('faltan');
+      expect(await codigo(tx, () => editarDatosObra(tx, { ...corregidos, telefono: '555-0199' }))).toBe(
+        'telefono_incompleto',
+      );
+      expect(await codigo(tx, () => editarDatosObra(tx, { ...corregidos, pmId: MIEMBROS.duenoA }))).toBe(
+        'pm_no_activo',
+      );
+      expect(
+        await codigo(tx, () =>
+          editarDatosObra(tx, { ...corregidos, obraId: 'a2000000-0000-4000-8000-000000000099' }),
+        ),
+      ).toBe('obra_no_encontrada');
+      await como(tx, USUARIOS.carlos);
+      expect(await codigo(tx, () => editarDatosObra(tx, corregidos))).toBe('solo_dueno');
+      expect(await codigo(tx, () => datosDeObra(tx, { obraId: OBRAS.a1Carlos }))).toBe('solo_dueno');
     }));
 });

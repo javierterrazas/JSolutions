@@ -1167,3 +1167,20 @@ seguimiento de la obra (D-062), "Registrar compra" (`/obras/[id]/compra`; legacy
 - **Cuenta** en el presupuesto de la obra (material) y en su día a día. El día a día muestra también los días con
   gastos aunque no tengan cierre, incluidos los de antes del arranque: el material se compra antes de empezar.
 - **El PM nunca la ve**, ni su recibo (RLS de gastos y de fotos, como antes).
+
+## D-064 · Los datos del cliente, y corregirlos o cambiar de PM
+
+**Decisión del dueño:** al ver una obra, el dueño no encontraba los datos del cliente; y quiere corregirlos si se
+escribieron mal y poder cambiar de PM.
+- **En el seguimiento (D-062), "Datos de la obra":** el cliente, su teléfono (se toca para llamar), la dirección (abre
+  el mapa), el PM, el estado, el inicio, la entrega comprometida (si las órdenes de cambio la movieron, también la
+  original del alta), el contrato original y las notas. **En la lista de "Obras"**, de cada obra activa, también su
+  entrega comprometida.
+- **"Corregir"** (`/obras/[id]/datos`, `editarDatosObra`): el cliente, el teléfono, la dirección, las notas y el PM,
+  con los mismos requisitos del alta (teléfono con al menos 10 dígitos; el PM nuevo, activo). Solo el dueño o el
+  administrador; también en una obra entregada (su garantía, D-060, pasa al PM nuevo). Las fechas y el contrato no
+  se corrigen aquí: la entrega se mueve con órdenes de cambio.
+- **Cambiar de PM:** desde ese momento la obra es del nuevo (la ve, la cierra, y su garantía); el anterior deja de
+  verla. Lo capturado (cierres, gastos, fotos, avisos) se queda en la obra con quien lo capturó. Lo que el anterior
+  tenga en la cola sin señal de esa obra ya no entra: la app se lo dice al intentar enviarlo.
+- No necesita migración: la RLS ya deja al dueño actualizar sus obras.

@@ -11,14 +11,21 @@ afterAll(() => servidor.sql.end());
 const LUNES = enAustin('2026-10-12', 9);
 
 describe('el seguimiento de una obra', () => {
-  it('cómo va: avance, en qué etapa va cada espacio y el plazo', () =>
+  it('cómo va: los datos del cliente, el avance, en qué etapa va cada espacio y el plazo', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const s = (await seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!;
       expect(s.obra).toMatchObject({
         folio: 'OB-001',
+        cliente: 'Familia García',
+        telefono: '512-555-0101',
+        direccion: '1200 Oak St, Austin, TX',
         pm: 'Carlos Méndez',
         estado: 'en_obra',
+        notas: null,
+        contrato: 24000,
         inicio: '2026-10-05',
+        // la orden de cambio autorizada le suma un día a la del alta
+        entregaOriginal: '2026-10-30',
         entregaComprometida: '2026-10-31',
         atraso: 0,
       });
@@ -86,10 +93,16 @@ describe('el seguimiento de una obra', () => {
       expect(s.hayMasDias).toBe(false);
     }));
 
-  it('la lista de obras trae de cada una su avance, presupuesto usado y atraso; el PM no ve nada de esto', () =>
+  it('la lista de obras trae de cada una su avance, presupuesto usado, entrega y atraso; el PM no ve nada de esto', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const r = await resumenDeObras(tx, LUNES);
-      expect(r.get(OBRAS.a1Carlos)).toEqual({ avance: 0.4, usado: 3.4, semaforo: 'rojo', atraso: 0 });
+      expect(r.get(OBRAS.a1Carlos)).toEqual({
+        avance: 0.4,
+        usado: 3.4,
+        semaforo: 'rojo',
+        entrega: '2026-10-31',
+        atraso: 0,
+      });
       expect(r.has(OBRAS.a3Entregada)).toBe(false);
       await como(tx, USUARIOS.carlos);
       expect(await codigo(tx, () => seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))).toBe(
