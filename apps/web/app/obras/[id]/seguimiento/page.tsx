@@ -61,10 +61,10 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
   const p = s.presupuesto;
 
   return (
-    <Marco titulo={to('encabezado', { folio: s.obra.folio, cliente: s.obra.cliente })}>
-      <Link href="/obras" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
+    <Marco
+      titulo={to('encabezado', { folio: s.obra.folio, cliente: s.obra.cliente })}
+      volver={{ href: '/obras', texto: t('volver') }}
+    >
       {/* los datos de la obra y del cliente, los del alta */}
       <section className={`${estilos.tarjeta} flex flex-col gap-2 text-sm`}>
         <div className="flex items-baseline justify-between gap-2">

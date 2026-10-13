@@ -2,7 +2,6 @@
 // esperan respuesta y las respuestas del dueño.
 import { datosParaAviso } from '@ijm/servidor';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
 import { Marco, estilos } from '../../../componentes/marco';
@@ -26,11 +25,11 @@ export default async function Aviso({ params }: PageProps<'/obras/[id]/aviso'>) 
     });
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
-      <p className="text-slate-700">{t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}</p>
+    <Marco
+      titulo={t('titulo')}
+      subtitulo={t('obra', { folio: d.obra.folio, cliente: d.obra.cliente })}
+      volver={{ href: '/', texto: t('volver') }}
+    >
       <FormularioAviso datos={{ obraId: d.obra.id, folio: d.obra.folio, slaHoras: d.slaHoras }} />
       {d.avisos.length ? (
         <section className="mt-4 flex flex-col gap-3">

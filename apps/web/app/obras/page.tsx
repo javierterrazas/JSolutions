@@ -26,10 +26,7 @@ export default async function Obras() {
   // el día de negocio a mediodía, para que ninguna zona lo mueva de día
   const dia = (d: string) => formato.dateTime(new Date(`${d}T12:00:00`), { dateStyle: 'medium' });
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {ti('hola', { nombre: acceso.yo.nombre })}
-      </Link>
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: ti('hola', { nombre: acceso.yo.nombre }) }}>
       <Link href="/obras/nueva" className={`${estilos.boton} flex items-center justify-center`}>
         {t('nueva')}
       </Link>

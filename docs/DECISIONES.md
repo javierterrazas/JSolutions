@@ -1184,3 +1184,20 @@ escribieron mal y poder cambiar de PM.
   verla. Lo capturado (cierres, gastos, fotos, avisos) se queda en la obra con quien lo capturó. Lo que el anterior
   tenga en la cola sin señal de esa obra ya no entra: la app se lo dice al intentar enviarlo.
 - No necesita migración: la RLS ya deja al dueño actualizar sus obras.
+
+## D-065 · Pantallas más fáciles de leer, con el nombre de la empresa
+
+**Decisión del dueño:** las pantallas del PM tienen que ser más intuitivas: letra un poco más grande, el botón de
+volver más notorio y, arriba, el nombre de la empresa que usa el sistema, no el de J Solutions.
+- **La letra base pasa de 16 a 18 px** (`font-size: 112.5%` en `html`): textos, botones y espacios crecen parejo. Los
+  campos y las etiquetas van en tamaño normal (antes pequeño), con bordes y textos secundarios un tono más oscuros:
+  en la obra se lee al sol.
+- **Volver es un botón**, arriba de todo y con flecha, en el marco de cada pantalla (`Marco`, prop `volver`), en vez
+  del texto pequeño bajo el título. La obra de la pantalla ("OB-001 · Familia García") va bajo el título
+  (`subtitulo`). Igual en las pantallas del dueño.
+- **Arriba, el nombre de la empresa** (`empresas.nombre`, en `quienSoy`). Sin consulta extra: la revisión de acceso de
+  la página ya lo leyó y lo deja para esa petición (`lib/empresa-de-la-peticion`). También en la pantalla del PIN;
+  donde todavía no hay empresa (la invitación, sin acceso), sigue "J Solutions". El nombre de la app instalada en
+  el teléfono no cambia.
+- **En el inicio del PM**, los títulos de sección más grandes, y los seis botones de cada obra con su ícono; "Subs"
+  pasa a "Subcontratistas".

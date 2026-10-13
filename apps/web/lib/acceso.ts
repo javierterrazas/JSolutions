@@ -6,6 +6,7 @@ import { esErrorDeNegocio } from '@ijm/core';
 import { enNombreDe, estadoDispositivo, quienSoy, type Llave, type Tx, type Yo } from '@ijm/servidor';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { recordarEmpresa } from './empresa-de-la-peticion';
 import { servidor } from './servidor';
 import { OPCIONES_COOKIE, usuarioDeLaSesion } from './supabase';
 
@@ -45,8 +46,10 @@ export async function estadoDeAcceso(): Promise<
     const estado = await estadoDispositivo(tx, llave);
     return estado === 'abierto' ? { estado, yo: await quienSoy(tx) } : { estado };
   });
-  if (r.estado === 'abierto')
+  if (r.estado === 'abierto') {
+    recordarEmpresa(r.yo.empresa);
     return { estado: 'abierto', acceso: { userId: sesion.userId, llave, yo: r.yo } };
+  }
   return { estado: r.estado };
 }
 

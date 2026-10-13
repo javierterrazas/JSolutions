@@ -49,11 +49,11 @@ export default async function Album({ params, searchParams }: PageProps<'/obras/
   };
 
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href={volver} className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
-      <p className="text-slate-700">{t('obra', { folio: a.obra.folio, cliente: a.obra.cliente })}</p>
+    <Marco
+      titulo={t('titulo')}
+      subtitulo={t('obra', { folio: a.obra.folio, cliente: a.obra.cliente })}
+      volver={{ href: volver, texto: t('volver') }}
+    >
       {a.registros.length === 0 ? <p className={estilos.tarjeta}>{t('vacio')}</p> : null}
       {dias.map((d) => (
         <section key={d.dia} className="flex flex-col gap-3">

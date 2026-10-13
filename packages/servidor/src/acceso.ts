@@ -221,12 +221,16 @@ export interface Yo {
   readonly nombre: string;
   readonly rol: 'dueno' | 'admin' | 'pm';
   readonly idioma: 'es' | 'en';
+  /** El nombre de su empresa, el que lleva arriba cada pantalla. */
+  readonly empresa: string;
 }
 
 /** Quién es el usuario de la sesión. Sin miembro activo: `sin_acceso`. */
 export async function quienSoy(tx: Tx): Promise<Yo> {
   const [m] = await tx<Yo[]>`
-    select id as "miembroId", nombre, rol, idioma from public.miembros where id = public.miembro_actual()`;
+    select m.id as "miembroId", m.nombre, m.rol, m.idioma, e.nombre as empresa
+    from public.miembros m join public.empresa_actual_datos e on e.id = m.empresa_id
+    where m.id = public.miembro_actual()`;
   if (!m) throw new ErrorDeNegocio('sin_acceso');
   return m;
 }

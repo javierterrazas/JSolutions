@@ -1,6 +1,5 @@
 import { datosParaObraNueva } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { Marco } from '../../componentes/marco';
 import { FormularioObra } from './formulario-obra';
@@ -15,10 +14,7 @@ export default async function ObraNueva() {
   ]);
   const datos = r.ok ? r.datos : { tipos: [], pms: [] };
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/obras" className="text-sm font-medium text-marca">
-        {to('titulo')}
-      </Link>
+    <Marco titulo={t('titulo')} volver={{ href: '/obras', texto: to('titulo') }}>
       <FormularioObra
         tipos={datos.tipos.map((x) => ({
           id: x.id,

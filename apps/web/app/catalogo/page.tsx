@@ -14,10 +14,7 @@ export default async function Catalogo() {
   const [t, idioma] = await Promise.all([getTranslations('catalogo'), getLocale()]);
   const nombre = (n: { es: string; en: string | null }) => (idioma === 'en' ? n.en : null) ?? n.es;
   return (
-    <Marco titulo={t('titulo')}>
-      <Link href="/" className="text-sm font-medium text-marca">
-        {t('volver')}
-      </Link>
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
       <ul className="flex flex-col gap-2">
         {datos.tipos.map((x) => (

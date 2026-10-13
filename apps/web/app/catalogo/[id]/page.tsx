@@ -2,7 +2,6 @@
 // que ya existen tienen su propia copia: lo que se cambie aquí vale para los espacios nuevos.
 import { tipoParaEditar } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { cambiarActivoDeTipo } from '../../acciones/catalogo';
@@ -27,10 +26,7 @@ export default async function TipoDeObra({ params }: PageProps<'/catalogo/[id]'>
   const activas = d.partidas.filter((p) => p.activa);
   const pesoTotal = activas.reduce((a, p) => a + p.peso, 0);
   return (
-    <Marco titulo={nombre(d.tipo.nombre)}>
-      <Link href="/catalogo" className="text-sm font-medium text-marca">
-        {t('volverCatalogo')}
-      </Link>
+    <Marco titulo={nombre(d.tipo.nombre)} volver={{ href: '/catalogo', texto: t('volverCatalogo') }}>
       {d.tipo.activo ? null : <p className={estilos.error}>{t('tipoDeBaja')}</p>}
       <p className="text-sm text-slate-600">{t('tipoAyuda')}</p>
       <RenombrarTipo tipoId={d.tipo.id} nombre={d.tipo.nombre} />
