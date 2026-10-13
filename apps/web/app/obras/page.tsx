@@ -23,6 +23,8 @@ export default async function Obras() {
     getFormatter(),
   ]);
   const pct = (x: number) => `${Math.round(x * 100)}%`;
+  // el día de negocio a mediodía, para que ninguna zona lo mueva de día
+  const dia = (d: string) => formato.dateTime(new Date(`${d}T12:00:00`), { dateStyle: 'medium' });
   return (
     <Marco titulo={t('titulo')}>
       <Link href="/" className="text-sm font-medium text-marca">
@@ -46,11 +48,8 @@ export default async function Obras() {
                 </span>
                 <span className="text-sm text-slate-600">{o.direccion}</span>
                 <span className="text-sm text-slate-600">
-                  {t('pm', {
-                    nombre: o.pm,
-                    // el día de negocio a mediodía, para que ninguna zona lo mueva de día
-                    fecha: formato.dateTime(new Date(`${o.inicio}T12:00:00`), { dateStyle: 'medium' }),
-                  })}
+                  {t('pm', { nombre: o.pm, fecha: dia(o.inicio) })}
+                  {x ? t('entrega', { fecha: dia(x.entrega) }) : null}
                 </span>
                 {x ? (
                   <span className="flex flex-wrap gap-x-3 text-sm font-medium">

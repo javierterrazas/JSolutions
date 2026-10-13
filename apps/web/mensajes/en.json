@@ -203,7 +203,8 @@
     "seguimiento": "See how it's going",
     "resumen": "{avance} done · budget {usado}",
     "resumenSinPresupuesto": "{avance} done",
-    "tarde": "{n, plural, one {# day late} other {# days late}}"
+    "tarde": "{n, plural, one {# day late} other {# days late}}",
+    "entrega": " · due {fecha}"
   },
   "obraNueva": {
     "titulo": "New job",
@@ -778,7 +779,6 @@
     "fotos": "{n, plural, one {# photo} other {# photos}}",
     "folio": "{folio}",
     "folioTardio": "{folio} · late",
-    "linea": "{direccion} · PM: {pm} · {estado}",
     "etapaDe": "{espacio} · {etapa}",
     "recientes": "More recent",
     "anteriores": "Earlier days",
@@ -791,7 +791,28 @@
       "cliente_no_disponible": "Client not available",
       "otro": "Other"
     },
-    "registrarCompra": "Record purchase"
+    "registrarCompra": "Record purchase",
+    "datos": "Job details",
+    "cliente": "Client",
+    "telefono": "Phone",
+    "direccion": "Address",
+    "pmTitulo": "PM",
+    "estado": "Status",
+    "inicio": "Start",
+    "entrega": "Delivery",
+    "entregaOriginal": "Originally {dia}; moved by change orders.",
+    "contrato": "Contract",
+    "notas": "Notes:",
+    "corregir": "Edit"
+  },
+  "datosObra": {
+    "titulo": "Job details",
+    "volver": "Back to job progress",
+    "inactivo": "{nombre} (no longer active)",
+    "cambioDePm": "The previous PM stops seeing this job and the new one sees it from now on. Everything already recorded stays with the job.",
+    "cancelar": "Cancel",
+    "guardar": "Save",
+    "guardando": "Saving…"
   },
   "compra": {
     "titulo": "Record purchase",

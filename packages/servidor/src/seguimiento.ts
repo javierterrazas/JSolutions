@@ -90,10 +90,16 @@ export interface SeguimientoObra {
     readonly id: string;
     readonly folio: string;
     readonly cliente: string;
+    readonly telefono: string;
     readonly direccion: string;
     readonly pm: string | null;
     readonly estado: string;
+    readonly notas: string | null;
+    /** El monto del contrato con el cliente, del alta (sin órdenes de cambio); null si no lo tiene. */
+    readonly contrato: number | null;
     readonly inicio: Dia;
+    /** La entrega del alta; la comprometida le suma los días de las órdenes de cambio autorizadas. */
+    readonly entregaOriginal: Dia;
     readonly entregaComprometida: Dia;
     readonly entregaPrevista: Dia | null;
     readonly atraso: number;
@@ -129,14 +135,16 @@ async function leerObras(tx: Tx, s: Sesion, ids: readonly string[]) {
       id: string;
       folio: string;
       cliente: string;
+      telefono: string;
       direccion: string;
       pm: string | null;
       estado: string;
+      notas: string | null;
       inicio: Dia;
       fin: Dia;
     }[]
   >`
-    select o.id, o.folio, o.cliente, o.direccion, m.nombre as pm, o.estado,
+    select o.id, o.folio, o.cliente, o.telefono_cliente as telefono, o.direccion, m.nombre as pm, o.estado, o.notas,
            to_char(o.fecha_inicio, 'YYYY-MM-DD') as inicio, to_char(o.fecha_fin_estimada, 'YYYY-MM-DD') as fin
     from obras o left join miembros m on m.id = o.pm_id where o.id = any(${ids})`;
   const espacios = await tx<
@@ -394,6 +402,8 @@ export async function seguimientoDeObra(
   const l = await leerObras(tx, s, [e.obraId]);
   if (!l.obras.length) return null;
   const c = calcular(l, e.obraId);
+  const [finanzas] = await tx<{ contrato: string }[]>`
+    select contrato_original as contrato from obras_finanzas where obra_id = ${e.obraId}`;
   const manoObra = l.manoObra.filter((m) => m.obra_id === e.obraId);
 
   // la cuadrilla: horas y días, con su costo a la tarifa de cada día
@@ -472,10 +482,14 @@ export async function seguimientoDeObra(
       id: c.o.id,
       folio: c.o.folio,
       cliente: c.o.cliente,
+      telefono: c.o.telefono,
       direccion: c.o.direccion,
       pm: c.o.pm,
       estado: c.o.estado,
+      notas: c.o.notas,
+      contrato: finanzas ? Number(finanzas.contrato) : null,
       inicio: c.o.inicio,
+      entregaOriginal: c.o.fin,
       entregaComprometida: c.entregaComprometida,
       entregaPrevista: c.entregaPrevista,
       atraso: c.atraso,
@@ -528,6 +542,7 @@ export interface ResumenDeObra {
   readonly avance: number;
   readonly usado: number | null;
   readonly semaforo: Semaforo | null;
+  readonly entrega: Dia;
   readonly atraso: number;
 }
 
@@ -543,7 +558,13 @@ export async function resumenDeObras(tx: Tx, ahora = new Date()): Promise<Map<st
       const c = calcular(l, id);
       return [
         id,
-        { avance: c.av.pct, usado: c.presupuesto.usado, semaforo: c.presupuesto.semaforo, atraso: c.atraso },
+        {
+          avance: c.av.pct,
+          usado: c.presupuesto.usado,
+          semaforo: c.presupuesto.semaforo,
+          entrega: c.entregaComprometida,
+          atraso: c.atraso,
+        },
       ];
     }),
   );

@@ -4,6 +4,7 @@ import {
   copiarPlantilla,
   type DatosPartida,
   ErrorDeNegocio,
+  exigir,
   type Responsable,
   validarAltaObra,
 } from '@ijm/core';
@@ -201,4 +202,78 @@ export async function agregarEspacio(
     returning id`;
   await copiarPartidas(tx, s.empresaId, e.obraId, esp!.id, e.tipoEspacioId);
   return { espacioId: esp!.id };
+}
+
+export interface DatosDeObra {
+  readonly id: string;
+  readonly folio: string;
+  readonly cliente: string;
+  readonly telefono: string;
+  readonly direccion: string;
+  readonly pmId: string;
+  readonly notas: string | null;
+  /** Los PMs activos, y el de la obra aunque ya no lo esté. */
+  readonly pms: readonly { id: string; nombre: string; activo: boolean }[];
+}
+
+/** Los datos del alta de una obra, para corregirlos; null si el dueño no la ve. */
+export async function datosDeObra(
+  tx: Tx,
+  entrada: { obraId: string },
+  ahora = new Date(),
+): Promise<DatosDeObra | null> {
+  const { obraId } = validarEntrada(z.object({ obraId: uuid }), entrada);
+  exigirDueno(await leerSesion(tx, ahora));
+  const [obra] = await tx<Omit<DatosDeObra, 'pms'>[]>`
+    select id, folio, cliente, telefono_cliente as telefono, direccion, pm_id as "pmId", notas
+    from obras where id = ${obraId}`;
+  if (!obra) return null;
+  const pms = await tx<{ id: string; nombre: string; activo: boolean }[]>`
+    select id, nombre, activo from miembros
+    where rol = 'pm' and (activo or id = ${obra.pmId}) order by nombre`;
+  return { ...obra, pms };
+}
+
+const EntradaDatos = z.object({
+  obraId: uuid,
+  cliente: textoCorto.nullish(),
+  telefono: z.string().max(40).nullish(),
+  direccion: textoCorto.nullish(),
+  pmId: uuid.nullish(),
+  notas: textoLargo.nullish(),
+});
+
+/**
+ * Corrige los datos del alta de una obra (D-064): el cliente, su teléfono, la dirección y las notas, y cambia de PM.
+ * Solo el dueño o el administrador. Con los mismos requisitos del alta: el teléfono con 10 dígitos y el PM nuevo,
+ * activo. Lo capturado por el PM anterior se queda en la obra; desde ese momento la obra es del nuevo.
+ * Errores: `faltan`, `telefono_incompleto`, `pm_no_activo`, `obra_no_encontrada`.
+ */
+export async function editarDatosObra(
+  tx: Tx,
+  entrada: z.input<typeof EntradaDatos>,
+  ahora = new Date(),
+): Promise<{ cambioDePm: boolean }> {
+  const e = validarEntrada(EntradaDatos, entrada);
+  exigirDueno(await leerSesion(tx, ahora));
+  const [obra] = await tx<{ pm_id: string }[]>`select pm_id from obras where id = ${e.obraId}`;
+  if (!obra) throw new ErrorDeNegocio('obra_no_encontrada');
+  exigir([
+    [e.cliente, 'cliente'],
+    [e.telefono, 'telefono_cliente'],
+    [e.direccion, 'direccion'],
+    [e.pmId, 'pm'],
+  ]);
+  if (e.telefono!.replace(/\D/g, '').length < 10) throw new ErrorDeNegocio('telefono_incompleto');
+  const cambioDePm = e.pmId !== obra.pm_id;
+  if (cambioDePm) {
+    const [pm] = await tx`select 1 from miembros where id = ${e.pmId!} and rol = 'pm' and activo`;
+    if (!pm) throw new ErrorDeNegocio('pm_no_activo');
+  }
+  await tx`
+    update obras set cliente = ${e.cliente!.trim()}, telefono_cliente = ${e.telefono!.trim()},
+                     direccion = ${e.direccion!.trim()}, pm_id = ${e.pmId!}, notas = ${e.notas?.trim() || null},
+                     actualizado_en = now()
+    where id = ${e.obraId}`;
+  return { cambioDePm };
 }

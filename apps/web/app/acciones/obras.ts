@@ -3,6 +3,7 @@
 import {
   agregarEspacio,
   crearObra,
+  editarDatosObra,
   guardarPresupuesto,
   type EntradaObra,
   type ResultadoPresupuesto,
@@ -30,6 +31,30 @@ export async function guardarPresupuestoObra(
   const r = await comoMiembro((tx) => guardarPresupuesto(tx, entrada), await exigirDueno());
   if (r.ok) revalidatePath('/obras');
   return r;
+}
+
+/** Corrige los datos del alta de una obra o le cambia el PM (D-064), y regresa a su seguimiento. */
+export async function corregirDatosObra(
+  obraId: string,
+  _previo: Resultado | null,
+  f: FormData,
+): Promise<Resultado> {
+  const texto = (campo: string) => String(f.get(campo) ?? '');
+  const r = await comoMiembro(
+    (tx) =>
+      editarDatosObra(tx, {
+        obraId,
+        cliente: texto('cliente'),
+        telefono: texto('telefono'),
+        direccion: texto('direccion'),
+        pmId: texto('pmId') || null,
+        notas: texto('notas'),
+      }),
+    await exigirDueno(),
+  );
+  if (!r.ok) return r;
+  revalidatePath('/obras');
+  redirect(`/obras/${obraId}/seguimiento`);
 }
 
 /** Agrega un espacio a una obra que ya existe, con las partidas de su tipo; su presupuesto se captura enseguida. */

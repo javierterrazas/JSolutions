@@ -25,6 +25,15 @@ function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) 
   );
 }
 
+function Dato({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <>
+      <dt className="text-slate-500">{titulo}</dt>
+      <dd className="min-w-0 break-words text-slate-800">{children}</dd>
+    </>
+  );
+}
+
 export default async function Seguimiento({ params, searchParams }: PageProps<'/obras/[id]/seguimiento'>) {
   const { id } = await params;
   const consulta = await searchParams;
@@ -56,13 +65,50 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
       <Link href="/obras" className="text-sm font-medium text-marca">
         {t('volver')}
       </Link>
-      <p className="text-sm text-slate-600">
-        {t('linea', {
-          direccion: s.obra.direccion,
-          pm: s.obra.pm ?? '—',
-          estado: to(`estado.${s.obra.estado}` as never),
-        })}
-      </p>
+      {/* los datos de la obra y del cliente, los del alta */}
+      <section className={`${estilos.tarjeta} flex flex-col gap-2 text-sm`}>
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="font-semibold text-marca">{t('datos')}</h2>
+          <Link href={`/obras/${s.obra.id}/datos`} className="font-medium text-marca underline">
+            {t('corregir')}
+          </Link>
+        </div>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+          <Dato titulo={t('cliente')}>{s.obra.cliente}</Dato>
+          <Dato titulo={t('telefono')}>
+            <a href={`tel:${s.obra.telefono}`} className="font-medium text-marca underline">
+              {s.obra.telefono}
+            </a>
+          </Dato>
+          <Dato titulo={t('direccion')}>
+            <a
+              href={`https://maps.google.com/?q=${encodeURIComponent(s.obra.direccion)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-marca underline"
+            >
+              {s.obra.direccion}
+            </a>
+          </Dato>
+          <Dato titulo={t('pmTitulo')}>{s.obra.pm ?? '—'}</Dato>
+          <Dato titulo={t('estado')}>{to(`estado.${s.obra.estado}` as never)}</Dato>
+          <Dato titulo={t('inicio')}>{dia(s.obra.inicio, true)}</Dato>
+          <Dato titulo={t('entrega')}>
+            {dia(s.obra.entregaComprometida, true)}
+            {s.obra.entregaComprometida !== s.obra.entregaOriginal ? (
+              <span className="block text-xs text-slate-500">
+                {t('entregaOriginal', { dia: dia(s.obra.entregaOriginal, true) })}
+              </span>
+            ) : null}
+          </Dato>
+          {s.obra.contrato !== null ? <Dato titulo={t('contrato')}>{dinero(s.obra.contrato)}</Dato> : null}
+        </dl>
+        {s.obra.notas ? (
+          <p className="whitespace-pre-line text-slate-700">
+            <span className="font-medium">{t('notas')}</span> {s.obra.notas}
+          </p>
+        ) : null}
+      </section>
       <Link
         href={`/obras/${s.obra.id}/compra`}
         className={`${estilos.boton} flex items-center justify-center`}
