@@ -23,6 +23,7 @@ export * from './cierre';
 export * from './fotos';
 export * from './portal';
 export * from './cambios';
+export * from './cobros';
 export * from './correcciones';
 export * from './acceso';
 export * from './auth';

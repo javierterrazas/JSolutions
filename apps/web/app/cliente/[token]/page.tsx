@@ -27,9 +27,10 @@ function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) 
 export default async function Portal({ params }: PageProps<'/cliente/[token]'>) {
   const { token } = await params;
   const p = await sinUsuario(servidor(), (tx) => portalCliente(tx, { token })).catch(() => null);
-  const [t, tc, formato, idioma] = await Promise.all([
+  const [t, tc, tco, formato, idioma] = await Promise.all([
     getTranslations('portal'),
     getTranslations('cambios'),
+    getTranslations('cobros'),
     getFormatter(),
     getLocale(),
   ]);
@@ -57,6 +58,7 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
   const autorizado = ordenes
     .filter((o) => o.estado === 'autorizada' || o.estado === 'facturada')
     .reduce((a, o) => a + o.precio, 0);
+  const pagado = p.pagos.reduce((a, x) => a + x.monto, 0);
   const porAprobar = ordenes.filter((o) => o.estado === 'propuesta' && !o.respuesta);
   const respondidas = ordenes.filter((o) => o.estado !== 'propuesta' || o.respuesta);
   const Orden = ({ o, children }: { o: CambioDelPortal; children?: ReactNode }) => (
@@ -230,11 +232,45 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
               </p>
             </Orden>
           ))}
-          {contrato !== null ? (
-            <p className="font-semibold text-slate-800">
-              {t('totalContrato', { total: dinero(contrato + autorizado) })}
-            </p>
-          ) : null}
+        </Seccion>
+      ) : null}
+
+      {/* sus pagos (D-071): lo que lleva pagado y su saldo */}
+      {contrato !== null || p.pagos.length ? (
+        <Seccion titulo={t('pagos')}>
+          <dl className={`${estilos.tarjeta} flex flex-col gap-1`}>
+            {contrato !== null ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-slate-600">{t('totalConCambios')}</dt>
+                <dd>{dinero(contrato + autorizado)}</dd>
+              </div>
+            ) : null}
+            <div className="flex justify-between gap-3">
+              <dt className="text-slate-600">{t('pagado')}</dt>
+              <dd className="text-emerald-800">{dinero(pagado)}</dd>
+            </div>
+            {contrato !== null ? (
+              <div className="flex justify-between gap-3 border-t border-slate-100 pt-1 text-lg font-bold">
+                <dt>{t('saldo')}</dt>
+                <dd>{dinero(contrato + autorizado - pagado)}</dd>
+              </div>
+            ) : null}
+          </dl>
+          <ul className="flex flex-col gap-2">
+            {p.pagos.map((x) => (
+              <li key={x.folio} className={`${estilos.tarjeta} flex items-baseline justify-between gap-3`}>
+                <span>
+                  <span className="block font-semibold">
+                    {tco.has(`conceptos.${x.concepto}` as never)
+                      ? tco(`conceptos.${x.concepto}` as never)
+                      : x.concepto}
+                  </span>
+                  <span className="text-sm text-slate-600">{fecha(x.fecha)}</span>
+                </span>
+                <span className="font-semibold">{dinero(x.monto)}</span>
+              </li>
+            ))}
+          </ul>
         </Seccion>
       ) : null}
 
