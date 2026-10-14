@@ -167,7 +167,7 @@ const EntradaAnulacion = z.object({ tabla: z.string().max(40), registroId: uuid,
 
 /**
  * Anula un registro: queda, pero sale de todos los cálculos. Anular lo ya anulado no hace nada. Un pago anulado
- * regresa su orden de "pagada" a "aprobada".
+ * regresa su orden de "pagada" a donde estaba: aprobada, confirmada o emitida.
  */
 export async function anular(
   tx: Tx,
@@ -191,7 +191,13 @@ export async function anular(
     e.motivo,
   );
   if (t === 'pagos_sub') {
-    await tx`update ordenes_trabajo set estado = 'aprobada' where id = ${String(r.orden_trabajo_id)} and estado = 'pagada'`;
+    // la orden regresa a donde estaba antes de liquidarse: aprobada, confirmada o emitida (D-074)
+    await tx`
+      update ordenes_trabajo
+      set estado = case when aprobada_en is not null then 'aprobada'::estado_orden_trabajo
+                        when confirmada_en is not null then 'confirmada'::estado_orden_trabajo
+                        else 'emitida'::estado_orden_trabajo end
+      where id = ${String(r.orden_trabajo_id)} and estado = 'pagada'`;
   }
   return { yaEstaba: false };
 }

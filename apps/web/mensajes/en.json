@@ -128,7 +128,11 @@
       "concepto": "concept",
       "metodo": "how they paid",
       "oficio": "trade",
-      "telefono": "phone"
+      "telefono": "phone",
+      "subcontratista": "subcontractor",
+      "partida": "task",
+      "alcance": "scope",
+      "fecha_fin": "end date"
     },
     "solo_pm": "Only the job's PM closes the day.",
     "dia_ya_cerrado": "That day is already closed.",
@@ -199,7 +203,13 @@
     "falta_nombre": "Please enter your name.",
     "falta_firma": "Sign inside the box to approve.",
     "enlace_invalido": "This link is no longer active.",
-    "sub_repetido": "A subcontractor with that name already exists: edit it instead of adding it again."
+    "sub_repetido": "A subcontractor with that name already exists: edit it instead of adding it again.",
+    "precio_cerrado": "The order has a fixed price: enter the price.",
+    "fin_antes_del_inicio": "The end date cannot be before the start.",
+    "sub_no_activo": "That subcontractor is deactivated.",
+    "orden_con_pagos": "That order already has payments: adjust the scope instead of canceling it.",
+    "orden_no_cancelable": "That order is already paid or canceled.",
+    "orden_cancelada": "That order is canceled."
   },
   "obras": {
     "titulo": "Jobs",
@@ -827,7 +837,8 @@
     "notas": "Notes:",
     "corregir": "Edit",
     "cambios": "Change orders",
-    "cobros": "Payments"
+    "cobros": "Payments",
+    "subcontratos": "Subcontracts and sub payments"
   },
   "datosObra": {
     "titulo": "Job details",
@@ -1065,6 +1076,75 @@
       "seguro_por_vencer": "Their insurance expires on {dia}: ask for the renewal.",
       "sin_licencia": "Their trade requires a state license and none is on file.",
       "licencia_vencida": "Their license expired on {dia}."
+    }
+  },
+  "subcontratos": {
+    "titulo": "Subcontracts",
+    "volver": "Back to job progress",
+    "ayuda": "Each work order is the cost commitment for that task, at a fixed price. Subs are always paid against their order.",
+    "comprometido": "Committed to subs",
+    "pagado": "Paid",
+    "porPagar": "To pay",
+    "saldo": "Balance",
+    "precio": "Price",
+    "cerrada": "The job is already delivered or closed: no orders are issued or paid.",
+    "ninguna": "This job has no work orders.",
+    "nueva": "Issue work order",
+    "sinSubs": "There are no active subcontractors: add them in Subcontractors.",
+    "sub": "Subcontractor",
+    "elegirSub": "Choose the subcontractor",
+    "subOficio": "{sub} · {oficio}",
+    "partida": "Task it covers",
+    "elegirPartida": "Choose the task",
+    "alcance": "Scope",
+    "alcanceEjemplo": "Rough plumbing for the master bathroom",
+    "inicio": "Start",
+    "fin": "End",
+    "emitir": "Issue order",
+    "cancelar": "Cancel",
+    "emitida": "Order {folio} issued. The PM sees it to confirm it.",
+    "otra": "Issue another",
+    "papelesConfirmar": "Before sending this sub to the job:",
+    "emitirAsi": "Issue anyway",
+    "folioSub": "{folio} · {sub}",
+    "partidaDe": "{espacio} · {partida}",
+    "fechas": "From {inicio} to {fin}",
+    "pagar": "Record payment",
+    "cancelarOrden": "Cancel order",
+    "registrarPago": "Record payment",
+    "pagarAsi": "Pay anyway",
+    "pagoRegistrado": "Payment recorded: {folio}",
+    "monto": "Amount",
+    "fecha": "Date",
+    "concepto": "Concept",
+    "metodo": "How it was paid",
+    "referencia": "Reference (optional)",
+    "pagoLinea": "{dia} · {concepto}",
+    "estados": {
+      "emitida": "Issued",
+      "confirmada": "Confirmed",
+      "aprobada": "Approved",
+      "pagada": "Paid",
+      "cancelada": "Canceled"
+    },
+    "conceptos": {
+      "anticipo": "Advance",
+      "parcial": "Partial payment",
+      "liquidacion": "Final payment"
+    },
+    "metodos": {
+      "transferencia": "Transfer",
+      "cheque": "Check",
+      "zelle": "Zelle",
+      "efectivo": "Cash",
+      "tarjeta": "Card",
+      "tarjeta_empresa": "Company card"
+    },
+    "avisos": {
+      "sin_confirmar": "This sub has not confirmed the order in writing yet. An advance before confirmation is money without commitment.",
+      "sin_aprobar": "The PM has not approved the work yet. The rule is that subs get paid against approved work.",
+      "papeles": "This sub does not have their paperwork in order (insurance or license). Paying them like this leaves you exposed.",
+      "sobrepago": "With this payment you would be at {total} against an order of {precio}. If it is extra work, it goes in a change order."
     }
   }
 }

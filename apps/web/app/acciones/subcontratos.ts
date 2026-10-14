@@ -1,0 +1,101 @@
+'use server';
+// Los subcontratos de una obra (D-074): el dueño emite órdenes de trabajo, las cancela, y les paga a los subs contra
+// su orden, confirmando los avisos uno por uno.
+import {
+  anular,
+  cancelarOrdenTrabajo,
+  emitirOrdenTrabajo,
+  registrarPagoSub,
+  type ResultadoOrdenTrabajo,
+  type ResultadoPagoSub,
+} from '@ijm/servidor';
+import { revalidatePath } from 'next/cache';
+import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+
+const texto = (f: FormData, campo: string) => String(f.get(campo) ?? '').trim() || null;
+/** "1,250" o "$1250.50" → 1250.5; vacío → null. */
+const numero = (f: FormData, campo: string) => {
+  const limpio = String(f.get(campo) ?? '').replace(/[$,\s]/g, '');
+  return limpio === '' ? null : Number(limpio);
+};
+/** Los avisos que ya confirmó, separados por comas. */
+const confirmado = (f: FormData) =>
+  String(f.get('confirmado') ?? '')
+    .split(',')
+    .filter(Boolean);
+
+function refrescar(obraId: string) {
+  revalidatePath(`/obras/${obraId}/subcontratos`);
+  revalidatePath(`/obras/${obraId}/seguimiento`);
+}
+
+export async function emitirOrden(
+  obraId: string,
+  _previo: Resultado<ResultadoOrdenTrabajo> | null,
+  f: FormData,
+): Promise<Resultado<ResultadoOrdenTrabajo>> {
+  const r = await comoMiembro(
+    (tx) =>
+      emitirOrdenTrabajo(tx, {
+        obraId,
+        subId: texto(f, 'sub'),
+        partidaId: texto(f, 'partida'),
+        alcance: texto(f, 'alcance'),
+        inicio: texto(f, 'inicio'),
+        fin: texto(f, 'fin'),
+        precio: numero(f, 'precio'),
+        confirmado: confirmado(f),
+      }),
+    await exigirDueno(),
+  );
+  if (r.ok && r.datos.ok) refrescar(obraId);
+  return r;
+}
+
+export async function cancelarOrden(
+  obraId: string,
+  ordenId: string,
+  _previo: Resultado<void> | null,
+): Promise<Resultado<void>> {
+  const r = await comoMiembro((tx) => cancelarOrdenTrabajo(tx, { ordenId }), await exigirDueno());
+  if (r.ok) refrescar(obraId);
+  return r;
+}
+
+export async function pagarSub(
+  obraId: string,
+  ordenId: string,
+  _previo: Resultado<ResultadoPagoSub> | null,
+  f: FormData,
+): Promise<Resultado<ResultadoPagoSub>> {
+  const r = await comoMiembro(
+    (tx) =>
+      registrarPagoSub(tx, {
+        ordenId,
+        fecha: texto(f, 'fecha'),
+        concepto: texto(f, 'concepto') as never,
+        monto: numero(f, 'monto'),
+        metodo: (texto(f, 'metodo') ?? 'transferencia') as never,
+        referencia: texto(f, 'referencia'),
+        confirmado: confirmado(f),
+      }),
+    await exigirDueno(),
+  );
+  if (r.ok && r.datos.ok) refrescar(obraId);
+  return r;
+}
+
+export async function anularPagoSub(
+  obraId: string,
+  pagoId: string,
+  _previo: Resultado<void> | null,
+  f: FormData,
+): Promise<Resultado<void>> {
+  const r = await comoMiembro(
+    (tx) => anular(tx, { tabla: 'pagos_sub', registroId: pagoId, motivo: String(f.get('motivo') ?? '') }),
+    await exigirDueno(),
+  );
+  if (!r.ok) return r;
+  refrescar(obraId);
+  return { ok: true, datos: undefined };
+}

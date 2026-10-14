@@ -364,3 +364,67 @@ function sumarDiasNaturales(d: Dia, n: number): Dia {
   f.setUTCDate(f.getUTCDate() + n);
   return f.toISOString().slice(0, 10);
 }
+
+// ------------------------------------------------------------------ órdenes de trabajo y pagos a subs
+export interface DatosOrdenTrabajo {
+  readonly subId: string | null;
+  readonly partidaId: string | null;
+  readonly alcance: string | null;
+  readonly inicio: Dia | null;
+  readonly fin: Dia | null;
+  readonly precio: number | null;
+}
+
+/**
+ * La orden de trabajo a un sub (legacy: admin/servidor.js duCrearOT): es el compromiso de costo de esa partida, con
+ * precio cerrado. Si al sub le faltan papeles, pide confirmar (`papeles`). Errores: `faltan`, `fin_antes_del_inicio`,
+ * `precio_cerrado`.
+ */
+export function validarOrdenTrabajo(
+  d: DatosOrdenTrabajo,
+  papeles: readonly AvisoPapeles[],
+  confirmado: readonly string[],
+): { ok: true } | { ok: false; confirmar: 'papeles'; avisos: readonly AvisoPapeles[] } {
+  exigir([
+    [d.subId, 'subcontratista'],
+    [d.partidaId, 'partida'],
+    [d.alcance, 'alcance'],
+    [d.inicio, 'fecha_inicio'],
+    [d.fin, 'fecha_fin'],
+  ]);
+  if (d.fin! < d.inicio!) throw new ErrorDeNegocio('fin_antes_del_inicio');
+  if (!(Number(d.precio) > 0)) throw new ErrorDeNegocio('precio_cerrado');
+  if (papeles.length && !confirmado.includes('papeles'))
+    return { ok: false, confirmar: 'papeles', avisos: papeles };
+  return { ok: true };
+}
+
+export type AvisoPagoSub = 'sin_confirmar' | 'sin_aprobar' | 'papeles' | 'sobrepago';
+
+/**
+ * Un pago a un sub, siempre contra su orden (legacy: duPagoSub). Cada advertencia se confirma por separado, en este
+ * orden: un anticipo antes de que el sub confirme por escrito (`sin_confirmar`), una liquidación antes de que el PM
+ * apruebe el trabajo (`sin_aprobar`), el sub sin papeles en regla (`papeles`; no cuenta que falte la fecha del seguro,
+ * como el legacy), y pagar más que el precio cerrado (`sobrepago`: el extra va en una orden de cambio). Devuelve si
+ * con este pago queda liquidada. Error: `monto_invalido`.
+ */
+export function validarPagoSub(
+  p: { monto: number | null; concepto: 'anticipo' | 'parcial' | 'liquidacion' },
+  orden: { confirmada: boolean; aprobada: boolean; precio: number; pagado: number },
+  papeles: readonly AvisoPapeles[],
+  confirmado: readonly string[],
+): { ok: true; liquida: boolean } | { ok: false; confirmar: AvisoPagoSub; total?: number } {
+  const monto = Number(p.monto) || 0;
+  if (monto <= 0) throw new ErrorDeNegocio('monto_invalido');
+  const acepta = (c: AvisoPagoSub) => confirmado.includes(c);
+  if (p.concepto === 'anticipo' && !orden.confirmada && !acepta('sin_confirmar'))
+    return { ok: false, confirmar: 'sin_confirmar' };
+  if (p.concepto === 'liquidacion' && !orden.aprobada && !acepta('sin_aprobar'))
+    return { ok: false, confirmar: 'sin_aprobar' };
+  if (papeles.some((a) => a.codigo !== 'sin_seguro') && !acepta('papeles'))
+    return { ok: false, confirmar: 'papeles' };
+  const total = orden.pagado + monto;
+  if (total > orden.precio + 0.01 && !acepta('sobrepago'))
+    return { ok: false, confirmar: 'sobrepago', total };
+  return { ok: true, liquida: total >= orden.precio - 0.01 };
+}

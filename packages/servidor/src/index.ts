@@ -25,6 +25,7 @@ export * from './portal';
 export * from './cambios';
 export * from './cobros';
 export * from './subcontratistas';
+export * from './subcontratos';
 export * from './correcciones';
 export * from './acceso';
 export * from './auth';

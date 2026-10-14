@@ -20,6 +20,8 @@ import {
   validarCuadrilla,
   revisarPapelesSub,
   validarOrdenCambio,
+  validarOrdenTrabajo,
+  validarPagoSub,
 } from './validaciones';
 
 const error = (fn: () => unknown) => {
@@ -383,5 +385,79 @@ describe('los papeles de un subcontratista', () => {
       { codigo: 'licencia_vencida', dia: '2026-01-31' },
     ]);
     expect(revisarPapelesSub({ ...plomero, licencia: null, requiereLicencia: false }, HOY)).toEqual([]);
+  });
+});
+
+describe('la orden de trabajo y el pago a un sub', () => {
+  const ot = {
+    subId: 'sub',
+    partidaId: 'partida',
+    alcance: 'Rough de plomería del baño',
+    inicio: '2026-10-14',
+    fin: '2026-10-16',
+    precio: 2000,
+  };
+  const vencido = [{ codigo: 'seguro_vencido' as const, dia: '2026-09-30' }];
+
+  it('la orden pide lo de siempre, con precio cerrado; sin papeles en regla, confirmar', () => {
+    expect(validarOrdenTrabajo(ot, [], [])).toEqual({ ok: true });
+    expect(error(() => validarOrdenTrabajo({ ...ot, subId: null, alcance: ' ' }, [], []))).toEqual({
+      codigo: 'faltan',
+      datos: { campos: ['subcontratista', 'alcance'] },
+    });
+    expect(error(() => validarOrdenTrabajo({ ...ot, fin: '2026-10-13' }, [], []))).toEqual({
+      codigo: 'fin_antes_del_inicio',
+    });
+    expect(error(() => validarOrdenTrabajo({ ...ot, precio: 0 }, [], []))).toEqual({
+      codigo: 'precio_cerrado',
+    });
+    expect(validarOrdenTrabajo(ot, vencido, [])).toEqual({
+      ok: false,
+      confirmar: 'papeles',
+      avisos: vencido,
+    });
+    expect(validarOrdenTrabajo(ot, vencido, ['papeles'])).toEqual({ ok: true });
+  });
+
+  it('cada advertencia del pago se confirma por separado, en el orden del legacy', () => {
+    const orden = { confirmada: false, aprobada: false, precio: 2000, pagado: 500 };
+    expect(validarPagoSub({ monto: 500, concepto: 'anticipo' }, orden, [], [])).toEqual({
+      ok: false,
+      confirmar: 'sin_confirmar',
+    });
+    expect(validarPagoSub({ monto: 1500, concepto: 'liquidacion' }, orden, vencido, ['sin_aprobar'])).toEqual(
+      {
+        ok: false,
+        confirmar: 'papeles',
+      },
+    );
+    expect(validarPagoSub({ monto: 1800, concepto: 'parcial' }, orden, [], [])).toEqual({
+      ok: false,
+      confirmar: 'sobrepago',
+      total: 2300,
+    });
+    expect(
+      validarPagoSub({ monto: 1500, concepto: 'liquidacion' }, { ...orden, aprobada: true }, [], []),
+    ).toEqual({
+      ok: true,
+      liquida: true,
+    });
+    expect(validarPagoSub({ monto: 300, concepto: 'parcial' }, orden, [], [])).toEqual({
+      ok: true,
+      liquida: false,
+    });
+  });
+
+  it('que falte la fecha del seguro no detiene un pago, como el legacy; sin monto, no hay pago', () => {
+    const orden = { confirmada: true, aprobada: true, precio: 2000, pagado: 0 };
+    expect(
+      validarPagoSub({ monto: 100, concepto: 'parcial' }, orden, [{ codigo: 'sin_seguro' }], []),
+    ).toEqual({
+      ok: true,
+      liquida: false,
+    });
+    expect(error(() => validarPagoSub({ monto: 0, concepto: 'parcial' }, orden, [], []))).toEqual({
+      codigo: 'monto_invalido',
+    });
   });
 });
