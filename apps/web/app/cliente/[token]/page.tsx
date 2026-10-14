@@ -175,12 +175,14 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
           {p.dias.map((d) => (
             <li key={d.dia} className={`${estilos.tarjeta} flex flex-col gap-1`}>
               <p className="font-semibold first-letter:uppercase">{dia(d.dia)}</p>
-              {d.partidas.map((x, i) => (
-                <p key={i} className="text-slate-700">
-                  {t(x.terminada ? 'partidaTerminada' : 'partida', {
-                    espacio: x.espacio,
-                    partida: nombre(x.partida),
-                  })}
+              {/* solo el trabajo, sin el espacio (D-069); el mismo trabajo en dos espacios, una vez */}
+              {unicos(
+                d.partidas.map((x) =>
+                  t(x.terminada ? 'partidaTerminada' : 'partida', { partida: nombre(x.partida) }),
+                ),
+              ).map((x) => (
+                <p key={x} className="text-slate-700">
+                  {x}
                 </p>
               ))}
             </li>
