@@ -12,6 +12,12 @@ const MAXIMO = 4 * 1024 * 1024;
 const sinDatos = (r: Resultado<unknown>): Resultado => (r.ok ? { ok: true, datos: undefined } : r);
 
 /** El recibo de un gasto que se registró sin él (legacy: pmSubirRecibo). Necesita señal. */
+/** Lo que muestra un gasto: la pantalla del PM y la de compras del dueño (D-068). */
+function refrescar(obraId: string) {
+  revalidatePath(`/obras/${obraId}/gasto`);
+  revalidatePath(`/obras/${obraId}/compra`);
+}
+
 export async function subirRecibo(
   ids: { obraId: string; gastoId: string },
   _previo: Resultado | null,
@@ -35,7 +41,7 @@ export async function subirRecibo(
     },
     await exigirAcceso(),
   );
-  if (r.ok) revalidatePath(`/obras/${ids.obraId}/gasto`);
+  if (r.ok) refrescar(ids.obraId);
   return sinDatos(r);
 }
 
@@ -65,7 +71,7 @@ export async function corregirGasto(
       }),
     await exigirAcceso(),
   );
-  if (r.ok) revalidatePath(`/obras/${ids.obraId}/gasto`);
+  if (r.ok) refrescar(ids.obraId);
   return sinDatos(r);
 }
 
@@ -84,7 +90,7 @@ export async function anularGasto(
       }),
     await exigirAcceso(),
   );
-  if (r.ok) revalidatePath(`/obras/${ids.obraId}/gasto`);
+  if (r.ok) refrescar(ids.obraId);
   return sinDatos(r);
 }
 

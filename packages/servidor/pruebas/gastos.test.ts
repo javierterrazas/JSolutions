@@ -4,6 +4,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
+  anular,
   corregir,
   datosParaCompra,
   datosParaGasto,
@@ -248,6 +249,46 @@ describe('las compras de la oficina', () => {
       // el PM no la ve
       await como(tx, USUARIOS.carlos);
       expect(await tx`select id from gastos where id = ${r.gastoId}`).toEqual([]);
+    }));
+
+  it('la pantalla trae las compras de la obra, de la oficina y del PM; el dueño las corrige y anula (D-068)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const d = (await datosParaCompra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!;
+      expect(d.cerrada).toBe(false);
+      const ferguson = d.compras.find((g) => g.proveedor === 'Ferguson')!;
+      const depot = d.compras.find((g) => g.proveedor === 'Home Depot')!;
+      expect(ferguson).toMatchObject({ origen: 'oficina', monto: 2500, corregible: true });
+      expect(depot).toMatchObject({ origen: 'pm', monto: 120, corregible: true });
+
+      // el dueño, sin el límite de 48 horas del PM, y con su motivo en el rastro
+      await corregir(
+        tx,
+        {
+          tabla: 'gastos',
+          registroId: ferguson.id,
+          cambios: { monto: 2400 },
+          motivo: 'Descuento de la factura',
+        },
+        LUNES,
+      );
+      await anular(tx, { tabla: 'gastos', registroId: depot.id, motivo: 'Se capturó dos veces' }, LUNES);
+      const despues = (await datosParaCompra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!.compras;
+      expect(despues.find((g) => g.id === ferguson.id)?.monto).toBe(2400);
+      expect(despues.find((g) => g.id === depot.id)).toBeUndefined();
+      const rastro = await tx<{ accion: string; motivo: string }[]>`
+        select accion, motivo from correcciones where registro_id in ${tx([ferguson.id, depot.id])}`;
+      expect(rastro).toHaveLength(2);
+      expect(rastro).toEqual(
+        expect.arrayContaining([
+          { accion: 'anular', motivo: 'Se capturó dos veces' },
+          { accion: 'editar', motivo: 'Descuento de la factura' },
+        ]),
+      );
+
+      // una obra entregada ya no se corrige
+      const entregada = (await datosParaCompra(tx, { obraId: OBRAS.a3Entregada }, LUNES))!;
+      expect(entregada.cerrada).toBe(true);
+      expect(entregada.compras.every((g) => !g.corregible)).toBe(true);
     }));
 
   it('rechaza lo que no cuadra; el PM no registra compras de la oficina', () =>

@@ -37,6 +37,25 @@ test('el dueño registra una compra con su recibo, y aparece en el día a día d
   ).toBeVisible();
 });
 
+test('el dueño corrige y anula una compra de la obra, con su motivo (D-068)', async ({ page }) => {
+  await entrar(page, 'dueno');
+  await page.goto(`/obras/${OBRAS.luis}/compra`);
+  await expect(page.getByRole('heading', { level: 2, name: es.compra.compras })).toBeVisible();
+  const compra = page.locator('li').filter({ hasText: 'Floor & Decor' });
+  await expect(compra).toContainText(es.gasto.deLaOficina);
+
+  await compra.getByRole('button', { name: es.gasto.corregir }).click();
+  await compra.getByRole('textbox', { name: es.gasto.monto }).fill('1300');
+  await compra.getByRole('textbox', { name: es.gasto.motivo }).fill('Descuento de la factura');
+  await compra.getByRole('button', { name: es.gasto.guardarCorreccion }).click();
+  await expect(compra).toContainText('$1,300.00');
+
+  await compra.getByRole('button', { name: es.gasto.anular }).click();
+  await compra.getByRole('textbox', { name: es.gasto.motivo }).fill('Se devolvió el material');
+  await compra.getByRole('button', { name: es.gasto.anularConfirmar }).click();
+  await expect(page.locator('li').filter({ hasText: 'Floor & Decor' })).toHaveCount(0);
+});
+
 test('el PM no registra compras de la oficina', async ({ page }) => {
   await entrar(page, 'pm');
   await page.goto(`/obras/${OBRAS.carlos}/compra`);

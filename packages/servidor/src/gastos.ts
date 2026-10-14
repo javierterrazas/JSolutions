@@ -131,7 +131,9 @@ export interface GastoDelPm {
   readonly partidaId: string | null;
   readonly conRecibo: boolean;
   readonly enRevision: boolean;
-  /** Todavía lo puede corregir o anular (48 h, D-044). */
+  /** Quién lo compró: el PM en obra o la oficina (D-063). */
+  readonly origen: 'pm' | 'oficina';
+  /** Todavía lo puede corregir o anular: el PM, 48 h (D-044); el dueño, mientras la obra no esté cerrada (D-068). */
   readonly corregible: boolean;
   readonly creadoEn: string;
 }
@@ -152,7 +154,16 @@ export interface DatosGasto {
 
 const HORAS_CORREGIBLE = 48;
 
-async function gastosDelPm(tx: Tx, obraId: string, ahora: Date): Promise<GastoDelPm[]> {
+/**
+ * Los gastos vigentes de una obra que el usuario ve (RLS: el PM, los suyos; el dueño, todos), lo más nuevo primero.
+ * Con `dueno`, son corregibles mientras la obra no esté cerrada; si no, 48 horas.
+ */
+async function gastosDelPm(
+  tx: Tx,
+  obraId: string,
+  ahora: Date,
+  dueno?: { obraCerrada: boolean },
+): Promise<GastoDelPm[]> {
   const filas = await tx<
     {
       id: string;
@@ -166,11 +177,12 @@ async function gastosDelPm(tx: Tx, obraId: string, ahora: Date): Promise<GastoDe
       partida_obra_id: string | null;
       recibo: boolean;
       revision: string | null;
+      origen: 'pm' | 'oficina';
       creado_en: Date;
     }[]
   >`
     select g.id, g.folio, to_char(g.dia, 'YYYY-MM-DD') as dia, o.folio as obra, g.monto, g.proveedor, g.descripcion,
-           g.categoria, g.partida_obra_id, g.revision, g.creado_en,
+           g.categoria, g.partida_obra_id, g.revision, g.origen, g.creado_en,
            exists (select 1 from fotos f where f.ref_tipo = 'gasto' and f.ref_id = g.id) as recibo
     from gastos g join obras o on o.id = g.obra_id
     where g.obra_id = ${obraId} and g.estado = 'vigente'
@@ -187,7 +199,10 @@ async function gastosDelPm(tx: Tx, obraId: string, ahora: Date): Promise<GastoDe
     partidaId: g.partida_obra_id,
     conRecibo: g.recibo,
     enRevision: g.revision === 'pendiente',
-    corregible: ahora.getTime() - g.creado_en.getTime() <= HORAS_CORREGIBLE * 3_600_000,
+    origen: g.origen,
+    corregible: dueno
+      ? !dueno.obraCerrada
+      : ahora.getTime() - g.creado_en.getTime() <= HORAS_CORREGIBLE * 3_600_000,
     creadoEn: g.creado_en.toISOString(),
   }));
 }
@@ -316,6 +331,10 @@ export type MetodoPago = (typeof METODOS_PAGO)[number];
 
 export interface DatosCompra {
   readonly obra: { id: string; folio: string; cliente: string };
+  /** Ya entregada o cerrada: no se registran compras ni se corrigen. */
+  readonly cerrada: boolean;
+  /** Las compras de la obra, de la oficina y del PM, lo más nuevo primero, para corregirlas o anularlas (D-068). */
+  readonly compras: readonly GastoDelPm[];
   /** Hoy en la zona de la empresa: el día de la compra si no se dice otro. */
   readonly hoy: Dia;
   /** Cada espacio con sus partidas (también las terminadas: a veces se paga después). */
@@ -335,8 +354,10 @@ export async function datosParaCompra(
   const { obraId } = validarEntrada(z.object({ obraId: uuid }), entrada);
   const s = await leerSesion(tx, ahora);
   exigirDueno(s);
-  const [obra] = await tx<{ id: string; folio: string; cliente: string }[]>`
-    select id, folio, cliente from obras where id = ${obraId}`;
+  const [obra] = await tx<{ id: string; folio: string; cliente: string; cerrada: boolean }[]>`
+    select id, folio, cliente,
+           estado = 'entregada' or exists (select 1 from obras_cerradas c where c.obra_id = o.id) as cerrada
+    from obras o where id = ${obraId}`;
   if (!obra) return null;
   const espacios = await tx<{ id: string; nombre: string }[]>`
     select id, nombre from espacios where obra_id = ${obraId} order by orden`;
@@ -344,7 +365,9 @@ export async function datosParaCompra(
     select id, espacio_id, nombre_es as es, nombre_en as en from partidas_obra
     where obra_id = ${obraId} and estado = 'activa' order by orden, nombre_es`;
   return {
-    obra,
+    obra: { id: obra.id, folio: obra.folio, cliente: obra.cliente },
+    cerrada: obra.cerrada,
+    compras: await gastosDelPm(tx, obraId, ahora, { obraCerrada: obra.cerrada }),
     hoy: s.hoy,
     espacios: espacios
       .map((e) => ({

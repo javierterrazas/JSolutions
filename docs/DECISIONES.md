@@ -1245,3 +1245,15 @@ Las fotos que ve son solo las que marquen el PM o el dueño. (Lo siguiente: que 
   contrato). Esto amplía D-066, que no le mostraba ningún monto.
 - **La base revisa** que la orden sea de la obra del enlace y siga por aprobar (`responder_cambio_cliente`), como
   con el resto del portal: sin sesión, el token es la prueba.
+
+## D-068 · Corregir y anular las compras de una obra, para el dueño
+
+**Decisión del dueño:** corregir o anular desde la app las compras ya registradas (antes solo el servidor lo
+permitía, sin pantalla).
+- **En "Registrar compra"** de cada obra (`/obras/[id]/compra`), abajo, "Compras de esta obra": las vigentes, de la
+  oficina y del PM (cada una dice de dónde vino), lo más nuevo primero, con su recibo o el aviso de que le falta.
+- **Corregir** el monto, la partida, la categoría, el proveedor y qué se compró; **anular** la compra (sale de todos
+  los cálculos, pero queda). Siempre con motivo, y cada cambio queda en `correcciones` (quién, qué, cuándo, antes,
+  después y por qué), como las correcciones del PM (`corregir`, `anular`).
+- **El dueño, sin el límite de 48 horas** del PM; solo mientras la obra no esté entregada ni cerrada. En una obra
+  cerrada, la pantalla ya no deja registrar compras ni corregirlas.
