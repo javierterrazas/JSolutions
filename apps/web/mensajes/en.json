@@ -16,7 +16,8 @@
     "cuadrilla": "Crew",
     "subcontratistas": "Subcontractors",
     "indicadores": "Metrics",
-    "miEmpresa": "My company"
+    "miEmpresa": "My company",
+    "plataforma": "Platform"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -214,7 +215,13 @@
     "orden_cancelada": "That order is canceled.",
     "orden_no_reprogramable": "That order is already approved, paid or canceled: it can no longer be rescheduled.",
     "logo_invalido": "The logo must be a PNG or JPG image.",
-    "logo_pesado": "The logo is over 1 MB: use a smaller image."
+    "logo_pesado": "The logo is over 1 MB: use a smaller image.",
+    "suscripcion_vencida": "The company's subscription expired: you can see everything, but changes aren't saved until it's renewed.",
+    "solo_plataforma": "Only the platform administrator can do this.",
+    "empresa_no_encontrada": "That company wasn't found.",
+    "sin_dueno": "That company doesn't have an active owner.",
+    "fecha_futura": "The date can't be after today.",
+    "vencimiento_antes_del_pago": "The paid-through date can't be before the payment."
   },
   "obras": {
     "titulo": "Jobs",
@@ -389,7 +396,8 @@
     "fotoRechazada": "A photo from the {obra} close for {dia} was not saved:",
     "entendido": "Got it",
     "gastoRechazado": "An expense for {obra} on {dia} was not saved:",
-    "avisoRechazado": "An alert for {obra} on {dia} was not saved:"
+    "avisoRechazado": "An alert for {obra} on {dia} was not saved:",
+    "soloLectura": "Your company's subscription expired: what you captured stays on this phone and is sent once it's renewed."
   },
   "catalogo": {
     "titulo": "Catalog",
@@ -1257,5 +1265,101 @@
     "guardando": "Saving…",
     "guardado": "Saved.",
     "instalarAyuda": "If someone already installed the app, to see the new icon: on iPhone, remove it from the home screen and add it again; on Android it updates by itself, though it can take a while."
+  },
+  "suscripcion": {
+    "prueba": "You're on the trial until {dia}.",
+    "pruebaPorVencer": "Your trial ends on {dia}. Contact J Solutions to keep using the app.",
+    "porVencer": "Your subscription expires on {dia}. Contact J Solutions to renew it.",
+    "gracia": "Your subscription expired on {dia}. You have until {hasta} to renew it; after that the app becomes read-only.",
+    "soloLectura": "Your subscription expired on {dia}. The app is read-only: you can see and download everything, but can't save changes. Contact J Solutions to renew it.",
+    "soloLecturaPm": "The app is read-only: changes can't be saved. Let the administrator know."
+  },
+  "suspendida": {
+    "titulo": "Account suspended",
+    "texto": "{empresa}'s account is suspended, so for now no one from the company can sign in. The administrator should contact J Solutions.",
+    "datos": "Your data is still saved: nothing was deleted."
+  },
+  "plataforma": {
+    "titulo": "Platform",
+    "volver": "Back to home",
+    "volverLista": "Back to companies",
+    "empresas": "Companies",
+    "alMes": "Monthly revenue",
+    "nueva": "New company",
+    "nuevaAyuda": "Set up the company with its owner. When done, you'll get the link for the owner to sign in from their phone (valid 7 days, once).",
+    "empresa": "Company name",
+    "ciudad": "City",
+    "ciudadEjemplo": "Austin, TX",
+    "dueno": "Owner's name",
+    "correo": "Owner's email",
+    "correoAyuda": "Nothing is sent to it: it identifies them.",
+    "idioma": "Language",
+    "suscripcion": "Subscription",
+    "plan": "Plan",
+    "planes": {
+      "basico": "Basic",
+      "pro": "Pro",
+      "empresa": "Business"
+    },
+    "ciclo": "Billing",
+    "ciclos": {
+      "mensual": "monthly",
+      "anual": "yearly"
+    },
+    "precio": "Price per billing (USD)",
+    "venceEl": "Paid through",
+    "venceElAyuda": "Empty: never expires. The owner is warned 7 days before; after it expires there are 7 grace days, then the app becomes read-only.",
+    "enPrueba": "On trial",
+    "darDeAlta": "Set up",
+    "altaLista": "Company set up.",
+    "verCuenta": "See its account",
+    "estados": {
+      "activa": "Active",
+      "prueba": "Trial",
+      "por_vencer": "Expiring",
+      "gracia": "Expired (grace)",
+      "solo_lectura": "Read-only",
+      "suspendida": "Suspended"
+    },
+    "planPrecio": "{plan} · {precio} {ciclo}",
+    "vence": "Paid through {dia}",
+    "sinVencimiento": "Never expires",
+    "uso": "{pms, plural, one {# PM} other {# PMs}} · {obras, plural, one {# active job} other {# active jobs}}",
+    "usoLinea": "{uso} · {ultimo}",
+    "ultimoUso": "last used {dia}",
+    "nuncaEntro": "no one has signed in",
+    "obrasTotal": "{n, plural, one {# job in total} other {# jobs in total}}",
+    "duenoCorreo": "Owner: {dueno} ({correo})",
+    "creada": "Set up on {dia}",
+    "registrarPago": "Record a payment",
+    "monto": "Amount (USD)",
+    "pagadoEl": "Payment date",
+    "metodo": "Paid with",
+    "metodos": {
+      "zelle": "Zelle",
+      "transferencia": "Bank transfer",
+      "efectivo": "Cash",
+      "tarjeta": "Card",
+      "otro": "Other"
+    },
+    "referencia": "Reference",
+    "cubreHasta": "Covers through",
+    "cubreHastaAyuda": "Already calculated with its billing, from its due date (or from today if it already expired). You can change it.",
+    "pagoRegistrado": "Payment recorded.",
+    "notas": "Notes",
+    "guardar": "Save",
+    "guardado": "Saved.",
+    "pagos": "Payments",
+    "sinPagos": "No payments yet.",
+    "metodoReferencia": "{metodo} · {referencia}",
+    "cubrio": "Covered through {dia}",
+    "acceso": "Access",
+    "reinvitar": "New invitation for the owner",
+    "reinvitarAyuda": "If the owner can't sign in. Cancels the invitations they didn't use.",
+    "suspender": "Suspend the company",
+    "suspenderSeguro": "No one from the company will be able to sign in until you reactivate it. Its data isn't deleted.",
+    "suspenderSi": "Yes, suspend",
+    "reactivar": "Reactivate the company",
+    "cancelar": "Cancel"
   }
 }

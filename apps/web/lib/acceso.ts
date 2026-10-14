@@ -3,7 +3,15 @@
 // las tres en una sola transacción (estado_dispositivo), y también que el miembro y su empresa sigan activos.
 import 'server-only';
 import { esErrorDeNegocio } from '@ijm/core';
-import { enNombreDe, estadoDispositivo, quienSoy, type Llave, type Tx, type Yo } from '@ijm/servidor';
+import {
+  enNombreDe,
+  esSuscripcionVencida,
+  estadoDispositivo,
+  quienSoy,
+  type Llave,
+  type Tx,
+  type Yo,
+} from '@ijm/servidor';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
@@ -109,6 +117,8 @@ export async function comoMiembro<T>(
     return { ok: true, datos: await enNombreDe(servidor(), { userId: a.userId }, (tx) => fn(tx, a)) };
   } catch (e) {
     if (esErrorDeNegocio(e)) return { ok: false, codigo: e.codigo, ...(e.datos ? { datos: e.datos } : {}) };
+    // la empresa está en solo lectura: la base no guardó nada (D-080)
+    if (esSuscripcionVencida(e)) return { ok: false, codigo: 'suscripcion_vencida' };
     throw e;
   }
 }

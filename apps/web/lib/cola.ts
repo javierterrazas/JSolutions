@@ -90,8 +90,11 @@ export interface Almacen {
   rechazar(r: Rechazo): Promise<void>;
 }
 
-/** Cómo terminó una pasada: se vació, se quedó esperando la señal, o espera a que el PM vuelva a entrar. */
-export type FinDeCola = 'vacia' | 'sin_red' | 'sin_sesion';
+/**
+ * Cómo terminó una pasada: se vació, se quedó esperando la señal, espera a que el PM vuelva a entrar, o espera a que
+ * la empresa renueve su suscripción (D-080).
+ */
+export type FinDeCola = 'vacia' | 'sin_red' | 'sin_sesion' | 'solo_lectura';
 
 /**
  * Cuánto se espera al servidor (D-056). Con señal muy mala una petición puede no terminar nunca: pasado este tiempo
@@ -120,6 +123,8 @@ export function conLimite<T>(envio: Promise<T>, ms = ESPERA_ENVIO_MS): Promise<T
 
 /** El código con que el servidor dice que la sesión ya no sirve: el PM tiene que volver a entrar. */
 export const SIN_SESION = 'sesion';
+/** El código con que el servidor dice que la empresa está en solo lectura: lo capturado espera, no se pierde. */
+export const SOLO_LECTURA = 'suscripcion_vencida';
 
 export async function procesarCola(
   almacen: Almacen,
@@ -148,6 +153,7 @@ export async function procesarCola(
       continue;
     }
     if (r.codigo === SIN_SESION) return 'sin_sesion';
+    if (r.codigo === SOLO_LECTURA) return 'solo_lectura';
     // negocio: sale, con sus fotos si es un cierre o un gasto, y se le avisa al PM
     const fotos =
       e.tipo !== 'foto'

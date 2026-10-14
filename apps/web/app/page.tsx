@@ -2,14 +2,17 @@ import {
   avisosAbiertos,
   congelarPlanSemanal,
   copiaSinSenal,
+  esAdminPlataforma,
   gastosEnRevision,
   inicioDelPm,
+  miSuscripcion,
   obrasEnGarantia,
 } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
 import { salir } from './acciones/entrar';
+import { AvisoSuscripcion } from './aviso-suscripcion';
 import { Marco, estilos } from './componentes/marco';
 import { MensajeError } from './componentes/mensaje-error';
 import { EstadoCola } from './estado-cola';
@@ -37,8 +40,16 @@ export default async function Inicio() {
     await comoMiembro((tx) => congelarPlanSemanal(tx), acceso).catch((e: unknown) =>
       console.error('No se pudo congelar el plan de la semana', e),
     );
+  // la suscripción de la empresa, para su aviso; y si quien entra administra la plataforma (D-080)
+  const cuenta = await comoMiembro(
+    async (tx) => ({ suscripcion: await miSuscripcion(tx), plataforma: await esAdminPlataforma(tx) }),
+    acceso,
+  );
   return (
     <Marco titulo={t('hola', { nombre: yo.nombre })}>
+      {cuenta.ok && cuenta.datos.suscripcion ? (
+        <AvisoSuscripcion suscripcion={cuenta.datos.suscripcion} esPm={yo.rol === 'pm'} />
+      ) : null}
       {copia?.ok && copia.datos ? <GuardarCopia copia={copia.datos} /> : null}
       {yo.rol === 'pm' ? <EstadoCola /> : null}
       {pm?.ok ? <InicioDelPm datos={pm.datos} /> : null}
@@ -94,6 +105,11 @@ export default async function Inicio() {
             {t('miEmpresa')}
           </Link>
         </>
+      ) : null}
+      {cuenta.ok && cuenta.datos.plataforma ? (
+        <Link href="/plataforma" className={`${estilos.botonSecundario} flex items-center justify-center`}>
+          {t('plataforma')}
+        </Link>
       ) : null}
       <form action={salir} className="mt-auto flex flex-col gap-1">
         <button type="submit" className={estilos.botonSecundario}>

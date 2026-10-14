@@ -1407,3 +1407,33 @@ siguiente se compara contra lo que el PM marcó como terminado.
 - **Sin migración:** la tabla y su RLS (el dueño lee y crea) ya estaban.
 - **De paso:** los textos que ve el PM dicen "administrador" en vez de "dueño" (el PIN, la invitación, los errores,
   los gastos y los avisos). El rol "Dueño" del equipo se queda.
+
+## D-080 · La plataforma: suscripciones, pagos y solo lectura
+
+**Decisión de quien desarrolla la plataforma:** gestionar desde la app las empresas que la usan, su plan, su precio y
+su vencimiento, cobrando a mano (Zelle, transferencia) hasta que llegue Stripe (fase 4).
+- **Quien administra la plataforma** está en `plataforma.administradores` (fuera de `public`: no es de ninguna
+  empresa), y se da de alta con `scripts/admin-plataforma.ts`. Entra con su celular y su PIN como cualquier miembro
+  (puede ser el dueño de una empresa) y en su inicio le aparece **"Plataforma"** (`/plataforma`).
+- **Lo que ve de cada empresa** (`plataforma_empresas`): su plan, su precio, su ciclo, si está a prueba, hasta cuándo
+  está pagada, su estado, su dueño y su correo, sus pagos, cuántos PMs activos y obras en curso tiene y cuándo entró
+  alguien por última vez. **No ve sus obras, sus clientes ni su dinero**: todo pasa por funciones de la base que
+  devuelven solo eso, y RLS no le abre nada de otra empresa.
+- **Lo que hace:** dar de alta una empresa con su dueño y su suscripción (le da el enlace para el dueño, como el
+  script `alta-empresa.mjs`), cambiar la suscripción, anotar un pago (ya trae el monto y hasta cuándo cubre: desde el
+  vencimiento si no ha pasado, o desde hoy; se puede cambiar), reinvitar al dueño (como `invitar-de-nuevo.ts`) y
+  suspender o reactivar la empresa. Lo que hace en otra empresa no lleva su identidad de miembro
+  (`plataforma.soltar_identidad`), para que los triggers no lo tomen por autor.
+- **El estado** lo calcula la base (`estado_suscripcion`), con el día de la empresa: sin fecha, **activa** (las
+  empresas que ya existían); **a prueba**; **por vencer** los 7 días antes; **en gracia** los 7 días después, con todo
+  funcionando; **solo lectura** después; **suspendida** (`empresas.activa = false`).
+- **Solo lectura:** un trigger por sentencia en cada tabla de la empresa (`exigir_suscripcion_vigente`; las nuevas lo
+  reciben en `preparar_tabla`) rechaza lo que escribe el servidor a nombre de un miembro, con `suscripcion_vencida`.
+  Se ve y se descarga todo; se sigue entrando con el PIN (son funciones de la base). La cola del PM no pierde lo
+  capturado: se detiene y lo envía cuando se renueve.
+- **Los avisos, en el inicio:** al dueño, a prueba, por vencer, en gracia (hasta cuándo) y en solo lectura; al PM, solo
+  en solo lectura, para que avise al administrador. **Suspendida,** nadie entra y se les dice por qué (`/suspendida`,
+  sin borrar la copia del celular).
+- **Nada se borra** al vencer ni al suspender.
+- **Pendiente (fase 4):** Stripe para el cobro con tarjeta y automático; el registro en línea con prueba.
+

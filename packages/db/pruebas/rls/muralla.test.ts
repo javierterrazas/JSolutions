@@ -24,7 +24,8 @@ afterAll(() => base.end());
 // 💲 D-002
 const TABLAS_DINERO = [
   'tarifas_trabajador', 'obras_finanzas', 'presupuesto_etapas', 'ordenes_trabajo_precios', 'pagos_sub',
-  'ordenes_cambio_montos', 'no_calidad', 'cobros', 'obras_cerradas', 'historico_etapas',
+  'ordenes_cambio_montos', 'no_calidad', 'cobros', 'obras_cerradas', 'historico_etapas', 'suscripciones',
+  'pagos_plataforma',
 ]; // prettier-ignore
 
 // Tablas que el PM no lee completas: las ve por una vista, o no las ve.

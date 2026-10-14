@@ -13,3 +13,4 @@ export * from './calidad';
 export * from './indicadores';
 export * from './correcciones';
 export * from './acceso';
+export * from './suscripcion';
