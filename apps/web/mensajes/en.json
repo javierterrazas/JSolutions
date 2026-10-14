@@ -14,7 +14,8 @@
     "avisosPorContestar": "{n, plural, one {# alert to answer} other {# alerts to answer}}",
     "terminadas": "Finished jobs ({n})",
     "cuadrilla": "Crew",
-    "subcontratistas": "Subcontractors"
+    "subcontratistas": "Subcontractors",
+    "indicadores": "Metrics"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -1145,6 +1146,71 @@
       "sin_aprobar": "The PM has not approved the work yet. The rule is that subs get paid against approved work.",
       "papeles": "This sub does not have their paperwork in order (insurance or license). Paying them like this leaves you exposed.",
       "sobrepago": "With this payment you would be at {total} against an order of {precio}. If it is extra work, it goes in a change order."
+    }
+  },
+  "indicadores": {
+    "titulo": "Metrics",
+    "volver": "Back to home",
+    "contexto": "{enCurso, plural, one {# job in progress} other {# jobs in progress}} · {entregadas, plural, one {# delivered} other {# delivered}}",
+    "principales": "The Monday six",
+    "sinDatos": "No data yet",
+    "metaMayor": "Goal: {meta} or more",
+    "metaMenor": "Goal: {meta} or less",
+    "extraGarantias": "Warranty cost: {costo}",
+    "extraDias": "{n, plural, one {# day lost} other {# days lost}}",
+    "semaforos": {
+      "verde": "On goal",
+      "ambar": "Close to goal",
+      "rojo": "Far from goal",
+      "info": "For reference"
+    },
+    "procesos": {
+      "P3": "Daily control",
+      "P4": "Change orders and costs",
+      "P5": "Quality",
+      "P6": "Handover and warranty"
+    },
+    "nombres": {
+      "tasa_cierre_dia": "Days closed by the PM (business days)",
+      "cumplimiento_semanal": "Weekly plan completion",
+      "avisos_fuera_de_sla": "Alerts unanswered after {horas} h",
+      "horas_respuesta_avisos": "Average hours to answer alerts",
+      "cargos_sin_recibo": "PM expenses without receipt after {horas} h",
+      "presentacion_subs": "Subs who show up on the agreed day",
+      "pagos_sin_aprobacion": "Sub payments without work approved by the PM",
+      "saldo_subcontratistas": "Balance owed to subcontractors",
+      "inspecciones_con_defectos": "Inspections with defects",
+      "pruebas_agua_con_fuga": "Flood tests with leaks",
+      "punch_por_obra": "Handover items per job",
+      "punch_en_7_dias": "Handover items closed on time",
+      "garantias_por_obra": "Warranty claims per delivered job",
+      "resenas": "Reviews received",
+      "oc_fuera_de_sla": "Change orders unanswered after {horas} h",
+      "oc_autorizadas": "Change orders approved",
+      "margen_oc": "Average change order margin",
+      "oc_sobre_contratos": "Change orders over contracts",
+      "no_calidad_sobre_contratos": "Cost of poor quality over contracts"
+    },
+    "explicaciones": {
+      "tasa_cierre_dia": "The integrity of your data. If it drops, everything else is fiction.",
+      "cumplimiento_semanal": "Of what was planned to finish last week, how much was finished.",
+      "avisos_fuera_de_sla": "If you fail here, the PM stops reporting.",
+      "horas_respuesta_avisos": "Your commitment to the PM, measured.",
+      "cargos_sin_recibo": "Field financial control.",
+      "presentacion_subs": "The real quality of your sub bench.",
+      "pagos_sin_aprobacion": "If you pay without approval, quality control falls apart.",
+      "saldo_subcontratistas": "What you already owe even if it has not left your account.",
+      "inspecciones_con_defectos": "Found in time, before being covered. It is good that this exists.",
+      "pruebas_agua_con_fuga": "Each one avoided is the most expensive warranty claim there is.",
+      "punch_por_obra": "Above the goal: the pre-handover inspection is not being done.",
+      "punch_en_7_dias": "Closing late is what ruins a handover that went well.",
+      "garantias_por_obra": "What slipped through. It mirrors quality.",
+      "resenas": "Your client acquisition cost drops directly with this.",
+      "oc_fuera_de_sla": "Job days you are losing while waiting.",
+      "oc_autorizadas": "Below the goal: you quote high or communicate poorly.",
+      "margen_oc": "If it is lower than the contract, you are giving work away.",
+      "oc_sobre_contratos": "Above the goal, the problem is in your estimate.",
+      "no_calidad_sobre_contratos": "The metric that hurts and almost nobody measures."
     }
   }
 }

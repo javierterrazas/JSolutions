@@ -1,0 +1,132 @@
+// Los indicadores de la empresa, para el dueño (D-075; legacy: el tablero de kpis_): arriba los seis del lunes, lo
+// primero que hay que ver; abajo los 19 por proceso, cada uno con su valor, su meta, su semáforo y qué revela. Lleva
+// dinero: solo el dueño o el administrador.
+import type { Indicador } from '@ijm/core';
+import { indicadoresDeLaEmpresa } from '@ijm/servidor';
+import { getLocale, getTranslations } from 'next-intl/server';
+import type { ReactNode } from 'react';
+import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { formatoDinero } from '@/lib/dinero';
+import { Marco, estilos } from '../componentes/marco';
+import { MensajeError } from '../componentes/mensaje-error';
+
+const COLOR: Record<Indicador['semaforo'], { borde: string; punto: string; texto: string }> = {
+  verde: { borde: 'border-emerald-300', punto: 'bg-emerald-600', texto: 'text-emerald-800' },
+  ambar: { borde: 'border-amber-300', punto: 'bg-amber-500', texto: 'text-amber-800' },
+  rojo: { borde: 'border-red-300', punto: 'bg-red-600', texto: 'text-red-800' },
+  info: { borde: 'border-slate-200', punto: 'bg-slate-400', texto: 'text-slate-800' },
+};
+const PROCESOS = ['P3', 'P4', 'P5', 'P6'] as const;
+
+function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="text-xl font-bold text-marca">{titulo}</h2>
+      {children}
+    </section>
+  );
+}
+
+export default async function Indicadores() {
+  const acceso = await exigirDueno();
+  const r = await comoMiembro((tx) => indicadoresDeLaEmpresa(tx), acceso);
+  const [t, idioma] = await Promise.all([getTranslations('indicadores'), getLocale()]);
+  const dinero = formatoDinero(idioma);
+  const numero = (n: number, decimales = 0) =>
+    new Intl.NumberFormat(idioma === 'en' ? 'en-US' : 'es-MX', {
+      maximumFractionDigits: decimales,
+      minimumFractionDigits: decimales,
+    }).format(n);
+  const valor = (i: Indicador, x: number) =>
+    i.formato === 'pct'
+      ? `${numero(x * 100)}%`
+      : i.formato === 'dinero'
+        ? dinero.format(x)
+        : i.formato === 'num1'
+          ? numero(x, 1)
+          : numero(x);
+  const meta = (i: Indicador) =>
+    i.direccion === 'info'
+      ? null
+      : t(i.direccion === 'mayor' ? 'metaMayor' : 'metaMenor', { meta: valor(i, i.meta) });
+  const nombre = (i: Indicador) =>
+    t(
+      `nombres.${i.clave}` as never,
+      {
+        horas: numero(i.datos?.slaHoras ?? i.datos?.horas ?? 0),
+      } as never,
+    );
+  const extra = (i: Indicador) => {
+    if (!i.datos) return null;
+    if (i.clave === 'garantias_por_obra' && i.datos.costo)
+      return t('extraGarantias', { costo: dinero.format(i.datos.costo) });
+    if (i.clave === 'no_calidad_sobre_contratos' && i.datos.diasPerdidos)
+      return t('extraDias', { n: i.datos.diasPerdidos });
+    return null;
+  };
+
+  if (!r.ok)
+    return (
+      <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
+        <MensajeError problema={r} />
+      </Marco>
+    );
+  const d = r.datos;
+  const principales = d.indicadores.filter((i) => i.principal);
+
+  return (
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
+      <p className="text-sm text-slate-700">
+        {t('contexto', { enCurso: d.obrasEnCurso, entregadas: d.obrasEntregadas })}
+      </p>
+
+      <Seccion titulo={t('principales')}>
+        <ul className="grid grid-cols-2 gap-2">
+          {principales.map((i) => (
+            <li
+              key={i.clave}
+              className={`flex flex-col gap-1 rounded-2xl border-2 bg-white p-3 ${COLOR[i.semaforo].borde}`}
+            >
+              <span className="text-sm leading-tight text-slate-700">{nombre(i)}</span>
+              <span className={`text-2xl font-bold ${COLOR[i.semaforo].texto}`}>
+                {i.sinDatos ? '—' : valor(i, i.valor)}
+              </span>
+              {meta(i) ? <span className="text-xs text-slate-600">{meta(i)}</span> : null}
+            </li>
+          ))}
+        </ul>
+      </Seccion>
+
+      {PROCESOS.map((p) => (
+        <Seccion key={p} titulo={t(`procesos.${p}`)}>
+          <ul className="flex flex-col gap-2">
+            {d.indicadores
+              .filter((i) => i.proceso === p)
+              .map((i) => (
+                <li key={i.clave} className={`${estilos.tarjeta} flex flex-col gap-1`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="flex items-start gap-2 font-semibold">
+                      <span
+                        aria-hidden="true"
+                        className={`mt-1.5 size-3 shrink-0 rounded-full ${COLOR[i.semaforo].punto}`}
+                      />
+                      {nombre(i)}
+                    </span>
+                    <span className={`shrink-0 text-lg font-bold ${COLOR[i.semaforo].texto}`}>
+                      {i.sinDatos ? t('sinDatos') : valor(i, i.valor)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-700">{t(`explicaciones.${i.clave}` as never)}</p>
+                  <p className="flex flex-wrap gap-x-3 text-xs text-slate-600">
+                    {meta(i) ? <span>{meta(i)}</span> : null}
+                    <span>{t(`semaforos.${i.semaforo}`)}</span>
+                    {extra(i) ? <span>{extra(i)}</span> : null}
+                  </p>
+                </li>
+              ))}
+          </ul>
+        </Seccion>
+      ))}
+    </Marco>
+  );
+}

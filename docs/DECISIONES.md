@@ -1327,3 +1327,18 @@ Desde el seguimiento de cada obra, "Subcontratos y pagos a subs" (`/obras/[id]/s
 - **Anular un pago** con su motivo (`anular`); la orden regresa de pagada a donde estaba: aprobada, confirmada o
   emitida (antes regresaba siempre a aprobada, aunque el PM no la hubiera aprobado).
 - **Cancelar una orden** sin pagos: deja de contar como comprometido. Con pagos no se cancela (se ajusta el alcance).
+
+## D-075 · Los indicadores de la empresa
+
+**Decisión del dueño:** ver los indicadores del negocio en la app (legacy: el tablero de `kpis_`). Desde su inicio,
+"Indicadores" (`/indicadores`).
+- **Arriba, los seis del lunes** (D-034): días cerrados por el PM, avisos y órdenes de cambio sin respuesta a tiempo,
+  gastos del PM sin recibo, saldo con los subcontratistas y costo de no calidad sobre contratos; cada uno con su
+  valor, su meta y su color.
+- **Abajo, los 19 por proceso** (control diario, órdenes de cambio y costos, calidad, entrega y garantía), cada uno con
+  su valor, su meta, su semáforo (en la meta, cerca o lejos) y qué revela, con las palabras del legacy.
+- **Las reglas son las de `calcularIndicadores`** (paridad con el legacy, D-034); `indicadoresDeLaEmpresa` lee de la
+  base lo que miden, de toda la empresa, con los plazos de la configuración y las metas que la empresa haya cambiado
+  (`metas_indicadores`). Solo el dueño o el administrador.
+- **El cumplimiento del plan de la semana** sale "sin datos" mientras nadie congele el plan del lunes
+  (`plan_semanal`): la app todavía no lo hace.
