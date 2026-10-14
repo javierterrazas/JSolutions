@@ -546,7 +546,9 @@
     "cancelar": "Cancelar",
     "guardarCorreccion": "Guardar la corrección",
     "anularAyuda": "El gasto queda registrado, pero sale de todos los cálculos.",
-    "anularConfirmar": "Anular el gasto"
+    "anularConfirmar": "Anular el gasto",
+    "deLaOficina": "Compra de la oficina",
+    "delPm": "Gasto del PM"
   },
   "revisionGastos": {
     "titulo": "Compras por revisar",
@@ -846,7 +848,11 @@
       "zelle": "Zelle",
       "efectivo": "Efectivo",
       "tarjeta_empresa": "Tarjeta de la empresa"
-    }
+    },
+    "cerrada": "La obra ya está cerrada: no se registran ni corrigen compras.",
+    "compras": "Compras de esta obra",
+    "comprasAyuda": "Las de la oficina y las del PM. Corrige o anula con su motivo: nada se borra, queda el registro de qué cambió y por qué.",
+    "sinCompras": "Esta obra todavía no tiene compras."
   },
   "portal": {
     "noDisponible": "Enlace no disponible",

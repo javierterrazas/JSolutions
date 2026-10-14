@@ -546,7 +546,9 @@
     "cancelar": "Cancel",
     "guardarCorreccion": "Save the correction",
     "anularAyuda": "The expense stays recorded, but it is left out of all calculations.",
-    "anularConfirmar": "Void the expense"
+    "anularConfirmar": "Void the expense",
+    "deLaOficina": "Office purchase",
+    "delPm": "PM expense"
   },
   "revisionGastos": {
     "titulo": "Purchases to review",
@@ -846,7 +848,11 @@
       "zelle": "Zelle",
       "efectivo": "Cash",
       "tarjeta_empresa": "Company card"
-    }
+    },
+    "cerrada": "The job is already closed: no purchases are recorded or corrected.",
+    "compras": "Purchases for this job",
+    "comprasAyuda": "From the office and from the PM. Correct or void with a reason: nothing is deleted, the record of what changed and why stays.",
+    "sinCompras": "This job has no purchases yet."
   },
   "portal": {
     "noDisponible": "Link not available",

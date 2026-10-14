@@ -16,10 +16,13 @@ export function GastoCapturado({
   obraId,
   gasto: g,
   espacios,
+  dueno = false,
 }: {
   obraId: string;
   gasto: GastoDelPm;
   espacios: DatosFormularioGasto['espacios'];
+  /** En la pantalla de compras del dueño (D-068): dice de dónde vino cada gasto. */
+  dueno?: boolean;
 }) {
   const t = useTranslations('gasto');
   const formato = useFormatter();
@@ -59,6 +62,11 @@ export function GastoCapturado({
           descripcion: g.descripcion ?? '',
         })}
       </p>
+      {dueno ? (
+        <p className="text-sm font-medium text-slate-700">
+          {t(g.origen === 'oficina' ? 'deLaOficina' : 'delPm')}
+        </p>
+      ) : null}
       {g.enRevision ? <p className="text-sm text-amber-800">{t('pendienteRevision')}</p> : null}
 
       {g.conRecibo ? null : (
