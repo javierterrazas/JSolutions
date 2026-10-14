@@ -67,6 +67,7 @@ test('las pantallas del dueño tampoco chocan con el CSP', async ({ page }) => {
     '/cuadrilla',
     '/subcontratistas',
     '/indicadores',
+    '/empresa',
     '/catalogo',
     '/gastos',
     '/avisos',

@@ -77,6 +77,9 @@ export default async function Inicio() {
           <Link href="/catalogo" className={`${estilos.botonSecundario} flex items-center justify-center`}>
             {t('catalogo')}
           </Link>
+          <Link href="/empresa" className={`${estilos.botonSecundario} flex items-center justify-center`}>
+            {t('miEmpresa')}
+          </Link>
         </>
       ) : null}
       <form action={salir} className="mt-auto flex flex-col gap-1">

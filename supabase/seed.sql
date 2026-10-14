@@ -293,6 +293,11 @@ insert into public.enlaces_cliente (empresa_id, obra_id, token_hash) values
    public.hash_secreto('enlace-de-prueba-cliente-perez-2026'));
 update public.fotos set para_cliente = true where ref_tipo = 'bitacora';
 
+-- La marca de cada empresa (D-078): IJM con su color y sin logo; la otra, con el color por omisión.
+insert into public.marcas_empresa (empresa_id, color) values
+  ('e000000a-0000-4000-8000-000000000000', '#1d3557'),
+  ('e000000b-0000-4000-8000-000000000000', '#7c2d12');
+
 -- Feriados (D-028): IJM descansa Thanksgiving y trabaja el 24 de diciembre; la otra empresa descansa Thanksgiving.
 insert into public.feriados (empresa_id, dia, nombre_es, nombre_en, se_trabaja) values
   ('e000000a-0000-4000-8000-000000000000', '2026-11-26', 'Día de Acción de Gracias', 'Thanksgiving', false),

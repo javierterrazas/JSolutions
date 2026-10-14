@@ -24,6 +24,7 @@ export function Marco({
   volver?: Volver;
   children: ReactNode;
 }) {
+  const empresa = empresaDeLaPeticion();
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))]">
       <header className="relative flex flex-col gap-3">
@@ -47,8 +48,16 @@ export function Marco({
         ) : null}
         {/* sin el botón de volver, el título comparte renglón con el idioma: le deja su lugar */}
         <div className={`flex flex-col gap-1 ${volver ? '' : 'pr-24'}`}>
-          <p className="text-sm font-semibold tracking-wide text-marca/80 uppercase">
-            {empresaDeLaPeticion() ?? NOMBRE_APP}
+          <p className="flex items-center gap-2 text-sm font-semibold tracking-wide text-marca/80 uppercase">
+            {empresa?.id && empresa.conLogo ? (
+              // eslint-disable-next-line @next/next/no-img-element -- el logo de la empresa (D-078), servido por la app
+              <img
+                src={`/marca/${empresa.id}/logo?v=${empresa.version ?? 1}`}
+                alt=""
+                className="h-8 w-auto max-w-24 object-contain"
+              />
+            ) : null}
+            {empresa?.nombre ?? NOMBRE_APP}
           </p>
           <h1 className="text-2xl font-bold text-marca">{titulo}</h1>
           {subtitulo ? <p className="text-lg font-medium text-slate-800">{subtitulo}</p> : null}

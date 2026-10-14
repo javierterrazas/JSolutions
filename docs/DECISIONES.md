@@ -1367,3 +1367,24 @@ etapa, aproximadamente; y que el costo de la cuadrilla por etapa se calcule igua
   celular hace zoom) y muestra sus horas por etapa, aproximadas (≈).
 - **El presupuesto por etapa** (D-062) usa el mismo reparto para el costo de la cuadrilla. Las horas, los días y el
   costo total de cada trabajador no cambian; cambia a qué etapa se cargan.
+
+## D-078 · La marca de cada empresa: su logo y su ícono
+
+**Decisión del dueño:** que la app de cada empresa lleve su logo: el ícono en el teléfono, el nombre de la app
+instalada, y el logo arriba de cada pantalla y en el portal del cliente.
+- **"Mi empresa"** (`/empresa`, en el inicio del dueño): subir el logo (PNG o JPG de hasta 1 MB; se reconoce por sus
+  bytes, no por el nombre), quitarlo, elegir el color de la empresa y el fondo del ícono (blanco, para logos oscuros,
+  o el color de la empresa), con la vista previa del ícono. Se guarda en `marcas_empresa`; cada cambio sube su
+  versión, que va en las direcciones de los íconos para que el teléfono pida los nuevos.
+- **El ícono** (`/marca/{empresa}/icono/{32|180|192|512|maskable}`): el logo sobre el fondo elegido o, sin logo, las
+  iniciales de la empresa ("IJM Construction" → IJM) en blanco sobre su color. **El manifiesto**
+  (`/marca/{empresa}/manifest`): el nombre de la empresa, su color y esos íconos. El teléfono los pide sin las cookies
+  de la app, así que van por el id de la empresa y se leen sin sesión (`marca_publica`): solo nombre, color y logo.
+- **Quien entra instala la app de su empresa:** el layout pone el manifiesto, los íconos, el nombre y el color de la
+  barra de la empresa de la sesión (la misma revisión de acceso de la página, una consulta por petición). Antes de
+  entrar (la invitación), J Solutions en `/manifest.webmanifest`, que el service worker sigue guardando para abrir sin
+  señal.
+- **El logo, arriba de cada pantalla** junto al nombre de la empresa (D-065), y **en el portal del cliente** (D-066).
+- **Al cambiar el logo:** quien ya instaló la app en iPhone tiene que quitarla y volver a agregarla para ver el ícono
+  nuevo; en Android se actualiza sola, aunque puede tardar. La dirección de la app es la misma para todas las
+  empresas.

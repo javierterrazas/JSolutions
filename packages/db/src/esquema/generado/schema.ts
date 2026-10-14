@@ -1,6 +1,8 @@
 // ARCHIVO GENERADO por `pnpm db:esquema` desde supabase/migrations/. No lo edites: cambia la migración y
 // vuelve a generarlo.
 import { authUsers } from 'drizzle-orm/supabase';
+import { customType } from 'drizzle-orm/pg-core';
+const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
 import {
   pgTable,
   index,
@@ -14,8 +16,8 @@ import {
   boolean,
   timestamp,
   uniqueIndex,
-  numeric,
   date,
+  numeric,
   smallint,
   primaryKey,
   pgView,
@@ -171,80 +173,6 @@ export const hitos_calidad = pgTable(
   ],
 );
 
-export const miembros = pgTable(
-  'miembros',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    user_id: uuid().notNull(),
-    rol: rol_miembro().notNull(),
-    nombre: text().notNull(),
-    telefono: text(),
-    idioma: idioma().default('es').notNull(),
-    activo: boolean().default(true).notNull(),
-    tarjeta_ultimos4: text(),
-    correo_avisos: text(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('miembros_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [table.id, table.empresa_id],
-      name: 'miembros_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id],
-      foreignColumns: [empresas.id],
-      name: 'miembros_empresa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.user_id],
-      foreignColumns: [authUsers.id],
-      name: 'miembros_user_id_fkey',
-    }),
-    unique('miembros_empresa_id_id_key').on(table.id, table.empresa_id),
-    unique('miembros_user_id_key').on(table.user_id),
-    pgPolicy('cada quien lee su miembro', {
-      as: 'permissive',
-      for: 'select',
-      to: ['authenticated'],
-      using: sql`(id = ( SELECT miembro_actual() AS miembro_actual))`,
-    }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('miembros_correo_avisos_check', sql`correo_avisos ~~ '%_@_%'::text`),
-    check('miembros_nombre_check', sql`btrim(nombre) <> ''::text`),
-    check('miembros_tarjeta_ultimos4_check', sql`tarjeta_ultimos4 ~ '^[0-9]{4}$'::text`),
-  ],
-);
-
-export const empresas = pgTable(
-  'empresas',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    nombre: text().notNull(),
-    ciudad: text(),
-    zona_horaria: text().default('America/Chicago').notNull(),
-    idioma: idioma().default('es').notNull(),
-    activa: boolean().default(true).notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    pgPolicy('dueno edita su empresa', {
-      as: 'permissive',
-      for: 'update',
-      to: ['servidor_app'],
-      using: sql`((id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-      withCheck: sql`((id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno lee su empresa', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('empresas_nombre_check', sql`btrim(nombre) <> ''::text`),
-  ],
-);
-
 export const etapas = pgTable(
   'etapas',
   {
@@ -281,6 +209,768 @@ export const etapas = pgTable(
     pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
     pgPolicy('la empresa lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
     check('etapas_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
+  ],
+);
+
+export const subcontratistas = pgTable(
+  'subcontratistas',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    nombre: text().notNull(),
+    oficio_id: uuid().notNull(),
+    telefono: text(),
+    contacto: text(),
+    correo: text(),
+    seguro_vence: date(),
+    licencia: text(),
+    licencia_vence: date(),
+    w9: boolean().default(false).notNull(),
+    activo: boolean().default(true).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('subcontratistas_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
+    uniqueIndex('subcontratistas_nombre_unico').using('btree', sql`empresa_id`, sql`lower(btrim(nombre))`),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'subcontratistas_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.oficio_id],
+      foreignColumns: [oficios.id, oficios.empresa_id],
+      name: 'subcontratistas_empresa_id_oficio_id_fkey',
+    }),
+    unique('subcontratistas_empresa_id_id_key').on(table.id, table.empresa_id),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('subcontratistas_nombre_check', sql`btrim(nombre) <> ''::text`),
+  ],
+);
+
+export const trabajadores = pgTable(
+  'trabajadores',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    nombre: text().notNull(),
+    puesto: text(),
+    tipo_pago: tipo_pago().notNull(),
+    telefono: text(),
+    activo: boolean().default(true).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('trabajadores_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'trabajadores_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id],
+      foreignColumns: [empresas.id],
+      name: 'trabajadores_empresa_id_fkey',
+    }),
+    unique('trabajadores_empresa_id_id_key').on(table.id, table.empresa_id),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('la empresa lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('trabajadores_nombre_check', sql`btrim(nombre) <> ''::text`),
+  ],
+);
+
+export const obras = pgTable(
+  'obras',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    folio: text(),
+    cliente: text().notNull(),
+    telefono_cliente: text().notNull(),
+    direccion: text().notNull(),
+    pm_id: uuid().notNull(),
+    fecha_inicio: date().notNull(),
+    fecha_fin_estimada: date().notNull(),
+    fecha_fin_real: date(),
+    estado: estado_obra().default('sin_presupuesto').notNull(),
+    notas: text(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('obras_empresa_id_estado_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.estado.asc().nullsLast().op('enum_ops'),
+    ),
+    index('obras_pm_id_idx').using('btree', table.pm_id.asc().nullsLast().op('uuid_ops')),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'obras_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id],
+      foreignColumns: [empresas.id],
+      name: 'obras_empresa_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.pm_id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'obras_empresa_id_pm_id_fkey',
+    }),
+    unique('obras_empresa_id_id_key').on(table.id, table.empresa_id),
+    unique('obras_empresa_id_folio_key').on(table.empresa_id, table.folio),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    pgPolicy('pm arranca su obra', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('obras_check', sql`fecha_fin_estimada >= fecha_inicio`),
+    check('obras_check1', sql`(fecha_fin_real IS NULL) OR (fecha_fin_real >= fecha_inicio)`),
+    check('obras_cliente_check', sql`btrim(cliente) <> ''::text`),
+    check('obras_direccion_check', sql`btrim(direccion) <> ''::text`),
+    check('obras_folio_asignado', sql`folio IS NOT NULL`),
+    check(
+      'obras_telefono_cliente_check',
+      sql`length(regexp_replace(telefono_cliente, '\D'::text, ''::text, 'g'::text)) >= 10`,
+    ),
+  ],
+);
+
+export const obras_finanzas = pgTable(
+  'obras_finanzas',
+  {
+    obra_id: uuid().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    contrato_original: numeric({ precision: 12, scale: 2 }).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'obras_finanzas_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.obra_id, table.empresa_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'obras_finanzas_empresa_id_obra_id_fkey',
+    }),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('obras_finanzas_contrato_original_check', sql`contrato_original > (0)::numeric`),
+  ],
+);
+
+export const avance = pgTable(
+  'avance',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    obra_id: uuid().notNull(),
+    partida_obra_id: uuid().notNull(),
+    bitacora_id: uuid(),
+    estado: estado_avance().notNull(),
+    dia: date().notNull(),
+    estado_registro: estado_registro().default('vigente').notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('avance_empresa_id_obra_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.obra_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    index('avance_partida_obra_id_idx').using(
+      'btree',
+      table.partida_obra_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'avance_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'avance_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.obra_id, table.bitacora_id],
+      foreignColumns: [bitacora.id, bitacora.obra_id],
+      name: 'avance_obra_id_bitacora_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.obra_id, table.partida_obra_id],
+      foreignColumns: [partidas_obra.id, partidas_obra.obra_id],
+      name: 'avance_obra_id_partida_obra_id_fkey',
+    }),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    pgPolicy('pm corrige su avance', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('pm crea en sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
+    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+  ],
+);
+
+export const inspecciones = pgTable(
+  'inspecciones',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    obra_id: uuid().notNull(),
+    espacio_id: uuid().notNull(),
+    hito_id: uuid().notNull(),
+    partida_obra_id: uuid(),
+    resultado: resultado_inspeccion().notNull(),
+    puntos_ok: integer().notNull(),
+    puntos_total: integer().notNull(),
+    realizada_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('inspecciones_empresa_id_obra_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.obra_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    index('inspecciones_espacio_id_hito_id_realizada_en_idx').using(
+      'btree',
+      table.espacio_id.asc().nullsLast().op('timestamptz_ops'),
+      table.hito_id.asc().nullsLast().op('uuid_ops'),
+      table.realizada_en.asc().nullsLast().op('uuid_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'inspecciones_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.hito_id],
+      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
+      name: 'inspecciones_empresa_id_hito_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'inspecciones_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.espacio_id, table.partida_obra_id],
+      foreignColumns: [partidas_obra.id, partidas_obra.espacio_id],
+      name: 'inspecciones_espacio_id_partida_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.obra_id, table.espacio_id],
+      foreignColumns: [espacios.id, espacios.obra_id],
+      name: 'inspecciones_obra_id_espacio_id_fkey',
+    }),
+    unique('inspecciones_obra_id_id_key').on(table.id, table.obra_id),
+    pgPolicy('dueno lee', {
+      as: 'permissive',
+      for: 'select',
+      to: ['authenticated'],
+      using: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('pm crea en sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
+    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('inspecciones_check', sql`puntos_ok <= puntos_total`),
+    check(
+      'inspecciones_check1',
+      sql`(resultado = 'aprobado'::resultado_inspeccion) = (puntos_ok = puntos_total)`,
+    ),
+    check('inspecciones_puntos_ok_check', sql`puntos_ok >= 0`),
+    check('inspecciones_puntos_total_check', sql`puntos_total > 0`),
+  ],
+);
+
+export const empresas = pgTable(
+  'empresas',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    nombre: text().notNull(),
+    ciudad: text(),
+    zona_horaria: text().default('America/Chicago').notNull(),
+    idioma: idioma().default('es').notNull(),
+    activa: boolean().default(true).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    pgPolicy('dueno edita su empresa', {
+      as: 'permissive',
+      for: 'update',
+      to: ['servidor_app'],
+      using: sql`((id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+      withCheck: sql`((id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno lee su empresa', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('empresas_nombre_check', sql`btrim(nombre) <> ''::text`),
+  ],
+);
+
+export const partidas_obra = pgTable(
+  'partidas_obra',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    obra_id: uuid().notNull(),
+    espacio_id: uuid().notNull(),
+    plantilla_id: uuid(),
+    orden: integer().default(0).notNull(),
+    nombre_es: text().notNull(),
+    nombre_en: text(),
+    hito_id: uuid(),
+    peso: numeric({ precision: 6, scale: 2 }).default('1').notNull(),
+    dias: integer().default(1).notNull(),
+    responsable: responsable_partida().default('cuadrilla').notNull(),
+    oficio_id: uuid(),
+    paralelo: boolean().default(false).notNull(),
+    espera: integer().default(0).notNull(),
+    etapa_id: uuid(),
+    estado: estado_partida().default('activa').notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('partidas_obra_empresa_id_obra_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.obra_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    uniqueIndex('partidas_obra_nombre_unico')
+      .using('btree', sql`espacio_id`, sql`lower(nombre_es)`)
+      .where(sql`(estado = 'activa'::estado_partida)`),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'partidas_obra_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.etapa_id],
+      foreignColumns: [etapas.id, etapas.empresa_id],
+      name: 'partidas_obra_empresa_id_etapa_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.hito_id],
+      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
+      name: 'partidas_obra_empresa_id_hito_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'partidas_obra_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.oficio_id],
+      foreignColumns: [oficios.id, oficios.empresa_id],
+      name: 'partidas_obra_empresa_id_oficio_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.plantilla_id],
+      foreignColumns: [plantillas_partida.id, plantillas_partida.empresa_id],
+      name: 'partidas_obra_empresa_id_plantilla_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.obra_id, table.espacio_id],
+      foreignColumns: [espacios.id, espacios.obra_id],
+      name: 'partidas_obra_obra_id_espacio_id_fkey',
+    }),
+    unique('partidas_obra_empresa_id_id_key').on(table.id, table.empresa_id),
+    unique('partidas_obra_obra_id_id_key').on(table.id, table.obra_id),
+    unique('partidas_obra_espacio_id_id_key').on(table.id, table.espacio_id),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check(
+      'partidas_obra_check',
+      sql`(responsable = 'subcontratista'::responsable_partida) = (oficio_id IS NOT NULL)`,
+    ),
+    check('partidas_obra_dias_check', sql`dias >= 1`),
+    check('partidas_obra_espera_check', sql`espera >= 0`),
+    check('partidas_obra_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
+    check('partidas_obra_peso_check', sql`peso > (0)::numeric`),
+  ],
+);
+
+export const configuracion = pgTable(
+  'configuracion',
+  {
+    empresa_id: uuid().primaryKey().notNull(),
+    impuesto: numeric({ precision: 6, scale: 4 }).default('0.0825').notNull(),
+    limite_compra_pm: numeric({ precision: 12, scale: 2 }).default('300').notNull(),
+    sla_bloqueo_horas: integer().default(24).notNull(),
+    sla_oc_horas: integer().default(48).notNull(),
+    umbral_oc_menor: numeric({ precision: 12, scale: 2 }).default('200').notNull(),
+    margen_minimo_oc: numeric({ precision: 5, scale: 4 }).default('0.35').notNull(),
+    horas_sin_recibo: integer().default(72).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    dias_laborables: smallint().array().default([1, 2, 3, 4, 5, 6]).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.empresa_id],
+      foreignColumns: [empresas.id],
+      name: 'configuracion_empresa_id_fkey',
+    }),
+    pgPolicy('dueno edita', {
+      as: 'permissive',
+      for: 'update',
+      to: ['servidor_app'],
+      using: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check(
+      'configuracion_dias_laborables_check',
+      sql`((cardinality(dias_laborables) >= 1) AND (cardinality(dias_laborables) <= 7)) AND (dias_laborables <@ '{1,2,3,4,5,6,7}'::smallint[])`,
+    ),
+    check('configuracion_horas_sin_recibo_check', sql`horas_sin_recibo > 0`),
+    check('configuracion_impuesto_check', sql`impuesto >= (0)::numeric`),
+    check('configuracion_limite_compra_pm_check', sql`limite_compra_pm >= (0)::numeric`),
+    check(
+      'configuracion_margen_minimo_oc_check',
+      sql`(margen_minimo_oc >= (0)::numeric) AND (margen_minimo_oc < (1)::numeric)`,
+    ),
+    check('configuracion_sla_bloqueo_horas_check', sql`sla_bloqueo_horas > 0`),
+    check('configuracion_sla_oc_horas_check', sql`sla_oc_horas > 0`),
+    check('configuracion_umbral_oc_menor_check', sql`umbral_oc_menor >= (0)::numeric`),
+  ],
+);
+
+export const puntos_control = pgTable(
+  'puntos_control',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    hito_id: uuid().notNull(),
+    orden: integer().default(0).notNull(),
+    texto_es: text().notNull(),
+    texto_en: text(),
+    requiere_foto: boolean().default(false).notNull(),
+    activo: boolean().default(true).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('puntos_control_empresa_id_hito_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.hito_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    uniqueIndex('puntos_control_texto_unico').using('btree', sql`hito_id`, sql`lower(texto_es)`),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'puntos_control_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.hito_id],
+      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
+      name: 'puntos_control_empresa_id_hito_id_fkey',
+    }),
+    unique('puntos_control_empresa_id_id_key').on(table.id, table.empresa_id),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('la empresa lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('puntos_control_texto_es_check', sql`btrim(texto_es) <> ''::text`),
+  ],
+);
+
+export const plantillas_partida = pgTable(
+  'plantillas_partida',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    tipo_espacio_id: uuid().notNull(),
+    orden: integer().default(0).notNull(),
+    nombre_es: text().notNull(),
+    nombre_en: text(),
+    hito_id: uuid(),
+    peso: numeric({ precision: 6, scale: 2 }).default('1').notNull(),
+    dias: integer().default(1).notNull(),
+    responsable: responsable_partida().default('cuadrilla').notNull(),
+    oficio_id: uuid(),
+    paralelo: boolean().default(false).notNull(),
+    espera: integer().default(0).notNull(),
+    etapa_id: uuid(),
+    activa: boolean().default(true).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('plantillas_partida_empresa_id_tipo_espacio_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.tipo_espacio_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    uniqueIndex('plantillas_partida_nombre_unico')
+      .using('btree', sql`tipo_espacio_id`, sql`lower(nombre_es)`)
+      .where(sql`activa`),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'plantillas_partida_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.etapa_id],
+      foreignColumns: [etapas.id, etapas.empresa_id],
+      name: 'plantillas_partida_empresa_id_etapa_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.hito_id],
+      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
+      name: 'plantillas_partida_empresa_id_hito_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.oficio_id],
+      foreignColumns: [oficios.id, oficios.empresa_id],
+      name: 'plantillas_partida_empresa_id_oficio_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.tipo_espacio_id],
+      foreignColumns: [tipos_espacio.id, tipos_espacio.empresa_id],
+      name: 'plantillas_partida_empresa_id_tipo_espacio_id_fkey',
+    }),
+    unique('plantillas_partida_empresa_id_id_key').on(table.id, table.empresa_id),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check(
+      'plantillas_partida_check',
+      sql`(responsable = 'subcontratista'::responsable_partida) = (oficio_id IS NOT NULL)`,
+    ),
+    check('plantillas_partida_dias_check', sql`dias >= 1`),
+    check('plantillas_partida_espera_check', sql`espera >= 0`),
+    check('plantillas_partida_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
+    check('plantillas_partida_peso_check', sql`peso > (0)::numeric`),
+  ],
+);
+
+export const presupuesto_etapas = pgTable(
+  'presupuesto_etapas',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    obra_id: uuid().notNull(),
+    espacio_id: uuid().notNull(),
+    etapa_id: uuid(),
+    monto: numeric({ precision: 12, scale: 2 }).notNull(),
+    notas: text(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('presupuesto_etapas_empresa_id_obra_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.obra_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'presupuesto_etapas_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.etapa_id],
+      foreignColumns: [etapas.id, etapas.empresa_id],
+      name: 'presupuesto_etapas_empresa_id_etapa_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'presupuesto_etapas_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.obra_id, table.espacio_id],
+      foreignColumns: [espacios.id, espacios.obra_id],
+      name: 'presupuesto_etapas_obra_id_espacio_id_fkey',
+    }),
+    unique('presupuesto_etapas_espacio_id_etapa_id_key').on(table.espacio_id, table.etapa_id),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('presupuesto_etapas_monto_check', sql`monto >= (0)::numeric`),
+  ],
+);
+
+export const plan_semanal = pgTable(
+  'plan_semanal',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    semana: date().notNull(),
+    obra_id: uuid().notNull(),
+    partida_obra_id: uuid().notNull(),
+    fin_previsto: date().notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('plan_semanal_empresa_id_semana_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('date_ops'),
+      table.semana.asc().nullsLast().op('uuid_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'plan_semanal_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.obra_id, table.partida_obra_id],
+      foreignColumns: [partidas_obra.id, partidas_obra.obra_id],
+      name: 'plan_semanal_obra_id_partida_obra_id_fkey',
+    }),
+    unique('plan_semanal_semana_partida_obra_id_key').on(table.semana, table.partida_obra_id),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('plan_semanal_semana_check', sql`EXTRACT(isodow FROM semana) = (1)::numeric`),
+  ],
+);
+
+export const mano_obra = pgTable(
+  'mano_obra',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    obra_id: uuid().notNull(),
+    espacio_id: uuid().notNull(),
+    partida_obra_id: uuid(),
+    trabajador_id: uuid().notNull(),
+    cantidad: numeric({ precision: 5, scale: 2 }).notNull(),
+    dia: date().notNull(),
+    bitacora_id: uuid(),
+    estado: estado_registro().default('vigente').notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('mano_obra_empresa_id_obra_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.obra_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    index('mano_obra_trabajador_id_dia_idx').using(
+      'btree',
+      table.trabajador_id.asc().nullsLast().op('date_ops'),
+      table.dia.asc().nullsLast().op('date_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'mano_obra_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'mano_obra_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.trabajador_id],
+      foreignColumns: [trabajadores.id, trabajadores.empresa_id],
+      name: 'mano_obra_empresa_id_trabajador_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.espacio_id, table.partida_obra_id],
+      foreignColumns: [partidas_obra.id, partidas_obra.espacio_id],
+      name: 'mano_obra_espacio_id_partida_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.obra_id, table.bitacora_id],
+      foreignColumns: [bitacora.id, bitacora.obra_id],
+      name: 'mano_obra_obra_id_bitacora_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.obra_id, table.espacio_id],
+      foreignColumns: [espacios.id, espacios.obra_id],
+      name: 'mano_obra_obra_id_espacio_id_fkey',
+    }),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    pgPolicy('pm corrige su cuadrilla', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('pm crea en sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
+    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('mano_obra_cantidad_check', sql`(cantidad > (0)::numeric) AND (cantidad <= (16)::numeric)`),
   ],
 );
 
@@ -407,39 +1097,6 @@ export const tarifas_trabajador = pgTable(
   ],
 );
 
-export const obras_finanzas = pgTable(
-  'obras_finanzas',
-  {
-    obra_id: uuid().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    contrato_original: numeric({ precision: 12, scale: 2 }).notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'obras_finanzas_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.obra_id, table.empresa_id],
-      foreignColumns: [obras.id, obras.empresa_id],
-      name: 'obras_finanzas_empresa_id_obra_id_fkey',
-    }),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('obras_finanzas_contrato_original_check', sql`contrato_original > (0)::numeric`),
-  ],
-);
-
 export const espacios = pgTable(
   'espacios',
   {
@@ -504,664 +1161,6 @@ export const espacios = pgTable(
     check('espacios_pies2_verificados_check', sql`pies2_verificados > (0)::numeric`),
     check('espacios_pies_lineales_cotizados_check', sql`pies_lineales_cotizados >= (0)::numeric`),
     check('espacios_pies_lineales_verificados_check', sql`pies_lineales_verificados >= (0)::numeric`),
-  ],
-);
-
-export const obras = pgTable(
-  'obras',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    folio: text(),
-    cliente: text().notNull(),
-    telefono_cliente: text().notNull(),
-    direccion: text().notNull(),
-    pm_id: uuid().notNull(),
-    fecha_inicio: date().notNull(),
-    fecha_fin_estimada: date().notNull(),
-    fecha_fin_real: date(),
-    estado: estado_obra().default('sin_presupuesto').notNull(),
-    notas: text(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('obras_empresa_id_estado_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.estado.asc().nullsLast().op('enum_ops'),
-    ),
-    index('obras_pm_id_idx').using('btree', table.pm_id.asc().nullsLast().op('uuid_ops')),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'obras_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id],
-      foreignColumns: [empresas.id],
-      name: 'obras_empresa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.pm_id],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'obras_empresa_id_pm_id_fkey',
-    }),
-    unique('obras_empresa_id_id_key').on(table.id, table.empresa_id),
-    unique('obras_empresa_id_folio_key').on(table.empresa_id, table.folio),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    pgPolicy('pm arranca su obra', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('obras_check', sql`fecha_fin_estimada >= fecha_inicio`),
-    check('obras_check1', sql`(fecha_fin_real IS NULL) OR (fecha_fin_real >= fecha_inicio)`),
-    check('obras_cliente_check', sql`btrim(cliente) <> ''::text`),
-    check('obras_direccion_check', sql`btrim(direccion) <> ''::text`),
-    check('obras_folio_asignado', sql`folio IS NOT NULL`),
-    check(
-      'obras_telefono_cliente_check',
-      sql`length(regexp_replace(telefono_cliente, '\D'::text, ''::text, 'g'::text)) >= 10`,
-    ),
-  ],
-);
-
-export const puntos_control = pgTable(
-  'puntos_control',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    hito_id: uuid().notNull(),
-    orden: integer().default(0).notNull(),
-    texto_es: text().notNull(),
-    texto_en: text(),
-    requiere_foto: boolean().default(false).notNull(),
-    activo: boolean().default(true).notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('puntos_control_empresa_id_hito_id_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.hito_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    uniqueIndex('puntos_control_texto_unico').using('btree', sql`hito_id`, sql`lower(texto_es)`),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'puntos_control_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.hito_id],
-      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
-      name: 'puntos_control_empresa_id_hito_id_fkey',
-    }),
-    unique('puntos_control_empresa_id_id_key').on(table.id, table.empresa_id),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('la empresa lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('puntos_control_texto_es_check', sql`btrim(texto_es) <> ''::text`),
-  ],
-);
-
-export const plantillas_partida = pgTable(
-  'plantillas_partida',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    tipo_espacio_id: uuid().notNull(),
-    orden: integer().default(0).notNull(),
-    nombre_es: text().notNull(),
-    nombre_en: text(),
-    hito_id: uuid(),
-    peso: numeric({ precision: 6, scale: 2 }).default('1').notNull(),
-    dias: integer().default(1).notNull(),
-    responsable: responsable_partida().default('cuadrilla').notNull(),
-    oficio_id: uuid(),
-    paralelo: boolean().default(false).notNull(),
-    espera: integer().default(0).notNull(),
-    etapa_id: uuid(),
-    activa: boolean().default(true).notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('plantillas_partida_empresa_id_tipo_espacio_id_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.tipo_espacio_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    uniqueIndex('plantillas_partida_nombre_unico')
-      .using('btree', sql`tipo_espacio_id`, sql`lower(nombre_es)`)
-      .where(sql`activa`),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'plantillas_partida_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.etapa_id],
-      foreignColumns: [etapas.id, etapas.empresa_id],
-      name: 'plantillas_partida_empresa_id_etapa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.hito_id],
-      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
-      name: 'plantillas_partida_empresa_id_hito_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.oficio_id],
-      foreignColumns: [oficios.id, oficios.empresa_id],
-      name: 'plantillas_partida_empresa_id_oficio_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.tipo_espacio_id],
-      foreignColumns: [tipos_espacio.id, tipos_espacio.empresa_id],
-      name: 'plantillas_partida_empresa_id_tipo_espacio_id_fkey',
-    }),
-    unique('plantillas_partida_empresa_id_id_key').on(table.id, table.empresa_id),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check(
-      'plantillas_partida_check',
-      sql`(responsable = 'subcontratista'::responsable_partida) = (oficio_id IS NOT NULL)`,
-    ),
-    check('plantillas_partida_dias_check', sql`dias >= 1`),
-    check('plantillas_partida_espera_check', sql`espera >= 0`),
-    check('plantillas_partida_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
-    check('plantillas_partida_peso_check', sql`peso > (0)::numeric`),
-  ],
-);
-
-export const subcontratistas = pgTable(
-  'subcontratistas',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    nombre: text().notNull(),
-    oficio_id: uuid().notNull(),
-    telefono: text(),
-    contacto: text(),
-    correo: text(),
-    seguro_vence: date(),
-    licencia: text(),
-    licencia_vence: date(),
-    w9: boolean().default(false).notNull(),
-    activo: boolean().default(true).notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('subcontratistas_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
-    uniqueIndex('subcontratistas_nombre_unico').using('btree', sql`empresa_id`, sql`lower(btrim(nombre))`),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'subcontratistas_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.oficio_id],
-      foreignColumns: [oficios.id, oficios.empresa_id],
-      name: 'subcontratistas_empresa_id_oficio_id_fkey',
-    }),
-    unique('subcontratistas_empresa_id_id_key').on(table.id, table.empresa_id),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('subcontratistas_nombre_check', sql`btrim(nombre) <> ''::text`),
-  ],
-);
-
-export const trabajadores = pgTable(
-  'trabajadores',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    nombre: text().notNull(),
-    puesto: text(),
-    tipo_pago: tipo_pago().notNull(),
-    telefono: text(),
-    activo: boolean().default(true).notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('trabajadores_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'trabajadores_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id],
-      foreignColumns: [empresas.id],
-      name: 'trabajadores_empresa_id_fkey',
-    }),
-    unique('trabajadores_empresa_id_id_key').on(table.id, table.empresa_id),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('la empresa lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('trabajadores_nombre_check', sql`btrim(nombre) <> ''::text`),
-  ],
-);
-
-export const partidas_obra = pgTable(
-  'partidas_obra',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    obra_id: uuid().notNull(),
-    espacio_id: uuid().notNull(),
-    plantilla_id: uuid(),
-    orden: integer().default(0).notNull(),
-    nombre_es: text().notNull(),
-    nombre_en: text(),
-    hito_id: uuid(),
-    peso: numeric({ precision: 6, scale: 2 }).default('1').notNull(),
-    dias: integer().default(1).notNull(),
-    responsable: responsable_partida().default('cuadrilla').notNull(),
-    oficio_id: uuid(),
-    paralelo: boolean().default(false).notNull(),
-    espera: integer().default(0).notNull(),
-    etapa_id: uuid(),
-    estado: estado_partida().default('activa').notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('partidas_obra_empresa_id_obra_id_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.obra_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    uniqueIndex('partidas_obra_nombre_unico')
-      .using('btree', sql`espacio_id`, sql`lower(nombre_es)`)
-      .where(sql`(estado = 'activa'::estado_partida)`),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'partidas_obra_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.etapa_id],
-      foreignColumns: [etapas.id, etapas.empresa_id],
-      name: 'partidas_obra_empresa_id_etapa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.hito_id],
-      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
-      name: 'partidas_obra_empresa_id_hito_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.id, obras.empresa_id],
-      name: 'partidas_obra_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.oficio_id],
-      foreignColumns: [oficios.id, oficios.empresa_id],
-      name: 'partidas_obra_empresa_id_oficio_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.plantilla_id],
-      foreignColumns: [plantillas_partida.id, plantillas_partida.empresa_id],
-      name: 'partidas_obra_empresa_id_plantilla_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.obra_id, table.espacio_id],
-      foreignColumns: [espacios.id, espacios.obra_id],
-      name: 'partidas_obra_obra_id_espacio_id_fkey',
-    }),
-    unique('partidas_obra_empresa_id_id_key').on(table.id, table.empresa_id),
-    unique('partidas_obra_obra_id_id_key').on(table.id, table.obra_id),
-    unique('partidas_obra_espacio_id_id_key').on(table.id, table.espacio_id),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check(
-      'partidas_obra_check',
-      sql`(responsable = 'subcontratista'::responsable_partida) = (oficio_id IS NOT NULL)`,
-    ),
-    check('partidas_obra_dias_check', sql`dias >= 1`),
-    check('partidas_obra_espera_check', sql`espera >= 0`),
-    check('partidas_obra_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
-    check('partidas_obra_peso_check', sql`peso > (0)::numeric`),
-  ],
-);
-
-export const presupuesto_etapas = pgTable(
-  'presupuesto_etapas',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    obra_id: uuid().notNull(),
-    espacio_id: uuid().notNull(),
-    etapa_id: uuid(),
-    monto: numeric({ precision: 12, scale: 2 }).notNull(),
-    notas: text(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('presupuesto_etapas_empresa_id_obra_id_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.obra_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'presupuesto_etapas_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.etapa_id],
-      foreignColumns: [etapas.id, etapas.empresa_id],
-      name: 'presupuesto_etapas_empresa_id_etapa_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.id, obras.empresa_id],
-      name: 'presupuesto_etapas_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.obra_id, table.espacio_id],
-      foreignColumns: [espacios.id, espacios.obra_id],
-      name: 'presupuesto_etapas_obra_id_espacio_id_fkey',
-    }),
-    unique('presupuesto_etapas_espacio_id_etapa_id_key').on(table.espacio_id, table.etapa_id),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('presupuesto_etapas_monto_check', sql`monto >= (0)::numeric`),
-  ],
-);
-
-export const plan_semanal = pgTable(
-  'plan_semanal',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    semana: date().notNull(),
-    obra_id: uuid().notNull(),
-    partida_obra_id: uuid().notNull(),
-    fin_previsto: date().notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('plan_semanal_empresa_id_semana_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('date_ops'),
-      table.semana.asc().nullsLast().op('uuid_ops'),
-    ),
-    foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.id, obras.empresa_id],
-      name: 'plan_semanal_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.obra_id, table.partida_obra_id],
-      foreignColumns: [partidas_obra.id, partidas_obra.obra_id],
-      name: 'plan_semanal_obra_id_partida_obra_id_fkey',
-    }),
-    unique('plan_semanal_semana_partida_obra_id_key').on(table.semana, table.partida_obra_id),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('plan_semanal_semana_check', sql`EXTRACT(isodow FROM semana) = (1)::numeric`),
-  ],
-);
-
-export const inspecciones = pgTable(
-  'inspecciones',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    obra_id: uuid().notNull(),
-    espacio_id: uuid().notNull(),
-    hito_id: uuid().notNull(),
-    partida_obra_id: uuid(),
-    resultado: resultado_inspeccion().notNull(),
-    puntos_ok: integer().notNull(),
-    puntos_total: integer().notNull(),
-    realizada_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('inspecciones_empresa_id_obra_id_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.obra_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    index('inspecciones_espacio_id_hito_id_realizada_en_idx').using(
-      'btree',
-      table.espacio_id.asc().nullsLast().op('timestamptz_ops'),
-      table.hito_id.asc().nullsLast().op('uuid_ops'),
-      table.realizada_en.asc().nullsLast().op('uuid_ops'),
-    ),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'inspecciones_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.hito_id],
-      foreignColumns: [hitos_calidad.id, hitos_calidad.empresa_id],
-      name: 'inspecciones_empresa_id_hito_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.id, obras.empresa_id],
-      name: 'inspecciones_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.espacio_id, table.partida_obra_id],
-      foreignColumns: [partidas_obra.id, partidas_obra.espacio_id],
-      name: 'inspecciones_espacio_id_partida_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.obra_id, table.espacio_id],
-      foreignColumns: [espacios.id, espacios.obra_id],
-      name: 'inspecciones_obra_id_espacio_id_fkey',
-    }),
-    unique('inspecciones_obra_id_id_key').on(table.id, table.obra_id),
-    pgPolicy('dueno lee', {
-      as: 'permissive',
-      for: 'select',
-      to: ['authenticated'],
-      using: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('pm crea en sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
-    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('inspecciones_check', sql`puntos_ok <= puntos_total`),
-    check(
-      'inspecciones_check1',
-      sql`(resultado = 'aprobado'::resultado_inspeccion) = (puntos_ok = puntos_total)`,
-    ),
-    check('inspecciones_puntos_ok_check', sql`puntos_ok >= 0`),
-    check('inspecciones_puntos_total_check', sql`puntos_total > 0`),
-  ],
-);
-
-export const avance = pgTable(
-  'avance',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    obra_id: uuid().notNull(),
-    partida_obra_id: uuid().notNull(),
-    bitacora_id: uuid(),
-    estado: estado_avance().notNull(),
-    dia: date().notNull(),
-    estado_registro: estado_registro().default('vigente').notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('avance_empresa_id_obra_id_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.obra_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    index('avance_partida_obra_id_idx').using(
-      'btree',
-      table.partida_obra_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'avance_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.id, obras.empresa_id],
-      name: 'avance_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.obra_id, table.bitacora_id],
-      foreignColumns: [bitacora.id, bitacora.obra_id],
-      name: 'avance_obra_id_bitacora_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.obra_id, table.partida_obra_id],
-      foreignColumns: [partidas_obra.id, partidas_obra.obra_id],
-      name: 'avance_obra_id_partida_obra_id_fkey',
-    }),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    pgPolicy('pm corrige su avance', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('pm crea en sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
-    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-  ],
-);
-
-export const mano_obra = pgTable(
-  'mano_obra',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    obra_id: uuid().notNull(),
-    espacio_id: uuid().notNull(),
-    partida_obra_id: uuid(),
-    trabajador_id: uuid().notNull(),
-    cantidad: numeric({ precision: 5, scale: 2 }).notNull(),
-    dia: date().notNull(),
-    bitacora_id: uuid(),
-    estado: estado_registro().default('vigente').notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    index('mano_obra_empresa_id_obra_id_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.obra_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    index('mano_obra_trabajador_id_dia_idx').using(
-      'btree',
-      table.trabajador_id.asc().nullsLast().op('date_ops'),
-      table.dia.asc().nullsLast().op('date_ops'),
-    ),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'mano_obra_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.id, obras.empresa_id],
-      name: 'mano_obra_empresa_id_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.trabajador_id],
-      foreignColumns: [trabajadores.id, trabajadores.empresa_id],
-      name: 'mano_obra_empresa_id_trabajador_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.espacio_id, table.partida_obra_id],
-      foreignColumns: [partidas_obra.id, partidas_obra.espacio_id],
-      name: 'mano_obra_espacio_id_partida_obra_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.obra_id, table.bitacora_id],
-      foreignColumns: [bitacora.id, bitacora.obra_id],
-      name: 'mano_obra_obra_id_bitacora_id_fkey',
-    }),
-    foreignKey({
-      columns: [table.obra_id, table.espacio_id],
-      foreignColumns: [espacios.id, espacios.obra_id],
-      name: 'mano_obra_obra_id_espacio_id_fkey',
-    }),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    pgPolicy('pm corrige su cuadrilla', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('pm crea en sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
-    pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('mano_obra_cantidad_check', sql`(cantidad > (0)::numeric) AND (cantidad <= (16)::numeric)`),
   ],
 );
 
@@ -1327,6 +1326,57 @@ export const entregas = pgTable(
     pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
     check('entregas_check', sql`garantia_vence >= fecha_entrega`),
     check('entregas_garantia_meses_check', sql`garantia_meses >= 0`),
+  ],
+);
+
+export const fotos = pgTable(
+  'fotos',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    obra_id: uuid().notNull(),
+    ref_tipo: tipo_foto().notNull(),
+    ref_id: uuid().notNull(),
+    indice: smallint().notNull(),
+    storage_path: text().notNull(),
+    tomada_en: timestamp({ withTimezone: true, mode: 'string' }),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    para_cliente: boolean().default(false).notNull(),
+  },
+  (table) => [
+    index('fotos_empresa_id_obra_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.obra_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'fotos_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.id, obras.empresa_id],
+      name: 'fotos_empresa_id_obra_id_fkey',
+    }),
+    unique('fotos_ref_tipo_ref_id_indice_key').on(
+      table.empresa_id,
+      table.ref_tipo,
+      table.ref_id,
+      table.indice,
+    ),
+    unique('fotos_storage_path_key').on(table.storage_path),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    pgPolicy('pm lee las fotos de sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    pgPolicy('pm sube fotos a sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
+    check('fotos_indice_check', sql`indice >= 1`),
   ],
 );
 
@@ -1525,57 +1575,6 @@ export const correcciones = pgTable(
     }),
     pgPolicy('el servidor deja el rastro', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
     check('correcciones_motivo_check', sql`length(btrim(motivo)) >= 5`),
-  ],
-);
-
-export const fotos = pgTable(
-  'fotos',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    obra_id: uuid().notNull(),
-    ref_tipo: tipo_foto().notNull(),
-    ref_id: uuid().notNull(),
-    indice: smallint().notNull(),
-    storage_path: text().notNull(),
-    tomada_en: timestamp({ withTimezone: true, mode: 'string' }),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    para_cliente: boolean().default(false).notNull(),
-  },
-  (table) => [
-    index('fotos_empresa_id_obra_id_idx').using(
-      'btree',
-      table.empresa_id.asc().nullsLast().op('uuid_ops'),
-      table.obra_id.asc().nullsLast().op('uuid_ops'),
-    ),
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'fotos_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id, table.obra_id],
-      foreignColumns: [obras.id, obras.empresa_id],
-      name: 'fotos_empresa_id_obra_id_fkey',
-    }),
-    unique('fotos_ref_tipo_ref_id_indice_key').on(
-      table.empresa_id,
-      table.ref_tipo,
-      table.ref_id,
-      table.indice,
-    ),
-    unique('fotos_storage_path_key').on(table.storage_path),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    pgPolicy('pm lee las fotos de sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    pgPolicy('pm sube fotos a sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
-    check('fotos_indice_check', sql`indice >= 1`),
   ],
 );
 
@@ -2179,89 +2178,6 @@ export const avisos = pgTable(
   ],
 );
 
-export const configuracion = pgTable(
-  'configuracion',
-  {
-    empresa_id: uuid().primaryKey().notNull(),
-    impuesto: numeric({ precision: 6, scale: 4 }).default('0.0825').notNull(),
-    limite_compra_pm: numeric({ precision: 12, scale: 2 }).default('300').notNull(),
-    sla_bloqueo_horas: integer().default(24).notNull(),
-    sla_oc_horas: integer().default(48).notNull(),
-    umbral_oc_menor: numeric({ precision: 12, scale: 2 }).default('200').notNull(),
-    margen_minimo_oc: numeric({ precision: 5, scale: 4 }).default('0.35').notNull(),
-    horas_sin_recibo: integer().default(72).notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    dias_laborables: smallint().array().default([1, 2, 3, 4, 5, 6]).notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.empresa_id],
-      foreignColumns: [empresas.id],
-      name: 'configuracion_empresa_id_fkey',
-    }),
-    pgPolicy('dueno edita', {
-      as: 'permissive',
-      for: 'update',
-      to: ['servidor_app'],
-      using: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check(
-      'configuracion_dias_laborables_check',
-      sql`((cardinality(dias_laborables) >= 1) AND (cardinality(dias_laborables) <= 7)) AND (dias_laborables <@ '{1,2,3,4,5,6,7}'::smallint[])`,
-    ),
-    check('configuracion_horas_sin_recibo_check', sql`horas_sin_recibo > 0`),
-    check('configuracion_impuesto_check', sql`impuesto >= (0)::numeric`),
-    check('configuracion_limite_compra_pm_check', sql`limite_compra_pm >= (0)::numeric`),
-    check(
-      'configuracion_margen_minimo_oc_check',
-      sql`(margen_minimo_oc >= (0)::numeric) AND (margen_minimo_oc < (1)::numeric)`,
-    ),
-    check('configuracion_sla_bloqueo_horas_check', sql`sla_bloqueo_horas > 0`),
-    check('configuracion_sla_oc_horas_check', sql`sla_oc_horas > 0`),
-    check('configuracion_umbral_oc_menor_check', sql`umbral_oc_menor >= (0)::numeric`),
-  ],
-);
-
-export const feriados = pgTable(
-  'feriados',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    empresa_id: uuid().notNull(),
-    dia: date().notNull(),
-    nombre_es: text().notNull(),
-    nombre_en: text(),
-    se_trabaja: boolean().default(false).notNull(),
-    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    creado_por: uuid(),
-    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.empresa_id, table.creado_por],
-      foreignColumns: [miembros.id, miembros.empresa_id],
-      name: 'feriados_empresa_id_creado_por_fkey',
-    }),
-    foreignKey({
-      columns: [table.empresa_id],
-      foreignColumns: [empresas.id],
-      name: 'feriados_empresa_id_fkey',
-    }),
-    unique('feriados_empresa_id_dia_key').on(table.empresa_id, table.dia),
-    pgPolicy('dueno crea', {
-      as: 'permissive',
-      for: 'insert',
-      to: ['servidor_app'],
-      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
-    }),
-    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
-    pgPolicy('la empresa lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
-    check('feriados_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
-  ],
-);
-
 export const dispositivos = pgTable(
   'dispositivos',
   {
@@ -2312,6 +2228,92 @@ export const dispositivos = pgTable(
     check('dispositivos_intentos_fallidos_check', sql`intentos_fallidos >= 0`),
     check('dispositivos_nombre_check', sql`btrim(nombre) <> ''::text`),
     check('dispositivos_secreto_hash_check', sql`secreto_hash ~ '^[0-9a-f]{64}$'::text`),
+  ],
+);
+
+export const miembros = pgTable(
+  'miembros',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    user_id: uuid().notNull(),
+    rol: rol_miembro().notNull(),
+    nombre: text().notNull(),
+    telefono: text(),
+    idioma: idioma().default('es').notNull(),
+    activo: boolean().default(true).notNull(),
+    tarjeta_ultimos4: text(),
+    correo_avisos: text(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('miembros_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [table.id, table.empresa_id],
+      name: 'miembros_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id],
+      foreignColumns: [empresas.id],
+      name: 'miembros_empresa_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.user_id],
+      foreignColumns: [authUsers.id],
+      name: 'miembros_user_id_fkey',
+    }),
+    unique('miembros_empresa_id_id_key').on(table.id, table.empresa_id),
+    unique('miembros_user_id_key').on(table.user_id),
+    pgPolicy('cada quien lee su miembro', {
+      as: 'permissive',
+      for: 'select',
+      to: ['authenticated'],
+      using: sql`(id = ( SELECT miembro_actual() AS miembro_actual))`,
+    }),
+    pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('miembros_correo_avisos_check', sql`correo_avisos ~~ '%_@_%'::text`),
+    check('miembros_nombre_check', sql`btrim(nombre) <> ''::text`),
+    check('miembros_tarjeta_ultimos4_check', sql`tarjeta_ultimos4 ~ '^[0-9]{4}$'::text`),
+  ],
+);
+
+export const feriados = pgTable(
+  'feriados',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    dia: date().notNull(),
+    nombre_es: text().notNull(),
+    nombre_en: text(),
+    se_trabaja: boolean().default(false).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'feriados_empresa_id_creado_por_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id],
+      foreignColumns: [empresas.id],
+      name: 'feriados_empresa_id_fkey',
+    }),
+    unique('feriados_empresa_id_dia_key').on(table.empresa_id, table.dia),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('la empresa lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('feriados_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
   ],
 );
 
@@ -2472,6 +2474,42 @@ export const respuestas_cambio = pgTable(
     check('respuestas_cambio_ip_check', sql`length(ip) <= 100`),
     check('respuestas_cambio_navegador_check', sql`length(navegador) <= 400`),
     check('respuestas_cambio_nombre_check', sql`(btrim(nombre) <> ''::text) AND (length(nombre) <= 120)`),
+  ],
+);
+
+export const marcas_empresa = pgTable(
+  'marcas_empresa',
+  {
+    empresa_id: uuid().primaryKey().notNull(),
+    color: text().default('#1d3557').notNull(),
+    logo: bytea('logo'),
+    logo_tipo: text(),
+    fondo_blanco: boolean().default(true).notNull(),
+    version: integer().default(1).notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.empresa_id],
+      foreignColumns: [empresas.id],
+      name: 'marcas_empresa_empresa_id_fkey',
+    }),
+    pgPolicy('dueno crea', {
+      as: 'permissive',
+      for: 'insert',
+      to: ['servidor_app'],
+      withCheck: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
+    pgPolicy('la empresa lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('marcas_empresa_check', sql`(logo IS NULL) = (logo_tipo IS NULL)`),
+    check('marcas_empresa_color_check', sql`color ~ '^#[0-9a-fA-F]{6}$'::text`),
+    check('marcas_empresa_logo_check', sql`(logo IS NULL) OR (octet_length(logo) <= 1048576)`),
+    check(
+      'marcas_empresa_logo_tipo_check',
+      sql`(logo_tipo IS NULL) OR (logo_tipo = ANY (ARRAY['image/png'::text, 'image/jpeg'::text]))`,
+    ),
   ],
 );
 

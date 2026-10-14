@@ -18,7 +18,12 @@ export async function estadoParaPin(): Promise<{
       const estado = await estadoDispositivo(tx, llave);
       const yo = await quienSoy(tx);
       // la pantalla del PIN también lleva arriba el nombre de la empresa
-      recordarEmpresa(yo.empresa);
+      recordarEmpresa({
+        nombre: yo.empresa,
+        id: yo.empresaId,
+        conLogo: yo.marca.conLogo,
+        version: yo.marca.version,
+      });
       return { estado, largo: LARGO_PIN[yo.rol], miembroId: yo.miembroId, esPm: yo.rol === 'pm' };
     });
   } catch (e) {

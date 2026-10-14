@@ -223,16 +223,24 @@ export interface Yo {
   readonly idioma: 'es' | 'en';
   /** El nombre de su empresa, el que lleva arriba cada pantalla. */
   readonly empresa: string;
+  readonly empresaId: string;
+  /** La marca de su empresa (D-078): su color, si tiene logo y la versión, para el ícono y el encabezado. */
+  readonly marca: { color: string; conLogo: boolean; version: number };
 }
 
 /** Quién es el usuario de la sesión. Sin miembro activo: `sin_acceso`. */
 export async function quienSoy(tx: Tx): Promise<Yo> {
-  const [m] = await tx<Yo[]>`
-    select m.id as "miembroId", m.nombre, m.rol, m.idioma, e.nombre as empresa
+  const [m] = await tx<
+    (Omit<Yo, 'marca'> & { color: string | null; logo: boolean; version: number | null })[]
+  >`
+    select m.id as "miembroId", m.nombre, m.rol, m.idioma, e.nombre as empresa, e.id as "empresaId",
+           ma.color, ma.logo is not null as logo, ma.version
     from public.miembros m join public.empresa_actual_datos e on e.id = m.empresa_id
+    left join public.marcas_empresa ma on ma.empresa_id = e.id
     where m.id = public.miembro_actual()`;
   if (!m) throw new ErrorDeNegocio('sin_acceso');
-  return m;
+  const { color, logo, version, ...yo } = m;
+  return { ...yo, marca: { color: color ?? '#1d3557', conLogo: logo, version: version ?? 1 } };
 }
 
 export interface MiembroDelEquipo {
