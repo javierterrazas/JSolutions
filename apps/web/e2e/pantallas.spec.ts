@@ -39,14 +39,14 @@ test('cada pantalla del PM se recorre completa, sin salirse a los lados ni choca
   }
   expect(bloqueado).toEqual([]);
 
-  // el inicio es largo: hasta abajo llega al idioma, y un gesto hacia arriba regresa
+  // el inicio es largo: hasta abajo llega a "Salir", y un gesto hacia arriba regresa
   await page.goto('/');
   const { max } = await desplazamiento(page);
   expect(max, 'el inicio del seed es más largo que la pantalla').toBeGreaterThan(300);
   await page.mouse.move(200, 400);
   for (let i = 0; i < 15; i++) await page.mouse.wheel(0, 600);
   await expect.poll(async () => (await desplazamiento(page)).y).toBeGreaterThanOrEqual(max - 1);
-  await expect(page.getByRole('navigation', { name: es.idioma.etiqueta })).toBeInViewport();
+  await expect(page.getByRole('button', { name: es.inicio.salir })).toBeInViewport();
   await page.mouse.wheel(0, -350);
   await expect.poll(async () => (await desplazamiento(page)).y).toBeLessThan(max - 300);
 });

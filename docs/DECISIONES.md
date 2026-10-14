@@ -1265,3 +1265,9 @@ permitía, sin pantalla).
 con los trabajos en curso, sin repetir. Si hoy no hay ninguno, dice qué etapa sigue; con todo terminado, lo dice.
 En "Lo que se ha trabajado", cada día dice solo los trabajos, sin el
 espacio. El avance total de la obra sigue arriba.
+
+## D-070 · El idioma, arriba a la derecha
+
+**Decisión del dueño:** el botón para cambiar de idioma va arriba a la derecha de cada pantalla, pequeño y abreviado:
+"ES" y "EN" (antes, dos botones grandes al final de la página). Para el lector de pantalla cada uno dice su nombre
+completo ("Español", "English"). Igual en la app del equipo y en el portal del cliente.
