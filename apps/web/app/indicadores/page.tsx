@@ -2,8 +2,13 @@
 // primero que hay que ver; abajo los 19 por proceso, cada uno con su valor, su meta, su semáforo y qué revela. Lleva
 // dinero: solo el dueño o el administrador.
 import type { Indicador } from '@ijm/core';
-import { indicadoresDeLaEmpresa } from '@ijm/servidor';
-import { getLocale, getTranslations } from 'next-intl/server';
+import {
+  congelarPlanSemanal,
+  type CumplimientoDelPlan,
+  cumplimientoDelPlan,
+  indicadoresDeLaEmpresa,
+} from '@ijm/servidor';
+import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
@@ -29,8 +34,20 @@ function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) 
 
 export default async function Indicadores() {
   const acceso = await exigirDueno();
+  // el plan de esta semana se congela al abrir, si nadie lo ha hecho (D-079)
+  const plan = await comoMiembro(async (tx) => {
+    await congelarPlanSemanal(tx);
+    return cumplimientoDelPlan(tx);
+  }, acceso);
   const r = await comoMiembro((tx) => indicadoresDeLaEmpresa(tx), acceso);
-  const [t, idioma] = await Promise.all([getTranslations('indicadores'), getLocale()]);
+  const [t, idioma, formato] = await Promise.all([
+    getTranslations('indicadores'),
+    getLocale(),
+    getFormatter(),
+  ]);
+  // un día de negocio a mediodía, para que ninguna zona horaria lo mueva de día
+  const dia = (d: string) =>
+    formato.dateTime(new Date(`${d}T12:00:00`), { weekday: 'short', day: 'numeric', month: 'short' });
   const dinero = formatoDinero(idioma);
   const numero = (n: number, decimales = 0) =>
     new Intl.NumberFormat(idioma === 'en' ? 'en-US' : 'es-MX', {
@@ -122,11 +139,82 @@ export default async function Indicadores() {
                     <span>{t(`semaforos.${i.semaforo}`)}</span>
                     {extra(i) ? <span>{extra(i)}</span> : null}
                   </p>
+                  {i.clave === 'cumplimiento_semanal' && plan.ok ? (
+                    <DetalleDelPlan plan={plan.datos} dia={dia} idioma={idioma} t={t} />
+                  ) : null}
                 </li>
               ))}
           </ul>
         </Seccion>
       ))}
     </Marco>
+  );
+}
+
+/** Lo que se prometió la semana pasada, por obra, y si se terminó a tiempo (D-079). */
+function DetalleDelPlan({
+  plan,
+  dia,
+  idioma,
+  t,
+}: {
+  plan: CumplimientoDelPlan;
+  dia: (d: string) => string;
+  idioma: string;
+  t: Awaited<ReturnType<typeof getTranslations<'indicadores'>>>;
+}) {
+  const hechas = plan.partidas.filter((p) => p.cumplida).length;
+  const obras = [...new Set(plan.partidas.map((p) => p.folio))];
+  return (
+    <div className="flex flex-col gap-2 border-t border-slate-200 pt-2 text-sm">
+      <p className="text-slate-700">{t('plan.estaSemana', { n: plan.estaSemana })}</p>
+      {plan.partidas.length ? (
+        <details>
+          <summary className="cursor-pointer py-1 font-semibold text-marca">
+            {t('plan.ver', { hechas, total: plan.partidas.length })}
+          </summary>
+          <p className="mt-1 text-slate-600">
+            {t('plan.semana', { lunes: dia(plan.lunes), domingo: dia(plan.domingo) })}
+          </p>
+          {obras.map((folio) => (
+            <div key={folio} className="mt-2 flex flex-col gap-1">
+              <h3 className="font-semibold">{folio}</h3>
+              <ul className="flex flex-col gap-1">
+                {plan.partidas
+                  .filter((p) => p.folio === folio)
+                  .map((p, n) => (
+                    <li key={n} className="flex items-start gap-2">
+                      <span
+                        aria-hidden="true"
+                        className={`font-bold ${p.cumplida ? 'text-emerald-700' : 'text-red-700'}`}
+                      >
+                        {p.cumplida ? '✓' : '✗'}
+                      </span>
+                      <span className="flex flex-col">
+                        <span>
+                          {t('plan.linea', {
+                            espacio: p.espacio,
+                            partida: (idioma === 'en' && p.partida.en) || p.partida.es,
+                          })}
+                        </span>
+                        <span className="text-xs text-slate-600">
+                          {t('plan.detalle', {
+                            prevista: t('plan.prevista', { dia: dia(p.finPrevisto) }),
+                            resultado: p.terminadaEl
+                              ? t(p.cumplida ? 'plan.terminada' : 'plan.tarde', { dia: dia(p.terminadaEl) })
+                              : t('plan.pendiente'),
+                          })}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ))}
+        </details>
+      ) : (
+        <p className="text-slate-600">{t('plan.sinPlan')}</p>
+      )}
+    </div>
   );
 }
