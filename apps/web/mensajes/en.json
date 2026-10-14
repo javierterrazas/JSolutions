@@ -861,11 +861,7 @@
     "trabajos": "{terminados} of {total} tasks complete",
     "entrega": "Committed completion date: {dia}",
     "entregada": "Delivered on {dia}. Warranty until {garantia}.",
-    "espacios": "How each area is going",
-    "terminado": "Complete",
-    "enCurso": "In progress: {trabajos}",
-    "sigue": "Next: {etapa}",
-    "empieza": "Starts with: {etapa}",
+    "espacios": "What's being worked on",
     "porEmpezar": "Not started yet",
     "trabajado": "Work done",
     "sinDias": "No work days yet this month.",
@@ -898,7 +894,10 @@
     "cambios": "Your change orders",
     "aprobadaPor": "Approved by {nombre} on {dia}.",
     "noAprobadaPor": "Not approved by {nombre} on {dia}.",
-    "totalContrato": "Your contract total with approved changes: {total}"
+    "totalContrato": "Your contract total with approved changes: {total}",
+    "enProceso": "In progress:",
+    "nadaEnProceso": "No work in progress today. Next: {etapas}.",
+    "todoTerminado": "All the work is complete."
   },
   "enlaceCliente": {
     "titulo": "Client portal",

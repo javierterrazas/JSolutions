@@ -90,6 +90,14 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
     </article>
   );
 
+  // lo que va en curso, sin repetir, y si nada va en curso, las etapas que siguen
+  const unicos = (xs: string[]) => [...new Set(xs)];
+  const enProceso = unicos(p.espacios.flatMap((e) => e.enCurso.map(nombre)));
+  const siguen = unicos(
+    p.espacios.filter((e) => e.estado !== 'terminado' && e.etapa).map((e) => nombre(e.etapa!)),
+  );
+  const terminado = p.espacios.length > 0 && p.espacios.every((e) => e.estado === 'terminado');
+
   // las fotos por día, en el orden en que llegan (lo más nuevo primero)
   const fotosPorDia: { dia: string; fotos: string[] }[] = [];
   for (const f of p.fotos) {
@@ -137,26 +145,28 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
         )}
       </div>
 
+      {/* en qué se está trabajando, sin los espacios de la obra (lo pidió el dueño, D-069) */}
       <Seccion titulo={t('espacios')}>
-        <ul className="flex flex-col gap-2">
-          {p.espacios.map((e) => (
-            <li key={e.nombre} className={`${estilos.tarjeta} flex flex-col gap-1`}>
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="font-semibold">{e.nombre}</span>
-                <span className="text-slate-700">{pct(e.pct)}</span>
-              </div>
-              <p className="text-slate-700">
-                {e.estado === 'terminado'
-                  ? t('terminado')
-                  : e.enCurso.length
-                    ? t('enCurso', { trabajos: e.enCurso.map(nombre).join(', ') })
-                    : e.etapa
-                      ? t(e.estado === 'sin_iniciar' ? 'empieza' : 'sigue', { etapa: nombre(e.etapa) })
-                      : t('porEmpezar')}
-              </p>
-            </li>
-          ))}
-        </ul>
+        <div className={`${estilos.tarjeta} flex flex-col gap-2`}>
+          {terminado ? (
+            <p className="font-semibold text-emerald-800">{t('todoTerminado')}</p>
+          ) : (
+            <>
+              <p className="font-semibold">{t('enProceso')}</p>
+              {enProceso.length ? (
+                <ul className="list-disc pl-5 text-slate-800">
+                  {enProceso.map((x) => (
+                    <li key={x}>{x}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-slate-700">
+                  {siguen.length ? t('nadaEnProceso', { etapas: siguen.join(', ') }) : t('porEmpezar')}
+                </p>
+              )}
+            </>
+          )}
+        </div>
       </Seccion>
 
       <Seccion titulo={t('trabajado')}>

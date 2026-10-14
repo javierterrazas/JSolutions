@@ -861,11 +861,7 @@
     "trabajos": "{terminados} de {total} trabajos terminados",
     "entrega": "Entrega comprometida: {dia}",
     "entregada": "Entregada el {dia}. Garantía hasta el {garantia}.",
-    "espacios": "Cómo va cada espacio",
-    "terminado": "Terminado",
-    "enCurso": "En proceso: {trabajos}",
-    "sigue": "Sigue: {etapa}",
-    "empieza": "Empieza con: {etapa}",
+    "espacios": "En qué se está trabajando",
     "porEmpezar": "Por empezar",
     "trabajado": "Lo que se ha trabajado",
     "sinDias": "Todavía no hay días trabajados este mes.",
@@ -898,7 +894,10 @@
     "cambios": "Sus órdenes de cambio",
     "aprobadaPor": "Aprobada por {nombre} el {dia}.",
     "noAprobadaPor": "No aprobada por {nombre} el {dia}.",
-    "totalContrato": "Total de su contrato con los cambios aprobados: {total}"
+    "totalContrato": "Total de su contrato con los cambios aprobados: {total}",
+    "enProceso": "En proceso:",
+    "nadaEnProceso": "Hoy no hay trabajos en proceso. Lo siguiente: {etapas}.",
+    "todoTerminado": "Todos los trabajos están terminados."
   },
   "enlaceCliente": {
     "titulo": "Portal del cliente",
