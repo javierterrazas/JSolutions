@@ -14,7 +14,8 @@
     "avisosPorContestar": "{n, plural, one {# aviso por contestar} other {# avisos por contestar}}",
     "terminadas": "Obras terminadas ({n})",
     "cuadrilla": "Cuadrilla",
-    "subcontratistas": "Subcontratistas"
+    "subcontratistas": "Subcontratistas",
+    "indicadores": "Indicadores"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -1145,6 +1146,71 @@
       "sin_aprobar": "El PM todavía no aprueba el trabajo. La regla es que el sub cobra contra trabajo aprobado.",
       "papeles": "Este sub no tiene sus papeles en regla (seguro o licencia). Pagarle así te deja expuesto.",
       "sobrepago": "Con este pago llevarías {total} contra una orden de {precio}. Si es trabajo extra, va en una orden de cambio."
+    }
+  },
+  "indicadores": {
+    "titulo": "Indicadores",
+    "volver": "Volver al inicio",
+    "contexto": "{enCurso, plural, one {# obra en curso} other {# obras en curso}} · {entregadas, plural, one {# entregada} other {# entregadas}}",
+    "principales": "Los seis del lunes",
+    "sinDatos": "Sin datos todavía",
+    "metaMayor": "Meta: {meta} o más",
+    "metaMenor": "Meta: {meta} o menos",
+    "extraGarantias": "Costo de garantías: {costo}",
+    "extraDias": "{n, plural, one {# día perdido} other {# días perdidos}}",
+    "semaforos": {
+      "verde": "En la meta",
+      "ambar": "Cerca de la meta",
+      "rojo": "Lejos de la meta",
+      "info": "Para saberlo"
+    },
+    "procesos": {
+      "P3": "Control diario",
+      "P4": "Órdenes de cambio y costos",
+      "P5": "Calidad",
+      "P6": "Entrega y garantía"
+    },
+    "nombres": {
+      "tasa_cierre_dia": "Días cerrados por el PM (días hábiles)",
+      "cumplimiento_semanal": "Cumplimiento del plan de la semana",
+      "avisos_fuera_de_sla": "Avisos sin respuesta después de {horas} h",
+      "horas_respuesta_avisos": "Horas promedio de respuesta a avisos",
+      "cargos_sin_recibo": "Gastos del PM sin recibo después de {horas} h",
+      "presentacion_subs": "Subs que llegan el día acordado",
+      "pagos_sin_aprobacion": "Pagos a subs sin trabajo aprobado por el PM",
+      "saldo_subcontratistas": "Saldo pendiente con subcontratistas",
+      "inspecciones_con_defectos": "Inspecciones con defectos",
+      "pruebas_agua_con_fuga": "Pruebas de inundación con fuga",
+      "punch_por_obra": "Detalles de entrega por obra",
+      "punch_en_7_dias": "Detalles de entrega cerrados a tiempo",
+      "garantias_por_obra": "Reclamos de garantía por obra entregada",
+      "resenas": "Reseñas obtenidas",
+      "oc_fuera_de_sla": "Órdenes de cambio sin respuesta después de {horas} h",
+      "oc_autorizadas": "Órdenes de cambio aprobadas",
+      "margen_oc": "Margen promedio de las órdenes de cambio",
+      "oc_sobre_contratos": "Órdenes de cambio sobre contratos",
+      "no_calidad_sobre_contratos": "Costo de no calidad sobre contratos"
+    },
+    "explicaciones": {
+      "tasa_cierre_dia": "La integridad de tus datos. Si cae, todo lo demás es ficción.",
+      "cumplimiento_semanal": "De lo que estaba previsto terminar la semana pasada, cuánto se terminó.",
+      "avisos_fuera_de_sla": "Si fallas aquí, el PM deja de reportar.",
+      "horas_respuesta_avisos": "Tu compromiso con el PM, medido.",
+      "cargos_sin_recibo": "Control financiero de campo.",
+      "presentacion_subs": "La calidad real de tu banco de subs.",
+      "pagos_sin_aprobacion": "Si pagas sin aprobación, el control de calidad se cae solo.",
+      "saldo_subcontratistas": "Lo que ya debes aunque no haya salido de tu cuenta.",
+      "inspecciones_con_defectos": "Encontrados a tiempo, antes de cubrirse. Es bueno que exista.",
+      "pruebas_agua_con_fuga": "Cada una evitada es el reclamo de garantía más caro que existe.",
+      "punch_por_obra": "Arriba de la meta: la inspección previa a la entrega no se está haciendo.",
+      "punch_en_7_dias": "Cerrar tarde es lo que arruina una entrega que salió bien.",
+      "garantias_por_obra": "Lo que se te escapó. Es el espejo de la calidad.",
+      "resenas": "Tu costo de conseguir clientes baja directo con esto.",
+      "oc_fuera_de_sla": "Días de obra que estás perdiendo en espera.",
+      "oc_autorizadas": "Abajo de la meta: cotizas caro o comunicas mal.",
+      "margen_oc": "Si es menor al del contrato, te estás regalando.",
+      "oc_sobre_contratos": "Arriba de la meta, el problema está en tu estimación.",
+      "no_calidad_sobre_contratos": "El indicador que duele y que casi nadie mide."
     }
   }
 }
