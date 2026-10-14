@@ -1,5 +1,5 @@
-// El marco de cada pantalla en el teléfono: el botón para volver, el nombre de la empresa, el título (con la obra
-// debajo, si es de una) y, abajo, el idioma.
+// El marco de cada pantalla en el teléfono: el botón para volver, el idioma (arriba a la derecha, D-070), el nombre
+// de la empresa y el título (con la obra debajo, si es de una).
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { empresaDeLaPeticion } from '@/lib/empresa-de-la-peticion';
@@ -26,7 +26,10 @@ export function Marco({
 }) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))]">
-      <header className="flex flex-col gap-3">
+      <header className="relative flex flex-col gap-3">
+        <div className="absolute top-0 right-0">
+          <SelectorDeIdioma />
+        </div>
         {volver ? (
           <Link
             href={volver.href}
@@ -42,7 +45,8 @@ export function Marco({
             {volver.texto}
           </Link>
         ) : null}
-        <div className="flex flex-col gap-1">
+        {/* sin el botón de volver, el título comparte renglón con el idioma: le deja su lugar */}
+        <div className={`flex flex-col gap-1 ${volver ? '' : 'pr-24'}`}>
           <p className="text-sm font-semibold tracking-wide text-marca/80 uppercase">
             {empresaDeLaPeticion() ?? NOMBRE_APP}
           </p>
@@ -51,7 +55,6 @@ export function Marco({
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4">{children}</div>
-      <SelectorDeIdioma />
     </main>
   );
 }
