@@ -94,6 +94,14 @@ describe('la cola sin señal', () => {
     expect(a.rechazados).toEqual([]);
   });
 
+  it('empresa en solo lectura (D-080): se detiene y no pierde nada', async () => {
+    const a = almacenDePrueba([cierre('lunes', 1), cierre('martes', 2)]);
+    const s = servidor(() => ({ ok: false, codigo: 'suscripcion_vencida' }));
+    expect(await procesarCola(a.almacen, s.enviar)).toBe('solo_lectura');
+    expect(a.cola().map((e) => e.id)).toEqual(['lunes', 'martes']);
+    expect(a.rechazados).toEqual([]);
+  });
+
   it('en orden de llegada, aunque se hayan guardado desordenadas; las fotos van detrás de su cierre', async () => {
     const a = almacenDePrueba([foto('f2', 3, 'lunes', 2), cierre('lunes', 1), foto('f1', 2, 'lunes', 1)]);
     const s = servidor(() => ({ ok: true }));

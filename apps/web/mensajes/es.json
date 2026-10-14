@@ -16,7 +16,8 @@
     "cuadrilla": "Cuadrilla",
     "subcontratistas": "Subcontratistas",
     "indicadores": "Indicadores",
-    "miEmpresa": "Mi empresa"
+    "miEmpresa": "Mi empresa",
+    "plataforma": "Plataforma"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -214,7 +215,13 @@
     "orden_cancelada": "Esa orden está cancelada.",
     "orden_no_reprogramable": "Esa orden ya está aprobada, pagada o cancelada: ya no se reprograma.",
     "logo_invalido": "El logo tiene que ser una imagen PNG o JPG.",
-    "logo_pesado": "El logo pesa más de 1 MB: usa una imagen más pequeña."
+    "logo_pesado": "El logo pesa más de 1 MB: usa una imagen más pequeña.",
+    "suscripcion_vencida": "La suscripción de la empresa venció: puedes ver todo, pero no se guardan cambios hasta que se renueve.",
+    "solo_plataforma": "Solo quien administra la plataforma puede hacer esto.",
+    "empresa_no_encontrada": "No se encontró esa empresa.",
+    "sin_dueno": "Esa empresa no tiene un dueño activo.",
+    "fecha_futura": "La fecha no puede ser después de hoy.",
+    "vencimiento_antes_del_pago": "La fecha hasta la que cubre no puede ser antes del pago."
   },
   "obras": {
     "titulo": "Obras",
@@ -389,7 +396,8 @@
     "fotoRechazada": "Una foto del cierre de {obra} del {dia} no se guardó:",
     "entendido": "Entendido",
     "gastoRechazado": "Un gasto de {obra} del {dia} no se guardó:",
-    "avisoRechazado": "Un aviso de {obra} del {dia} no se guardó:"
+    "avisoRechazado": "Un aviso de {obra} del {dia} no se guardó:",
+    "soloLectura": "La suscripción de tu empresa venció: lo capturado se queda guardado en este teléfono y se envía cuando se renueve."
   },
   "catalogo": {
     "titulo": "Catálogo",
@@ -1257,5 +1265,101 @@
     "guardando": "Guardando…",
     "guardado": "Guardado.",
     "instalarAyuda": "Si alguien ya instaló la app, para ver el ícono nuevo: en iPhone, quítala de la pantalla de inicio y vuelve a agregarla; en Android se actualiza sola, aunque puede tardar."
+  },
+  "suscripcion": {
+    "prueba": "Estás en el periodo de prueba hasta el {dia}.",
+    "pruebaPorVencer": "Tu periodo de prueba termina el {dia}. Comunícate con J Solutions para seguir usando la app.",
+    "porVencer": "Tu suscripción vence el {dia}. Comunícate con J Solutions para renovarla.",
+    "gracia": "Tu suscripción venció el {dia}. Tienes hasta el {hasta} para renovarla; después la app queda en solo lectura.",
+    "soloLectura": "Tu suscripción venció el {dia}. La app está en solo lectura: puedes ver y descargar todo, pero no guardar cambios. Comunícate con J Solutions para renovarla.",
+    "soloLecturaPm": "La app está en solo lectura: no se pueden guardar cambios. Avísale al administrador."
+  },
+  "suspendida": {
+    "titulo": "Cuenta suspendida",
+    "texto": "La cuenta de {empresa} está suspendida, así que por ahora nadie de la empresa puede entrar. El administrador debe comunicarse con J Solutions.",
+    "datos": "Tus datos siguen guardados: nada se borró."
+  },
+  "plataforma": {
+    "titulo": "Plataforma",
+    "volver": "Volver al inicio",
+    "volverLista": "Volver a las empresas",
+    "empresas": "Empresas",
+    "alMes": "Ingreso al mes",
+    "nueva": "Nueva empresa",
+    "nuevaAyuda": "Da de alta la empresa con su dueño. Al terminar te doy el enlace para que el dueño entre desde su celular (vale 7 días, una vez).",
+    "empresa": "Nombre de la empresa",
+    "ciudad": "Ciudad",
+    "ciudadEjemplo": "Austin, TX",
+    "dueno": "Nombre del dueño",
+    "correo": "Correo del dueño",
+    "correoAyuda": "No se le manda nada: es para identificarlo.",
+    "idioma": "Idioma",
+    "suscripcion": "Suscripción",
+    "plan": "Plan",
+    "planes": {
+      "basico": "Básico",
+      "pro": "Pro",
+      "empresa": "Empresa"
+    },
+    "ciclo": "Cobro",
+    "ciclos": {
+      "mensual": "mensual",
+      "anual": "anual"
+    },
+    "precio": "Precio por cobro (USD)",
+    "venceEl": "Pagado hasta",
+    "venceElAyuda": "Vacío: no vence. Se avisa al dueño 7 días antes; después de vencer tiene 7 días de gracia y luego la app queda en solo lectura.",
+    "enPrueba": "Está a prueba",
+    "darDeAlta": "Dar de alta",
+    "altaLista": "Empresa dada de alta.",
+    "verCuenta": "Ver su cuenta",
+    "estados": {
+      "activa": "Activa",
+      "prueba": "A prueba",
+      "por_vencer": "Por vencer",
+      "gracia": "Vencida (gracia)",
+      "solo_lectura": "Solo lectura",
+      "suspendida": "Suspendida"
+    },
+    "planPrecio": "{plan} · {precio} {ciclo}",
+    "vence": "Pagado hasta el {dia}",
+    "sinVencimiento": "Sin vencimiento",
+    "uso": "{pms, plural, one {# PM} other {# PMs}} · {obras, plural, one {# obra en curso} other {# obras en curso}}",
+    "usoLinea": "{uso} · {ultimo}",
+    "ultimoUso": "entró {dia}",
+    "nuncaEntro": "nadie ha entrado",
+    "obrasTotal": "{n, plural, one {# obra en total} other {# obras en total}}",
+    "duenoCorreo": "Dueño: {dueno} ({correo})",
+    "creada": "Dada de alta el {dia}",
+    "registrarPago": "Registrar un pago",
+    "monto": "Monto (USD)",
+    "pagadoEl": "Fecha del pago",
+    "metodo": "Cómo pagó",
+    "metodos": {
+      "zelle": "Zelle",
+      "transferencia": "Transferencia",
+      "efectivo": "Efectivo",
+      "tarjeta": "Tarjeta",
+      "otro": "Otro"
+    },
+    "referencia": "Referencia",
+    "cubreHasta": "Cubre hasta",
+    "cubreHastaAyuda": "Ya calculado con su ciclo, desde su vencimiento (o desde hoy si ya venció). Puedes cambiarlo.",
+    "pagoRegistrado": "Pago registrado.",
+    "notas": "Notas",
+    "guardar": "Guardar",
+    "guardado": "Guardado.",
+    "pagos": "Pagos",
+    "sinPagos": "Todavía no hay pagos.",
+    "metodoReferencia": "{metodo} · {referencia}",
+    "cubrio": "Cubrió hasta el {dia}",
+    "acceso": "Acceso",
+    "reinvitar": "Nueva invitación para el dueño",
+    "reinvitarAyuda": "Si el dueño no puede entrar. Anula las invitaciones que no usó.",
+    "suspender": "Suspender la empresa",
+    "suspenderSeguro": "Nadie de la empresa podrá entrar hasta que la reactives. Sus datos no se borran.",
+    "suspenderSi": "Sí, suspender",
+    "reactivar": "Reactivar la empresa",
+    "cancelar": "Cancelar"
   }
 }

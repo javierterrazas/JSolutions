@@ -16,13 +16,14 @@ const TABLAS = [
   'inspecciones', 'inspeccion_respuestas', 'pruebas_agua', 'punch_list', 'fotos',
   'ordenes_trabajo', 'ordenes_trabajo_precios', 'pagos_sub', 'ordenes_cambio', 'ordenes_cambio_montos',
   'no_calidad', 'cobros', 'entregas', 'obras_cerradas', 'historico_etapas', 'historico_duraciones',
-  'correcciones', 'enlaces_cliente', 'respuestas_cambio', 'marcas_empresa',
+  'correcciones', 'enlaces_cliente', 'respuestas_cambio', 'marcas_empresa', 'suscripciones', 'pagos_plataforma',
 ]; // prettier-ignore
 
 // 💲 La muralla financiera: tablas que solo leerán dueño y administrador (D-002).
 const TABLAS_DINERO = [
   'tarifas_trabajador', 'obras_finanzas', 'presupuesto_etapas', 'ordenes_trabajo_precios', 'pagos_sub',
-  'ordenes_cambio_montos', 'no_calidad', 'cobros', 'obras_cerradas', 'historico_etapas',
+  'ordenes_cambio_montos', 'no_calidad', 'cobros', 'obras_cerradas', 'historico_etapas', 'suscripciones',
+  'pagos_plataforma',
 ]; // prettier-ignore
 
 describe('las tablas del modelo', () => {

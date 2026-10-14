@@ -8,8 +8,8 @@ import {
   type Invitacion,
 } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
 import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { enlaceDeInvitacion } from '@/lib/enlace';
 import { auth } from '@/lib/servidor';
 
 export interface EnlaceDeInvitacion {
@@ -18,13 +18,7 @@ export interface EnlaceDeInvitacion {
 }
 
 /** El enlace que se manda al invitado, en la dirección por la que entró el dueño. */
-async function enlaceDe(inv: Invitacion): Promise<string> {
-  const h = await headers();
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? '';
-  const protocolo =
-    h.get('x-forwarded-proto') ?? (/^(localhost|127\.0\.0\.1)(:|$)/.test(host) ? 'http' : 'https');
-  return `${protocolo}://${host}/invitacion/${inv.token}`;
-}
+const enlaceDe = (inv: Invitacion) => enlaceDeInvitacion(inv.token);
 
 export async function invitar(
   _previo: Resultado<EnlaceDeInvitacion> | null,

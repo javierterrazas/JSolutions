@@ -85,6 +85,7 @@ export function EstadoCola() {
         <div role="status" className="flex flex-col gap-2 rounded-xl bg-sky-50 p-3 text-sm text-sky-900">
           <p>{t('pendientes', { n: pendientes.length })}</p>
           {fin === 'sin_red' ? <p className="text-xs">{t('sinRed')}</p> : null}
+          {fin === 'solo_lectura' ? <p className="text-xs font-semibold">{t('soloLectura')}</p> : null}
           <button
             type="button"
             disabled={enviando}

@@ -156,7 +156,11 @@ pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/cargar-libro.ts …
 pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/invitar-de-nuevo.ts … reinvitar a un miembro (D-038)
 pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/probar-conexion.ts    comprobar DATABASE_URL (solo lee)
 pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/exportar-obra.ts …    exportar una obra para el piloto (D-057)
+pnpm exec tsx --env-file=.env.nube packages/servidor/scripts/admin-plataforma.ts … quién administra la plataforma (D-080)
 ```
+
+Desde D-080, el alta de una empresa y la invitación nueva de su dueño también se hacen en la app, en "Plataforma"
+(solo quien la administra); los scripts quedan de respaldo.
 
 ## Documentos
 

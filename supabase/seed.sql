@@ -298,6 +298,16 @@ insert into public.marcas_empresa (empresa_id, color) values
   ('e000000a-0000-4000-8000-000000000000', '#1d3557'),
   ('e000000b-0000-4000-8000-000000000000', '#7c2d12');
 
+-- La plataforma (D-080): IJM sin vencimiento, con un pago; la otra empresa a prueba, vence en un año. Quien administra
+-- la plataforma es el dueño de IJM (en la nube se da de alta con scripts/admin-plataforma.ts).
+insert into public.suscripciones (empresa_id, plan, precio, ciclo, en_prueba, vence_el) values
+  ('e000000a-0000-4000-8000-000000000000', 'pro', 149, 'mensual', false, null),
+  ('e000000b-0000-4000-8000-000000000000', 'basico', 79, 'mensual', true, current_date + 365);
+insert into public.pagos_plataforma (empresa_id, monto, pagado_el, metodo, referencia, vence_el) values
+  ('e000000a-0000-4000-8000-000000000000', 149, '2026-10-01', 'zelle', 'Octubre', '2026-10-31'),
+  ('e000000b-0000-4000-8000-000000000000', 79, '2026-10-01', 'transferencia', null, '2026-10-31');
+insert into plataforma.administradores (user_id) values ('a0000000-0000-4000-8000-000000000001');
+
 -- Feriados (D-028): IJM descansa Thanksgiving y trabaja el 24 de diciembre; la otra empresa descansa Thanksgiving.
 insert into public.feriados (empresa_id, dia, nombre_es, nombre_en, se_trabaja) values
   ('e000000a-0000-4000-8000-000000000000', '2026-11-26', 'Día de Acción de Gracias', 'Thanksgiving', false),
