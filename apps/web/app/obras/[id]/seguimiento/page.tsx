@@ -281,14 +281,40 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
           </p>
           {s.cuadrilla.porTrabajador.length === 0 ? (
             <p className="text-slate-600">{t('sinCuadrilla')}</p>
-          ) : null}
+          ) : (
+            <p className="text-xs text-slate-600">{t('cuadrillaAyuda')}</p>
+          )}
           <ul className="flex flex-col gap-1">
+            {/* con un toque, sus horas por etapa: aproximadas, repartidas entre las partidas de cada día (D-077) */}
             {s.cuadrilla.porTrabajador.map((w) => (
-              <li key={w.nombre} className="flex justify-between gap-2 text-slate-700">
-                <span>
-                  {t('trabajador', { nombre: w.nombre, cantidad: cantidad(w.tipoPago, w.cantidad) })}
-                </span>
-                <span>{dinero(w.costo)}</span>
+              <li key={w.nombre}>
+                <details className="group">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-slate-700">
+                    <span className="flex items-center gap-2">
+                      <svg
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        className="size-4 shrink-0 fill-none stroke-current stroke-[2.5] transition-transform group-open:rotate-90"
+                      >
+                        <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {t('trabajador', { nombre: w.nombre, cantidad: cantidad(w.tipoPago, w.cantidad) })}
+                    </span>
+                    <span>{dinero(w.costo)}</span>
+                  </summary>
+                  <ul className="mb-2 ml-6 flex flex-col gap-1 border-l-2 border-slate-200 pl-3 text-slate-700">
+                    {w.porEtapa.map((x, i) => (
+                      <li key={i} className="flex justify-between gap-2">
+                        <span>{x.etapa ? nombre(x.etapa) : t('otras')}</span>
+                        <span>
+                          {t('aproximado', {
+                            cantidad: cantidad(w.tipoPago, Math.round(x.cantidad * 10) / 10),
+                          })}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               </li>
             ))}
           </ul>

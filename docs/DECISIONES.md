@@ -1354,3 +1354,16 @@ emitir otra (legacy: `duReprogramarOT`). En la orden, en "Subcontratos" de la ob
   presentación de subs, D-075) y el rastro lo dice. La orden muestra "El sub no llegó" y cuántas faltas lleva.
 - **El cambio de fechas queda en `correcciones`** (antes, después y motivo). Solo una orden emitida o confirmada (no
   aprobada, pagada ni cancelada), y no en una obra cerrada. Solo el dueño o el administrador.
+
+## D-077 · Las horas de la cuadrilla por etapa, repartidas entre las partidas del día
+
+**Decisión del dueño:** en el seguimiento de la obra, ver cuántas horas trabajó cada uno de la cuadrilla en cada
+etapa, aproximadamente; y que el costo de la cuadrilla por etapa se calcule igual.
+- **El reparto** (`repartirCuadrilla`): el PM anota en el cierre cuántas horas (o días) trabajó cada uno, no en qué
+  partida. Antes todo se cargaba a la primera partida del día. Ahora las horas de cada día se reparten **en partes
+  iguales** entre las partidas que se trabajaron ese día (las del cierre), cada una con su espacio y su etapa. Sin
+  cierre o sin partidas en él, se quedan en la partida con la que se guardaron.
+- **En "Cuadrilla" del seguimiento,** cada trabajador se abre con un toque (una flechita; no doble toque, que en el
+  celular hace zoom) y muestra sus horas por etapa, aproximadas (≈).
+- **El presupuesto por etapa** (D-062) usa el mismo reparto para el costo de la cuadrilla. Las horas, los días y el
+  costo total de cada trabajador no cambian; cambia a qué etapa se cargan.
