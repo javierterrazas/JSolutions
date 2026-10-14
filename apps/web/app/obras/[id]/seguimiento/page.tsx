@@ -147,6 +147,12 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
         >
           {t('cobros')}
         </Link>
+        <Link
+          href={`/obras/${s.obra.id}/subcontratos`}
+          className={`${estilos.botonSecundario} col-span-2 flex items-center justify-center px-2 text-center`}
+        >
+          {t('subcontratos')}
+        </Link>
       </div>
       <EnlaceCliente
         obraId={s.obra.id}

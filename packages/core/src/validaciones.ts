@@ -319,3 +319,112 @@ export function validarOrdenCambio(datos: DatosOrdenCambio, margenMinimo: number
     };
   return { ok: true, margen };
 }
+
+// ------------------------------------------------------------------ subcontratistas
+export interface PapelesSub {
+  readonly seguroVence: Dia | null;
+  readonly licencia: string | null;
+  readonly licenciaVence: Dia | null;
+  /** Su oficio requiere licencia estatal (en Texas: plomería, electricidad, HVAC). */
+  readonly requiereLicencia: boolean;
+}
+
+export type AvisoPapeles =
+  | { readonly codigo: 'sin_seguro' }
+  | { readonly codigo: 'seguro_vencido'; readonly dia: Dia }
+  | { readonly codigo: 'seguro_por_vencer'; readonly dia: Dia }
+  | { readonly codigo: 'sin_licencia' }
+  | { readonly codigo: 'licencia_vencida'; readonly dia: Dia };
+
+/** Cuántos días antes de que venza el seguro se avisa. */
+export const DIAS_AVISO_SEGURO = 30;
+
+/**
+ * Lo que le falta en papeles a un subcontratista (legacy: admin/servidor.js revisionSub_). Vacío: en regla. El
+ * sistema no bloquea: avisa, y al emitirle una orden o pagarle se confirma. Además del legacy, avisa del seguro que
+ * vence en los próximos 30 días.
+ */
+export function revisarPapelesSub(s: PapelesSub, hoy: Dia): AvisoPapeles[] {
+  const out: AvisoPapeles[] = [];
+  if (!s.seguroVence) out.push({ codigo: 'sin_seguro' });
+  else if (s.seguroVence < hoy) out.push({ codigo: 'seguro_vencido', dia: s.seguroVence });
+  else if (s.seguroVence <= sumarDiasNaturales(hoy, DIAS_AVISO_SEGURO))
+    out.push({ codigo: 'seguro_por_vencer', dia: s.seguroVence });
+  if (s.requiereLicencia) {
+    if (!s.licencia?.trim()) out.push({ codigo: 'sin_licencia' });
+    else if (s.licenciaVence && s.licenciaVence < hoy)
+      out.push({ codigo: 'licencia_vencida', dia: s.licenciaVence });
+  }
+  return out;
+}
+
+/** Un día más n días de calendario (no laborables). */
+function sumarDiasNaturales(d: Dia, n: number): Dia {
+  const f = new Date(`${d}T12:00:00Z`);
+  f.setUTCDate(f.getUTCDate() + n);
+  return f.toISOString().slice(0, 10);
+}
+
+// ------------------------------------------------------------------ órdenes de trabajo y pagos a subs
+export interface DatosOrdenTrabajo {
+  readonly subId: string | null;
+  readonly partidaId: string | null;
+  readonly alcance: string | null;
+  readonly inicio: Dia | null;
+  readonly fin: Dia | null;
+  readonly precio: number | null;
+}
+
+/**
+ * La orden de trabajo a un sub (legacy: admin/servidor.js duCrearOT): es el compromiso de costo de esa partida, con
+ * precio cerrado. Si al sub le faltan papeles, pide confirmar (`papeles`). Errores: `faltan`, `fin_antes_del_inicio`,
+ * `precio_cerrado`.
+ */
+export function validarOrdenTrabajo(
+  d: DatosOrdenTrabajo,
+  papeles: readonly AvisoPapeles[],
+  confirmado: readonly string[],
+): { ok: true } | { ok: false; confirmar: 'papeles'; avisos: readonly AvisoPapeles[] } {
+  exigir([
+    [d.subId, 'subcontratista'],
+    [d.partidaId, 'partida'],
+    [d.alcance, 'alcance'],
+    [d.inicio, 'fecha_inicio'],
+    [d.fin, 'fecha_fin'],
+  ]);
+  if (d.fin! < d.inicio!) throw new ErrorDeNegocio('fin_antes_del_inicio');
+  if (!(Number(d.precio) > 0)) throw new ErrorDeNegocio('precio_cerrado');
+  if (papeles.length && !confirmado.includes('papeles'))
+    return { ok: false, confirmar: 'papeles', avisos: papeles };
+  return { ok: true };
+}
+
+export type AvisoPagoSub = 'sin_confirmar' | 'sin_aprobar' | 'papeles' | 'sobrepago';
+
+/**
+ * Un pago a un sub, siempre contra su orden (legacy: duPagoSub). Cada advertencia se confirma por separado, en este
+ * orden: un anticipo antes de que el sub confirme por escrito (`sin_confirmar`), una liquidación antes de que el PM
+ * apruebe el trabajo (`sin_aprobar`), el sub sin papeles en regla (`papeles`; no cuenta que falte la fecha del seguro,
+ * como el legacy), y pagar más que el precio cerrado (`sobrepago`: el extra va en una orden de cambio). Devuelve si
+ * con este pago queda liquidada. Error: `monto_invalido`.
+ */
+export function validarPagoSub(
+  p: { monto: number | null; concepto: 'anticipo' | 'parcial' | 'liquidacion' },
+  orden: { confirmada: boolean; aprobada: boolean; precio: number; pagado: number },
+  papeles: readonly AvisoPapeles[],
+  confirmado: readonly string[],
+): { ok: true; liquida: boolean } | { ok: false; confirmar: AvisoPagoSub; total?: number } {
+  const monto = Number(p.monto) || 0;
+  if (monto <= 0) throw new ErrorDeNegocio('monto_invalido');
+  const acepta = (c: AvisoPagoSub) => confirmado.includes(c);
+  if (p.concepto === 'anticipo' && !orden.confirmada && !acepta('sin_confirmar'))
+    return { ok: false, confirmar: 'sin_confirmar' };
+  if (p.concepto === 'liquidacion' && !orden.aprobada && !acepta('sin_aprobar'))
+    return { ok: false, confirmar: 'sin_aprobar' };
+  if (papeles.some((a) => a.codigo !== 'sin_seguro') && !acepta('papeles'))
+    return { ok: false, confirmar: 'papeles' };
+  const total = orden.pagado + monto;
+  if (total > orden.precio + 0.01 && !acepta('sobrepago'))
+    return { ok: false, confirmar: 'sobrepago', total };
+  return { ok: true, liquida: total >= orden.precio - 0.01 };
+}

@@ -13,7 +13,8 @@
     "gastosPorRevisar": "{n, plural, one {# compra por revisar} other {# compras por revisar}}",
     "avisosPorContestar": "{n, plural, one {# aviso por contestar} other {# avisos por contestar}}",
     "terminadas": "Obras terminadas ({n})",
-    "cuadrilla": "Cuadrilla"
+    "cuadrilla": "Cuadrilla",
+    "subcontratistas": "Subcontratistas"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -125,7 +126,13 @@
       "costo": "costo",
       "monto": "monto",
       "concepto": "concepto",
-      "metodo": "cómo pagó"
+      "metodo": "cómo pagó",
+      "oficio": "oficio",
+      "telefono": "teléfono",
+      "subcontratista": "subcontratista",
+      "partida": "partida",
+      "alcance": "alcance",
+      "fecha_fin": "fecha de fin"
     },
     "solo_pm": "Solo el PM de la obra cierra el día.",
     "dia_ya_cerrado": "Ese día ya está cerrado.",
@@ -161,7 +168,7 @@
     "falta_oficio": "Elige el oficio del subcontratista.",
     "etapa_inexistente": "Esa etapa ya no existe.",
     "hito_inexistente": "Ese punto de control ya no existe.",
-    "oficio_inexistente": "Ese oficio ya no existe.",
+    "oficio_inexistente": "Ese oficio no existe o está dado de baja.",
     "etapa_sin_nombre": "Escribe el nombre de la etapa.",
     "etapa_repetida": "Ya existe una etapa con ese nombre.",
     "inspeccion_sin_foto": "Faltan fotos: una de cada pregunta marcada «requiere foto» que cumple.",
@@ -195,7 +202,14 @@
     "orden_ya_respondida": "Esta orden de cambio ya tiene respuesta.",
     "falta_nombre": "Escriba su nombre.",
     "falta_firma": "Firme dentro del recuadro para aprobar.",
-    "enlace_invalido": "Este enlace ya no está activo."
+    "enlace_invalido": "Este enlace ya no está activo.",
+    "sub_repetido": "Ya existe un subcontratista con ese nombre: edítalo en vez de darlo de alta otra vez.",
+    "precio_cerrado": "La orden va con precio cerrado: captura el precio.",
+    "fin_antes_del_inicio": "La fecha de fin no puede ser antes del inicio.",
+    "sub_no_activo": "Ese subcontratista está dado de baja.",
+    "orden_con_pagos": "Esa orden ya tiene pagos: ajusta el alcance en vez de cancelarla.",
+    "orden_no_cancelable": "Esa orden ya está pagada o cancelada.",
+    "orden_cancelada": "Esa orden está cancelada."
   },
   "obras": {
     "titulo": "Obras",
@@ -823,7 +837,8 @@
     "notas": "Notas:",
     "corregir": "Corregir",
     "cambios": "Órdenes de cambio",
-    "cobros": "Cobros"
+    "cobros": "Cobros",
+    "subcontratos": "Subcontratos y pagos a subs"
   },
   "datosObra": {
     "titulo": "Datos de la obra",
@@ -1023,6 +1038,113 @@
       "cheque": "Cheque",
       "efectivo": "Efectivo",
       "tarjeta": "Tarjeta"
+    }
+  },
+  "subcontratistas": {
+    "titulo": "Subcontratistas",
+    "volver": "Volver al inicio",
+    "ayuda": "Los subcontratistas de la empresa con sus papeles. Nunca se borran: de baja ya no se les emiten órdenes, y su historial se queda.",
+    "agregar": "Agregar subcontratista",
+    "guardar": "Guardar",
+    "cancelar": "Cancelar",
+    "editar": "Editar",
+    "darDeBaja": "Dar de baja",
+    "reactivar": "Reactivar",
+    "dadosDeBaja": "Dados de baja",
+    "vacio": "Todavía no hay subcontratistas.",
+    "guardado": "Subcontratista guardado.",
+    "nombre": "Nombre o empresa",
+    "oficio": "Oficio",
+    "elegirOficio": "Elige el oficio",
+    "oficioConLicencia": "{oficio} (requiere licencia)",
+    "telefono": "Teléfono",
+    "contacto": "Contacto (opcional)",
+    "correo": "Correo (opcional)",
+    "seguro": "Su seguro vence el",
+    "licencia": "Número de licencia",
+    "licenciaVence": "La licencia vence el",
+    "w9": "Ya entregó su W-9",
+    "seguroHasta": "Seguro hasta el {dia}",
+    "licenciaNum": "Licencia {licencia}",
+    "conW9": "W-9 entregado",
+    "sinW9": "Sin W-9",
+    "abiertas": "{n, plural, one {# orden de trabajo abierta} other {# órdenes de trabajo abiertas}}",
+    "bajaConAbiertas": "{n, plural, one {Dado de baja. Su orden abierta sigue: termínala o cancélala.} other {Dado de baja. Sus # órdenes abiertas siguen: termínalas o cancélalas.}}",
+    "avisos": {
+      "sin_seguro": "No tiene registrada la fecha de su seguro.",
+      "seguro_vencido": "Su seguro venció el {dia}.",
+      "seguro_por_vencer": "Su seguro vence el {dia}: pídele la renovación.",
+      "sin_licencia": "Su oficio requiere licencia estatal y no tiene una registrada.",
+      "licencia_vencida": "Su licencia venció el {dia}."
+    }
+  },
+  "subcontratos": {
+    "titulo": "Subcontratos",
+    "volver": "Volver al seguimiento",
+    "ayuda": "Cada orden de trabajo es el compromiso de costo de esa partida, con precio cerrado. Al sub se le paga siempre contra su orden.",
+    "comprometido": "Comprometido con subs",
+    "pagado": "Pagado",
+    "porPagar": "Por pagar",
+    "saldo": "Saldo",
+    "precio": "Precio",
+    "cerrada": "La obra ya está entregada o cerrada: no se emiten órdenes ni se pagan.",
+    "ninguna": "Esta obra no tiene órdenes de trabajo.",
+    "nueva": "Emitir orden de trabajo",
+    "sinSubs": "No hay subcontratistas activos: dalos de alta en Subcontratistas.",
+    "sub": "Subcontratista",
+    "elegirSub": "Elige el subcontratista",
+    "subOficio": "{sub} · {oficio}",
+    "partida": "Partida que cubre",
+    "elegirPartida": "Elige la partida",
+    "alcance": "Alcance",
+    "alcanceEjemplo": "Rough de plomería del baño principal",
+    "inicio": "Inicio",
+    "fin": "Fin",
+    "emitir": "Emitir orden",
+    "cancelar": "Cancelar",
+    "emitida": "Orden {folio} emitida. El PM la ve para confirmarla.",
+    "otra": "Emitir otra",
+    "papelesConfirmar": "Antes de mandar a este sub a la obra:",
+    "emitirAsi": "Emitirla de todos modos",
+    "folioSub": "{folio} · {sub}",
+    "partidaDe": "{espacio} · {partida}",
+    "fechas": "Del {inicio} al {fin}",
+    "pagar": "Registrar pago",
+    "cancelarOrden": "Cancelar orden",
+    "registrarPago": "Registrar pago",
+    "pagarAsi": "Pagar de todos modos",
+    "pagoRegistrado": "Pago registrado: {folio}",
+    "monto": "Monto",
+    "fecha": "Fecha",
+    "concepto": "Concepto",
+    "metodo": "Cómo se pagó",
+    "referencia": "Referencia (opcional)",
+    "pagoLinea": "{dia} · {concepto}",
+    "estados": {
+      "emitida": "Emitida",
+      "confirmada": "Confirmada",
+      "aprobada": "Aprobada",
+      "pagada": "Pagada",
+      "cancelada": "Cancelada"
+    },
+    "conceptos": {
+      "anticipo": "Anticipo",
+      "parcial": "Pago parcial",
+      "liquidacion": "Liquidación"
+    },
+    "metodos": {
+      "transferencia": "Transferencia",
+      "cheque": "Cheque",
+      "zelle": "Zelle",
+      "efectivo": "Efectivo",
+      "tarjeta": "Tarjeta",
+      "tarjeta_empresa": "Tarjeta de la empresa"
+    },
+    "avisos": {
+      "sin_confirmar": "Este sub todavía no confirma la orden por escrito. Un anticipo antes de la confirmación es dinero sin compromiso.",
+      "sin_aprobar": "El PM todavía no aprueba el trabajo. La regla es que el sub cobra contra trabajo aprobado.",
+      "papeles": "Este sub no tiene sus papeles en regla (seguro o licencia). Pagarle así te deja expuesto.",
+      "sobrepago": "Con este pago llevarías {total} contra una orden de {precio}. Si es trabajo extra, va en una orden de cambio."
     }
   }
 }

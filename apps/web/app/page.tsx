@@ -65,6 +65,12 @@ export default async function Inicio() {
           <Link href="/cuadrilla" className={`${estilos.botonSecundario} flex items-center justify-center`}>
             {t('cuadrilla')}
           </Link>
+          <Link
+            href="/subcontratistas"
+            className={`${estilos.botonSecundario} flex items-center justify-center`}
+          >
+            {t('subcontratistas')}
+          </Link>
           <Link href="/catalogo" className={`${estilos.botonSecundario} flex items-center justify-center`}>
             {t('catalogo')}
           </Link>

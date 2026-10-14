@@ -140,7 +140,7 @@ describe('correcciones del PM', () => {
 });
 
 describe('correcciones del dueño', () => {
-  it('corrige un cobro con rastro; anular un pago regresa la orden de "pagada" a "aprobada"', () =>
+  it('corrige un cobro con rastro; anular un pago regresa la orden de "pagada" a donde estaba', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const [cobro] = await tx<{ id: string }[]>`select id from cobros where obra_id = ${OBRAS.a1Carlos}`;
       await corregir(tx, {
@@ -153,6 +153,8 @@ describe('correcciones del dueño', () => {
       const [pago] = await tx<{ id: string; ot: string }[]>`
         select p.id, p.orden_trabajo_id as ot from pagos_sub p join ordenes_trabajo o on o.id = p.orden_trabajo_id
         where p.obra_id = ${OBRAS.a1Carlos} and o.estado = 'pagada'`;
+      // el PM la había aprobado: regresa a aprobada (D-074)
+      await tx`update ordenes_trabajo set aprobada_en = now(), aprobada_por = ${MIEMBROS.carlos} where id = ${pago!.ot}`;
       await anular(tx, { tabla: 'pagos_sub', registroId: pago!.id, motivo: 'El cheque rebotó' });
       expect((await tx`select estado from ordenes_trabajo where id = ${pago!.ot}`)[0]!.estado).toBe(
         'aprobada',

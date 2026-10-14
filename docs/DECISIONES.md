@@ -1294,3 +1294,36 @@ portal lo que lleva pagado y su saldo (legacy: `duCobro`, "cobrado contra ejecut
 app instalada no hay barra de direcciones, y el dueño se quedó atrapado en el portal. Si quien abre el portal tiene
 su sesión de la app en ese celular (con el PIN abierto o no), arriba sale el botón "Volver a la app", que lleva al
 inicio. El cliente, sin sesión, no lo ve.
+
+## D-073 · Los subcontratistas, para el dueño
+
+**Decisión del dueño:** un botón en su inicio para gestionar los subcontratistas ("Subcontratistas",
+`/subcontratistas`; legacy: `duGuardarSub`, `duActivarSub`).
+- **Alta y edición:** nombre o empresa, oficio, teléfono (los tres obligatorios), contacto y correo, y sus papeles:
+  cuándo vence su seguro, su número de licencia y cuándo vence, y si ya entregó su W-9. **El nombre no se repite**
+  (dos altas del mismo sub parten su historial en dos): se edita el que hay.
+- **Los papeles** (`revisarPapelesSub`, como `revisionSub_` del legacy): avisa si no tiene fecha de seguro, si venció,
+  o, además del legacy, si vence en los próximos 30 días; y si su oficio requiere licencia estatal
+  (`oficios.requiere_licencia`, en vez de adivinarlo por el nombre), si no la tiene o si venció. No bloquea: avisa.
+- **Baja y reactivación:** nunca se borra (su historial vive en sus órdenes y pagos); de baja ya no se le emiten
+  órdenes, y se dice cuántas órdenes abiertas le quedan.
+- Solo el dueño o el administrador. El PM los sigue viendo por `subcontratistas_pm`, sin papeles ni dinero.
+
+## D-074 · Las órdenes de trabajo y los pagos a subs
+
+**Decisión del dueño:** pagarle a los subcontratistas desde la app (legacy: `duCrearOT`, `duCancelarOT`, `duPagoSub`).
+Desde el seguimiento de cada obra, "Subcontratos y pagos a subs" (`/obras/[id]/subcontratos`).
+- **Arriba:** lo comprometido con los subs (las órdenes no canceladas, por su precio), lo pagado y lo que falta por
+  pagar.
+- **Emitir una orden de trabajo** a un sub activo: la partida que cubre, el alcance, el inicio y el fin, y el **precio
+  cerrado** (`validarOrdenTrabajo`). Es el compromiso de costo de esa partida. Si al sub le faltan papeles (D-073),
+  lo dice y deja emitirla de todos modos. No en una obra entregada o cerrada. El PM la ve para confirmarla y
+  aprobarla en su app, como antes.
+- **Pagarle siempre contra su orden:** monto (el saldo por omisión), fecha (no después de hoy), concepto (anticipo,
+  pago parcial o liquidación), cómo se pagó y una referencia (`registrarPagoSub`). **Los avisos del legacy**, que se
+  confirman uno por uno (`validarPagoSub`): un anticipo antes de que el sub confirme por escrito, una liquidación antes
+  de que el PM apruebe el trabajo, el sub sin papeles en regla, y pagar más que el precio (el extra va en una orden de
+  cambio). Liquidada, la orden queda **pagada** (el PM ya no la ve, D-017).
+- **Anular un pago** con su motivo (`anular`); la orden regresa de pagada a donde estaba: aprobada, confirmada o
+  emitida (antes regresaba siempre a aprobada, aunque el PM no la hubiera aprobado).
+- **Cancelar una orden** sin pagos: deja de contar como comprometido. Con pagos no se cancela (se ajusta el alcance).
