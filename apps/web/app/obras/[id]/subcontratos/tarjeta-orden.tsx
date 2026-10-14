@@ -6,7 +6,7 @@ import type { Nombre, OrdenDeTrabajo } from '@ijm/servidor';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { startTransition, useActionState, useRef, useState } from 'react';
 import { formatoDinero } from '@/lib/dinero';
-import { anularPagoSub, cancelarOrden, pagarSub } from '../../../acciones/subcontratos';
+import { anularPagoSub, cancelarOrden, pagarSub, reprogramarOrden } from '../../../acciones/subcontratos';
 import { enviarSinVaciar } from '../../../componentes/enviar';
 import { estilos } from '../../../componentes/marco';
 import { MensajeError } from '../../../componentes/mensaje-error';
@@ -99,6 +99,15 @@ export function TarjetaOrden({
   const nombre = (n: Nombre) => (idioma === 'en' ? n.en : null) ?? n.es;
   const dia = (d: string) => formato.dateTime(new Date(`${d}T12:00:00`), { day: 'numeric', month: 'short' });
   const [pagando, setPagando] = useState(false);
+  const [reprogramando, setReprogramando] = useState(false);
+  const [rReprogramar, reprogramar, enviandoReprogramar] = useActionState(
+    async (previo: Awaited<ReturnType<typeof reprogramarOrden>> | null, f: FormData) => {
+      const r = await reprogramarOrden(obraId, o.id, previo, f);
+      if (r.ok) setReprogramando(false);
+      return r;
+    },
+    null,
+  );
   const [confirmado, setConfirmado] = useState<string[]>([]);
   const formulario = useRef<HTMLFormElement>(null);
   const [rPago, pagar, enviandoPago] = useActionState(
@@ -136,7 +145,11 @@ export function TarjetaOrden({
         {t('partidaDe', { espacio: o.espacio, partida: nombre(o.partida) })}
       </p>
       <p className="text-slate-900">{o.alcance}</p>
-      <p className="text-sm text-slate-700">{t('fechas', { inicio: dia(o.inicio), fin: dia(o.fin) })}</p>
+      <p className="flex flex-wrap gap-x-3 text-sm text-slate-700">
+        <span>{t('fechas', { inicio: dia(o.inicio), fin: dia(o.fin) })}</span>
+        {o.sePresento === false ? <span className="font-semibold text-red-700">{t('noLlego')}</span> : null}
+        {o.faltas ? <span className="text-amber-800">{t('faltas', { n: o.faltas })}</span> : null}
+      </p>
       <dl className="grid grid-cols-3 gap-2 rounded-xl bg-slate-50 p-2 text-center text-sm">
         <div>
           <dt className="text-slate-600">{t('precio')}</dt>
@@ -265,8 +278,58 @@ export function TarjetaOrden({
         </p>
       ) : null}
       <MensajeError problema={rCancelar && !rCancelar.ok ? rCancelar : null} />
-      {abierta && !pagando ? (
+      {reprogramando ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const f = new FormData(e.currentTarget);
+            startTransition(() => reprogramar(f));
+          }}
+          className="flex flex-col gap-3 border-t border-slate-100 pt-3"
+        >
+          <p className="text-sm text-slate-700">{t('reprogramarAyuda')}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <label className={estilos.etiqueta}>
+              {t('nuevoInicio')}
+              <input name="inicio" type="date" required defaultValue={hoy} className={estilos.campo} />
+            </label>
+            <label className={estilos.etiqueta}>
+              {t('nuevoFin')}
+              <input name="fin" type="date" defaultValue={hoy} className={estilos.campo} />
+            </label>
+          </div>
+          <label className={estilos.etiqueta}>
+            {t('motivo')}
+            <input name="motivo" required minLength={5} maxLength={500} className={estilos.campo} />
+          </label>
+          <MensajeError problema={rReprogramar && !rReprogramar.ok ? rReprogramar : null} />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setReprogramando(false)}
+              className={`${estilos.botonSecundario} flex-1`}
+            >
+              {t('cancelar')}
+            </button>
+            <button type="submit" disabled={enviandoReprogramar} className={`${estilos.boton} flex-1`}>
+              {t('reprogramar')}
+            </button>
+          </div>
+        </form>
+      ) : null}
+      {rReprogramar?.ok && !reprogramando ? (
+        <p role="status" className="text-sm font-semibold text-emerald-800">
+          {rReprogramar.datos.falto ? t('reprogramadaConFalta') : t('reprogramada')}
+        </p>
+      ) : null}
+
+      {abierta && !pagando && !reprogramando ? (
         <div className="grid grid-cols-2 gap-2">
+          {o.estado === 'emitida' || o.estado === 'confirmada' ? (
+            <button type="button" onClick={() => setReprogramando(true)} className={estilos.botonSecundario}>
+              {t('reprogramar')}
+            </button>
+          ) : null}
           {o.estado !== 'pagada' ? (
             <button type="button" onClick={() => setPagando(true)} className={estilos.botonSecundario}>
               {t('pagar')}

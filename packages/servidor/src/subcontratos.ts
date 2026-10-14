@@ -55,6 +55,10 @@ export interface OrdenDeTrabajo {
   readonly confirmada: boolean;
   /** El PM aprobó el trabajo. */
   readonly aprobada: boolean;
+  /** Si el sub llegó el día de arranque (lo marca el cierre del PM); null si todavía no se sabe. */
+  readonly sePresento: boolean | null;
+  /** Las veces que no llegó y se reprogramó. */
+  readonly faltas: number;
   readonly precio: number;
   readonly pagado: number;
   readonly saldo: number;
@@ -155,13 +159,16 @@ export async function subcontratosDeObra(
       estado: OrdenDeTrabajo['estado'];
       confirmada: boolean;
       aprobada: boolean;
+      se_presento: boolean | null;
+      faltas: number;
       precio: string | null;
     }[]
   >`
     select ot.id, ot.folio, ot.subcontratista_id as sub_id, s.nombre as sub, e.nombre as espacio,
            p.nombre_es as es, p.nombre_en as en, ot.alcance,
            to_char(ot.inicio_programado, 'YYYY-MM-DD') as inicio, to_char(ot.fin_programado, 'YYYY-MM-DD') as fin,
-           ot.estado, ot.confirmada_en is not null as confirmada, ot.aprobada_en is not null as aprobada, pr.precio
+           ot.estado, ot.confirmada_en is not null as confirmada, ot.aprobada_en is not null as aprobada,
+           ot.se_presento, ot.faltas, pr.precio
     from ordenes_trabajo ot
     join subcontratistas s on s.id = ot.subcontratista_id
     join espacios e on e.id = ot.espacio_id
@@ -193,6 +200,8 @@ export async function subcontratosDeObra(
       estado: o.estado,
       confirmada: o.confirmada,
       aprobada: o.aprobada,
+      sePresento: o.se_presento,
+      faltas: o.faltas,
       precio,
       pagado,
       saldo: precio - pagado,
@@ -384,4 +393,75 @@ export async function registrarPagoSub(
     returning id, folio`;
   if (r.liquida) await tx`update ordenes_trabajo set estado = 'pagada' where id = ${e.ordenId}`;
   return { ok: true, pagoId: pago!.id, folio: pago!.folio, saldo: precio - pagado - Number(e.monto) };
+}
+
+const EntradaReprogramar = z.object({
+  ordenId: uuid,
+  inicio: dia.nullish(),
+  /** Sin fin, la orden es de un solo día. */
+  fin: dia.nullish(),
+  motivo: z.string().max(2000).nullish(),
+});
+
+/**
+ * Reprograma una orden cuando el sub no llegó o cambió la fecha (legacy: duReprogramarOT), en vez de cancelarla y
+ * emitir otra. Si el sub no llegó, la falta queda contada (alimenta la tasa de presentación de subs); la orden
+ * regresa a emitida, sin confirmación ni asistencia, para que el sub la confirme otra vez y el PM marque cuándo sí
+ * llegue. No una aprobada, pagada o cancelada, ni en una obra cerrada. El cambio de fechas queda en correcciones con
+ * su motivo. Errores: `faltan`, `falta_motivo`, `fin_antes_del_inicio`, `registro_no_encontrado`,
+ * `orden_no_reprogramable`, `obra_cerrada`, `sin_cambios`.
+ */
+export async function reprogramarOrdenTrabajo(
+  tx: Tx,
+  entrada: z.input<typeof EntradaReprogramar>,
+  ahora = new Date(),
+): Promise<{ faltas: number; falto: boolean }> {
+  const e = validarEntrada(EntradaReprogramar, entrada);
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  exigir([[e.inicio, 'fecha_inicio']]);
+  const motivo = e.motivo?.trim() ?? '';
+  if (motivo.length < 5) throw new ErrorDeNegocio('falta_motivo');
+  const fin = e.fin ?? e.inicio!;
+  if (fin < e.inicio!) throw new ErrorDeNegocio('fin_antes_del_inicio');
+  const [ot] = await tx<
+    {
+      obra_id: string;
+      estado: string;
+      inicio: Dia;
+      fin: Dia;
+      se_presento: boolean | null;
+      faltas: number;
+    }[]
+  >`
+    select obra_id, estado, to_char(inicio_programado, 'YYYY-MM-DD') as inicio,
+           to_char(fin_programado, 'YYYY-MM-DD') as fin, se_presento, faltas
+    from ordenes_trabajo where id = ${e.ordenId} for update`;
+  if (!ot) throw new ErrorDeNegocio('registro_no_encontrado');
+  if (!['emitida', 'confirmada'].includes(ot.estado)) throw new ErrorDeNegocio('orden_no_reprogramable');
+  if ((await obraAbierta(tx, ot.obra_id))?.cerrada) throw new ErrorDeNegocio('obra_cerrada');
+  const falto = ot.se_presento === false;
+  const faltas = ot.faltas + (falto ? 1 : 0);
+  await tx`
+    update ordenes_trabajo
+    set inicio_programado = ${e.inicio!}, fin_programado = ${fin}, estado = 'emitida', confirmada_en = null,
+        se_presento = null, faltas = ${faltas}
+    where id = ${e.ordenId}`;
+  const porque = falto ? `${motivo} (el sub no llegó)` : motivo;
+  const cambios = [
+    { campo: 'inicio_programado', antes: ot.inicio, despues: e.inicio! },
+    { campo: 'fin_programado', antes: ot.fin, despues: fin },
+  ].filter((c) => c.antes !== c.despues);
+  if (!cambios.length) throw new ErrorDeNegocio('sin_cambios');
+  await tx`insert into correcciones ${tx(
+    cambios.map((c) => ({
+      empresa_id: s.empresaId,
+      tabla: 'ordenes_trabajo',
+      registro_id: e.ordenId,
+      accion: 'editar',
+      ...c,
+      motivo: porque,
+    })),
+  )}`;
+  return { faltas, falto };
 }

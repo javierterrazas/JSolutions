@@ -210,7 +210,8 @@
     "sub_no_activo": "That subcontractor is deactivated.",
     "orden_con_pagos": "That order already has payments: adjust the scope instead of canceling it.",
     "orden_no_cancelable": "That order is already paid or canceled.",
-    "orden_cancelada": "That order is canceled."
+    "orden_cancelada": "That order is canceled.",
+    "orden_no_reprogramable": "That order is already approved, paid or canceled: it can no longer be rescheduled."
   },
   "obras": {
     "titulo": "Jobs",
@@ -1146,7 +1147,16 @@
       "sin_aprobar": "The PM has not approved the work yet. The rule is that subs get paid against approved work.",
       "papeles": "This sub does not have their paperwork in order (insurance or license). Paying them like this leaves you exposed.",
       "sobrepago": "With this payment you would be at {total} against an order of {precio}. If it is extra work, it goes in a change order."
-    }
+    },
+    "noLlego": "The sub did not show up",
+    "faltas": "{n, plural, one {# no-show} other {# no-shows}}",
+    "reprogramar": "Reschedule",
+    "nuevoInicio": "New start",
+    "nuevoFin": "New end",
+    "motivo": "Reason",
+    "reprogramarAyuda": "Move the dates instead of canceling the order. The sub has to confirm it again; if they did not show up, the no-show is counted.",
+    "reprogramada": "Order rescheduled. The PM sees it so the sub confirms it again.",
+    "reprogramadaConFalta": "Order rescheduled and the no-show counted."
   },
   "indicadores": {
     "titulo": "Metrics",
