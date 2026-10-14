@@ -1294,3 +1294,17 @@ portal lo que lleva pagado y su saldo (legacy: `duCobro`, "cobrado contra ejecut
 app instalada no hay barra de direcciones, y el dueño se quedó atrapado en el portal. Si quien abre el portal tiene
 su sesión de la app en ese celular (con el PIN abierto o no), arriba sale el botón "Volver a la app", que lleva al
 inicio. El cliente, sin sesión, no lo ve.
+
+## D-073 · Los subcontratistas, para el dueño
+
+**Decisión del dueño:** un botón en su inicio para gestionar los subcontratistas ("Subcontratistas",
+`/subcontratistas`; legacy: `duGuardarSub`, `duActivarSub`).
+- **Alta y edición:** nombre o empresa, oficio, teléfono (los tres obligatorios), contacto y correo, y sus papeles:
+  cuándo vence su seguro, su número de licencia y cuándo vence, y si ya entregó su W-9. **El nombre no se repite**
+  (dos altas del mismo sub parten su historial en dos): se edita el que hay.
+- **Los papeles** (`revisarPapelesSub`, como `revisionSub_` del legacy): avisa si no tiene fecha de seguro, si venció,
+  o, además del legacy, si vence en los próximos 30 días; y si su oficio requiere licencia estatal
+  (`oficios.requiere_licencia`, en vez de adivinarlo por el nombre), si no la tiene o si venció. No bloquea: avisa.
+- **Baja y reactivación:** nunca se borra (su historial vive en sus órdenes y pagos); de baja ya no se le emiten
+  órdenes, y se dice cuántas órdenes abiertas le quedan.
+- Solo el dueño o el administrador. El PM los sigue viendo por `subcontratistas_pm`, sin papeles ni dinero.

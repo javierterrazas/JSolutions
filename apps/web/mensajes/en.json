@@ -13,7 +13,8 @@
     "gastosPorRevisar": "{n, plural, one {# purchase to review} other {# purchases to review}}",
     "avisosPorContestar": "{n, plural, one {# alert to answer} other {# alerts to answer}}",
     "terminadas": "Finished jobs ({n})",
-    "cuadrilla": "Crew"
+    "cuadrilla": "Crew",
+    "subcontratistas": "Subcontractors"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -125,7 +126,9 @@
       "costo": "cost",
       "monto": "amount",
       "concepto": "concept",
-      "metodo": "how they paid"
+      "metodo": "how they paid",
+      "oficio": "trade",
+      "telefono": "phone"
     },
     "solo_pm": "Only the job's PM closes the day.",
     "dia_ya_cerrado": "That day is already closed.",
@@ -161,7 +164,7 @@
     "falta_oficio": "Choose the subcontractor's trade.",
     "etapa_inexistente": "That stage no longer exists.",
     "hito_inexistente": "That checkpoint no longer exists.",
-    "oficio_inexistente": "That trade no longer exists.",
+    "oficio_inexistente": "That trade does not exist or is inactive.",
     "etapa_sin_nombre": "Enter the name of the stage.",
     "etapa_repetida": "A stage with that name already exists.",
     "inspeccion_sin_foto": "Photos missing: one for each question marked “photo required” that passes.",
@@ -195,7 +198,8 @@
     "orden_ya_respondida": "This change order already has an answer.",
     "falta_nombre": "Please enter your name.",
     "falta_firma": "Sign inside the box to approve.",
-    "enlace_invalido": "This link is no longer active."
+    "enlace_invalido": "This link is no longer active.",
+    "sub_repetido": "A subcontractor with that name already exists: edit it instead of adding it again."
   },
   "obras": {
     "titulo": "Jobs",
@@ -1023,6 +1027,44 @@
       "cheque": "Check",
       "efectivo": "Cash",
       "tarjeta": "Card"
+    }
+  },
+  "subcontratistas": {
+    "titulo": "Subcontractors",
+    "volver": "Back to home",
+    "ayuda": "The company's subcontractors and their paperwork. They are never deleted: once deactivated they get no new orders, and their history stays.",
+    "agregar": "Add subcontractor",
+    "guardar": "Save",
+    "cancelar": "Cancel",
+    "editar": "Edit",
+    "darDeBaja": "Deactivate",
+    "reactivar": "Reactivate",
+    "dadosDeBaja": "Deactivated",
+    "vacio": "No subcontractors yet.",
+    "guardado": "Subcontractor saved.",
+    "nombre": "Name or company",
+    "oficio": "Trade",
+    "elegirOficio": "Choose the trade",
+    "oficioConLicencia": "{oficio} (license required)",
+    "telefono": "Phone",
+    "contacto": "Contact (optional)",
+    "correo": "Email (optional)",
+    "seguro": "Insurance expires on",
+    "licencia": "License number",
+    "licenciaVence": "License expires on",
+    "w9": "W-9 received",
+    "seguroHasta": "Insured until {dia}",
+    "licenciaNum": "License {licencia}",
+    "conW9": "W-9 received",
+    "sinW9": "No W-9",
+    "abiertas": "{n, plural, one {# open work order} other {# open work orders}}",
+    "bajaConAbiertas": "{n, plural, one {Deactivated. Their open order continues: finish or cancel it.} other {Deactivated. Their # open orders continue: finish or cancel them.}}",
+    "avisos": {
+      "sin_seguro": "No insurance expiration date on file.",
+      "seguro_vencido": "Their insurance expired on {dia}.",
+      "seguro_por_vencer": "Their insurance expires on {dia}: ask for the renewal.",
+      "sin_licencia": "Their trade requires a state license and none is on file.",
+      "licencia_vencida": "Their license expired on {dia}."
     }
   }
 }

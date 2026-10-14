@@ -18,6 +18,7 @@ import {
   validarCierreTardioPM,
   validarDiaDeCaptura,
   validarCuadrilla,
+  revisarPapelesSub,
   validarOrdenCambio,
 } from './validaciones';
 
@@ -349,5 +350,38 @@ describe('orden de cambio', () => {
       datos: { campos: ['motivo', 'descripcion', 'costo'] },
     });
     expect(error(() => validarOrdenCambio({ ...oc, precio: 0 }, 0.35))).toEqual({ codigo: 'falta_precio' });
+  });
+});
+
+describe('los papeles de un subcontratista', () => {
+  const HOY = '2026-10-12';
+  const plomero = {
+    seguroVence: '2027-06-30',
+    licencia: 'M-12345',
+    licenciaVence: null,
+    requiereLicencia: true,
+  };
+
+  it('en regla: nada que avisar', () => {
+    expect(revisarPapelesSub(plomero, HOY)).toEqual([]);
+  });
+
+  it('sin seguro, vencido, o por vencer en 30 días; como el legacy, y el aviso previo además', () => {
+    expect(revisarPapelesSub({ ...plomero, seguroVence: null }, HOY)).toEqual([{ codigo: 'sin_seguro' }]);
+    expect(revisarPapelesSub({ ...plomero, seguroVence: '2026-10-11' }, HOY)).toEqual([
+      { codigo: 'seguro_vencido', dia: '2026-10-11' },
+    ]);
+    expect(revisarPapelesSub({ ...plomero, seguroVence: '2026-11-11' }, HOY)).toEqual([
+      { codigo: 'seguro_por_vencer', dia: '2026-11-11' },
+    ]);
+    expect(revisarPapelesSub({ ...plomero, seguroVence: '2026-11-12' }, HOY)).toEqual([]);
+  });
+
+  it('la licencia solo si su oficio la requiere: que la tenga y no esté vencida', () => {
+    expect(revisarPapelesSub({ ...plomero, licencia: ' ' }, HOY)).toEqual([{ codigo: 'sin_licencia' }]);
+    expect(revisarPapelesSub({ ...plomero, licenciaVence: '2026-01-31' }, HOY)).toEqual([
+      { codigo: 'licencia_vencida', dia: '2026-01-31' },
+    ]);
+    expect(revisarPapelesSub({ ...plomero, licencia: null, requiereLicencia: false }, HOY)).toEqual([]);
   });
 });

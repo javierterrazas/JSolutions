@@ -319,3 +319,48 @@ export function validarOrdenCambio(datos: DatosOrdenCambio, margenMinimo: number
     };
   return { ok: true, margen };
 }
+
+// ------------------------------------------------------------------ subcontratistas
+export interface PapelesSub {
+  readonly seguroVence: Dia | null;
+  readonly licencia: string | null;
+  readonly licenciaVence: Dia | null;
+  /** Su oficio requiere licencia estatal (en Texas: plomería, electricidad, HVAC). */
+  readonly requiereLicencia: boolean;
+}
+
+export type AvisoPapeles =
+  | { readonly codigo: 'sin_seguro' }
+  | { readonly codigo: 'seguro_vencido'; readonly dia: Dia }
+  | { readonly codigo: 'seguro_por_vencer'; readonly dia: Dia }
+  | { readonly codigo: 'sin_licencia' }
+  | { readonly codigo: 'licencia_vencida'; readonly dia: Dia };
+
+/** Cuántos días antes de que venza el seguro se avisa. */
+export const DIAS_AVISO_SEGURO = 30;
+
+/**
+ * Lo que le falta en papeles a un subcontratista (legacy: admin/servidor.js revisionSub_). Vacío: en regla. El
+ * sistema no bloquea: avisa, y al emitirle una orden o pagarle se confirma. Además del legacy, avisa del seguro que
+ * vence en los próximos 30 días.
+ */
+export function revisarPapelesSub(s: PapelesSub, hoy: Dia): AvisoPapeles[] {
+  const out: AvisoPapeles[] = [];
+  if (!s.seguroVence) out.push({ codigo: 'sin_seguro' });
+  else if (s.seguroVence < hoy) out.push({ codigo: 'seguro_vencido', dia: s.seguroVence });
+  else if (s.seguroVence <= sumarDiasNaturales(hoy, DIAS_AVISO_SEGURO))
+    out.push({ codigo: 'seguro_por_vencer', dia: s.seguroVence });
+  if (s.requiereLicencia) {
+    if (!s.licencia?.trim()) out.push({ codigo: 'sin_licencia' });
+    else if (s.licenciaVence && s.licenciaVence < hoy)
+      out.push({ codigo: 'licencia_vencida', dia: s.licenciaVence });
+  }
+  return out;
+}
+
+/** Un día más n días de calendario (no laborables). */
+function sumarDiasNaturales(d: Dia, n: number): Dia {
+  const f = new Date(`${d}T12:00:00Z`);
+  f.setUTCDate(f.getUTCDate() + n);
+  return f.toISOString().slice(0, 10);
+}
