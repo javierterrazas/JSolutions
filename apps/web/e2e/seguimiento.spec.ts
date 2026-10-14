@@ -39,6 +39,11 @@ test('el dueño ve cómo va la obra: avance, etapa, presupuesto por etapa, cuadr
     }),
   ).toBeVisible();
   await expect(page.getByText(/^Pedro · \d+ horas$/)).toBeVisible();
+  // con un toque, sus horas por etapa (D-077)
+  await page.getByText(/^Pedro · \d+ horas$/).click();
+  await expect(page.locator('details[open]').filter({ hasText: 'Pedro' })).toContainText(
+    /Demolición\s*≈ \d+(\.\d)? horas?/,
+  );
 
   // el día a día llega hasta el arranque: en la última página está el cierre del 5 de octubre
   while (await page.getByRole('link', { name: es.seguimiento.anteriores }).isVisible())

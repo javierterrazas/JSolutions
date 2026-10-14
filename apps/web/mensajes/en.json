@@ -840,7 +840,9 @@
     "corregir": "Edit",
     "cambios": "Change orders",
     "cobros": "Payments",
-    "subcontratos": "Subcontracts and sub payments"
+    "subcontratos": "Subcontracts and sub payments",
+    "aproximado": "≈ {cantidad}",
+    "cuadrillaAyuda": "Tap a worker to see their hours by stage, approximate."
   },
   "datosObra": {
     "titulo": "Job details",

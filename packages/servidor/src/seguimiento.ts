@@ -122,10 +122,73 @@ export interface SeguimientoObra {
       tipoPago: 'hora' | 'dia';
       cantidad: number;
       costo: number;
+      /** Sus horas o días por etapa, aproximados: las de cada día, repartidas entre las partidas de ese día (D-077). */
+      porEtapa: readonly { etapa: Nombre | null; cantidad: number }[];
     }[];
   };
   readonly dias: readonly DiaDelSeguimiento[];
   readonly hayMasDias: boolean;
+}
+
+/** Un renglón de la cuadrilla, ya repartido a una partida: su espacio, su etapa y su parte de las horas o días. */
+export interface CuadrillaRepartida {
+  readonly obra_id: string;
+  readonly espacio_id: string;
+  readonly partida: string | null;
+  readonly etapa: string | null;
+  readonly trabajador_id: string;
+  readonly cantidad: number;
+  readonly dia: Dia;
+}
+
+/**
+ * Reparte las horas (o días) de cada trabajador en un día entre las partidas que se trabajaron ese día, en partes
+ * iguales (D-077): el PM anota cuánto trabajó cada uno, no en qué partida. Antes todo iba a la primera partida del
+ * día. Sin cierre o sin partidas en el cierre, se queda en la partida con la que se guardó.
+ */
+export function repartirCuadrilla(
+  manoObra: readonly {
+    obra_id: string;
+    espacio_id: string;
+    partida: string | null;
+    trabajador_id: string;
+    cantidad: string | number;
+    dia: Dia;
+    bitacora_id: string | null;
+  }[],
+  delCierre: readonly { bitacora_id: string; partida: string }[],
+  deLaPartida: ReadonlyMap<string, { espacio_id: string; etapa_id: string | null }>,
+): CuadrillaRepartida[] {
+  const porCierre = new Map<string, string[]>();
+  for (const x of delCierre)
+    porCierre.set(x.bitacora_id, [...(porCierre.get(x.bitacora_id) ?? []), x.partida]);
+  return manoObra.flatMap((m) => {
+    const partidas = (m.bitacora_id ? porCierre.get(m.bitacora_id) : undefined)?.filter((p) =>
+      deLaPartida.has(p),
+    );
+    if (!partidas?.length)
+      return [
+        {
+          obra_id: m.obra_id,
+          espacio_id: m.espacio_id,
+          partida: m.partida,
+          etapa: m.partida ? (deLaPartida.get(m.partida)?.etapa_id ?? null) : null,
+          trabajador_id: m.trabajador_id,
+          cantidad: Number(m.cantidad),
+          dia: m.dia,
+        },
+      ];
+    const parte = Number(m.cantidad) / partidas.length;
+    return partidas.map((p) => ({
+      obra_id: m.obra_id,
+      espacio_id: deLaPartida.get(p)!.espacio_id,
+      partida: p,
+      etapa: deLaPartida.get(p)!.etapa_id,
+      trabajador_id: m.trabajador_id,
+      cantidad: parte,
+      dia: m.dia,
+    }));
+  });
 }
 
 /** Lo que el seguimiento necesita de la base para una o varias obras. */
@@ -203,6 +266,16 @@ async function leerObras(tx: Tx, s: Sesion, ids: readonly string[]) {
            to_char(m.dia, 'YYYY-MM-DD') as dia, m.bitacora_id
     from mano_obra m join trabajadores t on t.id = m.trabajador_id
     where m.obra_id = any(${ids}) and m.estado = 'vigente'`;
+  // las partidas que se trabajaron en cada cierre, y de qué espacio y etapa es cada partida (también las de baja)
+  const delCierre = await tx<{ bitacora_id: string; partida: string }[]>`
+    select bitacora_id, partida_obra_id as partida from bitacora_partidas where obra_id = any(${ids})`;
+  const deLaPartida = new Map(
+    (
+      await tx<{ id: string; espacio_id: string; etapa_id: string | null }[]>`
+        select id, espacio_id, etapa_id from partidas_obra where obra_id = any(${ids})`
+    ).map((p) => [p.id, p]),
+  );
+  const manoObraRepartida = repartirCuadrilla(manoObra, delCierre, deLaPartida);
   const gastos = await tx<
     {
       obra_id: string;
@@ -235,6 +308,7 @@ async function leerObras(tx: Tx, s: Sesion, ids: readonly string[]) {
     presupuesto,
     tarifas,
     manoObra,
+    manoObraRepartida,
     gastos,
     subs,
     etapas,
@@ -364,13 +438,14 @@ function calcular(l: Lectura, obraId: string) {
         cubo: 'material' as const,
         monto: Number(g.monto),
       })),
-    ...l.manoObra
+    // las horas de cada día, repartidas entre las partidas que se trabajaron ese día (D-077)
+    ...l.manoObraRepartida
       .filter((m) => m.obra_id === obraId)
       .map((m) => ({
         espacioId: m.espacio_id,
         partidaId: m.partida,
         cubo: 'cuadrilla' as const,
-        monto: Number(m.cantidad) * tarifaDelDia(l.tarifas, m.trabajador_id, m.dia),
+        monto: m.cantidad * tarifaDelDia(l.tarifas, m.trabajador_id, m.dia),
       })),
     ...l.subs
       .filter((x) => x.obra_id === obraId)
@@ -458,7 +533,21 @@ export async function seguimientoDeObra(
     x.costo += Number(m.cantidad) * tarifaDelDia(l.tarifas, m.trabajador_id, m.dia);
     porTrabajador.set(m.trabajador_id, x);
   }
-  const trabajadores = [...porTrabajador.values()].sort((a, b) => b.costo - a.costo);
+  // y por etapa, con las horas repartidas: aproximado, porque el PM anota las horas del día, no por partida
+  const porEtapa = new Map<string, Map<string, number>>();
+  for (const m of l.manoObraRepartida.filter((x) => x.obra_id === e.obraId)) {
+    const suyo = porEtapa.get(m.trabajador_id) ?? new Map<string, number>();
+    suyo.set(m.etapa ?? '', (suyo.get(m.etapa ?? '') ?? 0) + m.cantidad);
+    porEtapa.set(m.trabajador_id, suyo);
+  }
+  const trabajadores = [...porTrabajador.entries()]
+    .map(([id, x]) => ({
+      ...x,
+      porEtapa: [...(porEtapa.get(id) ?? new Map<string, number>()).entries()]
+        .map(([etapa, cantidad]) => ({ etapa: etapa ? (l.etapas.get(etapa) ?? null) : null, cantidad }))
+        .sort((a, b) => b.cantidad - a.cantidad),
+    }))
+    .sort((a, b) => b.costo - a.costo);
 
   // el día a día: los días cerrados, los laborables que faltaron desde el inicio hasta hoy (o la entrega), y los
   // días con gastos, también los de antes del arranque (el material se compra antes de empezar)

@@ -3,7 +3,13 @@
 // Generales) y $2,500 (Ferguson, baño) en material, 8 horas de Pedro a $22.50 y órdenes de trabajo por $2,000 y $300.
 // "Hoy" es el lunes 12 de octubre de 2026 en Austin.
 import { afterAll, describe, expect, it } from 'vitest';
-import { cambiarTarifa, resumenDeObras, seguimientoDeObra, semaforoDePresupuesto } from '../src/index';
+import {
+  cambiarTarifa,
+  repartirCuadrilla,
+  resumenDeObras,
+  seguimientoDeObra,
+  semaforoDePresupuesto,
+} from '../src/index';
 import { codigo, como, enAustin, OBRAS, probarComo, servidor, USUARIOS } from './apoyo';
 
 afterAll(() => servidor.sql.end());
@@ -54,7 +60,16 @@ describe('el seguimiento de una obra', () => {
         horas: 8,
         dias: 0,
         costo: 180,
-        porTrabajador: [{ nombre: 'Pedro', tipoPago: 'hora', cantidad: 8, costo: 180 }],
+        porTrabajador: [
+          {
+            nombre: 'Pedro',
+            tipoPago: 'hora',
+            cantidad: 8,
+            costo: 180,
+            // su cierre solo tuvo la demolición: las 8 horas van ahí (D-077)
+            porEtapa: [{ etapa: { es: 'Demolición', en: 'Demolition' }, cantidad: 8 }],
+          },
+        ],
       });
 
       // un aumento desde hoy no cambia lo ya trabajado (D-031)
@@ -116,5 +131,53 @@ describe('el seguimiento de una obra', () => {
     expect(semaforoDePresupuesto(600, 1000, 0.4)).toBe('amarillo');
     expect(semaforoDePresupuesto(500, 1000, 0.4)).toBe('verde');
     expect(semaforoDePresupuesto(100, 0, 0)).toBeNull();
+  });
+});
+
+describe('el reparto de la cuadrilla entre las partidas del día (D-077)', () => {
+  const partidas = new Map([
+    ['demo', { espacio_id: 'bano', etapa_id: 'demolicion' }],
+    ['plom', { espacio_id: 'bano', etapa_id: 'plomeria' }],
+    ['tile', { espacio_id: 'cocina', etapa_id: 'azulejo' }],
+  ]);
+  const renglon = (extra: Record<string, unknown>) => ({
+    obra_id: 'obra',
+    espacio_id: 'bano',
+    partida: 'demo',
+    trabajador_id: 'pedro',
+    cantidad: '8',
+    dia: '2026-10-05',
+    bitacora_id: 'bit1',
+    ...extra,
+  });
+
+  it('las horas de un día van en partes iguales a las partidas que se trabajaron, cada una con su espacio y etapa', () => {
+    const r = repartirCuadrilla(
+      [renglon({})],
+      [
+        { bitacora_id: 'bit1', partida: 'demo' },
+        { bitacora_id: 'bit1', partida: 'plom' },
+        { bitacora_id: 'bit1', partida: 'tile' },
+      ],
+      partidas,
+    );
+    expect(r.map((x) => [x.partida, x.espacio_id, x.etapa, x.cantidad])).toEqual([
+      ['demo', 'bano', 'demolicion', 8 / 3],
+      ['plom', 'bano', 'plomeria', 8 / 3],
+      ['tile', 'cocina', 'azulejo', 8 / 3],
+    ]);
+    expect(r.reduce((a, x) => a + x.cantidad, 0)).toBeCloseTo(8, 10);
+  });
+
+  it('sin cierre o sin partidas en el cierre, se queda en su partida', () => {
+    const r = repartirCuadrilla(
+      [renglon({ bitacora_id: null }), renglon({ bitacora_id: 'bit2', partida: 'plom' })],
+      [],
+      partidas,
+    );
+    expect(r.map((x) => [x.partida, x.etapa, x.cantidad])).toEqual([
+      ['demo', 'demolicion', 8],
+      ['plom', 'plomeria', 8],
+    ]);
   });
 });

@@ -840,7 +840,9 @@
     "corregir": "Corregir",
     "cambios": "Órdenes de cambio",
     "cobros": "Cobros",
-    "subcontratos": "Subcontratos y pagos a subs"
+    "subcontratos": "Subcontratos y pagos a subs",
+    "aproximado": "≈ {cantidad}",
+    "cuadrillaAyuda": "Toca a un trabajador para ver sus horas por etapa, aproximadas."
   },
   "datosObra": {
     "titulo": "Datos de la obra",
