@@ -27,6 +27,7 @@ export * from './cobros';
 export * from './subcontratistas';
 export * from './subcontratos';
 export * from './indicadores';
+export * from './marca';
 export * from './correcciones';
 export * from './acceso';
 export * from './auth';

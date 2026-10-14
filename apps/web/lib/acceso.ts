@@ -5,6 +5,7 @@ import 'server-only';
 import { esErrorDeNegocio } from '@ijm/core';
 import { enNombreDe, estadoDispositivo, quienSoy, type Llave, type Tx, type Yo } from '@ijm/servidor';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { recordarEmpresa } from './empresa-de-la-peticion';
 import { servidor } from './servidor';
@@ -34,24 +35,34 @@ export interface Acceso {
   readonly yo: Yo;
 }
 
-/** Cómo está el acceso en esta petición; con `acceso` solo si está abierto. */
-export async function estadoDeAcceso(): Promise<
-  | { readonly estado: 'abierto'; readonly acceso: Acceso }
-  | { readonly estado: 'cerrado' | 'sin_pin' | 'invalido' }
-> {
-  const sesion = await usuarioDeLaSesion();
-  const llave = await leerLlave();
-  if (!sesion || !llave) return { estado: 'invalido' };
-  const r = await enNombreDe(servidor(), { userId: sesion.userId }, async (tx) => {
-    const estado = await estadoDispositivo(tx, llave);
-    return estado === 'abierto' ? { estado, yo: await quienSoy(tx) } : { estado };
-  });
-  if (r.estado === 'abierto') {
-    recordarEmpresa(r.yo.empresa);
-    return { estado: 'abierto', acceso: { userId: sesion.userId, llave, yo: r.yo } };
-  }
-  return { estado: r.estado };
-}
+/**
+ * Cómo está el acceso en esta petición; con `acceso` solo si está abierto. Una vez por petición (`cache`): el layout
+ * lo pide para el ícono y el nombre de la empresa (D-078) y la página otra vez, con una sola consulta.
+ */
+export const estadoDeAcceso = cache(
+  async (): Promise<
+    | { readonly estado: 'abierto'; readonly acceso: Acceso }
+    | { readonly estado: 'cerrado' | 'sin_pin' | 'invalido' }
+  > => {
+    const sesion = await usuarioDeLaSesion();
+    const llave = await leerLlave();
+    if (!sesion || !llave) return { estado: 'invalido' };
+    const r = await enNombreDe(servidor(), { userId: sesion.userId }, async (tx) => {
+      const estado = await estadoDispositivo(tx, llave);
+      return estado === 'abierto' ? { estado, yo: await quienSoy(tx) } : { estado };
+    });
+    if (r.estado === 'abierto') {
+      recordarEmpresa({
+        nombre: r.yo.empresa,
+        id: r.yo.empresaId,
+        conLogo: r.yo.marca.conLogo,
+        version: r.yo.marca.version,
+      });
+      return { estado: 'abierto', acceso: { userId: sesion.userId, llave, yo: r.yo } };
+    }
+    return { estado: r.estado };
+  },
+);
 
 /**
  * Exige un miembro activo, en su celular verificado y con el PIN abierto. Si falta algo, manda a donde

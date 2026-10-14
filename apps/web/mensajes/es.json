@@ -15,7 +15,8 @@
     "terminadas": "Obras terminadas ({n})",
     "cuadrilla": "Cuadrilla",
     "subcontratistas": "Subcontratistas",
-    "indicadores": "Indicadores"
+    "indicadores": "Indicadores",
+    "miEmpresa": "Mi empresa"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -211,7 +212,9 @@
     "orden_con_pagos": "Esa orden ya tiene pagos: ajusta el alcance en vez de cancelarla.",
     "orden_no_cancelable": "Esa orden ya está pagada o cancelada.",
     "orden_cancelada": "Esa orden está cancelada.",
-    "orden_no_reprogramable": "Esa orden ya está aprobada, pagada o cancelada: ya no se reprograma."
+    "orden_no_reprogramable": "Esa orden ya está aprobada, pagada o cancelada: ya no se reprograma.",
+    "logo_invalido": "El logo tiene que ser una imagen PNG o JPG.",
+    "logo_pesado": "El logo pesa más de 1 MB: usa una imagen más pequeña."
   },
   "obras": {
     "titulo": "Obras",
@@ -1224,5 +1227,23 @@
       "oc_sobre_contratos": "Arriba de la meta, el problema está en tu estimación.",
       "no_calidad_sobre_contratos": "El indicador que duele y que casi nadie mide."
     }
+  },
+  "miEmpresa": {
+    "titulo": "Mi empresa",
+    "volver": "Volver al inicio",
+    "ayuda": "El logo y el color de tu empresa: con ellos tu equipo instala la app en su celular, y el logo sale arriba de cada pantalla y en el portal de tus clientes.",
+    "vistaPrevia": "Así se ve el ícono de la app",
+    "vistaPreviaAyuda": "Así se verá el ícono en el celular de tu equipo.",
+    "logo": "Logo (PNG o JPG, hasta 1 MB)",
+    "logoAyuda": "De preferencia cuadrado y con fondo transparente o blanco. Sin logo, el ícono lleva las iniciales de la empresa.",
+    "quitarLogo": "Quitar el logo",
+    "color": "Color de la empresa",
+    "fondo": "Fondo del ícono",
+    "fondoBlanco": "Blanco (para logos en colores oscuros)",
+    "fondoColor": "El color de la empresa (para logos claros)",
+    "guardar": "Guardar",
+    "guardando": "Guardando…",
+    "guardado": "Guardado.",
+    "instalarAyuda": "Si alguien ya instaló la app, para ver el ícono nuevo: en iPhone, quítala de la pantalla de inicio y vuelve a agregarla; en Android se actualiza sola, aunque puede tardar."
   }
 }

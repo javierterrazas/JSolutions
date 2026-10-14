@@ -15,7 +15,8 @@
     "terminadas": "Finished jobs ({n})",
     "cuadrilla": "Crew",
     "subcontratistas": "Subcontractors",
-    "indicadores": "Metrics"
+    "indicadores": "Metrics",
+    "miEmpresa": "My company"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -211,7 +212,9 @@
     "orden_con_pagos": "That order already has payments: adjust the scope instead of canceling it.",
     "orden_no_cancelable": "That order is already paid or canceled.",
     "orden_cancelada": "That order is canceled.",
-    "orden_no_reprogramable": "That order is already approved, paid or canceled: it can no longer be rescheduled."
+    "orden_no_reprogramable": "That order is already approved, paid or canceled: it can no longer be rescheduled.",
+    "logo_invalido": "The logo must be a PNG or JPG image.",
+    "logo_pesado": "The logo is over 1 MB: use a smaller image."
   },
   "obras": {
     "titulo": "Jobs",
@@ -1224,5 +1227,23 @@
       "oc_sobre_contratos": "Above the goal, the problem is in your estimate.",
       "no_calidad_sobre_contratos": "The metric that hurts and almost nobody measures."
     }
+  },
+  "miEmpresa": {
+    "titulo": "My company",
+    "volver": "Back to home",
+    "ayuda": "Your company's logo and color: your team installs the app on their phone with them, and the logo shows at the top of every screen and in your clients' portal.",
+    "vistaPrevia": "This is the app icon",
+    "vistaPreviaAyuda": "This is how the icon will look on your team's phone.",
+    "logo": "Logo (PNG or JPG, up to 1 MB)",
+    "logoAyuda": "Preferably square, with a transparent or white background. Without a logo, the icon shows the company initials.",
+    "quitarLogo": "Remove the logo",
+    "color": "Company color",
+    "fondo": "Icon background",
+    "fondoBlanco": "White (for dark logos)",
+    "fondoColor": "The company color (for light logos)",
+    "guardar": "Save",
+    "guardando": "Saving…",
+    "guardado": "Saved.",
+    "instalarAyuda": "If someone already installed the app, to see the new icon: on iPhone, remove it from the home screen and add it again; on Android it updates by itself, though it can take a while."
   }
 }

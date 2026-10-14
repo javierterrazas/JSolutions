@@ -2,7 +2,7 @@
 // cuenta ni PIN. El avance, en qué va cada espacio, la entrega comprometida, los días trabajados del último mes y
 // las fotos que el PM o el dueño marcaron para él; y sus órdenes de cambio, que aprueba con su firma (D-067). Del
 // dinero, solo lo que se le cobra; nada de lo interno de la obra.
-import { type CambioDelPortal, portalCliente, sinUsuario } from '@ijm/servidor';
+import { type CambioDelPortal, empresaDelPortal, portalCliente, sinUsuario } from '@ijm/servidor';
 import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -45,7 +45,9 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
         <p className={estilos.tarjeta}>{t('noDisponibleTexto')}</p>
       </Marco>
     );
-  recordarEmpresa(p.empresa);
+  // su empresa, con su logo (D-078)
+  const marca = await sinUsuario(servidor(), (tx) => empresaDelPortal(tx, { token })).catch(() => null);
+  recordarEmpresa({ nombre: p.empresa, ...(marca ?? {}) });
 
   const nombre = (n: { es: string; en: string | null }) => (idioma === 'en' ? n.en : null) ?? n.es;
   const pct = (x: number) => `${Math.round(x * 100)}%`;

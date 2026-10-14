@@ -33,5 +33,5 @@ export async function proxy(peticion: NextRequest) {
 
 export const config = {
   // todo, menos los archivos de Next, los íconos, el manifiesto y el service worker
-  matcher: ['/((?!_next/|iconos/|icon|apple-icon|manifest.webmanifest|sw.js).*)'],
+  matcher: ['/((?!_next/|marca/|manifest.webmanifest|sw.js).*)'],
 };
