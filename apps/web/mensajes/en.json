@@ -904,7 +904,8 @@
     "pagos": "Your payments",
     "totalConCambios": "Your contract total (with approved changes)",
     "pagado": "Paid",
-    "saldo": "Balance"
+    "saldo": "Balance",
+    "volverApp": "Back to the app"
   },
   "enlaceCliente": {
     "titulo": "Client portal",

@@ -6,6 +6,7 @@ import { type CambioDelPortal, portalCliente, sinUsuario } from '@ijm/servidor';
 import type { Metadata } from 'next';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import { estadoDeAcceso } from '@/lib/acceso';
 import { recordarEmpresa } from '@/lib/empresa-de-la-peticion';
 import { formatoDinero } from '@/lib/dinero';
 import { servidor } from '@/lib/servidor';
@@ -26,6 +27,9 @@ function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) 
 
 export default async function Portal({ params }: PageProps<'/cliente/[token]'>) {
   const { token } = await params;
+  // alguien del equipo que abrió el enlace en su celular (en la app instalada no hay barra de direcciones): le deja
+  // regresar a la app. El cliente no tiene sesión y no lo ve (D-072). Antes que el portal, que pone su empresa.
+  const delEquipo = (await estadoDeAcceso().catch(() => null))?.estado;
   const p = await sinUsuario(servidor(), (tx) => portalCliente(tx, { token })).catch(() => null);
   const [t, tc, tco, formato, idioma] = await Promise.all([
     getTranslations('portal'),
@@ -34,9 +38,10 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
     getFormatter(),
     getLocale(),
   ]);
+  const volver = delEquipo && delEquipo !== 'invalido' ? { href: '/', texto: t('volverApp') } : undefined;
   if (!p)
     return (
-      <Marco titulo={t('noDisponible')}>
+      <Marco titulo={t('noDisponible')} volver={volver}>
         <p className={estilos.tarjeta}>{t('noDisponibleTexto')}</p>
       </Marco>
     );
@@ -109,7 +114,7 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
   }
 
   return (
-    <Marco titulo={p.obra.cliente} subtitulo={p.obra.direccion}>
+    <Marco titulo={p.obra.cliente} subtitulo={p.obra.direccion} volver={volver}>
       {porAprobar.length ? (
         <Seccion titulo={t('porAprobar', { n: porAprobar.length })}>
           <p className="text-slate-700">{t('porAprobarAyuda')}</p>

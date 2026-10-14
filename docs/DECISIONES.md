@@ -1287,3 +1287,10 @@ portal lo que lleva pagado y su saldo (legacy: `duCobro`, "cobrado contra ejecut
   (`corregir`, `anular`), como las compras; mientras la obra no esté entregada.
 - **En el portal del cliente, "Sus pagos":** el total de su contrato con los cambios aprobados, lo pagado y su saldo,
   y cada pago con su fecha, concepto y monto (`cobros_portal_cliente`); nunca el método ni la referencia.
+
+## D-072 · Del portal del cliente, de regreso a la app
+
+**Decisión del dueño:** quien es del equipo y abre el enlace del cliente en su celular puede regresar a la app: en la
+app instalada no hay barra de direcciones, y el dueño se quedó atrapado en el portal. Si quien abre el portal tiene
+su sesión de la app en ese celular (con el PIN abierto o no), arriba sale el botón "Volver a la app", que lleva al
+inicio. El cliente, sin sesión, no lo ve.
