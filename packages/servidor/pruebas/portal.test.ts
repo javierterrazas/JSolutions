@@ -81,7 +81,11 @@ describe('el portal del cliente', () => {
           ['Tile de otra colección', 'facturada', 1000],
         ]),
       );
-      const { cambios: _, ...resto } = p;
+      // y sus pagos: fecha, concepto y monto, sin el método ni la referencia (D-071)
+      expect(p.pagos).toEqual([
+        { folio: expect.stringMatching(/^COB-/), fecha: '2026-10-01', concepto: 'deposito', monto: 7200 },
+      ]);
+      const { cambios: _, pagos: __, ...resto } = p;
       expect(JSON.stringify(resto)).not.toMatch(
         /monto|precio|costo|presupuesto|contrato|tarifa|prevista|atraso|Pedro|Juan|Plomería Rápida|Home Depot|humedad/i,
       );

@@ -122,7 +122,10 @@
       "descripcion": "what was bought",
       "motivo": "reason",
       "fecha_hallazgo": "date found",
-      "costo": "cost"
+      "costo": "cost",
+      "monto": "amount",
+      "concepto": "concept",
+      "metodo": "how they paid"
     },
     "solo_pm": "Only the job's PM closes the day.",
     "dia_ya_cerrado": "That day is already closed.",
@@ -819,7 +822,8 @@
     "contrato": "Contract",
     "notas": "Notes:",
     "corregir": "Edit",
-    "cambios": "Change orders"
+    "cambios": "Change orders",
+    "cobros": "Payments"
   },
   "datosObra": {
     "titulo": "Job details",
@@ -894,10 +898,13 @@
     "cambios": "Your change orders",
     "aprobadaPor": "Approved by {nombre} on {dia}.",
     "noAprobadaPor": "Not approved by {nombre} on {dia}.",
-    "totalContrato": "Your contract total with approved changes: {total}",
     "enProceso": "In progress:",
     "nadaEnProceso": "No work in progress today. Next: {etapas}.",
-    "todoTerminado": "All the work is complete."
+    "todoTerminado": "All the work is complete.",
+    "pagos": "Your payments",
+    "totalConCambios": "Your contract total (with approved changes)",
+    "pagado": "Paid",
+    "saldo": "Balance"
   },
   "enlaceCliente": {
     "titulo": "Client portal",
@@ -976,5 +983,45 @@
     "aprobo": "Approved",
     "noAprobo": "Not approved",
     "folioMotivo": "{folio} · {motivo}"
+  },
+  "cobros": {
+    "titulo": "Payments",
+    "volver": "Back to job progress",
+    "contrato": "Original contract",
+    "cambios": "Approved changes",
+    "total": "Contract total",
+    "cobrado": "Collected",
+    "porCobrar": "To collect",
+    "pctCobrado": "{pct}% collected",
+    "cerrada": "The job is already closed: no payments are recorded.",
+    "nuevo": "Record a client payment",
+    "monto": "Amount",
+    "fecha": "Payment date",
+    "concepto": "Concept",
+    "metodo": "How they paid",
+    "referencia": "Reference (optional)",
+    "referenciaEjemplo": "Check or transfer number",
+    "registrar": "Record payment",
+    "registrado": "Payment recorded: {folio}",
+    "otro": "Record another",
+    "pagos": "Client payments",
+    "sinPagos": "No payments recorded yet.",
+    "montoConcepto": "{monto} · {concepto}",
+    "cuandoComo": "{dia} · {metodo}",
+    "anularAyuda": "The payment stays, but no longer counts as collected. Write why.",
+    "conceptos": {
+      "deposito": "Deposit",
+      "hito": "Progress payment",
+      "orden_cambio": "Change order",
+      "liquidacion": "Final payment",
+      "otro": "Other"
+    },
+    "metodos": {
+      "transferencia": "Transfer",
+      "zelle": "Zelle",
+      "cheque": "Check",
+      "efectivo": "Cash",
+      "tarjeta": "Card"
+    }
   }
 }

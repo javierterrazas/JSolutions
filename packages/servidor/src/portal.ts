@@ -52,6 +52,8 @@ export interface PortalCliente {
     readonly contrato: number | null;
     readonly ordenes: readonly CambioDelPortal[];
   };
+  /** Lo que ha pagado (D-071): sus pagos vigentes, el más reciente primero. */
+  readonly pagos: readonly { folio: string; fecha: Dia; concepto: string; monto: number }[];
 }
 
 export interface CambioDelPortal {
@@ -128,6 +130,10 @@ export async function portalCliente(
       };
     }[]
   >`select public.cambios_portal_cliente(${token}) as c`;
+  const [pg] = await tx<
+    { p: { folio: string; fecha: Dia; concepto: string; monto: number | string }[] | null }[]
+  >`
+    select public.cobros_portal_cliente(${token}) as p`;
 
   const id = d.obra.id;
   const a = avanceDeLaObra(
@@ -187,6 +193,7 @@ export async function portalCliente(
       contrato: c?.c.contrato === null || c?.c.contrato === undefined ? null : Number(c.c.contrato),
       ordenes: (c?.c.ordenes ?? []).map((o) => ({ ...o, precio: Number(o.precio) })),
     },
+    pagos: (pg?.p ?? []).map((x) => ({ ...x, monto: Number(x.monto) })),
   };
 }
 

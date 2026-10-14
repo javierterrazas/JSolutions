@@ -1271,3 +1271,19 @@ espacio. El avance total de la obra sigue arriba.
 **Decisión del dueño:** el botón para cambiar de idioma va arriba a la derecha de cada pantalla, pequeño y abreviado:
 "ES" y "EN" (antes, dos botones grandes al final de la página). Para el lector de pantalla cada uno dice su nombre
 completo ("Español", "English"). Igual en la app del equipo y en el portal del cliente.
+
+## D-071 · Los cobros al cliente
+
+**Decisión del dueño:** registrar lo que paga el cliente y ver cuánto falta por cobrar; y que el cliente vea en su
+portal lo que lleva pagado y su saldo (legacy: `duCobro`, "cobrado contra ejecutado").
+- **"Cobros"** en el seguimiento de cada obra (`/obras/[id]/cobros`): el contrato original, los cambios aprobados
+  (órdenes de cambio autorizadas o facturadas, por su precio al cliente), el total, lo cobrado y lo que falta por
+  cobrar, con una barra del porcentaje cobrado.
+- **Registrar un pago:** monto, fecha (hoy por omisión; no después de hoy), concepto (depósito, pago de avance, orden
+  de cambio, liquidación u otro), cómo pagó (transferencia, Zelle, cheque, efectivo o tarjeta; la tarjeta de la
+  empresa no, esa es para comprar) y una referencia opcional (`registrarCobro`). También en una obra entregada (la
+  liquidación suele llegar después); no en una cerrada.
+- **Corregir** el monto, el concepto o la referencia, o **anular** el pago, siempre con motivo y con rastro
+  (`corregir`, `anular`), como las compras; mientras la obra no esté entregada.
+- **En el portal del cliente, "Sus pagos":** el total de su contrato con los cambios aprobados, lo pagado y su saldo,
+  y cada pago con su fecha, concepto y monto (`cobros_portal_cliente`); nunca el método ni la referencia.
