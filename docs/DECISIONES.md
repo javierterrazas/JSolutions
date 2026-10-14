@@ -1341,7 +1341,7 @@ Desde el seguimiento de cada obra, "Subcontratos y pagos a subs" (`/obras/[id]/s
   base lo que miden, de toda la empresa, con los plazos de la configuración y las metas que la empresa haya cambiado
   (`metas_indicadores`). Solo el dueño o el administrador.
 - **El cumplimiento del plan de la semana** sale "sin datos" mientras nadie congele el plan del lunes
-  (`plan_semanal`): la app todavía no lo hace.
+  (`plan_semanal`): desde D-079 se congela solo.
 
 ## D-076 · Reprogramar una orden de trabajo
 
@@ -1388,3 +1388,21 @@ instalada, y el logo arriba de cada pantalla y en el portal del cliente.
 - **Al cambiar el logo:** quien ya instaló la app en iPhone tiene que quitarla y volver a agregarla para ver el ícono
   nuevo; en Android se actualiza sola, aunque puede tardar. La dirección de la app es la misma para todas las
   empresas.
+
+## D-079 · Congelar el plan de la semana
+
+**Decisión del dueño:** que el cumplimiento del plan de la semana (D-075) tenga datos. El cronograma se recorre solo
+cuando algo se atrasa: comparar contra él siempre dice "vamos al día". Cada semana se guarda lo prometido, y el lunes
+siguiente se compara contra lo que el PM marcó como terminado.
+- **Qué se congela** (`congelarPlanSemanal`, con `planDeLaSemana` de @ijm/core): de las obras en obra, las partidas que
+  el cronograma prevé terminar entre el lunes y el domingo de la semana, sin lo que ya se terminó antes de ese día.
+  Se guarda en `plan_semanal`, una sola vez por semana; si dos pantallas lo congelan a la vez, la segunda no repite.
+- **Cuándo:** como en el legacy (`congelarSemana_`), la primera vez que el dueño o el administrador abre su inicio o
+  los indicadores en la semana; nadie tiene que acordarse. El PM no lo congela (no ve las obras de los demás). Si
+  falla, el inicio se muestra igual y se vuelve a intentar al abrir otra vez. Si se abre hasta el miércoles, lo
+  terminado el lunes y el martes ya no entra.
+- **El detalle, en Indicadores,** debajo del cumplimiento: cuántas tareas tiene el plan de esta semana y, de la
+  semana pasada, lo prometido por obra (espacio y partida, la fecha prevista) con ✓ si se terminó a más tardar el
+  domingo y ✗ si no o si fue tarde (`cumplimientoDelPlan`, la misma regla que `cumplimientoSemanal`).
+- **Sin migración:** la tabla y su RLS (el dueño lee y crea) ya estaban.
+- **De paso:** la pantalla del PIN dice "pide al administrador" en vez de "pide al dueño".

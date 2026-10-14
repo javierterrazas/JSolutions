@@ -97,7 +97,7 @@ Aquí son columnas (D-021).
 | `espacios` | Areas | `tipo_espacio_id`, `nombre`, `orden`; **dos medidas** (D-014): `pies2_cotizados`, `pies_lineales_cotizados` y `pies2_verificados`, `pies_lineales_verificados` con `verificado_por` y `verificado_en` | lee y escribe | lee; verifica la medida mediante el servidor |
 | `partidas_obra` | Partidas_Obra | la copia de la plantilla (`plantilla_id` de origen) o una partida solo de esta obra; `estado` (`activa`/`quitada`) | lee y escribe | lee |
 | `presupuesto_etapas` 💲 | Presupuesto | `espacio_id`, `etapa_id` (nulo = "Otras partidas"), `monto`, `notas`; uno por espacio y etapa | lee y escribe | — |
-| `plan_semanal` | Plan_Semanal | `semana` (lunes), `partida_obra_id`, `fin_previsto`: lo que el cronograma preveía, congelado | lee | — |
+| `plan_semanal` | Plan_Semanal | `semana` (lunes), `partida_obra_id`, `fin_previsto`: lo que el cronograma preveía, congelado la primera vez que el dueño abre la app en la semana (D-079) | lee y crea | — |
 
 La etiqueta de la obra ("Baño + Closet") y los pies² totales no se guardan: salen de sus espacios.
 `presupuesto_etapas` no guarda cantidad ni unidad: son los pies² vigentes del espacio (D-014).

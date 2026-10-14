@@ -1,4 +1,11 @@
-import { avisosAbiertos, copiaSinSenal, gastosEnRevision, inicioDelPm, obrasEnGarantia } from '@ijm/servidor';
+import {
+  avisosAbiertos,
+  congelarPlanSemanal,
+  copiaSinSenal,
+  gastosEnRevision,
+  inicioDelPm,
+  obrasEnGarantia,
+} from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { comoMiembro, exigirAcceso } from '@/lib/acceso';
@@ -24,6 +31,12 @@ export default async function Inicio() {
   // y los avisos de los PMs que esperan respuesta (D-050)
   const abiertos = yo.rol !== 'pm' ? await comoMiembro((tx) => avisosAbiertos(tx), acceso) : null;
   const avisos = abiertos?.ok ? abiertos.datos : [];
+  // el plan de esta semana, para el cumplimiento: se congela la primera vez que el dueño abre la app en la semana
+  // (D-079). Si falla, el inicio se muestra igual: se vuelve a intentar al abrir otra vez.
+  if (yo.rol !== 'pm')
+    await comoMiembro((tx) => congelarPlanSemanal(tx), acceso).catch((e: unknown) =>
+      console.error('No se pudo congelar el plan de la semana', e),
+    );
   return (
     <Marco titulo={t('hola', { nombre: yo.nombre })}>
       {copia?.ok && copia.datos ? <GuardarCopia copia={copia.datos} /> : null}

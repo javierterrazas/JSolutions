@@ -51,7 +51,7 @@
     "entrar": "Sign in",
     "mostrar": "Show PIN",
     "ocultar": "Hide PIN",
-    "olvide": "Forgot your PIN? Ask the owner for a new invitation."
+    "olvide": "Forgot your PIN? Ask the administrator for a new invitation."
   },
   "equipo": {
     "titulo": "Team",
@@ -1226,6 +1226,18 @@
       "margen_oc": "If it is lower than the contract, you are giving work away.",
       "oc_sobre_contratos": "Above the goal, the problem is in your estimate.",
       "no_calidad_sobre_contratos": "The metric that hurts and almost nobody measures."
+    },
+    "plan": {
+      "estaSemana": "{n, plural, =0 {This week's plan doesn't expect anything to finish yet.} one {This week's plan is saved: # task to finish.} other {This week's plan is saved: # tasks to finish.}}",
+      "ver": "See what was promised last week: {hechas} of {total} finished",
+      "semana": "Week of {lunes} to {domingo}",
+      "prevista": "Due {dia}",
+      "terminada": "finished {dia}",
+      "tarde": "finished late, {dia}",
+      "pendiente": "not finished",
+      "sinPlan": "No plan was saved last week. It saves itself the first time you open the app in the week.",
+      "linea": "{espacio} · {partida}",
+      "detalle": "{prevista} · {resultado}"
     }
   },
   "miEmpresa": {

@@ -51,7 +51,7 @@
     "entrar": "Entrar",
     "mostrar": "Mostrar PIN",
     "ocultar": "Ocultar PIN",
-    "olvide": "¿Olvidaste tu PIN? Pide al dueño una invitación nueva."
+    "olvide": "¿Olvidaste tu PIN? Pide al administrador una invitación nueva."
   },
   "equipo": {
     "titulo": "Equipo",
@@ -1226,6 +1226,18 @@
       "margen_oc": "Si es menor al del contrato, te estás regalando.",
       "oc_sobre_contratos": "Arriba de la meta, el problema está en tu estimación.",
       "no_calidad_sobre_contratos": "El indicador que duele y que casi nadie mide."
+    },
+    "plan": {
+      "estaSemana": "{n, plural, =0 {El plan de esta semana no prevé terminar nada todavía.} one {El plan de esta semana ya quedó guardado: # tarea por terminar.} other {El plan de esta semana ya quedó guardado: # tareas por terminar.}}",
+      "ver": "Ver lo prometido la semana pasada: {hechas} de {total} terminadas",
+      "semana": "Semana del {lunes} al {domingo}",
+      "prevista": "Prevista para el {dia}",
+      "terminada": "terminada el {dia}",
+      "tarde": "terminada tarde, el {dia}",
+      "pendiente": "sin terminar",
+      "sinPlan": "La semana pasada no quedó plan guardado. Se guarda solo, la primera vez que abres la app en la semana.",
+      "linea": "{espacio} · {partida}",
+      "detalle": "{prevista} · {resultado}"
     }
   },
   "miEmpresa": {
