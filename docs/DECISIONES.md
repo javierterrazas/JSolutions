@@ -1405,4 +1405,5 @@ siguiente se compara contra lo que el PM marcó como terminado.
   semana pasada, lo prometido por obra (espacio y partida, la fecha prevista) con ✓ si se terminó a más tardar el
   domingo y ✗ si no o si fue tarde (`cumplimientoDelPlan`, la misma regla que `cumplimientoSemanal`).
 - **Sin migración:** la tabla y su RLS (el dueño lee y crea) ya estaban.
-- **De paso:** la pantalla del PIN dice "pide al administrador" en vez de "pide al dueño".
+- **De paso:** los textos que ve el PM dicen "administrador" en vez de "dueño" (el PIN, la invitación, los errores,
+  los gastos y los avisos). El rol "Dueño" del equipo se queda.
