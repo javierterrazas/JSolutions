@@ -904,7 +904,8 @@
     "pagos": "Sus pagos",
     "totalConCambios": "Total de su contrato (con cambios aprobados)",
     "pagado": "Pagado",
-    "saldo": "Saldo"
+    "saldo": "Saldo",
+    "volverApp": "Volver a la app"
   },
   "enlaceCliente": {
     "titulo": "Portal del cliente",

@@ -30,6 +30,8 @@ test('el cliente abre su enlace sin cuenta y ve cómo va su obra, sin el costo n
   await expect(page.getByRole('img', { name: /^Foto del / }).first()).toBeVisible();
   // del dinero, solo lo que se le cobra en sus órdenes de cambio; nada del costo, del margen ni de lo interno
   await expect(page.locator('main')).not.toContainText(/costo|margen|\$650|Pedro|Plomería Rápida|prevista/i);
+  // el cliente no tiene sesión: no ve el enlace a la app del equipo (D-072)
+  await expect(page.getByRole('link', { name: es.portal.volverApp })).toHaveCount(0);
   expect(bloqueado).toEqual([]);
 
   await page.goto('/cliente/un-enlace-que-no-existe-0000000');
@@ -117,6 +119,10 @@ test('el dueño emite una orden de cambio y el cliente la aprueba con su firma e
 
 test('el dueño crea un enlace nuevo para el cliente y el anterior deja de servir', async ({ page }) => {
   await entrar(page, 'dueno');
+  // abrió el enlace del cliente en su celular: puede regresar a la app (D-072)
+  await page.goto(PORTAL);
+  await page.getByRole('link', { name: es.portal.volverApp }).click();
+  await expect(page).toHaveURL(/\/$/);
   await page.goto(`/obras/${OBRAS.carlos}/seguimiento`);
   await expect(page.getByRole('heading', { level: 2, name: es.enlaceCliente.titulo })).toBeVisible();
   await expect(page.getByText(/^Enlace activo desde el /)).toBeVisible();
