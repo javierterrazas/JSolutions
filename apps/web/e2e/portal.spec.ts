@@ -19,6 +19,14 @@ test('el cliente abre su enlace sin cuenta y ve cómo va su obra, sin el costo n
   await expect(page.getByText(/^Entrega comprometida: /)).toBeVisible();
   for (const seccion of ['espacios', 'trabajado', 'fotos'] as const)
     await expect(page.getByRole('heading', { level: 2, name: es.portal[seccion] })).toBeVisible();
+  // en qué se trabaja, sin los espacios de la obra
+  const enProceso = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: es.portal.espacios }) });
+  await expect(enProceso).toContainText(es.portal.enProceso);
+  await expect(enProceso).not.toContainText(/Generales de obra|Baño principal/);
+  // ni en los días trabajados: solo el trabajo
+  await expect(page.locator('main')).not.toContainText(/Generales de obra|Baño principal/);
   await expect(page.getByRole('img', { name: /^Foto del / }).first()).toBeVisible();
   // del dinero, solo lo que se le cobra en sus órdenes de cambio; nada del costo, del margen ni de lo interno
   await expect(page.locator('main')).not.toContainText(/costo|margen|\$650|Pedro|Plomería Rápida|prevista/i);

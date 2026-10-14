@@ -1257,3 +1257,11 @@ permitía, sin pantalla).
   después y por qué), como las correcciones del PM (`corregir`, `anular`).
 - **El dueño, sin el límite de 48 horas** del PM; solo mientras la obra no esté entregada ni cerrada. En una obra
   cerrada, la pantalla ya no deja registrar compras ni corregirlas.
+
+## D-069 · En el portal, lo que está en proceso, sin los espacios
+
+**Decisión del dueño:** en el portal del cliente (D-066), la sección de cómo va cada espacio no muestra los espacios
+("Generales de obra", "Baño principal") ni su porcentaje: se llama "En qué se está trabajando" y dice "En proceso:"
+con los trabajos en curso, sin repetir. Si hoy no hay ninguno, dice qué etapa sigue; con todo terminado, lo dice.
+En "Lo que se ha trabajado", cada día dice solo los trabajos, sin el
+espacio. El avance total de la obra sigue arriba.
