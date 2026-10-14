@@ -51,3 +51,14 @@ test('el dueño emite una orden de trabajo, le paga al sub contra ella y cancela
   await expect(otra).toContainText(es.subcontratos.estados.cancelada);
   await expect(porPagar).toContainText('$1,500.00');
 });
+
+test('el dueño reprograma una orden con su motivo, en vez de cancelarla', async ({ page }) => {
+  await entrar(page, 'dueno');
+  await page.goto(`/obras/${OBRAS.carlos}/subcontratos`);
+  const orden = page.locator('li').filter({ hasText: 'Rough de plomería del baño' });
+  await orden.getByRole('button', { name: es.subcontratos.reprogramar }).click();
+  await orden.getByRole('textbox', { name: es.subcontratos.motivo }).fill('El sub pidió otro día');
+  await orden.getByRole('button', { name: es.subcontratos.reprogramar }).click();
+  await expect(orden.getByRole('status')).toHaveText(es.subcontratos.reprogramada);
+  await expect(orden).toContainText(es.subcontratos.estados.emitida);
+});

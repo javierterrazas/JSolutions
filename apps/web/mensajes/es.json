@@ -210,7 +210,8 @@
     "sub_no_activo": "Ese subcontratista está dado de baja.",
     "orden_con_pagos": "Esa orden ya tiene pagos: ajusta el alcance en vez de cancelarla.",
     "orden_no_cancelable": "Esa orden ya está pagada o cancelada.",
-    "orden_cancelada": "Esa orden está cancelada."
+    "orden_cancelada": "Esa orden está cancelada.",
+    "orden_no_reprogramable": "Esa orden ya está aprobada, pagada o cancelada: ya no se reprograma."
   },
   "obras": {
     "titulo": "Obras",
@@ -1146,7 +1147,16 @@
       "sin_aprobar": "El PM todavía no aprueba el trabajo. La regla es que el sub cobra contra trabajo aprobado.",
       "papeles": "Este sub no tiene sus papeles en regla (seguro o licencia). Pagarle así te deja expuesto.",
       "sobrepago": "Con este pago llevarías {total} contra una orden de {precio}. Si es trabajo extra, va en una orden de cambio."
-    }
+    },
+    "noLlego": "El sub no llegó",
+    "faltas": "{n, plural, one {# falta} other {# faltas}}",
+    "reprogramar": "Reprogramar",
+    "nuevoInicio": "Nuevo inicio",
+    "nuevoFin": "Nuevo fin",
+    "motivo": "Motivo",
+    "reprogramarAyuda": "Mueve las fechas en vez de cancelar la orden. El sub la tiene que confirmar otra vez; si no llegó, la falta queda contada.",
+    "reprogramada": "Orden reprogramada. El PM la ve para que el sub la confirme otra vez.",
+    "reprogramadaConFalta": "Orden reprogramada y la falta del sub, contada."
   },
   "indicadores": {
     "titulo": "Indicadores",

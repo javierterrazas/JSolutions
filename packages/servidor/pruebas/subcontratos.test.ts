@@ -6,6 +6,7 @@ import {
   cancelarOrdenTrabajo,
   emitirOrdenTrabajo,
   registrarPagoSub,
+  reprogramarOrdenTrabajo,
   subcontratosDeObra,
   type Tx,
 } from '../src/index';
@@ -167,5 +168,74 @@ describe('los subcontratos de una obra', () => {
           registrarPagoSub(tx, { ordenId: r.ordenId, concepto: 'parcial', monto: 10 }, LUNES),
         ),
       ).toBe('orden_cancelada');
+    }));
+
+  it('reprograma una orden cuando el sub no llegó: cuenta la falta y la regresa a emitida, con rastro', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const { rough } = await datos(tx);
+      // confirmada por el sub, y el cierre del PM marcó que no llegó
+      await tx`update ordenes_trabajo set estado = 'confirmada', confirmada_en = now(), se_presento = false
+               where id = ${rough.id}`;
+      const r = await reprogramarOrdenTrabajo(
+        tx,
+        { ordenId: rough.id, inicio: '2026-10-15', motivo: 'Se le cruzó otra obra' },
+        LUNES,
+      );
+      expect(r).toEqual({ faltas: 1, falto: true });
+      const o = (await datos(tx)).rough;
+      expect(o).toMatchObject({
+        inicio: '2026-10-15',
+        fin: '2026-10-15',
+        estado: 'emitida',
+        confirmada: false,
+        sePresento: null,
+        faltas: 1,
+      });
+      const rastro = await tx<{ campo: string; antes: string; despues: string; motivo: string }[]>`
+        select campo, antes, despues, motivo from correcciones where registro_id = ${rough.id} order by campo desc`;
+      expect(rastro).toEqual([
+        {
+          campo: 'inicio_programado',
+          antes: '2026-10-07',
+          despues: '2026-10-15',
+          motivo: 'Se le cruzó otra obra (el sub no llegó)',
+        },
+        {
+          campo: 'fin_programado',
+          antes: '2026-10-08',
+          despues: '2026-10-15',
+          motivo: 'Se le cruzó otra obra (el sub no llegó)',
+        },
+      ]);
+
+      // sin falta: solo mueve las fechas
+      expect(
+        await reprogramarOrdenTrabajo(
+          tx,
+          { ordenId: rough.id, inicio: '2026-10-19', fin: '2026-10-20', motivo: 'El cliente pidió otro día' },
+          LUNES,
+        ),
+      ).toEqual({ faltas: 1, falto: false });
+    }));
+
+  it('pide fecha y motivo; no una orden aprobada, pagada o cancelada; el PM no reprograma', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const { d, rough } = await datos(tx);
+      const pagada = d.ordenes.find((o) => o.estado === 'pagada')!;
+      const r = (extra: Record<string, unknown>) =>
+        codigo(tx, () =>
+          reprogramarOrdenTrabajo(
+            tx,
+            { ordenId: rough.id, inicio: '2026-10-15', motivo: 'Lluvia fuerte', ...extra },
+            LUNES,
+          ),
+        );
+      expect(await r({ inicio: null })).toBe('faltan');
+      expect(await r({ motivo: 'no' })).toBe('falta_motivo');
+      expect(await r({ fin: '2026-10-14' })).toBe('fin_antes_del_inicio');
+      expect(await r({ inicio: '2026-10-07', fin: '2026-10-08' })).toBe('sin_cambios');
+      expect(await r({ ordenId: pagada.id })).toBe('orden_no_reprogramable');
+      await como(tx, USUARIOS.carlos);
+      expect(await r({})).toBe('solo_dueno');
     }));
 });

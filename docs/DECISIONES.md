@@ -1342,3 +1342,15 @@ Desde el seguimiento de cada obra, "Subcontratos y pagos a subs" (`/obras/[id]/s
   (`metas_indicadores`). Solo el dueño o el administrador.
 - **El cumplimiento del plan de la semana** sale "sin datos" mientras nadie congele el plan del lunes
   (`plan_semanal`): la app todavía no lo hace.
+
+## D-076 · Reprogramar una orden de trabajo
+
+**Decisión del dueño:** cuando el sub no llega o cambia la fecha, se reprograma la orden en vez de cancelarla y
+emitir otra (legacy: `duReprogramarOT`). En la orden, en "Subcontratos" de la obra (D-074), "Reprogramar".
+- **El nuevo inicio y fin** (sin fin, de un solo día) y **el motivo**. La orden regresa a **emitida**, sin la
+  confirmación del sub ni la asistencia, para que el sub la confirme otra vez y el PM marque en su cierre cuándo sí
+  llegue (`reprogramarOrdenTrabajo`).
+- **Si el sub no llegó** (el cierre del PM lo marcó), la falta queda contada (`faltas`, alimenta la tasa de
+  presentación de subs, D-075) y el rastro lo dice. La orden muestra "El sub no llegó" y cuántas faltas lleva.
+- **El cambio de fechas queda en `correcciones`** (antes, después y motivo). Solo una orden emitida o confirmada (no
+  aprobada, pagada ni cancelada), y no en una obra cerrada. Solo el dueño o el administrador.

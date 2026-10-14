@@ -6,6 +6,7 @@ import {
   cancelarOrdenTrabajo,
   emitirOrdenTrabajo,
   registrarPagoSub,
+  reprogramarOrdenTrabajo,
   type ResultadoOrdenTrabajo,
   type ResultadoPagoSub,
 } from '@ijm/servidor';
@@ -82,6 +83,27 @@ export async function pagarSub(
     await exigirDueno(),
   );
   if (r.ok && r.datos.ok) refrescar(obraId);
+  return r;
+}
+
+/** Reprograma una orden (el sub no llegó o cambió la fecha), con su motivo. */
+export async function reprogramarOrden(
+  obraId: string,
+  ordenId: string,
+  _previo: Resultado<{ faltas: number; falto: boolean }> | null,
+  f: FormData,
+): Promise<Resultado<{ faltas: number; falto: boolean }>> {
+  const r = await comoMiembro(
+    (tx) =>
+      reprogramarOrdenTrabajo(tx, {
+        ordenId,
+        inicio: texto(f, 'inicio'),
+        fin: texto(f, 'fin'),
+        motivo: texto(f, 'motivo'),
+      }),
+    await exigirDueno(),
+  );
+  if (r.ok) refrescar(obraId);
   return r;
 }
 
