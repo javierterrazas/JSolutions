@@ -19,7 +19,6 @@ export async function guardarMarcaEmpresa(
     (tx) =>
       guardarMarca(tx, {
         color: String(f.get('color') ?? ''),
-        fondoBlanco: f.get('fondo') !== 'color',
         logo,
       }),
     await exigirDueno(),

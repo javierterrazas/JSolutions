@@ -1,4 +1,4 @@
-// El ícono de la app, de cualquier tamaño (D-078): el logo de la empresa (sobre blanco o sobre su color) o, sin logo,
+// El ícono de la app, de cualquier tamaño (D-078): el logo de la empresa llenando todo el ícono (D-082) o, sin logo,
 // sus iniciales en blanco sobre su color. Sin empresa (antes de entrar), la "J" de J Solutions.
 import { ImageResponse } from 'next/og';
 import { COLOR_MARCA, NOMBRE_APP } from '../marca';
@@ -8,7 +8,6 @@ export interface MarcaDelIcono {
   readonly color: string;
   readonly logo: Buffer | null;
   readonly logoTipo: string | null;
-  readonly fondoBlanco: boolean;
 }
 
 export const MARCA_GENERAL: MarcaDelIcono = {
@@ -16,7 +15,6 @@ export const MARCA_GENERAL: MarcaDelIcono = {
   color: COLOR_MARCA,
   logo: null,
   logoTipo: null,
-  fondoBlanco: false,
 };
 
 /**
@@ -36,15 +34,15 @@ export function iniciales(nombre: string): string {
 }
 
 /**
- * `margen` es la parte del lado que queda libre alrededor del dibujo. El ícono "maskable" de Android lleva más
- * margen, porque el teléfono lo recorta en círculo o en gota.
+ * `margen` es la parte del lado que queda libre alrededor de las iniciales. El ícono "maskable" de Android lleva más
+ * margen, porque el teléfono lo recorta en círculo o en gota. El logo no lleva margen: llena todo el ícono (D-082);
+ * si no es cuadrado, se recorta al centro. Lo transparente de un PNG queda en blanco.
  */
 export function dibujarIcono(
   lado: number,
   margen = 0.2,
   marca: MarcaDelIcono = MARCA_GENERAL,
 ): ImageResponse {
-  const util = Math.round(lado * (1 - 2 * margen));
   if (marca.logo && marca.logoTipo) {
     const src = `data:${marca.logoTipo};base64,${marca.logo.toString('base64')}`;
     return new ImageResponse(
@@ -55,15 +53,16 @@ export function dibujarIcono(
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: marca.fondoBlanco ? '#ffffff' : marca.color,
+          background: '#ffffff',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- dentro de ImageResponse no hay next/image */}
-        <img src={src} alt="" width={util} height={util} style={{ objectFit: 'contain' }} />
+        <img src={src} alt="" width={lado} height={lado} style={{ objectFit: 'cover' }} />
       </div>,
       { width: lado, height: lado },
     );
   }
+  const util = Math.round(lado * (1 - 2 * margen));
   const texto = iniciales(marca.nombre);
   return new ImageResponse(
     <div
