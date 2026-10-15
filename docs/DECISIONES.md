@@ -1463,3 +1463,22 @@ su propio fondo se veía chico y con un borde). Cambia D-078.
 - **Ya no se elige el fondo del ícono:** se quitó `fondo_blanco` de `marcas_empresa` y de `marca_publica`.
 - **Sin logo,** el ícono sigue siendo las iniciales de la empresa sobre su color, con su margen.
 
+## D-083 · Los miembros se dan de alta con su celular, no con su correo
+
+**Decisión del dueño:** al registrar un manager (y al dueño de una empresa nueva en la plataforma) se pide su
+**celular**; el correo queda opcional. Casi todos tienen celular y muchos no usan o no recuerdan su correo.
+- **Por qué hacía falta el correo:** la cuenta de Auth de cada miembro se identifica por correo, y la sesión del
+  celular verificado se abre con un enlace mágico que la app genera y canjea en ese momento (D-038), algo que Supabase
+  solo hace con correo; con número pide mandar un SMS (un proveedor con costo por mensaje).
+- **Cómo queda:** la cuenta lleva una **dirección interna que sale del número** (`15125550101@celular.invalid`,
+  `correoDeCelular`). Nadie la ve ni recibe nada en ella (el dominio `.invalid` no existe); solo sirve para abrir la
+  sesión, como antes. No se manda ningún SMS: el enlace se sigue mandando por WhatsApp.
+- **El celular** se normaliza (`normalizarCelular`): 10 dígitos son de EE. UU. (+1); de otro país, con su +. Se guarda
+  en `miembros.telefono` y se ve en "Managers" (con enlace para llamar) y en la plataforma. El correo, si lo dan, va a
+  `miembros.correo_avisos`. El mismo celular, escrito como sea, no se da de alta dos veces (`celular_ya_registrado`).
+- **Los que ya estaban** siguen entrando igual, con su correo. Los scripts de respaldo (`invitar-de-nuevo.ts`,
+  `admin-plataforma.ts`) buscan por `--celular` o por `--correo`.
+- **En la base:** versiones nuevas de `invitar_pm` y `plataforma_alta_empresa` con el celular y el correo; las de
+  antes se quitan cuando ya no las use ninguna versión publicada de la app. `plataforma_empresas` devuelve el
+  celular del dueño y, como correo, el que dio (nunca la dirección interna).
+

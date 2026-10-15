@@ -59,7 +59,6 @@
     "volver": "Back",
     "invitarTitulo": "Invite a PM",
     "nombre": "Name",
-    "correo": "Email",
     "idiomaApp": "App language",
     "invitar": "Create invitation",
     "enlaceTitulo": "Invitation ready for {nombre}",
@@ -74,13 +73,16 @@
     },
     "dadoDeBaja": "Access turned off",
     "sinCelular": "No verified phone",
-    "celular": "{nombre} · last used: {fecha}",
+    "celular": "Cell phone",
     "celularSinUso": "{nombre} · verified on {fecha}",
     "quitar": "Remove",
     "pendiente": "Pending invitation; expires {fecha}",
     "nuevaInvitacion": "New invitation",
     "darDeBaja": "Turn off access",
-    "reactivar": "Turn access back on"
+    "reactivar": "Turn access back on",
+    "celularEjemplo": "(512) 555-0101",
+    "celularAyuda": "They sign in to the app with their cell number. No message is sent to it: you send them the link on WhatsApp.",
+    "correoOpcional": "Email (optional)"
   },
   "errores": {
     "desconocido": "Something went wrong. Try again.",
@@ -223,7 +225,9 @@
     "fecha_futura": "The date can't be after today.",
     "vencimiento_antes_del_pago": "The paid-through date can't be before the payment.",
     "cambio_ya_hecho": "That change order is already marked as done.",
-    "cambio_no_autorizado": "The client hasn't approved that change order yet."
+    "cambio_no_autorizado": "The client hasn't approved that change order yet.",
+    "celular_invalido": "That cell number isn't complete: type all 10 digits (or the number with + and its country code).",
+    "celular_ya_registrado": "That cell number already belongs to a member."
   },
   "obras": {
     "titulo": "Jobs",
@@ -1302,8 +1306,6 @@
     "ciudad": "City",
     "ciudadEjemplo": "Austin, TX",
     "dueno": "Owner's name",
-    "correo": "Owner's email",
-    "correoAyuda": "Nothing is sent to it: it identifies them.",
     "idioma": "Language",
     "suscripcion": "Subscription",
     "plan": "Plan",
@@ -1340,7 +1342,6 @@
     "ultimoUso": "last used {dia}",
     "nuncaEntro": "no one has signed in",
     "obrasTotal": "{n, plural, one {# job in total} other {# jobs in total}}",
-    "duenoCorreo": "Owner: {dueno} ({correo})",
     "creada": "Set up on {dia}",
     "registrarPago": "Record a payment",
     "monto": "Amount (USD)",
@@ -1371,6 +1372,10 @@
     "suspenderSeguro": "No one from the company will be able to sign in until you reactivate it. Its data isn't deleted.",
     "suspenderSi": "Yes, suspend",
     "reactivar": "Reactivate the company",
-    "cancelar": "Cancel"
+    "cancelar": "Cancel",
+    "celular": "Owner's cell phone",
+    "celularAyuda": "They sign in to the app with their cell number. No message is sent to it: you send them the link.",
+    "correoOpcional": "Owner's email (optional)",
+    "duenoContacto": "Owner: {dueno} ({contacto})"
   }
 }

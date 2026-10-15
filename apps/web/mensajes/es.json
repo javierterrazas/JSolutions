@@ -59,7 +59,6 @@
     "volver": "Volver",
     "invitarTitulo": "Invitar a un PM",
     "nombre": "Nombre",
-    "correo": "Correo",
     "idiomaApp": "Idioma de la app",
     "invitar": "Crear invitación",
     "enlaceTitulo": "Invitación lista para {nombre}",
@@ -74,13 +73,16 @@
     },
     "dadoDeBaja": "Dado de baja",
     "sinCelular": "Sin celular verificado",
-    "celular": "{nombre} · último uso: {fecha}",
+    "celular": "Celular",
     "celularSinUso": "{nombre} · verificado el {fecha}",
     "quitar": "Quitar",
     "pendiente": "Invitación pendiente; vence el {fecha}",
     "nuevaInvitacion": "Nueva invitación",
     "darDeBaja": "Dar de baja",
-    "reactivar": "Reactivar"
+    "reactivar": "Reactivar",
+    "celularEjemplo": "(512) 555-0101",
+    "celularAyuda": "Con su celular entra a la app. No le llega ningún mensaje: tú le mandas el enlace por WhatsApp.",
+    "correoOpcional": "Correo (opcional)"
   },
   "errores": {
     "desconocido": "Algo falló. Intenta de nuevo.",
@@ -223,7 +225,9 @@
     "fecha_futura": "La fecha no puede ser después de hoy.",
     "vencimiento_antes_del_pago": "La fecha hasta la que cubre no puede ser antes del pago.",
     "cambio_ya_hecho": "Esa orden de cambio ya está marcada como hecha.",
-    "cambio_no_autorizado": "El cliente todavía no aprueba esa orden de cambio."
+    "cambio_no_autorizado": "El cliente todavía no aprueba esa orden de cambio.",
+    "celular_invalido": "Ese celular no está completo: escribe los 10 dígitos (o el número con + y el código de su país).",
+    "celular_ya_registrado": "Ese celular ya es de un miembro."
   },
   "obras": {
     "titulo": "Obras",
@@ -1302,8 +1306,6 @@
     "ciudad": "Ciudad",
     "ciudadEjemplo": "Austin, TX",
     "dueno": "Nombre del dueño",
-    "correo": "Correo del dueño",
-    "correoAyuda": "No se le manda nada: es para identificarlo.",
     "idioma": "Idioma",
     "suscripcion": "Suscripción",
     "plan": "Plan",
@@ -1340,7 +1342,6 @@
     "ultimoUso": "entró {dia}",
     "nuncaEntro": "nadie ha entrado",
     "obrasTotal": "{n, plural, one {# obra en total} other {# obras en total}}",
-    "duenoCorreo": "Dueño: {dueno} ({correo})",
     "creada": "Dada de alta el {dia}",
     "registrarPago": "Registrar un pago",
     "monto": "Monto (USD)",
@@ -1371,6 +1372,10 @@
     "suspenderSeguro": "Nadie de la empresa podrá entrar hasta que la reactives. Sus datos no se borran.",
     "suspenderSi": "Sí, suspender",
     "reactivar": "Reactivar la empresa",
-    "cancelar": "Cancelar"
+    "cancelar": "Cancelar",
+    "celular": "Celular del dueño",
+    "celularAyuda": "Con su celular entra a la app. No le llega ningún mensaje: tú le mandas el enlace.",
+    "correoOpcional": "Correo del dueño (opcional)",
+    "duenoContacto": "Dueño: {dueno} ({contacto})"
   }
 }

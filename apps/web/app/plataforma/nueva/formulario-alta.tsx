@@ -44,9 +44,13 @@ export function FormularioAlta({ venceEl }: { venceEl: string }) {
         <input name="dueno" required maxLength={80} className={estilos.campo} />
       </label>
       <label className={estilos.etiqueta}>
-        {t('correo')}
-        <input name="correo" type="email" required className={estilos.campo} />
-        <span className="text-sm font-normal text-slate-600">{t('correoAyuda')}</span>
+        {t('celular')}
+        <input name="celular" type="tel" inputMode="tel" required className={estilos.campo} />
+        <span className="text-sm font-normal text-slate-600">{t('celularAyuda')}</span>
+      </label>
+      <label className={estilos.etiqueta}>
+        {t('correoOpcional')}
+        <input name="correo" type="email" className={estilos.campo} />
       </label>
       <label className={estilos.etiqueta}>
         {t('idioma')}

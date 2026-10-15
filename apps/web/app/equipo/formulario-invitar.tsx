@@ -19,8 +19,21 @@ export function FormularioInvitar() {
         <input name="nombre" required maxLength={80} autoComplete="off" className={estilos.campo} />
       </label>
       <label className={estilos.etiqueta}>
-        {t('equipo.correo')}
-        <input name="correo" type="email" required autoComplete="off" className={estilos.campo} />
+        {t('equipo.celular')}
+        <input
+          name="celular"
+          type="tel"
+          inputMode="tel"
+          required
+          autoComplete="off"
+          placeholder={t('equipo.celularEjemplo')}
+          className={estilos.campo}
+        />
+        <span className="text-sm font-normal text-slate-600">{t('equipo.celularAyuda')}</span>
+      </label>
+      <label className={estilos.etiqueta}>
+        {t('equipo.correoOpcional')}
+        <input name="correo" type="email" autoComplete="off" className={estilos.campo} />
       </label>
       <label className={estilos.etiqueta}>
         {t('equipo.idiomaApp')}

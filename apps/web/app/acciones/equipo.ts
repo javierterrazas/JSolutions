@@ -27,6 +27,7 @@ export async function invitar(
   const nombre = String(formulario.get('nombre') ?? '');
   const entrada = {
     nombre,
+    celular: String(formulario.get('celular') ?? ''),
     correo: String(formulario.get('correo') ?? ''),
     idioma: String(formulario.get('idioma') ?? 'es') as 'es' | 'en',
   };

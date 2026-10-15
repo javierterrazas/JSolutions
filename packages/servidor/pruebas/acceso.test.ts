@@ -26,7 +26,7 @@ import {
   borrarUsuariosDePrueba,
   codigo,
   como,
-  DOMINIO_DE_PRUEBA,
+  celularNuevo,
   EMPRESA_A,
   MIEMBROS,
   probarComo,
@@ -45,13 +45,11 @@ afterAll(async () => {
 });
 
 const usuarioDeCorreo = (correo: string) => authLocal().usuarioDeCorreo(correo);
-let n = 0;
-const correoNuevo = () => `pm${Date.now()}-${n++}${DOMINIO_DE_PRUEBA}`;
 
 /** El dueño A invita a un PM nuevo; el PM canjea en su celular y queda con su identidad. */
 async function pmConCelular(tx: Tx): Promise<{ userId: string; llave: Llave }> {
   await como(tx, USUARIOS.duenoA);
-  const inv = await invitarPm(tx, { nombre: 'PM Nuevo', correo: correoNuevo() }, usuarioDeCorreo);
+  const inv = await invitarPm(tx, { nombre: 'PM Nuevo', celular: celularNuevo() }, usuarioDeCorreo);
   await sinIdentidad(tx);
   const c = await canjearInvitacion(tx, { token: inv.token, nombreDispositivo: 'iPhone de prueba' });
   await como(tx, c.userId);
@@ -63,39 +61,52 @@ describe('invitar', () => {
     probarComo(USUARIOS.duenoA, async (tx) => {
       const inv = await invitarPm(
         tx,
-        { nombre: '  Pedro Ruiz ', correo: correoNuevo(), idioma: 'en' },
+        { nombre: '  Pedro Ruiz ', celular: '(555) 010-2030', correo: 'pedro@correo.test', idioma: 'en' },
         usuarioDeCorreo,
       );
       expect(inv.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
-      const [m] =
-        await tx`select nombre, rol, idioma, activo, creado_por from miembros where id = ${inv.miembroId}`;
+      const [m] = await tx`
+        select nombre, rol, idioma, activo, creado_por, telefono, correo_avisos from miembros
+        where id = ${inv.miembroId}`;
       expect(m).toEqual({
         nombre: 'Pedro Ruiz',
         rol: 'pm',
         idioma: 'en',
         activo: true,
         creado_por: MIEMBROS.duenoA,
+        telefono: '+15550102030',
+        correo_avisos: 'pedro@correo.test',
       });
       const pedro = (await equipo(tx)).find((x) => x.id === inv.miembroId)!;
-      expect(pedro).toMatchObject({ dispositivos: [], invitacion: { id: expect.any(String) } });
+      expect(pedro).toMatchObject({
+        telefono: '+15550102030',
+        dispositivos: [],
+        invitacion: { id: expect.any(String) },
+      });
     }));
 
-  it('un correo que ya es de un miembro, de cualquier empresa, no se invita', () =>
+  it('un celular que ya es de un miembro no se invita otra vez, escrito como sea (D-083)', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
-      for (const correo of ['pm1@empresa-a.test', 'PM1@empresa-b.test '])
-        expect(await codigo(tx, () => invitarPm(tx, { nombre: 'X', correo }, usuarioDeCorreo)), correo).toBe(
-          'correo_ya_registrado',
-        );
+      const cel = celularNuevo();
+      await invitarPm(tx, { nombre: 'X', celular: cel }, usuarioDeCorreo);
+      expect(
+        await codigo(tx, () => invitarPm(tx, { nombre: 'Y', celular: `+1 ${cel}` }, usuarioDeCorreo)),
+      ).toBe('celular_ya_registrado');
     }));
 
-  it('el PM no invita; un correo mal escrito es datos_invalidos', () =>
+  it('el PM no invita; un celular incompleto o un correo mal escrito no pasan', () =>
     probarComo(USUARIOS.carlos, async (tx) => {
       expect(
-        await codigo(tx, () => invitarPm(tx, { nombre: 'X', correo: correoNuevo() }, usuarioDeCorreo)),
+        await codigo(tx, () => invitarPm(tx, { nombre: 'X', celular: celularNuevo() }, usuarioDeCorreo)),
       ).toBe('solo_dueno');
       await como(tx, USUARIOS.duenoA);
       expect(
-        await codigo(tx, () => invitarPm(tx, { nombre: 'X', correo: 'no-es-correo' }, usuarioDeCorreo)),
+        await codigo(tx, () => invitarPm(tx, { nombre: 'X', celular: '555-0101' }, usuarioDeCorreo)),
+      ).toBe('celular_invalido');
+      expect(
+        await codigo(tx, () =>
+          invitarPm(tx, { nombre: 'X', celular: celularNuevo(), correo: 'no-es-correo' }, usuarioDeCorreo),
+        ),
       ).toBe('datos_invalidos');
     }));
 });
@@ -103,10 +114,10 @@ describe('invitar', () => {
 describe('canjear la invitación', () => {
   it('el celular queda verificado, una sola vez', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
-      const inv = await invitarPm(tx, { nombre: 'PM Nuevo', correo: correoNuevo() }, usuarioDeCorreo);
+      const inv = await invitarPm(tx, { nombre: 'PM Nuevo', celular: celularNuevo() }, usuarioDeCorreo);
       await sinIdentidad(tx);
       const c = await canjearInvitacion(tx, { token: inv.token, nombreDispositivo: 'iPhone de Pedro' });
-      expect(c.correo).toContain(DOMINIO_DE_PRUEBA);
+      expect(c.correo).toMatch(/^\d+@celular\.invalid$/);
       expect(c.secreto).toMatch(/^[A-Za-z0-9_-]{43}$/);
       expect(await codigo(tx, () => canjearInvitacion(tx, { token: inv.token }))).toBe('invitacion_invalida');
       await como(tx, USUARIOS.duenoA);

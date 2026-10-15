@@ -40,6 +40,7 @@ export async function darDeAlta(
           ciudad: texto(f, 'ciudad'),
           idioma: texto(f, 'idioma') === 'en' ? 'en' : 'es',
           dueno: texto(f, 'dueno'),
+          celular: texto(f, 'celular'),
           correo: texto(f, 'correo'),
           ...suscripcionDe(f),
         },

@@ -31,7 +31,7 @@ test('da de alta una empresa con su dueño, que entra con su enlace; luego la su
   await page.goto('/plataforma/nueva');
   await page.getByLabel(es.plataforma.empresa).fill('Pisos del Norte');
   await page.getByLabel(es.plataforma.dueno).fill('Ana Torres');
-  await page.getByLabel(es.plataforma.correo).fill(`ana${Date.now()}@pisos.test`);
+  await page.getByLabel(es.plataforma.celular).fill(`555${String(Date.now()).slice(-7)}`);
   await page.getByLabel(es.plataforma.precio).fill('59');
   await page.getByRole('button', { name: es.plataforma.darDeAlta }).click();
   await expect(page.getByRole('status')).toHaveText(es.plataforma.altaLista);
