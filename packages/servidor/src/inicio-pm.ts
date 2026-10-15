@@ -10,6 +10,7 @@ import {
   type AvanceDia,
   type CierreDia,
   type Dia,
+  diaEnZona,
   diasSinCierre,
   type EspacioCrono,
   estadoDePartida,
@@ -77,11 +78,14 @@ export interface InicioPm {
     inicio: Dia;
   }[];
   readonly cambios: readonly {
+    id: string;
     obra: string;
     folio: string;
     descripcion: string;
     dias: number;
     nueva: boolean;
+    /** El día que se marcó hecha (D-081); null si falta hacerla. */
+    hecha: Dia | null;
   }[];
   // Sus avisos y sus gastos se ven aunque la obra ya se haya entregado (D-025, como el legacy); de esa obra ya no
   // ve el folio, y `obra` queda nulo.
@@ -187,10 +191,21 @@ export async function inicioDelPm(tx: Tx, ahora = new Date()): Promise<InicioPm>
     from ordenes_trabajo o left join subcontratistas_pm s on s.id = o.subcontratista_id
     where o.obra_id = any(${ids})`;
   const cambios = await tx<
-    { obra_id: string; folio: string; descripcion: string; dias: number; autorizada: Date | null }[]
+    {
+      id: string;
+      obra_id: string;
+      folio: string;
+      descripcion: string;
+      dias: number;
+      autorizada: Date | null;
+      hecha: Date | null;
+    }[]
   >`
-    select obra_id, folio, descripcion, coalesce(dias_impacto, 0) as dias, autorizada_en as autorizada
-    from ordenes_cambio_pm where obra_id = any(${ids}) order by autorizada_en desc nulls last`;
+    select oc.id, oc.obra_id, oc.folio, oc.descripcion, coalesce(oc.dias_impacto, 0) as dias,
+           oc.autorizada_en as autorizada, h.creado_en as hecha
+    from ordenes_cambio_pm oc left join cambios_hechos h on h.orden_cambio_id = oc.id
+    where oc.obra_id = any(${ids})
+    order by h.creado_en is not null, oc.autorizada_en desc nulls last`;
   const inspecciones = await tx<{ espacio_id: string; hito_id: string; resultado: string }[]>`
     select espacio_id, hito_id, resultado from inspecciones
     where obra_id = any(${ids}) order by realizada_en`;
@@ -362,11 +377,13 @@ export async function inicioDelPm(tx: Tx, ahora = new Date()): Promise<InicioPm>
         inicio: x.inicio!,
       })),
     cambios: cambios.map((c) => ({
+      id: c.id,
       obra: folio.get(c.obra_id) ?? '',
       folio: c.folio,
       descripcion: c.descripcion,
       dias: c.dias,
-      nueva: !!c.autorizada && c.autorizada > hace3,
+      nueva: !c.hecha && !!c.autorizada && c.autorizada > hace3,
+      hecha: c.hecha ? diaEnZona(c.hecha, s.zona) : null,
     })),
     avisosAbiertos: avisos
       .filter((a) => a.estado === 'abierto')

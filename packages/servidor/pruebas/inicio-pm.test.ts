@@ -76,7 +76,11 @@ describe('el inicio del PM', () => {
         ['Nicho adicional en la regadera', 1],
         ['Tile de otra colección', 0],
       ]);
-      expect(r.cambios.every((c) => c.nueva)).toBe(true);
+      // la que falta hacer es nueva; la facturada ya se hizo (D-081) y va al final
+      expect(r.cambios.map((c) => [c.descripcion, c.nueva, c.hecha !== null])).toEqual([
+        ['Nicho adicional en la regadera', true, false],
+        ['Tile de otra colección', false, true],
+      ]);
       expect(r.cambios.flatMap((c) => Object.keys(c))).not.toContain('precio');
       // sus avisos y sus gastos se ven también de la obra que ya entregó (OB-003), sin su folio (D-025)
       expect(r.avisosAbiertos.map((a) => [a.obra, a.descripcion])).toEqual(

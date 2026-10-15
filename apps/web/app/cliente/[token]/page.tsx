@@ -237,6 +237,33 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
                     })
                   : tc(`estados.${o.estado}` as never)}
               </p>
+              {/* ya se hizo (D-081): cuándo y sus fotos */}
+              {o.hecho ? (
+                <div className="flex flex-col gap-2 rounded-xl bg-emerald-50 p-3">
+                  <p className="font-semibold text-emerald-900">
+                    {t('cambioRealizado', {
+                      dia: formato.dateTime(new Date(o.hecho.cuando), { dateStyle: 'long' }),
+                    })}
+                  </p>
+                  {o.hecho.fotos.length ? (
+                    <ul className="grid grid-cols-2 gap-2">
+                      {o.hecho.fotos.map((f) => (
+                        <li key={f}>
+                          <a href={`/cliente/${token}/fotos/${f}`} target="_blank" rel="noreferrer">
+                            {/* eslint-disable-next-line @next/next/no-img-element -- un enlace firmado de pocos minutos, no se optimiza */}
+                            <img
+                              src={`/cliente/${token}/fotos/${f}`}
+                              alt={t('fotoDelCambio')}
+                              loading="lazy"
+                              className="aspect-square w-full rounded-xl bg-slate-100 object-cover"
+                            />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
             </Orden>
           ))}
         </Seccion>

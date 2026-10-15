@@ -6,6 +6,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatoDinero } from '@/lib/dinero';
+import { CambioPorHacer } from './cambio-por-hacer';
 import { Icono } from './componentes/iconos';
 import { estilos } from './componentes/marco';
 
@@ -219,6 +220,15 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                   {t('cambio', { descripcion: c.descripcion, obra: c.obra })}
                 </span>
                 <span className="text-slate-600">{t('cambioDias', { n: c.dias })}</span>
+                {c.hecha ? (
+                  <span className="font-semibold text-emerald-800">
+                    {t('cambioHecho', {
+                      dia: formato.dateTime(new Date(`${c.hecha}T12:00:00`), FORMATOS.corto),
+                    })}
+                  </span>
+                ) : (
+                  <CambioPorHacer ordenId={c.id} />
+                )}
               </li>
             ))}
           </ul>

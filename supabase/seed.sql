@@ -284,6 +284,12 @@ insert into public.fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage
          oc.empresa_id || '/' || oc.obra_id || '/orden_cambio/' || oc.id || '-1.jpg', null
   from public.ordenes_cambio oc;
 
+-- Los cambios hechos (D-081): la orden facturada de cada obra ya se hizo; la autorizada sigue por hacer.
+insert into public.cambios_hechos (empresa_id, obra_id, orden_cambio_id, nota, creado_por)
+  select oc.empresa_id, oc.obra_id, oc.id, 'Listo, con el tile nuevo', o.pm_id
+  from public.ordenes_cambio oc join public.obras o on o.id = oc.obra_id
+  where oc.estado = 'facturada';
+
 -- El portal del cliente (D-066): un enlace en cada empresa, con un token conocido (solo local), y la foto del cierre
 -- de cada obra marcada para el cliente.
 insert into public.enlaces_cliente (empresa_id, obra_id, token_hash) values
@@ -302,7 +308,7 @@ insert into public.marcas_empresa (empresa_id, color) values
 -- la plataforma es el dueño de IJM (en la nube se da de alta con scripts/admin-plataforma.ts).
 insert into public.suscripciones (empresa_id, plan, precio, ciclo, en_prueba, vence_el) values
   ('e000000a-0000-4000-8000-000000000000', 'pro', 149, 'mensual', false, null),
-  ('e000000b-0000-4000-8000-000000000000', 'basico', 79, 'mensual', true, current_date + 365);
+  ('e000000b-0000-4000-8000-000000000000', 'basico', 79, 'mensual', true, (now() at time zone 'America/Chicago')::date + 365);
 insert into public.pagos_plataforma (empresa_id, monto, pagado_el, metodo, referencia, vence_el) values
   ('e000000a-0000-4000-8000-000000000000', 149, '2026-10-01', 'zelle', 'Octubre', '2026-10-31'),
   ('e000000b-0000-4000-8000-000000000000', 79, '2026-10-01', 'transferencia', null, '2026-10-31');

@@ -3,6 +3,7 @@
 // su firma en su portal (D-066). El dueño también registra la respuesta que el cliente le dio en papel. Lleva
 // dinero (costo y margen): solo el dueño o el administrador.
 import { type Dia, ErrorDeNegocio, validarOrdenCambio } from '@ijm/core';
+import postgres from 'postgres';
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import { dia, textoCorto, textoLargo, uuid, validarEntrada } from './entrada';
@@ -42,6 +43,15 @@ export interface OrdenDeCambio {
   readonly precio: number;
   readonly margen: number;
   readonly respuesta: RespuestaDeCambio | null;
+  /** Si ya se hizo (D-081): cuándo, quién lo marcó, su nota y sus fotos. */
+  readonly hecho: CambioHecho | null;
+}
+
+export interface CambioHecho {
+  readonly cuando: Date;
+  readonly por: string | null;
+  readonly nota: string | null;
+  readonly fotos: readonly string[];
 }
 
 export interface CambiosDeObra {
@@ -71,7 +81,7 @@ export async function cambiosDeObra(
     select contrato_original as contrato from obras_finanzas where obra_id = ${obraId}`;
   const [c] = await tx<{ minimo: string }[]>`select margen_minimo_oc as minimo from configuracion`;
   const filas = await tx<
-    (Omit<OrdenDeCambio, 'costo' | 'precio' | 'margen' | 'respuesta'> & {
+    (Omit<OrdenDeCambio, 'costo' | 'precio' | 'margen' | 'respuesta' | 'hecho'> & {
       costo: string;
       precio: string;
       r_decision: 'aprobada' | 'rechazada' | null;
@@ -80,16 +90,25 @@ export async function cambiosDeObra(
       r_comentario: string | null;
       r_portal: boolean | null;
       r_firma: string | null;
+      h_cuando: Date | null;
+      h_por: string | null;
+      h_nota: string | null;
+      h_fotos: string[] | null;
     })[]
   >`
     select oc.id, oc.folio, oc.motivo, oc.descripcion, to_char(oc.fecha_hallazgo, 'YYYY-MM-DD') as hallazgo,
            oc.dias_impacto as dias, oc.condicion_pago as condicion, oc.estado, oc.emitida_en as emitida,
            m.costo_estimado as costo, m.precio_cliente as precio,
            r.decision as r_decision, r.nombre as r_nombre, r.creado_en as r_cuando, r.comentario as r_comentario,
-           r.desde_portal as r_portal, r.firma as r_firma
+           r.desde_portal as r_portal, r.firma as r_firma,
+           h.creado_en as h_cuando, mh.nombre as h_por, h.nota as h_nota,
+           (select array_agg(f.id::text order by f.indice) from fotos f
+            where f.ref_tipo = 'cambio_hecho' and f.ref_id = h.id) as h_fotos
     from ordenes_cambio oc
     join ordenes_cambio_montos m on m.orden_cambio_id = oc.id
     left join respuestas_cambio r on r.orden_cambio_id = oc.id
+    left join cambios_hechos h on h.orden_cambio_id = oc.id
+    left join miembros mh on mh.id = h.creado_por
     where oc.obra_id = ${obraId}
     order by oc.emitida_en desc, oc.folio desc`;
   const ordenes = filas.map((o): OrdenDeCambio => {
@@ -118,6 +137,7 @@ export async function cambiosDeObra(
             firma: o.r_firma,
           }
         : null,
+      hecho: o.h_cuando ? { cuando: o.h_cuando, por: o.h_por, nota: o.h_nota, fotos: o.h_fotos ?? [] } : null,
     };
   });
   return {
@@ -232,4 +252,39 @@ export async function responderCambioDueno(
     set estado = ${e.decision === 'aprobada' ? 'autorizada' : 'rechazada'},
         autorizada_en = ${e.decision === 'aprobada' ? ahora : null}
     where id = ${e.ordenId}`;
+}
+
+/**
+ * Marca hecha una orden de cambio que el cliente aprobó (D-081): el PM de la obra desde su inicio, o el dueño. Una
+ * vez por orden. Devuelve el registro, para colgarle la foto. Errores: `orden_no_encontrada` (no existe o no la ve),
+ * `cambio_no_autorizado` (el cliente no la ha aprobado), `cambio_ya_hecho`.
+ */
+export async function marcarCambioHecho(
+  tx: Tx,
+  entrada: { ordenId: string; nota?: string | null },
+  ahora = new Date(),
+): Promise<{ cambioHechoId: string; obraId: string }> {
+  const e = validarEntrada(z.object({ ordenId: uuid, nota: z.string().trim().max(500).nullish() }), entrada);
+  const s = await leerSesion(tx, ahora);
+  // el PM no lee ordenes_cambio: ve las autorizadas de sus obras por su vista
+  const [o] = s.esDuenoOAdmin
+    ? await tx<{ obra_id: string }[]>`select obra_id from ordenes_cambio where id = ${e.ordenId}`
+    : await tx<{ obra_id: string }[]>`select obra_id from ordenes_cambio_pm where id = ${e.ordenId}`;
+  if (!o) throw new ErrorDeNegocio('orden_no_encontrada');
+  try {
+    const [h] = await tx.savepoint(
+      (sp) => sp<{ id: string }[]>`
+        insert into cambios_hechos (empresa_id, obra_id, orden_cambio_id, nota, creado_por)
+        values (${s.empresaId}, ${o.obra_id}, ${e.ordenId}, ${e.nota || null}, ${s.miembroId})
+        returning id`,
+    );
+    return { cambioHechoId: h!.id, obraId: o.obra_id };
+  } catch (err) {
+    if (err instanceof postgres.PostgresError) {
+      if (err.code === '23505') throw new ErrorDeNegocio('cambio_ya_hecho');
+      if (err.code === 'P0001' && err.message === 'cambio_no_autorizado')
+        throw new ErrorDeNegocio(err.message);
+    }
+    throw err;
+  }
 }

@@ -1437,3 +1437,19 @@ su vencimiento, cobrando a mano (Zelle, transferencia) hasta que llegue Stripe (
 - **Nada se borra** al vencer ni al suspender.
 - **Pendiente (fase 4):** Stripe para el cobro con tarjeta y automático; el registro en línea con prueba.
 
+## D-081 · Marcar hecha una orden de cambio, con su foto para el cliente
+
+**Decisión del dueño:** que el PM marque que ya ejecutó una orden de cambio aprobada, y que el cliente lo vea en su
+portal con la foto. (El legacy solo le mostraba al PM las autorizadas, sin forma de cerrarlas.)
+- **En el inicio del PM,** cada orden aprobada por hacer tiene **"Ya la hice"**: una nota opcional y fotos con la
+  cámara; "Marcar hecha" la guarda (`marcarCambioHecho`, en `cambios_hechos`) y queda "✓ Hecha el …". Necesita señal,
+  como la inspección: la orden y sus fotos van en una sola transacción.
+- **Solo una orden que el cliente aprobó** (autorizada o facturada), una vez, por el PM de la obra o el dueño. El PM
+  no lee `ordenes_cambio`: la base lo revisa (`validar_cambio_hecho`). No se edita ni se desmarca (si hiciera falta,
+  se pide).
+- **El dueño** lo ve en las órdenes de cambio de la obra: quién la marcó, cuándo, su nota y sus fotos; las aprobadas
+  que faltan dicen "el PM todavía no la marca hecha".
+- **El cliente** lo ve en su portal, en la orden: "Cambio realizado el …" con las fotos. Las fotos de un cambio hecho
+  (`cambio_hecho`, un tipo de foto nuevo) nacen marcadas para el cliente y también salen en su galería; en el álbum
+  se pueden desmarcar como las demás.
+

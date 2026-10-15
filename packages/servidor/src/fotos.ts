@@ -9,7 +9,16 @@ import type { Tx } from './conexion';
 import { uuid, validarEntrada } from './entrada';
 import { leerSesion } from './sesion';
 
-const TIPOS = ['bitacora', 'inspeccion', 'prueba_agua', 'aviso', 'punch', 'gasto', 'orden_cambio'] as const;
+const TIPOS = [
+  'bitacora',
+  'inspeccion',
+  'prueba_agua',
+  'aviso',
+  'punch',
+  'gasto',
+  'orden_cambio',
+  'cambio_hecho',
+] as const;
 type TipoFoto = (typeof TIPOS)[number];
 const TABLA: Record<TipoFoto, string> = {
   bitacora: 'bitacora',
@@ -19,6 +28,7 @@ const TABLA: Record<TipoFoto, string> = {
   punch: 'punch_list',
   gasto: 'gastos',
   orden_cambio: 'ordenes_cambio',
+  cambio_hecho: 'cambios_hechos',
 };
 
 /** La obra de un registro que el usuario puede ver, o `registro_no_encontrado`. */
