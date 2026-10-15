@@ -102,6 +102,7 @@ describe('guardar el presupuesto por etapa', () => {
         completo: true,
         faltan: [],
         total: 3000,
+        costo: 0,
       });
       expect((await tx`select estado from obras where id = ${obraId}`)[0]!.estado).toBe(
         'lista_para_arranque',
@@ -130,6 +131,50 @@ describe('guardar el presupuesto por etapa', () => {
       // sin nada: incompleto, la obra regresa a sin presupuesto
       expect((await guardarPresupuesto(tx, { obraId, lineas: [] })).completo).toBe(false);
       expect((await tx`select estado from obras where id = ${obraId}`)[0]!.estado).toBe('sin_presupuesto');
+    }));
+
+  it('con costo y margen (D-084): el precio lo calcula el servidor, el contrato se actualiza, con su rastro', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const { obraId, etapas } = await obraNueva(tx);
+      const [a, b] = etapas;
+      const r = await guardarPresupuesto(tx, {
+        obraId,
+        margenObjetivo: 0.35,
+        lineas: [
+          { espacioId: a!.espacio, etapaId: a!.etapa, costo: 10_000 },
+          // esta etapa, con su propio margen
+          { espacioId: b!.espacio, etapaId: b!.etapa, costo: 2000, margen: 0.5 },
+        ],
+        contrato: 19_500,
+      });
+      expect(r).toMatchObject({ total: 15_384.62 + 4000, costo: 12_000 });
+      const filas = await tx<{ monto: string; costo: string }[]>`
+        select monto, costo from presupuesto_etapas where obra_id = ${obraId} order by costo`;
+      expect(filas).toEqual([
+        { monto: '4000.00', costo: '2000.00' },
+        { monto: '15384.62', costo: '10000.00' },
+      ]);
+      const [f] =
+        await tx`select contrato_original, margen_objetivo from obras_finanzas where obra_id = ${obraId}`;
+      expect(f).toEqual({ contrato_original: '19500.00', margen_objetivo: '0.3500' });
+      const [rastro] = await tx`select campo, despues from correcciones
+                                where tabla = 'obras_finanzas' and registro_id = ${obraId}`;
+      expect(rastro).toEqual({ campo: 'contrato_original', despues: '19500' });
+
+      // otro costo: cambia su precio y deja rastro de los dos
+      await guardarPresupuesto(tx, {
+        obraId,
+        margenObjetivo: 0.35,
+        lineas: [{ espacioId: a!.espacio, etapaId: a!.etapa, costo: 6500 }],
+      });
+      const cambios = await tx<{ campo: string; despues: string }[]>`
+        select campo, despues from correcciones where tabla = 'presupuesto_etapas' order by campo, despues`;
+      expect(cambios).toEqual(
+        expect.arrayContaining([
+          { campo: 'costo', despues: '6500' },
+          { campo: 'monto', despues: '10000' },
+        ]),
+      );
     }));
 
   it('rechaza montos negativos y etapas que no son del espacio; el PM no presupuesta', () =>

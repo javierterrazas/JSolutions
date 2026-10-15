@@ -200,6 +200,22 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
           </p>
           {p.semaforo ? <p>{t(`semaforo.${p.semaforo}`)}</p> : null}
         </div>
+        {/* el margen de la obra (D-084): el que deja el contrato y el que quedaría si lo que falta sale como se
+            presupuestó */}
+        {p.margenEsperado !== null && p.margenProyectado !== null ? (
+          <p className="flex flex-wrap gap-x-3 text-sm text-slate-700">
+            <span>{t('margenEsperado', { pct: pct(p.margenEsperado) })}</span>
+            <span
+              className={
+                p.margenProyectado < p.margenEsperado - 0.0005
+                  ? 'font-semibold text-amber-800'
+                  : 'text-emerald-700'
+              }
+            >
+              {t('margenProyectado', { pct: pct(p.margenProyectado) })}
+            </span>
+          </p>
+        ) : null}
       </div>
 
       <Seccion titulo={t('espacios')}>
@@ -258,6 +274,9 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
                   ? t('etapaGastado', { total: dinero(x.total), presupuesto: dinero(x.presupuesto) })
                   : t('etapaSoloGastado', { total: dinero(x.total) })}
               </p>
+              {x.precio ? (
+                <p className="text-slate-700">{t('etapaPrecio', { precio: dinero(x.precio) })}</p>
+              ) : null}
               <p className="text-xs text-slate-500">
                 {t('desglose', {
                   material: dinero(x.material),

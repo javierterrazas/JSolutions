@@ -166,7 +166,12 @@ export async function obraNueva(browser: Browser, cliente: string, pm = MIEMBROS
     await page.getByRole('textbox', { name: o.pies2, exact: true }).fill('45');
     await page.getByRole('button', { name: o.crear, exact: true }).click();
     await expect(page).toHaveURL(/\/obras\/[0-9a-f-]{36}\/presupuesto$/);
-    for (const monto of await page.locator('fieldset').getByRole('textbox').all()) await monto.fill('1000');
+    // el costo de cada etapa; el margen, el de la obra (D-084)
+    for (const costo of await page
+      .locator('fieldset')
+      .getByRole('textbox', { name: /^Costo de / })
+      .all())
+      await costo.fill('1000');
     await page.getByRole('button', { name: es.presupuesto.guardar }).click();
     await expect(page.getByRole('status')).toHaveText(es.presupuesto.completo);
     return page.url().split('/').at(-2)!;

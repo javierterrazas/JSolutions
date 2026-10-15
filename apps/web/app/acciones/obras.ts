@@ -26,7 +26,13 @@ export async function crearObraNueva(_previo: Resultado | null, entrada: Entrada
 
 export async function guardarPresupuestoObra(
   _previo: Resultado<ResultadoPresupuesto> | null,
-  entrada: { obraId: string; lineas: { espacioId: string; etapaId: string | null; monto: number }[] },
+  entrada: {
+    obraId: string;
+    /** De cada etapa, su costo y, si es otro que el de la obra, su margen (D-084). */
+    lineas: { espacioId: string; etapaId: string | null; costo: number; margen?: number | null }[];
+    margenObjetivo: number;
+    contrato: number | null;
+  },
 ): Promise<Resultado<ResultadoPresupuesto>> {
   const r = await comoMiembro((tx) => guardarPresupuesto(tx, entrada), await exigirDueno());
   if (r.ok) revalidatePath('/obras');

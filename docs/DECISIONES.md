@@ -1482,3 +1482,22 @@ su propio fondo se veía chico y con un borde). Cambia D-078.
   antes se quitan cuando ya no las use ninguna versión publicada de la app. `plataforma_empresas` devuelve el
   celular del dueño y, como correo, el que dio (nunca la dirección interna).
 
+## D-084 · El presupuesto con costo y margen
+
+**Decisión del dueño:** capturar en el presupuesto el **costo** de cada etapa y el **margen** deseado, y que el precio
+salga solo. Antes cada etapa llevaba un solo monto, que el dueño capturaba con el margen incluido, y el seguimiento
+comparaba lo gastado contra ese precio: el rojo se prendía cuando ya se perdía dinero, no cuando se comía el margen.
+- **El margen es sobre el precio** (como en las órdenes de cambio): precio = costo / (1 − margen)
+  (`precioConMargen`). Con $10,000 de costo y 35%, el precio es $15,384.62.
+- **De cada etapa,** su costo y, si quiere, su propio margen; sin él, el **margen de la obra**
+  (`obras_finanzas.margen_objetivo`), que nace con el de la empresa (`configuracion.margen_presupuesto`, 35%). El
+  servidor calcula el precio; `presupuesto_etapas.monto` sigue siendo el precio y `costo` es nuevo.
+- **El contrato** sigue a la suma de los precios mientras el dueño no lo cambie (por ejemplo, para redondearlo), y se
+  ve con qué margen queda. Se guarda con su rastro en `correcciones`. El del alta se ajusta aquí.
+- **El seguimiento compara lo gastado contra el costo** (sin costo, contra el precio, como antes), y muestra el
+  **margen esperado** (contrato contra costos) y el **proyectado**: si lo que falta se gasta como se presupuestó, con
+  lo ya pasado como se gastó (`margenProyectado`). Cada etapa dice también cuánto se cobra.
+- **Las obras de antes:** sus montos se tomaron como precio y su costo se calculó con el margen de la empresa (35%);
+  el dueño lo corrige etapa por etapa.
+- El PM no ve nada de esto. Las órdenes de cambio llevan su propio costo y precio (D-067) y no entran aquí.
+

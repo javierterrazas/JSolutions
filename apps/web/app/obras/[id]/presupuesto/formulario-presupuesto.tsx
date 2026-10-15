@@ -1,6 +1,9 @@
 'use client';
-// El presupuesto por etapa: un monto por cada etapa de cada espacio. Al guardar, la obra queda lista para arranque
-// si cada espacio tiene al menos una etapa con monto.
+// El presupuesto por etapa (D-084): de cada etapa de cada espacio, lo que se espera gastar (costo) y el margen; el
+// precio sale solo (costo / (1 − margen), el margen sobre el precio). Abajo, la suma de los costos y de los precios,
+// y el contrato, que sigue a la suma de los precios hasta que el dueño lo cambia (por ejemplo, para redondearlo).
+// Al guardar, la obra queda lista para arranque si cada espacio tiene al menos una etapa con costo.
+import { margenDe, precioConMargen } from '@ijm/core';
 import { useLocale, useTranslations } from 'next-intl';
 import { startTransition, useActionState, useState } from 'react';
 import { formatoDinero } from '@/lib/dinero';
@@ -11,29 +14,84 @@ import { MensajeError } from '../../../componentes/mensaje-error';
 interface Espacio {
   id: string;
   nombre: string;
-  etapas: { etapaId: string | null; nombre: string | null; partidas: number; monto: number }[];
+  etapas: {
+    etapaId: string | null;
+    nombre: string | null;
+    partidas: number;
+    /** Su precio. */
+    monto: number;
+    costo: number | null;
+  }[];
 }
 
 const clave = (espacioId: string, etapaId: string | null) => `${espacioId}|${etapaId ?? ''}`;
-const numero = (s: string) => Number(s.replace(/[$,\s]/g, '')) || 0;
+const numero = (s: string) => Number(s.replace(/[$,\s%]/g, '')) || 0;
+/** Un margen escrito en por ciento (35) como fracción (0.35); null si está vacío o no sirve. */
+const fraccion = (s: string): number | null => {
+  if (!s.trim()) return null;
+  const n = numero(s) / 100;
+  return n >= 0 && n < 1 ? n : null;
+};
+const porciento = (m: number) => String(Math.round(m * 1000) / 10);
 
 export function FormularioPresupuesto({
   obraId,
   espacios,
+  margenObjetivo,
+  contrato: contratoInicial,
 }: {
   obraId: string;
   espacios: readonly Espacio[];
+  margenObjetivo: number;
+  contrato: number | null;
 }) {
   const t = useTranslations('presupuesto');
   const idioma = useLocale();
   const [resultado, accion, enviando] = useActionState(guardarPresupuestoObra, null);
-  const [montos, setMontos] = useState<Record<string, string>>(() =>
+  const [margenObra, setMargenObra] = useState(porciento(margenObjetivo));
+  // de cada etapa, su costo y su margen propio (vacío: el de la obra). Las que solo tenían precio (de antes) traen
+  // el costo que deja el margen de la obra.
+  const [costos, setCostos] = useState<Record<string, string>>(() =>
     Object.fromEntries(
-      espacios.flatMap((e) => e.etapas.map((x) => [clave(e.id, x.etapaId), x.monto ? String(x.monto) : ''])),
+      espacios.flatMap((e) =>
+        e.etapas.map((x) => {
+          const costo = x.costo ?? (x.monto ? Math.round(x.monto * (1 - margenObjetivo) * 100) / 100 : 0);
+          return [clave(e.id, x.etapaId), costo ? String(costo) : ''];
+        }),
+      ),
     ),
   );
+  const [margenes, setMargenes] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      espacios.flatMap((e) =>
+        e.etapas.map((x) => {
+          const m = x.costo !== null && x.monto ? margenDe(x.costo, x.monto) : null;
+          const propio = m !== null && Math.abs(m - margenObjetivo) > 0.0005 && m >= 0 && m < 1;
+          return [clave(e.id, x.etapaId), propio ? porciento(m) : ''];
+        }),
+      ),
+    ),
+  );
+
   const dinero = (n: number) => formatoDinero(idioma).format(n);
-  const total = Object.values(montos).reduce((a, m) => a + numero(m), 0);
+  const margenDeObra = fraccion(margenObra) ?? margenObjetivo;
+  const precioDe = (k: string) => {
+    const costo = numero(costos[k] ?? '');
+    return costo ? precioConMargen(costo, fraccion(margenes[k] ?? '') ?? margenDeObra) : 0;
+  };
+  const claves = espacios.flatMap((e) => e.etapas.map((x) => clave(e.id, x.etapaId)));
+  const costoTotal = claves.reduce((a, k) => a + numero(costos[k] ?? ''), 0);
+  const precioTotal = Math.round(claves.reduce((a, k) => a + precioDe(k), 0) * 100) / 100;
+
+  // el contrato sigue a la suma de los precios mientras el dueño no lo cambie; si ya era la suma, también
+  const sumaInicial = espacios.reduce((a, e) => a + e.etapas.reduce((b, x) => b + x.monto, 0), 0);
+  const [contratoEscrito, setContratoEscrito] = useState<string | null>(() =>
+    contratoInicial === null || Math.abs(contratoInicial - sumaInicial) < 0.01
+      ? null
+      : String(contratoInicial),
+  );
+  const contrato = contratoEscrito === null ? precioTotal : numero(contratoEscrito);
+  const margenContrato = costoTotal ? margenDe(costoTotal, contrato) : null;
   const nombreDe = (id: string) => espacios.find((e) => e.id === id)?.nombre ?? id;
 
   return (
@@ -43,45 +101,132 @@ export function FormularioPresupuesto({
         startTransition(() =>
           accion({
             obraId,
+            margenObjetivo: margenDeObra,
+            contrato: contratoInicial === null ? null : contrato,
             lineas: espacios.flatMap((esp) =>
-              esp.etapas.map((x) => ({
-                espacioId: esp.id,
-                etapaId: x.etapaId,
-                monto: numero(montos[clave(esp.id, x.etapaId)] ?? ''),
-              })),
+              esp.etapas.map((x) => {
+                const k = clave(esp.id, x.etapaId);
+                return {
+                  espacioId: esp.id,
+                  etapaId: x.etapaId,
+                  costo: numero(costos[k] ?? ''),
+                  margen: fraccion(margenes[k] ?? ''),
+                };
+              }),
             ),
           }),
         );
       }}
       className="flex flex-col gap-4"
     >
+      <label className={`${estilos.tarjeta} grid grid-cols-[1fr_6rem] items-center gap-3`}>
+        <span className="flex flex-col">
+          <span className="font-semibold">{t('margenObra')}</span>
+          <span className="text-sm text-slate-600">{t('margenObraAyuda')}</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <input
+            value={margenObra}
+            onChange={(v) => setMargenObra(v.target.value)}
+            inputMode="decimal"
+            aria-label={t('margenObra')}
+            className={`${estilos.campo} text-right`}
+          />
+          <span aria-hidden="true">{t('porciento')}</span>
+        </span>
+      </label>
+
       {espacios.map((e) => {
-        const subtotal = e.etapas.reduce((a, x) => a + numero(montos[clave(e.id, x.etapaId)] ?? ''), 0);
+        const costoEspacio = e.etapas.reduce((a, x) => a + numero(costos[clave(e.id, x.etapaId)] ?? ''), 0);
+        const precioEspacio = e.etapas.reduce((a, x) => a + precioDe(clave(e.id, x.etapaId)), 0);
         return (
-          <fieldset key={e.id} className={`${estilos.tarjeta} flex flex-col gap-2`}>
-            <legend className="flex w-full justify-between gap-2 px-1 font-semibold text-marca">
-              <span>{e.nombre}</span>
-              <span>{dinero(subtotal)}</span>
-            </legend>
-            {e.etapas.map((x) => (
-              <label key={clave(e.id, x.etapaId)} className="grid grid-cols-[1fr_8rem] items-center gap-2">
-                <span className="text-sm">
-                  {x.nombre ?? t('otras')}
-                  <br />
-                  <span className="text-xs text-slate-500">{t('partidas', { n: x.partidas })}</span>
-                </span>
-                <input
-                  value={montos[clave(e.id, x.etapaId)] ?? ''}
-                  onChange={(v) => setMontos((m) => ({ ...m, [clave(e.id, x.etapaId)]: v.target.value }))}
-                  inputMode="decimal"
-                  className={`${estilos.campo} text-right`}
-                />
-              </label>
-            ))}
+          <fieldset key={e.id} className={`${estilos.tarjeta} flex flex-col gap-3`}>
+            <legend className="px-1 font-semibold text-marca">{e.nombre}</legend>
+            <p className="-mt-2 text-sm text-slate-600">
+              {t('subtotales', { costo: dinero(costoEspacio), precio: dinero(precioEspacio) })}
+            </p>
+            {e.etapas.map((x) => {
+              const k = clave(e.id, x.etapaId);
+              const nombre = x.nombre ?? t('otras');
+              return (
+                <div key={k} className="flex flex-col gap-1 border-t border-slate-200 pt-2">
+                  <p className="text-sm font-medium">
+                    {t('etapaPartidas', { etapa: nombre, n: x.partidas })}
+                  </p>
+                  <div className="grid grid-cols-[1fr_5.5rem] gap-2">
+                    <label className="flex flex-col gap-1 text-xs text-slate-600">
+                      {t('costo')}
+                      <input
+                        value={costos[k] ?? ''}
+                        onChange={(v) => setCostos((c) => ({ ...c, [k]: v.target.value }))}
+                        inputMode="decimal"
+                        aria-label={t('costoDe', { etapa: nombre, espacio: e.nombre })}
+                        className={`${estilos.campo} text-right`}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs text-slate-600">
+                      {t('margen')}
+                      <input
+                        value={margenes[k] ?? ''}
+                        onChange={(v) => setMargenes((m) => ({ ...m, [k]: v.target.value }))}
+                        inputMode="decimal"
+                        placeholder={porciento(margenDeObra)}
+                        aria-label={t('margenDe', { etapa: nombre, espacio: e.nombre })}
+                        className={`${estilos.campo} text-right`}
+                      />
+                    </label>
+                  </div>
+                  <p className="text-right text-sm">{t('precio', { precio: dinero(precioDe(k)) })}</p>
+                </div>
+              );
+            })}
           </fieldset>
         );
       })}
-      <p className="text-right text-lg font-semibold text-marca">{t('total', { total: dinero(total) })}</p>
+
+      <div className={`${estilos.tarjeta} flex flex-col gap-2`}>
+        <p className="flex justify-between gap-2">
+          <span>{t('costoTotal')}</span>
+          <span className="font-semibold">{dinero(costoTotal)}</span>
+        </p>
+        <p className="flex justify-between gap-2">
+          <span>{t('precioTotal')}</span>
+          <span className="font-semibold">{dinero(precioTotal)}</span>
+        </p>
+        {contratoInicial !== null ? (
+          <>
+            <label className="grid grid-cols-[1fr_9rem] items-center gap-2 border-t border-slate-200 pt-2">
+              <span className="font-semibold text-marca">{t('contrato')}</span>
+              <input
+                value={contratoEscrito ?? String(precioTotal)}
+                onChange={(v) => setContratoEscrito(v.target.value)}
+                inputMode="decimal"
+                aria-label={t('contrato')}
+                className={`${estilos.campo} text-right font-semibold`}
+              />
+            </label>
+            {contratoEscrito !== null ? (
+              <button
+                type="button"
+                onClick={() => setContratoEscrito(null)}
+                className="self-end text-sm text-marca underline"
+              >
+                {t('usarSuma')}
+              </button>
+            ) : (
+              <p className="text-right text-xs text-slate-600">{t('contratoSigue')}</p>
+            )}
+            {margenContrato !== null ? (
+              <p
+                className={`text-right text-sm ${margenContrato < margenDeObra - 0.0005 ? 'text-amber-800' : 'text-slate-700'}`}
+              >
+                {t('margenContrato', { margen: `${porciento(margenContrato)}%` })}
+              </p>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+
       <MensajeError problema={resultado && !resultado.ok ? resultado : null} />
       {resultado?.ok ? (
         <p

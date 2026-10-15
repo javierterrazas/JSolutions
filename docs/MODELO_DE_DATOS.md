@@ -47,7 +47,7 @@ a su nombre, después de validar las reglas con `packages/core` y dejando rastro
 | Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
 | `empresas` | Config | `nombre`, `ciudad`, `zona_horaria` (por defecto `America/Chicago`), `idioma` | lee y escribe | vista: `nombre`, `zona_horaria` |
-| `configuracion` | Config | una fila por empresa: `impuesto`, `limite_compra_pm`, `sla_bloqueo_horas`, `sla_oc_horas`, `umbral_oc_menor`, `margen_minimo_oc`, `horas_sin_recibo`, `dias_laborables` (por defecto de lunes a sábado, D-028) | lee y escribe | vista: `limite_compra_pm`, `horas_sin_recibo`, `sla_bloqueo_horas`, `dias_laborables` |
+| `configuracion` | Config | una fila por empresa: `impuesto`, `limite_compra_pm`, `sla_bloqueo_horas`, `sla_oc_horas`, `umbral_oc_menor`, `margen_minimo_oc`, `margen_presupuesto` (con el que se arma un presupuesto, D-084), `horas_sin_recibo`, `dias_laborables` (por defecto de lunes a sábado, D-028) | lee y escribe | vista: `limite_compra_pm`, `horas_sin_recibo`, `sla_bloqueo_horas`, `dias_laborables` |
 | `feriados` | (nueva) | `dia`, `nombre`, `se_trabaja`: un feriado se descansa salvo que se decida trabajarlo (D-028) | lee y escribe | lee |
 | `metas_indicadores` | Config (`META_*`, `MAX_*`) y metas fijas del código | `indicador`, `meta`; sin renglón vale la del legacy (D-019) | lee y escribe | — |
 | `miembros` | Usuarios | `user_id` (Supabase Auth, único: una empresa por usuario, D-016), `rol` (`dueno`/`admin`/`pm`), `nombre`, `telefono` (su celular, con el que se da de alta, D-083), `idioma`, `activo`, `tarjeta_ultimos4`, `correo_avisos` (el correo opcional) | lee y escribe | lee su propio renglón |
@@ -93,10 +93,10 @@ Aquí son columnas (D-021).
 | Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
 | `obras` | Proyectos | `folio`, `cliente`, `telefono_cliente` (10 dígitos o más), `direccion`, `pm_id`, `fecha_inicio`, `fecha_fin_estimada` (no antes del inicio), `fecha_fin_real`, `estado`, `notas` | lee y escribe | lee |
-| `obras_finanzas` 💲 | Proyectos.contrato_original | `contrato_original` (mayor a cero) | lee y escribe | — |
+| `obras_finanzas` 💲 | Proyectos.contrato_original | `contrato_original` (mayor a cero), `margen_objetivo` (el margen que se busca en la obra, D-084) | lee y escribe | — |
 | `espacios` | Areas | `tipo_espacio_id`, `nombre`, `orden`; **dos medidas** (D-014): `pies2_cotizados`, `pies_lineales_cotizados` y `pies2_verificados`, `pies_lineales_verificados` con `verificado_por` y `verificado_en` | lee y escribe | lee; verifica la medida mediante el servidor |
 | `partidas_obra` | Partidas_Obra | la copia de la plantilla (`plantilla_id` de origen) o una partida solo de esta obra; `estado` (`activa`/`quitada`) | lee y escribe | lee |
-| `presupuesto_etapas` 💲 | Presupuesto | `espacio_id`, `etapa_id` (nulo = "Otras partidas"), `monto`, `notas`; uno por espacio y etapa | lee y escribe | — |
+| `presupuesto_etapas` 💲 | Presupuesto | `espacio_id`, `etapa_id` (nulo = "Otras partidas"), `monto` (el precio de la etapa), `costo` (lo que se espera gastar, D-084), `notas`; uno por espacio y etapa | lee y escribe | — |
 | `plan_semanal` | Plan_Semanal | `semana` (lunes), `partida_obra_id`, `fin_previsto`: lo que el cronograma preveía, congelado la primera vez que el dueño abre la app en la semana (D-079) | lee y crea | — |
 
 La etiqueta de la obra ("Baño + Closet") y los pies² totales no se guardan: salen de sus espacios.

@@ -103,9 +103,13 @@ test('una partida sin su inspección: el cierre lleva a hacerla y después deja 
     await dueno.getByRole('textbox', { name: es.obraNueva.nombreEspacio }).fill(ESPACIO);
     await dueno.getByRole('textbox', { name: es.obraNueva.pies2 }).fill('40');
     await dueno.getByRole('button', { name: es.presupuesto.agregarEspacio }).click();
-    const montos = dueno.locator('fieldset').filter({ hasText: ESPACIO }).getByRole('textbox');
+    // de cada etapa, su costo (D-084)
+    const montos = dueno
+      .locator('fieldset')
+      .filter({ hasText: ESPACIO })
+      .getByRole('textbox', { name: /^Costo de / });
     await expect(montos).toHaveCount(2);
-    const total = dueno.getByText(/^Total: /);
+    const total = dueno.locator('p').filter({ hasText: es.presupuesto.costoTotal });
     const totalAntes = await total.innerText();
     for (const monto of await montos.all()) await monto.fill('1500');
     // los montos no son type=number (legacy/pruebas/prueba_numeros_ui.py): sin flechitas, la rueda no los cambia,

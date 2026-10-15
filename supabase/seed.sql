@@ -138,7 +138,8 @@ begin
   select id into sub from public.subcontratistas where empresa_id = p_empresa;
   select id into tr from public.trabajadores where empresa_id = p_empresa and tipo_pago = 'hora';
 
-  insert into public.obras_finanzas (obra_id, empresa_id, contrato_original) values (p_obra, p_empresa, 24000);
+  insert into public.obras_finanzas (obra_id, empresa_id, contrato_original, margen_objetivo)
+    values (p_obra, p_empresa, 24000, 0.35);
   insert into public.espacios (empresa_id, obra_id, tipo_espacio_id, nombre, orden)
     values (p_empresa, p_obra, t_gen, 'Generales de obra', 0) returning id into s_gen;
   insert into public.espacios (empresa_id, obra_id, tipo_espacio_id, nombre, orden, pies2_cotizados)
@@ -151,8 +152,9 @@ begin
   select id into p_demo from public.partidas_obra where espacio_id = s_bano and orden = 1;
   select id into p_plom from public.partidas_obra where espacio_id = s_bano and orden = 2;
 
-  insert into public.presupuesto_etapas (empresa_id, obra_id, espacio_id, etapa_id, monto)
-    values (p_empresa, p_obra, s_bano, et_demo, 1500);
+  -- la demolición del baño: se cobra $1,500 y se espera gastar $975 (35% de margen sobre el precio, D-084)
+  insert into public.presupuesto_etapas (empresa_id, obra_id, espacio_id, etapa_id, monto, costo)
+    values (p_empresa, p_obra, s_bano, et_demo, 1500, 975);
   insert into public.plan_semanal (empresa_id, semana, obra_id, partida_obra_id, fin_previsto)
     values (p_empresa, '2026-10-05', p_obra, p_demo, '2026-10-06');
 

@@ -14,3 +14,4 @@ export * from './indicadores';
 export * from './correcciones';
 export * from './acceso';
 export * from './suscripcion';
+export * from './margen';

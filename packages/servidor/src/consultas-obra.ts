@@ -53,14 +53,27 @@ export async function obrasDeLaEmpresa(tx: Tx, ahora = new Date()): Promise<Obra
 
 export interface PresupuestoParaCapturar {
   readonly obra: Omit<ObraDeLaLista, 'pm' | 'inicio'>;
-  /** Cada espacio con las etapas de sus partidas y el monto que tiene cada una (0 si no tiene). */
+  /**
+   * Cada espacio con las etapas de sus partidas: su precio (`monto`, 0 si no tiene) y su costo (D-084; null si no lo
+   * tiene).
+   */
   readonly espacios: readonly {
     id: string;
     nombre: string;
     generales: boolean;
-    etapas: readonly { etapaId: string | null; nombre: Nombre | null; partidas: number; monto: number }[];
+    etapas: readonly {
+      etapaId: string | null;
+      nombre: Nombre | null;
+      partidas: number;
+      monto: number;
+      costo: number | null;
+    }[];
   }[];
   readonly total: number;
+  /** El margen que se busca en la obra; si no tiene, el de la empresa. */
+  readonly margenObjetivo: number;
+  /** El contrato con el cliente; null si no tiene. */
+  readonly contrato: number | null;
 }
 
 /** Lo que se captura en el presupuesto por etapa de una obra; null si el dueño no la ve. */
@@ -89,10 +102,16 @@ export async function presupuestoParaCapturar(
   );
   const montos = new Map(
     (
-      await tx<{ espacio_id: string; etapa_id: string | null; monto: string }[]>`
-        select espacio_id, etapa_id, monto from presupuesto_etapas where obra_id = ${obraId}`
-    ).map((m) => [claveEtapa(m.espacio_id, m.etapa_id), Number(m.monto)]),
+      await tx<{ espacio_id: string; etapa_id: string | null; monto: string; costo: string | null }[]>`
+        select espacio_id, etapa_id, monto, costo from presupuesto_etapas where obra_id = ${obraId}`
+    ).map((m) => [
+      claveEtapa(m.espacio_id, m.etapa_id),
+      { monto: Number(m.monto), costo: m.costo === null ? null : Number(m.costo) },
+    ]),
   );
+  const [f] = await tx<{ margen: string | null; contrato: string | null; empresa: string }[]>`
+    select f.margen_objetivo as margen, f.contrato_original as contrato, c.margen_presupuesto as empresa
+    from configuracion c left join obras_finanzas f on f.obra_id = ${obraId}`;
   const lista = espacios.map((e) => ({
     id: e.id,
     nombre: nombresEspacio.get(e.id) ?? '',
@@ -101,9 +120,16 @@ export async function presupuestoParaCapturar(
       etapaId: x.etapaId,
       nombre: x.etapaId ? (etapas.get(x.etapaId) ?? null) : null,
       partidas: x.partidas.length,
-      monto: montos.get(claveEtapa(e.id, x.etapaId)) ?? 0,
+      monto: montos.get(claveEtapa(e.id, x.etapaId))?.monto ?? 0,
+      costo: montos.get(claveEtapa(e.id, x.etapaId))?.costo ?? null,
     })),
   }));
   const total = lista.reduce((a, e) => a + e.etapas.reduce((b, x) => b + x.monto, 0), 0);
-  return { obra, espacios: lista, total };
+  return {
+    obra,
+    espacios: lista,
+    total,
+    margenObjetivo: Number(f?.margen ?? f?.empresa ?? 0.35),
+    contrato: f?.contrato === null || f?.contrato === undefined ? null : Number(f.contrato),
+  };
 }
