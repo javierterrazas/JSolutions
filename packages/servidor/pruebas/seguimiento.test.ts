@@ -47,11 +47,18 @@ describe('el seguimiento de una obra', () => {
   it('el presupuesto contra lo gastado, por etapa: material, cuadrilla a su tarifa del día y subcontratos', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const s = (await seguimientoDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!;
-      expect(s.presupuesto).toMatchObject({ total: 1500, gastado: 5100, usado: 3.4, semaforo: 'rojo' });
+      // lo gastado se compara contra el costo de la etapa ($975), no contra su precio ($1,500) (D-084)
+      expect(s.presupuesto).toMatchObject({ total: 975, gastado: 5100, semaforo: 'rojo' });
+      expect(s.presupuesto.usado).toBeCloseTo(5100 / 975, 6);
+      // el contrato de $24,000 contra $975 de costo; en el proyectado, la demolición cuenta su costo ($975, gastó
+      // $180) y lo demás, lo que ya se gastó sin presupuesto ($5,100 − $180)
+      expect(s.presupuesto.margenEsperado).toBeCloseTo(1 - 975 / 24000, 6);
+      expect(s.presupuesto.margenProyectado).toBeCloseTo(1 - (975 + 5100 - 180) / 24000, 6);
       const demolicion = s.presupuesto.porEtapa.find((x) => x.etapa?.es === 'Demolición')!;
       expect(demolicion).toMatchObject({
         espacio: 'Baño principal',
-        presupuesto: 1500,
+        presupuesto: 975,
+        precio: 1500,
         cuadrilla: 180,
         total: 180,
       });
@@ -113,7 +120,7 @@ describe('el seguimiento de una obra', () => {
       const r = await resumenDeObras(tx, LUNES);
       expect(r.get(OBRAS.a1Carlos)).toEqual({
         avance: 0.4,
-        usado: 3.4,
+        usado: 5100 / 975,
         semaforo: 'rojo',
         entrega: '2026-10-31',
         atraso: 0,

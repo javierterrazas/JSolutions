@@ -227,7 +227,8 @@
     "cambio_ya_hecho": "That change order is already marked as done.",
     "cambio_no_autorizado": "The client hasn't approved that change order yet.",
     "celular_invalido": "That cell number isn't complete: type all 10 digits (or the number with + and its country code).",
-    "celular_ya_registrado": "That cell number already belongs to a member."
+    "celular_ya_registrado": "That cell number already belongs to a member.",
+    "margen_invalido": "The margin has to be from 0% to less than 100%."
   },
   "obras": {
     "titulo": "Jobs",
@@ -276,15 +277,30 @@
   },
   "presupuesto": {
     "titulo": "Budget · {folio}",
-    "ayuda": "The amount for each stage of each space. Every space needs at least one stage with an amount before the job can start.",
+    "ayuda": "For each stage, what you expect to spend (cost) and the margin you want; the price is calculated. Each space needs at least one stage with a cost before the job can start.",
     "otras": "Other line items",
     "partidas": "{n, plural, one {# line item} other {# line items}}",
-    "total": "Total: {total}",
     "guardar": "Save budget",
     "completo": "Budget complete: the job is ready to start.",
     "incompleto": "Saved. Missing amounts in: {espacios}.",
     "volver": "Back to jobs",
-    "agregarEspacio": "Add space"
+    "agregarEspacio": "Add space",
+    "margenObra": "Job margin",
+    "margenObraAyuda": "On the price: at 35%, 35 cents of every dollar you're paid is profit. Stages without their own margin use it.",
+    "subtotales": "Cost {costo} · Price {precio}",
+    "etapaPartidas": "{etapa} · {n, plural, one {# task} other {# tasks}}",
+    "costo": "Cost",
+    "margen": "Margin %",
+    "costoDe": "Cost of {etapa} in {espacio}",
+    "margenDe": "Margin of {etapa} in {espacio}",
+    "precio": "Price: {precio}",
+    "costoTotal": "Total cost",
+    "precioTotal": "Sum of the prices",
+    "contrato": "Contract",
+    "contratoSigue": "It's the sum of the prices. You can change it, for example to round it.",
+    "usarSuma": "Use the sum of the prices",
+    "margenContrato": "With this contract, your margin is {margen}",
+    "porciento": "%"
   },
   "inicioPm": {
     "racha": "{n, plural, =0 {No streak yet} one {# day in a row closed} other {# days in a row closed}}",
@@ -795,7 +811,7 @@
     "prevista": "Forecast: {dia}",
     "tarde": "{n, plural, one {# day late} other {# days late}}",
     "aTiempo": "on time",
-    "gastado": "Spent {gastado} of {total} ({pct})",
+    "gastado": "Spent {gastado} of {total} in cost ({pct})",
     "sinPresupuesto": "Spent {gastado}; no budget yet",
     "semaforo": {
       "verde": "Within budget.",
@@ -814,7 +830,7 @@
     "sinPresupuestoEtapa": "no budget",
     "pasado": "{monto} over",
     "queda": "{monto} left",
-    "etapaGastado": "Spent {total} of {presupuesto}",
+    "etapaGastado": "Spent {total} of {presupuesto} in cost",
     "etapaSoloGastado": "Spent {total}",
     "desglose": "Material {material} · crew {cuadrilla} · subs {sub}",
     "cuadrilla": "Crew",
@@ -867,7 +883,10 @@
     "cobros": "Payments",
     "subcontratos": "Subcontracts and sub payments",
     "aproximado": "≈ {cantidad}",
-    "cuadrillaAyuda": "Tap a worker to see their hours by stage, approximate."
+    "cuadrillaAyuda": "Tap a worker to see their hours by stage, approximate.",
+    "etapaPrecio": "Charged {precio}",
+    "margenEsperado": "Expected margin: {pct}",
+    "margenProyectado": "If the rest goes as budgeted: {pct}"
   },
   "datosObra": {
     "titulo": "Job details",

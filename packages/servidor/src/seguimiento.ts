@@ -7,6 +7,7 @@ import {
   avanceDeObra,
   type AvanceDia,
   type Cargo,
+  claveEtapa,
   costosPorEtapa,
   cronogramaObra,
   type Dia,
@@ -14,6 +15,8 @@ import {
   esLaborable,
   estadoDePartida,
   fechaComprometida,
+  margenDe,
+  margenProyectado,
   type Responsable,
   sumarDias,
   tarifaDelDia,
@@ -55,7 +58,10 @@ export interface EspacioDelSeguimiento {
 export interface EtapaDelSeguimiento {
   readonly espacio: string;
   readonly etapa: Nombre | null;
+  /** Lo que se espera gastar (su costo, D-084; si no lo tiene, su precio, como antes). */
   readonly presupuesto: number;
+  /** Lo que se le cobra al cliente por la etapa. */
+  readonly precio: number;
   readonly material: number;
   readonly cuadrilla: number;
   readonly sub: number;
@@ -107,10 +113,15 @@ export interface SeguimientoObra {
   readonly avance: { pct: number; curso: number; terminadas: number; total: number };
   readonly espacios: readonly EspacioDelSeguimiento[];
   readonly presupuesto: {
+    /** Lo que se espera gastar en total (los costos, D-084). */
     readonly total: number;
     readonly gastado: number;
     readonly usado: number | null;
     readonly semaforo: Semaforo | null;
+    /** El margen que deja el contrato con los costos presupuestados; null sin contrato. */
+    readonly margenEsperado: number | null;
+    /** El margen si lo que falta se gasta como se presupuestó (lo ya pasado cuenta como se gastó); null sin contrato. */
+    readonly margenProyectado: number | null;
     readonly porEtapa: readonly EtapaDelSeguimiento[];
   };
   readonly cuadrilla: {
@@ -242,9 +253,15 @@ async function leerObras(tx: Tx, s: Sesion, ids: readonly string[]) {
     select obra_id, coalesce(dias_impacto, 0) as dias from ordenes_cambio
     where obra_id = any(${ids}) and estado in ('autorizada', 'facturada')`;
   const presupuesto = await tx<
-    { obra_id: string; espacio_id: string; etapa_id: string | null; monto: string }[]
+    { obra_id: string; espacio_id: string; etapa_id: string | null; monto: string; costo: string | null }[]
   >`
-    select obra_id, espacio_id, etapa_id, monto from presupuesto_etapas where obra_id = any(${ids})`;
+    select obra_id, espacio_id, etapa_id, monto, costo from presupuesto_etapas where obra_id = any(${ids})`;
+  const contratos = new Map(
+    (
+      await tx<{ obra_id: string; contrato: string }[]>`
+        select obra_id, contrato_original as contrato from obras_finanzas where obra_id = any(${ids})`
+    ).map((f) => [f.obra_id, Number(f.contrato)]),
+  );
   const tarifas = (
     await tx<{ trabajador_id: string; tarifa: string; desde: Dia }[]>`
       select trabajador_id, tarifa, to_char(vigente_desde, 'YYYY-MM-DD') as desde from tarifas_trabajador`
@@ -306,6 +323,7 @@ async function leerObras(tx: Tx, s: Sesion, ids: readonly string[]) {
     avance,
     cambios,
     presupuesto,
+    contratos,
     tarifas,
     manoObra,
     manoObraRepartida,
@@ -456,6 +474,7 @@ function calcular(l: Lectura, obraId: string) {
         monto: Number(x.precio),
       })),
   ];
+  const lineas = l.presupuesto.filter((x) => x.obra_id === obraId);
   const costos = costosPorEtapa(
     espacios.map((e) => ({
       id: e.id,
@@ -465,13 +484,18 @@ function calcular(l: Lectura, obraId: string) {
       partidas: partidas.filter((p) => p.espacio_id === e.id).map((p) => ({ id: p.id, etapaId: p.etapa_id })),
     })),
     cargos,
-    l.presupuesto
-      .filter((x) => x.obra_id === obraId)
-      .map((x) => ({ espacioId: x.espacio_id, etapaId: x.etapa_id, monto: Number(x.monto) })),
+    // lo gastado se compara contra el costo de cada etapa (D-084); sin costo, contra su precio, como antes
+    lineas.map((x) => ({
+      espacioId: x.espacio_id,
+      etapaId: x.etapa_id,
+      monto: x.costo === null ? Number(x.monto) : Number(x.costo),
+    })),
   );
+  const precioDe = new Map(lineas.map((x) => [claveEtapa(x.espacio_id, x.etapa_id), Number(x.monto)]));
   const nombreEspacio = new Map(espacios.map((e) => [e.id, e.nombre]));
   const total = costos.reduce((a, c) => a + c.presupuesto, 0);
   const gastado = costos.reduce((a, c) => a + c.total, 0);
+  const contrato = l.contratos.get(obraId) ?? 0;
 
   return {
     ...a,
@@ -481,10 +505,18 @@ function calcular(l: Lectura, obraId: string) {
       gastado,
       usado: total ? gastado / total : null,
       semaforo: semaforoDePresupuesto(gastado, total, a.av.pct),
+      margenEsperado: total ? margenDe(total, contrato) : null,
+      margenProyectado: total
+        ? margenProyectado(
+            costos.map((c) => ({ costo: c.presupuesto, gastado: c.total })),
+            contrato,
+          )
+        : null,
       porEtapa: costos.map((c) => ({
         espacio: nombreEspacio.get(c.espacioId) ?? '',
         etapa: c.etapaId ? (l.etapas.get(c.etapaId) ?? null) : null,
         presupuesto: c.presupuesto,
+        precio: precioDe.get(claveEtapa(c.espacioId, c.etapaId)) ?? 0,
         material: c.material,
         cuadrilla: c.cuadrilla,
         sub: c.sub,

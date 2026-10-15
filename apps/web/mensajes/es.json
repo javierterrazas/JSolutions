@@ -227,7 +227,8 @@
     "cambio_ya_hecho": "Esa orden de cambio ya está marcada como hecha.",
     "cambio_no_autorizado": "El cliente todavía no aprueba esa orden de cambio.",
     "celular_invalido": "Ese celular no está completo: escribe los 10 dígitos (o el número con + y el código de su país).",
-    "celular_ya_registrado": "Ese celular ya es de un miembro."
+    "celular_ya_registrado": "Ese celular ya es de un miembro.",
+    "margen_invalido": "El margen tiene que ser de 0% a menos de 100%."
   },
   "obras": {
     "titulo": "Obras",
@@ -276,15 +277,30 @@
   },
   "presupuesto": {
     "titulo": "Presupuesto · {folio}",
-    "ayuda": "El monto de cada etapa de cada espacio. Cada espacio necesita al menos una etapa con monto para que la obra pueda arrancar.",
+    "ayuda": "De cada etapa, lo que esperas gastar (costo) y el margen que quieres; el precio sale solo. Cada espacio necesita al menos una etapa con costo para que la obra pueda arrancar.",
     "otras": "Otras partidas",
     "partidas": "{n, plural, one {# partida} other {# partidas}}",
-    "total": "Total: {total}",
     "guardar": "Guardar presupuesto",
     "completo": "Presupuesto completo: la obra quedó lista para arranque.",
     "incompleto": "Guardado. Faltan montos en: {espacios}.",
     "volver": "Volver a obras",
-    "agregarEspacio": "Agregar espacio"
+    "agregarEspacio": "Agregar espacio",
+    "margenObra": "Margen de la obra",
+    "margenObraAyuda": "Sobre el precio: con 35%, de cada dólar que te pagan, 35 centavos son ganancia. Lo usan las etapas sin margen propio.",
+    "subtotales": "Costo {costo} · Precio {precio}",
+    "etapaPartidas": "{etapa} · {n, plural, one {# partida} other {# partidas}}",
+    "costo": "Costo",
+    "margen": "Margen %",
+    "costoDe": "Costo de {etapa} en {espacio}",
+    "margenDe": "Margen de {etapa} en {espacio}",
+    "precio": "Precio: {precio}",
+    "costoTotal": "Costo total",
+    "precioTotal": "Suma de los precios",
+    "contrato": "Contrato",
+    "contratoSigue": "Es la suma de los precios. Puedes cambiarlo, por ejemplo para redondearlo.",
+    "usarSuma": "Usar la suma de los precios",
+    "margenContrato": "Con este contrato, tu margen queda en {margen}",
+    "porciento": "%"
   },
   "inicioPm": {
     "racha": "{n, plural, =0 {Sin racha todavía} one {# día seguido cerrado} other {# días seguidos cerrados}}",
@@ -795,7 +811,7 @@
     "prevista": "Prevista: {dia}",
     "tarde": "{n, plural, one {# día tarde} other {# días tarde}}",
     "aTiempo": "a tiempo",
-    "gastado": "Gastado {gastado} de {total} ({pct})",
+    "gastado": "Gastado {gastado} de {total} de costo ({pct})",
     "sinPresupuesto": "Gastado {gastado}; todavía sin presupuesto",
     "semaforo": {
       "verde": "Dentro del presupuesto.",
@@ -814,7 +830,7 @@
     "sinPresupuestoEtapa": "sin presupuesto",
     "pasado": "se pasó {monto}",
     "queda": "quedan {monto}",
-    "etapaGastado": "Gastado {total} de {presupuesto}",
+    "etapaGastado": "Gastado {total} de {presupuesto} de costo",
     "etapaSoloGastado": "Gastado {total}",
     "desglose": "Material {material} · cuadrilla {cuadrilla} · subcontratos {sub}",
     "cuadrilla": "Cuadrilla",
@@ -867,7 +883,10 @@
     "cobros": "Cobros",
     "subcontratos": "Subcontratos y pagos a subs",
     "aproximado": "≈ {cantidad}",
-    "cuadrillaAyuda": "Toca a un trabajador para ver sus horas por etapa, aproximadas."
+    "cuadrillaAyuda": "Toca a un trabajador para ver sus horas por etapa, aproximadas.",
+    "etapaPrecio": "Se cobra {precio}",
+    "margenEsperado": "Margen esperado: {pct}",
+    "margenProyectado": "Si lo que falta sale como se presupuestó: {pct}"
   },
   "datosObra": {
     "titulo": "Datos de la obra",

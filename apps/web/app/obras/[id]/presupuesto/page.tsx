@@ -36,8 +36,11 @@ export default async function Presupuesto({ params }: PageProps<'/obras/[id]/pre
             nombre: x.nombre ? ((idioma === 'en' ? x.nombre.en : null) ?? x.nombre.es) : null,
             partidas: x.partidas,
             monto: x.monto,
+            costo: x.costo,
           })),
         }))}
+        margenObjetivo={p.margenObjetivo}
+        contrato={p.contrato}
       />
       {p.obra.estado !== 'entregada' && catalogo.ok ? (
         // se vuelve a montar al agregar uno, para quedar cerrado otra vez
