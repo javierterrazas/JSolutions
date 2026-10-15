@@ -29,31 +29,29 @@ describe('la marca de la empresa', () => {
     probarComo(USUARIOS.duenoA, async (tx) => {
       const antes = await marcaDeMiEmpresa(tx);
       expect(antes).toMatchObject({ empresaId: EMPRESA_A, nombre: 'IJM Construction', conLogo: false });
-      const r = await guardarMarca(tx, { color: '#0F766E', fondoBlanco: false, logo: PNG });
+      const r = await guardarMarca(tx, { color: '#0F766E', logo: PNG });
       expect(r.version).toBe(antes.version + 1);
       expect(await marcaDeMiEmpresa(tx)).toMatchObject({
         color: '#0f766e',
-        fondoBlanco: false,
         conLogo: true,
       });
 
       // sin logo en la entrada, se queda el que hay; con null, se quita
-      await guardarMarca(tx, { color: '#0f766e', fondoBlanco: true });
+      await guardarMarca(tx, { color: '#0f766e' });
       expect((await marcaDeMiEmpresa(tx)).conLogo).toBe(true);
-      await guardarMarca(tx, { color: '#0f766e', fondoBlanco: true, logo: null });
+      await guardarMarca(tx, { color: '#0f766e', logo: null });
       expect((await marcaDeMiEmpresa(tx)).conLogo).toBe(false);
     }));
 
   it('sin sesión, la marca pública trae nombre, color y logo; el portal sabe de qué empresa es', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
-      await guardarMarca(tx, { color: '#0f766e', fondoBlanco: true, logo: JPEG });
+      await guardarMarca(tx, { color: '#0f766e', logo: JPEG });
       await sinIdentidad(tx);
       const m = (await marcaPublica(tx, { empresaId: EMPRESA_A }))!;
       expect(m).toMatchObject({
         nombre: 'IJM Construction',
         color: '#0f766e',
         logoTipo: 'image/jpeg',
-        fondoBlanco: true,
       });
       expect([...m.logo!]).toEqual([...JPEG]);
       expect(await marcaPublica(tx, { empresaId: 'e0000000-0000-4000-8000-000000000099' })).toBeNull();
@@ -68,22 +66,16 @@ describe('la marca de la empresa', () => {
   it('el PM la ve en "quién soy"; no la cambia; un logo que no es imagen o pesa de más, no', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       expect(
-        await codigo(tx, () =>
-          guardarMarca(tx, { color: '#000000', fondoBlanco: true, logo: new Uint8Array([1, 2, 3]) }),
-        ),
+        await codigo(tx, () => guardarMarca(tx, { color: '#000000', logo: new Uint8Array([1, 2, 3]) })),
       ).toBe('logo_invalido');
       const pesado = new Uint8Array(1024 * 1024 + 1);
       pesado.set(PNG);
-      expect(
-        await codigo(tx, () => guardarMarca(tx, { color: '#000000', fondoBlanco: true, logo: pesado })),
-      ).toBe('logo_pesado');
-      expect(await codigo(tx, () => guardarMarca(tx, { color: 'rojo', fondoBlanco: true }))).toBe(
-        'datos_invalidos',
+      expect(await codigo(tx, () => guardarMarca(tx, { color: '#000000', logo: pesado }))).toBe(
+        'logo_pesado',
       );
+      expect(await codigo(tx, () => guardarMarca(tx, { color: 'rojo' }))).toBe('datos_invalidos');
       await como(tx, USUARIOS.carlos);
       expect((await quienSoy(tx)).marca).toMatchObject({ color: '#1d3557', conLogo: false });
-      expect(await codigo(tx, () => guardarMarca(tx, { color: '#000000', fondoBlanco: true }))).toBe(
-        'solo_dueno',
-      );
+      expect(await codigo(tx, () => guardarMarca(tx, { color: '#000000' }))).toBe('solo_dueno');
     }));
 });

@@ -1,4 +1,4 @@
-// La marca de cada empresa (D-078): su logo, su color y el fondo del ícono. La app instalada lleva el ícono y el nombre
+// La marca de cada empresa (D-078): su logo y su color; el logo llena todo el ícono (D-082). La app instalada lleva el ícono y el nombre
 // de la empresa que la usa; el logo sale arriba de cada pantalla y en el portal del cliente. El dueño la cambia en
 // "Mi empresa"; el manifiesto y los íconos se leen sin sesión (el teléfono los pide sin las cookies de la app).
 import { ErrorDeNegocio } from '@ijm/core';
@@ -16,7 +16,6 @@ export interface MarcaDeEmpresa {
   readonly empresaId: string;
   readonly nombre: string;
   readonly color: string;
-  readonly fondoBlanco: boolean;
   readonly conLogo: boolean;
   readonly version: number;
 }
@@ -26,7 +25,6 @@ export interface MarcaPublica {
   readonly color: string;
   readonly logo: Buffer | null;
   readonly logoTipo: TipoLogo | null;
-  readonly fondoBlanco: boolean;
   readonly version: number;
 }
 
@@ -42,16 +40,13 @@ export function tipoDeImagen(bytes: Uint8Array): TipoLogo | null {
 export async function marcaDeMiEmpresa(tx: Tx, ahora = new Date()): Promise<MarcaDeEmpresa> {
   const s = await leerSesion(tx, ahora);
   exigirDueno(s);
-  const [m] = await tx<
-    { nombre: string; color: string | null; fondo: boolean | null; logo: boolean; version: number | null }[]
-  >`
-    select e.nombre, m.color, m.fondo_blanco as fondo, m.logo is not null as logo, m.version
+  const [m] = await tx<{ nombre: string; color: string | null; logo: boolean; version: number | null }[]>`
+    select e.nombre, m.color, m.logo is not null as logo, m.version
     from empresa_actual_datos e left join marcas_empresa m on m.empresa_id = e.id`;
   return {
     empresaId: s.empresaId,
     nombre: m?.nombre ?? '',
     color: m?.color ?? COLOR_POR_OMISION,
-    fondoBlanco: m?.fondo ?? true,
     conLogo: !!m?.logo,
     version: m?.version ?? 1,
   };
@@ -59,13 +54,12 @@ export async function marcaDeMiEmpresa(tx: Tx, ahora = new Date()): Promise<Marc
 
 const EntradaMarca = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-  fondoBlanco: z.boolean(),
   /** El logo nuevo; null lo quita; sin él, se queda el que hay. */
   logo: z.instanceof(Uint8Array).nullish(),
 });
 
 /**
- * Cambia la marca de la empresa: su color, el fondo del ícono y, si se manda, su logo (o lo quita). Cada cambio sube
+ * Cambia la marca de la empresa: su color y, si se manda, su logo (o lo quita). Cada cambio sube
  * la versión, para que el teléfono pida los íconos nuevos. Solo el dueño o el administrador. Errores: `logo_invalido`
  * (no es PNG ni JPEG), `logo_pesado` (más de 1 MB).
  */
@@ -86,11 +80,10 @@ export async function guardarMarca(
     logo = { bytes: Buffer.from(e.logo), tipo };
   }
   const [m] = await tx<{ version: number }[]>`
-    insert into marcas_empresa (empresa_id, color, fondo_blanco, logo, logo_tipo)
-    values (${s.empresaId}, ${e.color.toLowerCase()}, ${e.fondoBlanco}, ${logo?.bytes ?? null}, ${logo?.tipo ?? null})
+    insert into marcas_empresa (empresa_id, color, logo, logo_tipo)
+    values (${s.empresaId}, ${e.color.toLowerCase()}, ${logo?.bytes ?? null}, ${logo?.tipo ?? null})
     on conflict (empresa_id) do update set
       color = excluded.color,
-      fondo_blanco = excluded.fondo_blanco,
       logo = ${logo ? tx`excluded.logo` : tx`marcas_empresa.logo`},
       logo_tipo = ${logo ? tx`excluded.logo_tipo` : tx`marcas_empresa.logo_tipo`},
       version = marcas_empresa.version + 1
@@ -107,7 +100,6 @@ export async function marcaPublica(tx: Tx, entrada: { empresaId: string }): Prom
       color: string;
       logo: Buffer | null;
       logo_tipo: TipoLogo | null;
-      fondo_blanco: boolean;
       version: number;
     }[]
   >`select * from public.marca_publica(${empresaId})`;
@@ -117,7 +109,6 @@ export async function marcaPublica(tx: Tx, entrada: { empresaId: string }): Prom
     color: m.color,
     logo: m.logo,
     logoTipo: m.logo_tipo,
-    fondoBlanco: m.fondo_blanco,
     version: m.version,
   };
 }

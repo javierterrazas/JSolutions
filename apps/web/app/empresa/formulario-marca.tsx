@@ -1,6 +1,6 @@
 'use client';
-// El logo, el color y el fondo del ícono de la empresa (D-078), con la vista previa del ícono como se verá en el
-// teléfono.
+// El logo y el color de la empresa (D-078; el logo llena todo el ícono, D-082), con la vista previa del ícono como se
+// verá en el teléfono.
 import type { MarcaDeEmpresa } from '@ijm/servidor';
 import { useTranslations } from 'next-intl';
 import { startTransition, useActionState, useState } from 'react';
@@ -66,30 +66,6 @@ export function FormularioMarca({ marca }: { marca: MarcaDeEmpresa }) {
           <span className="font-mono text-sm text-slate-700">{color}</span>
         </span>
       </label>
-
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-base font-medium text-slate-800">{t('fondo')}</legend>
-        <label className="flex min-h-11 items-center gap-3">
-          <input
-            name="fondo"
-            type="radio"
-            value="blanco"
-            defaultChecked={marca.fondoBlanco}
-            className="size-5"
-          />
-          {t('fondoBlanco')}
-        </label>
-        <label className="flex min-h-11 items-center gap-3">
-          <input
-            name="fondo"
-            type="radio"
-            value="color"
-            defaultChecked={!marca.fondoBlanco}
-            className="size-5"
-          />
-          {t('fondoColor')}
-        </label>
-      </fieldset>
 
       <MensajeError problema={resultado && !resultado.ok ? resultado : null} />
       {resultado?.ok ? (

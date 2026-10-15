@@ -23,7 +23,6 @@ test('el dueño sube el logo de su empresa: sale arriba, y la app se instala con
   await page.getByRole('link', { name: es.inicio.miEmpresa }).click();
   await expect(page.getByRole('heading', { level: 1, name: es.miEmpresa.titulo })).toBeVisible();
   await page.locator('input[name="logo"]').setInputFiles(FOTO);
-  await page.getByRole('radio', { name: es.miEmpresa.fondoColor }).check();
   await page.getByRole('button', { name: es.miEmpresa.guardar }).click();
   await expect(page.getByRole('status')).toHaveText(es.miEmpresa.guardado);
 

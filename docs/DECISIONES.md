@@ -1453,3 +1453,13 @@ portal con la foto. (El legacy solo le mostraba al PM las autorizadas, sin forma
   (`cambio_hecho`, un tipo de foto nuevo) nacen marcadas para el cliente y también salen en su galería; en el álbum
   se pueden desmarcar como las demás.
 
+## D-082 · El logo llena todo el ícono
+
+**Decisión del dueño:** el ícono de la app es el logo completo, sin margen ni recuadro (con margen, un logo que trae
+su propio fondo se veía chico y con un borde). Cambia D-078.
+- **El logo llena todo el ícono,** en todos sus tamaños (también el "maskable" de Android, que el teléfono recorta en
+  círculo o en gota: lo de las orillas puede quedar fuera). Si no es cuadrado, se recorta al centro; lo transparente
+  de un PNG queda en blanco. En "Mi empresa" se pide una imagen cuadrada.
+- **Ya no se elige el fondo del ícono:** se quitó `fondo_blanco` de `marcas_empresa` y de `marca_publica`.
+- **Sin logo,** el ícono sigue siendo las iniciales de la empresa sobre su color, con su margen.
+
