@@ -71,6 +71,8 @@ export interface CambioDelPortal {
     cuando: string;
     comentario: string | null;
   } | null;
+  /** Si ya se hizo (D-081): cuándo y sus fotos. */
+  readonly hecho: { cuando: string; fotos: readonly string[] } | null;
 }
 
 interface Datos {
@@ -291,7 +293,13 @@ export async function anularEnlaceCliente(
 
 // ------------------------------------------------------------------ las fotos que ve el cliente
 /** Las fotos que pueden ir al portal: las del trabajo (como foto_para_cliente_permitida en la base). */
-export const TIPOS_FOTO_CLIENTE: readonly string[] = ['bitacora', 'inspeccion', 'prueba_agua', 'punch'];
+export const TIPOS_FOTO_CLIENTE: readonly string[] = [
+  'bitacora',
+  'inspeccion',
+  'prueba_agua',
+  'punch',
+  'cambio_hecho',
+];
 
 /**
  * Marca (o desmarca) una foto para el portal del cliente. El PM de la obra o el dueño, y solo fotos del trabajo

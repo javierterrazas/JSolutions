@@ -221,7 +221,9 @@
     "empresa_no_encontrada": "That company wasn't found.",
     "sin_dueno": "That company doesn't have an active owner.",
     "fecha_futura": "The date can't be after today.",
-    "vencimiento_antes_del_pago": "The paid-through date can't be before the payment."
+    "vencimiento_antes_del_pago": "The paid-through date can't be before the payment.",
+    "cambio_ya_hecho": "That change order is already marked as done.",
+    "cambio_no_autorizado": "The client hasn't approved that change order yet."
   },
   "obras": {
     "titulo": "Jobs",
@@ -302,7 +304,7 @@
     "partidaDia": "{obra} · {espacio} · {partida}",
     "porConfirmar": "Orders to confirm",
     "ordenConfirmar": "{sub} · starts {dia} ({obra})",
-    "cambios": "Change orders to carry out",
+    "cambios": "Approved change orders",
     "cambio": "{descripcion} ({obra})",
     "cambioDias": "{n, plural, =0 {no extra days} one {+# day} other {+# days}}",
     "nueva": "New",
@@ -328,7 +330,14 @@
     "avisoNuevo": "Raise alert",
     "ordenesSubs": "Subcontractors",
     "entregaYMedidas": "Handover & measurements",
-    "album": "Photos"
+    "album": "Photos",
+    "yaLaHice": "It's done",
+    "notaCambio": "Note (optional)",
+    "fotosCambioAyuda": "The client sees these photos in their portal, with the change order.",
+    "marcarHecha": "Mark as done",
+    "guardando": "Saving…",
+    "cancelar": "Cancel",
+    "cambioHecho": "✓ Done on {dia}"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -704,7 +713,8 @@
       "punch": "Punch list",
       "gasto": "Expense receipt",
       "aviso": "Alert",
-      "orden_cambio": "Change order"
+      "orden_cambio": "Change order",
+      "cambio_hecho": "Completed change"
     },
     "resultados": {
       "aprobado": "approved",
@@ -935,7 +945,9 @@
     "totalConCambios": "Your contract total (with approved changes)",
     "pagado": "Paid",
     "saldo": "Balance",
-    "volverApp": "Back to the app"
+    "volverApp": "Back to the app",
+    "cambioRealizado": "Change completed on {dia}",
+    "fotoDelCambio": "Photo of the completed change"
   },
   "enlaceCliente": {
     "titulo": "Client portal",
@@ -1013,7 +1025,9 @@
     "comentario": "Comment (optional)",
     "aprobo": "Approved",
     "noAprobo": "Not approved",
-    "folioMotivo": "{folio} · {motivo}"
+    "folioMotivo": "{folio} · {motivo}",
+    "hechaPor": "Done · marked by {nombre} on {cuando}",
+    "porHacer": "Approved: the PM hasn't marked it done yet."
   },
   "cobros": {
     "titulo": "Payments",

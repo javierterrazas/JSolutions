@@ -104,6 +104,32 @@ export default async function Cambios({ params }: PageProps<'/obras/[id]/cambios
                 <RespuestaPapel obraId={c.obra.id} ordenId={o.id} />
               </>
             ) : null}
+            {o.hecho ? (
+              <div className="flex flex-col gap-1 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">
+                <p className="font-semibold">
+                  {t('hechaPor', { nombre: o.hecho.por ?? '—', cuando: cuando(o.hecho.cuando) })}
+                </p>
+                {o.hecho.nota ? <p className="italic">{o.hecho.nota}</p> : null}
+                {o.hecho.fotos.length ? (
+                  <ul className="grid grid-cols-3 gap-2">
+                    {o.hecho.fotos.map((f) => (
+                      <li key={f}>
+                        <a href={`/fotos/${f}`} target="_blank" rel="noreferrer">
+                          {/* eslint-disable-next-line @next/next/no-img-element -- un enlace firmado de pocos minutos */}
+                          <img
+                            src={`/fotos/${f}`}
+                            alt=""
+                            className="aspect-square w-full rounded-lg object-cover"
+                          />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : o.estado === 'autorizada' || o.estado === 'facturada' ? (
+              <p className="text-sm text-slate-600">{t('porHacer')}</p>
+            ) : null}
           </li>
         ))}
       </ul>

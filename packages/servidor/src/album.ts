@@ -13,7 +13,7 @@ import { leerSesion } from './sesion';
 export const REGISTROS_POR_PAGINA = 20;
 
 export type TipoRegistroAlbum =
-  'bitacora' | 'inspeccion' | 'prueba_agua' | 'punch' | 'gasto' | 'aviso' | 'orden_cambio';
+  'bitacora' | 'inspeccion' | 'prueba_agua' | 'punch' | 'gasto' | 'aviso' | 'orden_cambio' | 'cambio_hecho';
 
 export interface RegistroDelAlbum {
   readonly tipo: TipoRegistroAlbum;
@@ -108,6 +108,10 @@ export async function albumDeObra(
     for (const a of await tx<{ id: string; folio: string; tipo: string; descripcion: string }[]>`
       select id, folio, tipo, descripcion from avisos where id in ${tx(ids('aviso'))}`)
       info.set(a.id, { ...vacio, folio: a.folio, detalle: a.descripcion, resultado: a.tipo });
+  if (ids('cambio_hecho').length)
+    for (const h of await tx<{ id: string; nota: string | null }[]>`
+      select id, nota from cambios_hechos where id in ${tx(ids('cambio_hecho'))}`)
+      info.set(h.id, { ...vacio, detalle: h.nota });
 
   return {
     obra,
