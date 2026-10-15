@@ -5,7 +5,7 @@
   "inicio": {
     "hola": "Hola, {nombre}",
     "pronto": "Aquí vas a ver tu semana, tus obras y el cierre del día.",
-    "equipo": "Equipo",
+    "equipo": "Managers",
     "salir": "Salir",
     "salirAyuda": "La próxima vez te pide el PIN.",
     "obras": "Obras",
@@ -55,7 +55,7 @@
     "olvide": "¿Olvidaste tu PIN? Pide al administrador una invitación nueva."
   },
   "equipo": {
-    "titulo": "Equipo",
+    "titulo": "Managers",
     "volver": "Volver",
     "invitarTitulo": "Invitar a un PM",
     "nombre": "Nombre",
