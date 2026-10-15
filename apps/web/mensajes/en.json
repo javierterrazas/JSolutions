@@ -5,7 +5,7 @@
   "inicio": {
     "hola": "Hi, {nombre}",
     "pronto": "Your week, your jobs and the end-of-day report will show up here.",
-    "equipo": "Team",
+    "equipo": "Managers",
     "salir": "Sign out",
     "salirAyuda": "Next time it will ask for your PIN.",
     "obras": "Jobs",
@@ -55,7 +55,7 @@
     "olvide": "Forgot your PIN? Ask the administrator for a new invitation."
   },
   "equipo": {
-    "titulo": "Team",
+    "titulo": "Managers",
     "volver": "Back",
     "invitarTitulo": "Invite a PM",
     "nombre": "Name",
