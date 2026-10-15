@@ -1,7 +1,7 @@
 // Lo común de las pruebas de la capa del servidor: la conexión como ijm_servidor (la de supabase/seed.sql, solo
 // local) y una transacción a nombre de un usuario que se revierte al terminar, para dejar la base como estaba.
 import { execSync } from 'node:child_process';
-import { ErrorDeNegocio } from '@ijm/core';
+import { DOMINIO_CELULAR, ErrorDeNegocio } from '@ijm/core';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { authAdmin, conectarServidor, tomarIdentidad, type Tx } from '../src/index';
 
@@ -99,6 +99,12 @@ export async function borrarUsuariosDePrueba(): Promise<void> {
   const admin = clienteServicio().auth.admin;
   const { data, error } = await admin.listUsers({ perPage: 1000 });
   if (error) throw error;
-  for (const u of data.users.filter((x) => x.email?.endsWith(DOMINIO_DE_PRUEBA)))
+  for (const u of data.users.filter(
+    (x) => x.email?.endsWith(DOMINIO_DE_PRUEBA) || x.email?.endsWith(`@${DOMINIO_CELULAR}`),
+  ))
     await admin.deleteUser(u.id);
 }
+
+let celulares = 0;
+/** Un celular que no es de nadie, para dar de alta a alguien (D-083); sus usuarios se borran al final. */
+export const celularNuevo = () => `555${String((Date.now() + celulares++) % 10_000_000).padStart(7, '0')}`;

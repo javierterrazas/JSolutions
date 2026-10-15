@@ -13,7 +13,7 @@ import {
 } from '@ijm/core';
 import postgres from 'postgres';
 import { z } from 'zod';
-import { nuevoSecreto, type UsuarioDeCorreo } from './acceso';
+import { cuentaDeCelular, nuevoSecreto, type UsuarioDeCorreo } from './acceso';
 import type { Tx } from './conexion';
 import { dia, uuid, validarEntrada } from './entrada';
 
@@ -56,7 +56,10 @@ export interface EmpresaDeLaPlataforma {
   readonly notas: string | null;
   readonly estado: EstadoSuscripcion;
   readonly dueno: string | null;
+  /** El correo que dio el dueño (opcional desde D-083). */
   readonly correo: string | null;
+  /** El celular del dueño (+15125550101); null en los que se dieron de alta con correo. */
+  readonly telefono: string | null;
   /** PMs activos. */
   readonly pms: number;
   /** Obras listas para arrancar, en obra o en cierre. */
@@ -86,6 +89,7 @@ export async function empresasDeLaPlataforma(tx: Tx): Promise<EmpresaDeLaPlatafo
         estado: EstadoSuscripcion;
         dueno: string | null;
         correo: string | null;
+        telefono: string | null;
         pms: number;
         obras_en_curso: number;
         obras: number;
@@ -95,7 +99,8 @@ export async function empresasDeLaPlataforma(tx: Tx): Promise<EmpresaDeLaPlatafo
       }[]
     >`
       select id, nombre, ciudad, activa, creada_en, plan, precio, ciclo, en_prueba,
-             to_char(vence_el, 'YYYY-MM-DD') as vence_el, notas, estado, dueno, correo, pms, obras_en_curso, obras,
+             to_char(vence_el, 'YYYY-MM-DD') as vence_el, notas, estado, dueno, correo, telefono, pms,
+             obras_en_curso, obras,
              ultimo_uso, to_char(ultimo_pago, 'YYYY-MM-DD') as ultimo_pago, ultimo_monto
       from public.plataforma_empresas()`,
   );
@@ -114,6 +119,7 @@ export async function empresasDeLaPlataforma(tx: Tx): Promise<EmpresaDeLaPlatafo
     estado: f.estado,
     dueno: f.dueno,
     correo: f.correo,
+    telefono: f.telefono,
     pms: f.pms,
     obrasEnCurso: f.obras_en_curso,
     obras: f.obras,
@@ -236,7 +242,10 @@ const EntradaAlta = z.object({
   zona: z.string().trim().min(1).max(60).default('America/Chicago'),
   idioma: z.enum(['es', 'en']).default('es'),
   dueno: z.string().trim().min(1).max(80),
-  correo: z.string().trim().toLowerCase().pipe(z.email()),
+  /** El celular del dueño: con él entra (D-083). */
+  celular: z.string().trim().max(30),
+  /** Opcional: para avisos. */
+  correo: z.union([z.literal(''), z.string().trim().toLowerCase().pipe(z.email())]).nullish(),
   plan,
   precio: dinero,
   ciclo,
@@ -263,17 +272,22 @@ export async function altaDeEmpresa(
   ahora = new Date(),
 ): Promise<InvitacionDelDueno> {
   const e = validarEntrada(EntradaAlta, entrada);
+  const cuenta = cuentaDeCelular(e.celular);
   // antes de crear el usuario de Auth: quien no administra no debe poder crearlo
   if (!(await esAdminPlataforma(tx))) throw new ErrorDeNegocio('solo_plataforma');
-  const userId = await usuarioDeCorreo(e.correo);
+  const userId = await usuarioDeCorreo(cuenta.correo);
   const token = nuevoSecreto();
   const expira = venceLaInvitacion(ahora);
   const [r] = await deLaBase(
     () => tx<{ id: string }[]>`
       select public.plataforma_alta_empresa(${e.empresa}, ${e.ciudad}, ${e.zona}, ${e.idioma}, ${userId}, ${e.dueno},
                                             ${token}, ${expira}, ${e.plan}, ${e.precio}, ${e.ciclo}, ${e.enPrueba},
-                                            ${e.venceEl}) as id`,
-  );
+                                            ${e.venceEl}, ${cuenta.celular}, ${e.correo || null}) as id`,
+  ).catch((err: unknown) => {
+    if (err instanceof ErrorDeNegocio && err.codigo === 'correo_ya_registrado')
+      throw new ErrorDeNegocio('celular_ya_registrado');
+    throw err;
+  });
   return { empresaId: r!.id, dueno: e.dueno, token, expira };
 }
 

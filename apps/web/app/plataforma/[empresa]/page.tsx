@@ -1,6 +1,6 @@
 // La cuenta de una empresa en la plataforma (D-080): su estado, su dueño, cuánto la usa, su suscripción, sus pagos,
 // reinvitar a su dueño y suspenderla. Solo quien administra la plataforma.
-import { siguienteVencimiento } from '@ijm/core';
+import { formatoCelular, siguienteVencimiento } from '@ijm/core';
 import { empresaDeLaPlataforma, hoyDeLaPlataforma } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -45,7 +45,11 @@ export default async function CuentaDeEmpresa({ params }: { params: Promise<{ em
         </span>
         <span>{e.venceEl ? t('vence', { dia: fecha(e.venceEl) }) : t('sinVencimiento')}</span>
         <span className="text-slate-700">
-          {t('duenoCorreo', { dueno: e.dueno ?? '—', correo: e.correo ?? '—' })}
+          {t('duenoContacto', {
+            dueno: e.dueno ?? '—',
+            contacto:
+              [e.telefono ? formatoCelular(e.telefono) : null, e.correo].filter(Boolean).join(' · ') || '—',
+          })}
         </span>
         <span className="text-slate-700">{t('uso', { pms: e.pms, obras: e.obrasEnCurso })}</span>
         <span className="text-slate-700">{t('obrasTotal', { n: e.obras })}</span>

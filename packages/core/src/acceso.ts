@@ -48,3 +48,42 @@ export function validarPin(pin: string, rol: Rol): void {
   if (escalera || dosDigitos || anio || repetido || PIN_COMUNES.has(pin))
     throw new ErrorDeNegocio('pin_debil');
 }
+
+// ------------------------------------------------------------------ el celular de un miembro (D-083)
+/**
+ * Los miembros se dan de alta con su celular, no con su correo. Su cuenta de Auth lleva una dirección interna que sale
+ * del número: nadie la ve ni recibe nada en ella (el dominio .invalid no existe), solo sirve para abrir la sesión del
+ * celular verificado, como antes con el correo.
+ */
+export const DOMINIO_CELULAR = 'celular.invalid';
+
+/**
+ * Un celular en formato internacional (+15125550101), o null si no lo parece. Diez dígitos son de EE. UU. (+1); de
+ * otro país se escribe con su +.
+ */
+export function normalizarCelular(texto: string): string | null {
+  const limpio = texto.trim();
+  const digitos = limpio.replace(/\D/g, '');
+  if (limpio.startsWith('+')) return digitos.length >= 8 && digitos.length <= 15 ? `+${digitos}` : null;
+  if (digitos.length === 10) return `+1${digitos}`;
+  if (digitos.length === 11 && digitos.startsWith('1')) return `+${digitos}`;
+  return null;
+}
+
+/** La dirección interna de Auth de un celular ya normalizado. */
+export const correoDeCelular = (celular: string): string =>
+  `${celular.replace(/\D/g, '')}@${DOMINIO_CELULAR}`;
+
+/** El celular de una dirección interna; null si es un correo de verdad (los miembros de antes). */
+export function celularDeCorreo(correo: string | null | undefined): string | null {
+  const sufijo = `@${DOMINIO_CELULAR}`;
+  if (!correo?.endsWith(sufijo)) return null;
+  const digitos = correo.slice(0, -sufijo.length);
+  return /^\d+$/.test(digitos) ? `+${digitos}` : null;
+}
+
+/** Un celular para mostrarlo: (512) 555-0101 si es de EE. UU.; si no, tal cual. */
+export function formatoCelular(celular: string): string {
+  const m = /^\+1(\d{3})(\d{3})(\d{4})$/.exec(celular);
+  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : celular;
+}

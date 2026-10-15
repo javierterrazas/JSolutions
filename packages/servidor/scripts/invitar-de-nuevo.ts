@@ -7,16 +7,26 @@
 //     --correo dueno@ejemplo.com --url https://j-solutions-nine.vercel.app
 import { createHash, randomBytes } from 'node:crypto';
 import { parseArgs } from 'node:util';
-import { DIAS_INVITACION } from '@ijm/core';
+import { correoDeCelular, DIAS_INVITACION, normalizarCelular } from '@ijm/core';
 import postgres from 'postgres';
 
-const { values: a } = parseArgs({ options: { correo: { type: 'string' }, url: { type: 'string' } } });
+const { values: a } = parseArgs({
+  options: { celular: { type: 'string' }, correo: { type: 'string' }, url: { type: 'string' } },
+});
 const base = process.env.DATABASE_URL;
-if (!a.correo || !a.url || !base) {
-  console.error(!a.correo || !a.url ? 'Faltan --correo o --url' : 'Falta DATABASE_URL en el archivo .env');
+const celular = a.celular ? normalizarCelular(a.celular) : null;
+if ((!a.correo && !celular) || !a.url || !base) {
+  console.error(
+    a.celular && !celular
+      ? 'Ese celular no está completo'
+      : !base
+        ? 'Falta DATABASE_URL en el archivo .env'
+        : 'Faltan --celular (o --correo) o --url',
+  );
   process.exit(1);
 }
-const correo = a.correo.trim().toLowerCase();
+// los miembros se dan de alta con su celular: su cuenta lleva una dirección interna que sale del número (D-083)
+const correo = celular ? correoDeCelular(celular) : a.correo!.trim().toLowerCase();
 // la base de la nube pide SSL; la local no lo tiene
 const sql = postgres(base, {
   max: 1,
@@ -34,7 +44,7 @@ try {
     where lower(u.email) = ${correo}`;
   const m = miembros[0];
   if (!m) {
-    console.error(`${correo} no es miembro de ninguna empresa.`);
+    console.error(`${a.celular ?? correo} no es miembro de ninguna empresa.`);
     process.exitCode = 1;
   } else if (!m.activo) {
     console.error(`${m.nombre} está dado de baja: primero hay que reactivarlo.`);

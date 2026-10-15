@@ -23,7 +23,7 @@ import {
   borrarUsuariosDePrueba,
   codigo,
   como,
-  DOMINIO_DE_PRUEBA,
+  celularNuevo,
   probarComo,
   servidor,
   USUARIOS,
@@ -166,7 +166,7 @@ describe('la plataforma', () => {
 
   it('el alta de una empresa con su dueño y su suscripción, y otra invitación para el dueño', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
-      const correo = `nueva${Date.now()}${DOMINIO_DE_PRUEBA}`;
+      const celular = celularNuevo();
       const usuarioDeCorreo = (c: string) => authLocal().usuarioDeCorreo(c);
       const inv = await altaDeEmpresa(
         tx,
@@ -174,7 +174,8 @@ describe('la plataforma', () => {
           empresa: 'Pisos del Norte',
           ciudad: 'Dallas, TX',
           dueno: 'Ana',
-          correo,
+          celular,
+          correo: 'ana@pisos.test',
           plan: 'basico',
           precio: 59,
           ciclo: 'mensual',
@@ -188,13 +189,14 @@ describe('la plataforma', () => {
       expect(nueva).toMatchObject({
         nombre: 'Pisos del Norte',
         dueno: 'Ana',
-        correo,
+        correo: 'ana@pisos.test',
+        telefono: `+1${celular}`,
         precio: 59,
         estado: 'prueba',
         pms: 0,
         obras: 0,
       });
-      // el mismo correo no da de alta otra
+      // el mismo celular no da de alta otra
       expect(
         await codigo(tx, () =>
           altaDeEmpresa(
@@ -202,7 +204,7 @@ describe('la plataforma', () => {
             {
               empresa: 'Otra',
               dueno: 'Ana',
-              correo,
+              celular,
               plan: 'basico',
               precio: 0,
               ciclo: 'mensual',
@@ -212,7 +214,7 @@ describe('la plataforma', () => {
             usuarioDeCorreo,
           ),
         ),
-      ).toBe('correo_ya_registrado');
+      ).toBe('celular_ya_registrado');
 
       const otra = await reinvitarDueno(tx, { empresaId: inv.empresaId });
       expect(otra.dueno).toBe('Ana');

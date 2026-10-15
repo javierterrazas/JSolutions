@@ -1,4 +1,5 @@
 // El equipo de la empresa, para el dueño: invitar a un PM, ver los celulares de cada uno, quitar uno, dar de baja.
+import { formatoCelular } from '@ijm/core';
 import { equipo } from '@ijm/servidor';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
@@ -24,6 +25,11 @@ export default async function Equipo() {
               <p className="font-semibold">{m.nombre}</p>
               <p className="text-sm text-slate-600">{m.activo ? t(`rol.${m.rol}`) : t('dadoDeBaja')}</p>
             </div>
+            {m.telefono ? (
+              <a href={`tel:${m.telefono}`} className="self-start text-sm text-marca underline">
+                {formatoCelular(m.telefono)}
+              </a>
+            ) : null}
             {m.dispositivos.length === 0 ? (
               <p className="text-sm text-slate-500">{t('sinCelular')}</p>
             ) : (

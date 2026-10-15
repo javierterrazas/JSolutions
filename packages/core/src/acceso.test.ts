@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validarPin } from './acceso';
+import { celularDeCorreo, correoDeCelular, formatoCelular, normalizarCelular, validarPin } from './acceso';
 import { ErrorDeNegocio } from './errores';
 
 const codigo = (fn: () => void) => {
@@ -75,5 +75,26 @@ describe('validar el PIN', () => {
         codigo(() => validarPin(pin, 'dueno')),
         pin,
       ).toBeNull();
+  });
+});
+
+describe('el celular de un miembro (D-083)', () => {
+  it('normaliza los formatos de siempre a +1, y respeta el + de otro país', () => {
+    for (const t of ['512-555-0101', '(512) 555 0101', '5125550101', '1 512 555 0101', '+1 512 555-0101'])
+      expect(normalizarCelular(t), t).toBe('+15125550101');
+    expect(normalizarCelular('+52 55 1234 5678')).toBe('+525512345678');
+    for (const t of ['555-0101', '', 'abc', '+12', '25125550101']) expect(normalizarCelular(t), t).toBeNull();
+  });
+
+  it('la dirección interna va y vuelve; un correo de verdad no es celular', () => {
+    expect(correoDeCelular('+15125550101')).toBe('15125550101@celular.invalid');
+    expect(celularDeCorreo('15125550101@celular.invalid')).toBe('+15125550101');
+    expect(celularDeCorreo('javier@icloud.com')).toBeNull();
+    expect(celularDeCorreo(null)).toBeNull();
+  });
+
+  it('se muestra como (512) 555-0101', () => {
+    expect(formatoCelular('+15125550101')).toBe('(512) 555-0101');
+    expect(formatoCelular('+525512345678')).toBe('+525512345678');
   });
 });

@@ -2,7 +2,7 @@
 // D-038). Lo delicado (la llave del celular, el PIN y sus intentos) lo guardan y revisan funciones de la base
 // (20261007000100_acceso.sql); aquí se validan las entradas y las reglas de @ijm/core, y se traducen los rechazos.
 import { randomBytes } from 'node:crypto';
-import { DIAS_INVITACION, ErrorDeNegocio, validarPin } from '@ijm/core';
+import { correoDeCelular, DIAS_INVITACION, ErrorDeNegocio, normalizarCelular, validarPin } from '@ijm/core';
 import postgres from 'postgres';
 import { z } from 'zod';
 import type { Tx } from './conexion';
@@ -49,12 +49,27 @@ export interface Invitacion {
 
 const EntradaInvitar = z.object({
   nombre: z.string().trim().min(1).max(80),
-  correo: z.string().trim().toLowerCase().pipe(z.email()),
+  celular: z.string().trim().max(30),
+  /** Opcional: para avisos. No es con lo que entra. */
+  correo: z.union([z.literal(''), z.string().trim().toLowerCase().pipe(z.email())]).nullish(),
   idioma: z.enum(['es', 'en']).default('es'),
 });
 export type EntradaInvitar = z.input<typeof EntradaInvitar>;
 
-/** El dueño da de alta a un PM y lo invita. Un correo que ya es de un miembro, de cualquier empresa, no se invita. */
+/**
+ * El celular de un miembro nuevo, normalizado, y la dirección interna de su cuenta de Auth (D-083). Error:
+ * `celular_invalido`.
+ */
+export function cuentaDeCelular(texto: string): { celular: string; correo: string } {
+  const celular = normalizarCelular(texto);
+  if (!celular) throw new ErrorDeNegocio('celular_invalido');
+  return { celular, correo: correoDeCelular(celular) };
+}
+
+/**
+ * El dueño da de alta a un PM con su celular y lo invita (D-083). Un celular que ya es de un miembro, de cualquier
+ * empresa, no se invita: `celular_ya_registrado`.
+ */
 export async function invitarPm(
   tx: Tx,
   entrada: EntradaInvitar,
@@ -63,14 +78,22 @@ export async function invitarPm(
 ): Promise<Invitacion> {
   exigirDueno(await leerSesion(tx, ahora));
   const e = validarEntrada(EntradaInvitar, entrada);
-  const userId = await usuarioDeCorreo(e.correo);
+  const cuenta = cuentaDeCelular(e.celular);
+  const userId = await usuarioDeCorreo(cuenta.correo);
   const token = nuevoSecreto();
   const expira = venceEn(ahora);
-  const [r] = await enLaBase(
-    () => tx<{ id: string }[]>`
-      select public.invitar_pm(${userId}, ${e.nombre}, ${e.idioma}, ${token}, ${expira}) as id`,
-  );
-  return { miembroId: r!.id, token, expira };
+  try {
+    const [r] = await enLaBase(
+      () => tx<{ id: string }[]>`
+        select public.invitar_pm(${userId}, ${e.nombre}, ${e.idioma}, ${token}, ${expira}, ${cuenta.celular},
+                                 ${e.correo || null}) as id`,
+    );
+    return { miembroId: r!.id, token, expira };
+  } catch (err) {
+    if (err instanceof ErrorDeNegocio && err.codigo === 'correo_ya_registrado')
+      throw new ErrorDeNegocio('celular_ya_registrado');
+    throw err;
+  }
 }
 
 /** Otra invitación para un miembro activo (un celular nuevo, o el propio del dueño). Anula las que no se usaron. */
@@ -248,6 +271,8 @@ export interface MiembroDelEquipo {
   readonly nombre: string;
   readonly rol: 'dueno' | 'admin' | 'pm';
   readonly activo: boolean;
+  /** Su celular (+15125550101); null en los que se dieron de alta con correo. */
+  readonly telefono: string | null;
   readonly dispositivos: readonly {
     id: string;
     nombre: string;
@@ -262,7 +287,7 @@ export interface MiembroDelEquipo {
 export async function equipo(tx: Tx, ahora = new Date()): Promise<MiembroDelEquipo[]> {
   exigirDueno(await leerSesion(tx, ahora));
   return tx<MiembroDelEquipo[]>`
-    select m.id, m.nombre, m.rol, m.activo,
+    select m.id, m.nombre, m.rol, m.activo, m.telefono,
            coalesce((select json_agg(json_build_object('id', d.id, 'nombre', d.nombre, 'verificadoEn', d.verificado_en,
                                                        'ultimoUso', d.ultimo_uso) order by d.verificado_en)
                      from public.dispositivos d where d.miembro_id = m.id and d.revocado_en is null), '[]') as dispositivos,
