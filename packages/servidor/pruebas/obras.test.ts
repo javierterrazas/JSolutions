@@ -161,6 +161,19 @@ describe('guardar el presupuesto por etapa', () => {
                                 where tabla = 'obras_finanzas' and registro_id = ${obraId}`;
       expect(rastro).toEqual({ campo: 'contrato_original', despues: '19500' });
 
+      // los pies lineales cotizados del espacio (D-086), con su rastro
+      await guardarPresupuesto(tx, {
+        obraId,
+        margenObjetivo: 0.35,
+        lineas: [{ espacioId: a!.espacio, etapaId: a!.etapa, costo: 10_000 }],
+        medidas: [{ espacioId: a!.espacio, piesLineales: 12.5 }],
+      });
+      const [esp] = await tx`select pies_lineales_cotizados from espacios where id = ${a!.espacio}`;
+      expect(esp).toEqual({ pies_lineales_cotizados: '12.50' });
+      const [m] = await tx`select despues from correcciones
+                           where tabla = 'espacios' and campo = 'pies_lineales_cotizados'`;
+      expect(m).toEqual({ despues: '12.5' });
+
       // otro costo: cambia su precio y deja rastro de los dos
       await guardarPresupuesto(tx, {
         obraId,

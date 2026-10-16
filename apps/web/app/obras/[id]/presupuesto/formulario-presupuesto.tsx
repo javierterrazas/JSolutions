@@ -14,9 +14,13 @@ import { MensajeError } from '../../../componentes/mensaje-error';
 interface Espacio {
   id: string;
   nombre: string;
+  /** Sus medidas vigentes: con ellas sale el costo por unidad de cada etapa (D-086). */
+  pies2: number;
+  piesLineales: number;
   etapas: {
     etapaId: string | null;
     nombre: string | null;
+    unidad: 'pie2' | 'pie_lineal';
     partidas: number;
     /** Su precio. */
     monto: number;
@@ -73,6 +77,14 @@ export function FormularioPresupuesto({
     ),
   );
 
+  // los pies lineales de los espacios con etapas que se cotizan por pie lineal (D-086)
+  const [lineales, setLineales] = useState<Record<string, string>>(() =>
+    Object.fromEntries(espacios.map((e) => [e.id, e.piesLineales ? String(e.piesLineales) : ''])),
+  );
+  const conLineal = (e: Espacio) => e.etapas.some((x) => x.unidad === 'pie_lineal');
+  const medidaDe = (e: Espacio, unidad: 'pie2' | 'pie_lineal') =>
+    unidad === 'pie_lineal' ? numero(lineales[e.id] ?? '') : e.pies2;
+
   const dinero = (n: number) => formatoDinero(idioma).format(n);
   const margenDeObra = fraccion(margenObra) ?? margenObjetivo;
   const precioDe = (k: string) => {
@@ -103,6 +115,9 @@ export function FormularioPresupuesto({
             obraId,
             margenObjetivo: margenDeObra,
             contrato: contratoInicial === null ? null : contrato,
+            medidas: espacios
+              .filter(conLineal)
+              .map((esp) => ({ espacioId: esp.id, piesLineales: numero(lineales[esp.id] ?? '') })),
             lineas: espacios.flatMap((esp) =>
               esp.etapas.map((x) => {
                 const k = clave(esp.id, x.etapaId);
@@ -145,6 +160,19 @@ export function FormularioPresupuesto({
             <p className="-mt-2 text-sm text-slate-600">
               {t('subtotales', { costo: dinero(costoEspacio), precio: dinero(precioEspacio) })}
             </p>
+            {e.pies2 ? <p className="text-sm text-slate-600">{t('medidaPies2', { n: e.pies2 })}</p> : null}
+            {conLineal(e) ? (
+              <label className="grid grid-cols-[1fr_7rem] items-center gap-2 text-sm">
+                <span>{t('piesLineales')}</span>
+                <input
+                  value={lineales[e.id] ?? ''}
+                  onChange={(v) => setLineales((l) => ({ ...l, [e.id]: v.target.value }))}
+                  inputMode="decimal"
+                  aria-label={t('piesLinealesDe', { espacio: e.nombre })}
+                  className={`${estilos.campo} text-right`}
+                />
+              </label>
+            ) : null}
             {e.etapas.map((x) => {
               const k = clave(e.id, x.etapaId);
               const nombre = x.nombre ?? t('otras');
@@ -177,6 +205,19 @@ export function FormularioPresupuesto({
                     </label>
                   </div>
                   <p className="text-right text-sm">{t('precio', { precio: dinero(precioDe(k)) })}</p>
+                  {/* el costo y el precio por la unidad de la etapa (D-086) */}
+                  {numero(costos[k] ?? '') ? (
+                    medidaDe(e, x.unidad) ? (
+                      <p className="text-right text-xs text-slate-600">
+                        {t(x.unidad === 'pie_lineal' ? 'porPieLineal' : 'porPie2', {
+                          costo: dinero(numero(costos[k] ?? '') / medidaDe(e, x.unidad)),
+                          precio: dinero(precioDe(k) / medidaDe(e, x.unidad)),
+                        })}
+                      </p>
+                    ) : x.unidad === 'pie_lineal' ? (
+                      <p className="text-right text-xs text-amber-800">{t('faltanLineales')}</p>
+                    ) : null
+                  ) : null}
                 </div>
               );
             })}

@@ -40,6 +40,13 @@ export function NuevaEtapa() {
         {t('nombreEn')}
         <input name="nombreEn" maxLength={80} className={estilos.campo} />
       </label>
+      <label className={estilos.etiqueta}>
+        {t('unidad')}
+        <select name="unidad" defaultValue="pie2" className={estilos.campo}>
+          <option value="pie2">{t('unidades.pie2')}</option>
+          <option value="pie_lineal">{t('unidades.pie_lineal')}</option>
+        </select>
+      </label>
       <MensajeError problema={resultado && !resultado.ok ? resultado : null} />
       <button type="submit" disabled={enviando} className={estilos.boton}>
         {t('crearEtapa')}

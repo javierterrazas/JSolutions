@@ -302,7 +302,13 @@
     "contratoSigue": "It's the sum of the prices. You can change it, for example to round it.",
     "usarSuma": "Use the sum of the prices",
     "margenContrato": "With this contract, your margin is {margen}",
-    "porciento": "%"
+    "porciento": "%",
+    "medidaPies2": "Size: {n} sq ft",
+    "piesLineales": "Linear feet",
+    "piesLinealesDe": "Linear feet of {espacio}",
+    "porPie2": "Cost {costo}/sq ft · Price {precio}/sq ft",
+    "porPieLineal": "Cost {costo}/linear ft · Price {precio}/linear ft",
+    "faltanLineales": "Type the space's linear feet to see the cost per linear foot."
   },
   "inicioPm": {
     "racha": "{n, plural, =0 {No streak yet} one {# day in a row closed} other {# days in a row closed}}",
@@ -452,7 +458,7 @@
     "tamanoAyuda": "Sets how much this type weighs in the progress of a combined job: a full bathroom adds up to 90 and a closet 30. It is split evenly among the line items; you can fine-tune each one later.",
     "crearTipo": "Create type",
     "etapas": "Budget stages",
-    "etapasAyuda": "The budget is entered by stage. A line item without a stage falls under \"Other line items\".",
+    "etapasAyuda": "The budget is entered by stage, and each one is quoted per sq ft or per linear ft (countertops, baseboards). A task without a stage falls under \"Other tasks\".",
     "nuevaEtapa": "New stage",
     "nombreEtapa": "Stage name",
     "nombreEtapaEjemplo": "Painting",
@@ -494,7 +500,13 @@
     "guardar": "Save",
     "darDeBajaTipo": "Deactivate this type",
     "darDeBajaAyuda": "It won't be offered for new jobs; jobs that use it don't change.",
-    "reactivarTipo": "Reactivate this type"
+    "reactivarTipo": "Reactivate this type",
+    "unidad": "Quoted per",
+    "unidadDe": "How {etapa} is quoted",
+    "unidades": {
+      "pie2": "Sq ft",
+      "pie_lineal": "Linear ft"
+    }
   },
   "sinSenal": {
     "titulo": "No signal",

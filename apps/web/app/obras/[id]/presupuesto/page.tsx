@@ -31,8 +31,11 @@ export default async function Presupuesto({ params }: PageProps<'/obras/[id]/pre
         espacios={p.espacios.map((e) => ({
           id: e.id,
           nombre: e.nombre,
+          pies2: e.pies2,
+          piesLineales: e.piesLineales,
           etapas: e.etapas.map((x) => ({
             etapaId: x.etapaId,
+            unidad: x.unidad,
             nombre: x.nombre ? ((idioma === 'en' ? x.nombre.en : null) ?? x.nombre.es) : null,
             partidas: x.partidas,
             monto: x.monto,
