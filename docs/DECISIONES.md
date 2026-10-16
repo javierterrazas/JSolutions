@@ -1501,3 +1501,25 @@ comparaba lo gastado contra ese precio: el rojo se prendía cuando ya se perdía
   el dueño lo corrige etapa por etapa.
 - El PM no ve nada de esto. Las órdenes de cambio llevan su propio costo y precio (D-067) y no entran aquí.
 
+## D-085 · Cerrar una obra al entregarla
+
+**Decisión del dueño:** que la app cierre la obra al entregarla y guarde su histórico, para que más adelante recomiende
+el costo por pie² (o por pie lineal) de cada etapa con los datos de la empresa. Desde el seguimiento de la obra,
+**"Cerrar la obra"** (`/obras/[id]/cerrar`; legacy: `duPreCierre` y `duCerrarObra`).
+- **La revisión** (`revisionDeCierre`): el contrato original, las órdenes de cambio, el contrato final, lo cobrado, el
+  costo presupuestado (los costos de D-084) contra el real (material, cuadrilla y subs, con las reglas del
+  seguimiento), el costo de no calidad, el margen bruto, la desviación y los días cerrados por el PM. Y **lo que
+  falta**, lo grave primero, como el legacy: dinero por cobrar, órdenes de cambio sin respuesta o sin facturar,
+  partidas sin terminar (graves); dinero por pagarle a los subs, órdenes de trabajo sin aprobar, punch abierto,
+  gastos sin recibo, sin presupuesto (revisar); costos sin partida (nota).
+- **Cerrar** (`cerrarObra`): el día de la entrega (no después de hoy ni antes del arranque) y los meses de garantía
+  (12). Con algo grave pendiente, primero se confirma. En una transacción: la **entrega** con su garantía, la obra
+  **entregada** con su fecha real, su **resumen** en `obras_cerradas` y su **histórico** (D-008): de cada etapa de
+  cada espacio, lo presupuestado, el costo real, los pies², los **pies lineales** (columna nueva) y el costo por pie²
+  (`historico_etapas`); y de cada partida terminada, sus días planeados y reales (`historico_duraciones`).
+- Los días de la obra son de calendario, del arranque a la entrega, como en el legacy. Cerrada, no se cierra otra
+  vez, no se edita (las pantallas ya lo revisaban) y su pantalla muestra el resumen.
+- **Pendiente:** la unidad de cada etapa (pie² o pie lineal) en el catálogo, y la recomendación de costo en el
+  presupuesto cuando haya obras suficientes. La revisión de puntos de control y pruebas de inundación del legacy
+  queda para después.
+

@@ -29,6 +29,7 @@ export * from './subcontratos';
 export * from './indicadores';
 export * from './plan-semanal';
 export * from './plataforma';
+export * from './cierre-obra';
 export * from './marca';
 export * from './correcciones';
 export * from './acceso';

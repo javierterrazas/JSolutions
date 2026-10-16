@@ -500,6 +500,8 @@ function calcular(l: Lectura, obraId: string) {
   return {
     ...a,
     o,
+    /** Los costos de cada etapa, con su espacio (para el cierre, D-085). */
+    costos,
     presupuesto: {
       total,
       gastado,
@@ -725,4 +727,16 @@ export async function resumenDeObras(tx: Tx, ahora = new Date()): Promise<Map<st
       ];
     }),
   );
+}
+
+/**
+ * Lo que el cierre de una obra (D-085) necesita del seguimiento: lo leído de la base y sus costos por etapa, con las
+ * mismas reglas. Solo el dueño o el administrador.
+ */
+export async function lecturaParaCierre(tx: Tx, obraId: string, ahora = new Date()) {
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  const l = await leerObras(tx, s, [obraId]);
+  if (!l.obras.length) return null;
+  return { s, l, c: calcular(l, obraId) };
 }
