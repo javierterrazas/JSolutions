@@ -1536,3 +1536,19 @@ y más adelante se recomiende su costo con las obras de la empresa.
   (`historico_etapas.unidad`, `costo_por_unidad`); el costo por pie² se sigue guardando.
 - **Pendiente:** la recomendación del costo de cada etapa con ese histórico, cuando haya obras suficientes.
 
+## D-087 · El histórico de las obras cerradas
+
+**Decisión del dueño:** ver juntas sus obras cerradas (legacy: el histórico del tablero, `duHistorico`). Desde su
+inicio, **"Histórico"** (`/historico`), con lo que guardó el cierre (D-085). Solo el dueño o el administrador.
+- **Arriba:** el margen, la desviación y la duración promedio, y lo que cobra y le cuesta cada pie²; debajo de cada
+  uno, la **tendencia**: sus últimas 3 obras contra las 3 anteriores (verde si mejora, rojo si empeora).
+- **Por tipo de obra** (los tipos de sus espacios, "Baño + Closet") y **por mes de entrega:** cuántas, el margen,
+  la desviación, la duración, los contratos y el costo.
+- **Lo que cuesta cada etapa** por su unidad (D-086), por tipo de espacio: el promedio, el rango y en cuántas obras
+  (`costosPorUnidad`). De aquí saldrá la recomendación al cotizar.
+- **Garantías y reseñas:** los reclamos de garantía, su costo, cuántos siguen abiertos y cuántos clientes dejaron
+  reseña.
+- **Cada obra cerrada** con su tipo, su entrega, sus días, su contrato, su costo, su margen y su desviación; lleva a
+  su cierre.
+- Promedios simples, como el legacy: cada obra pesa lo mismo (`resumenHistorico`, en @ijm/core).
+
