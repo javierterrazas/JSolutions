@@ -5,7 +5,8 @@ import { entrar, es, OBRAS, t } from './apoyo';
 
 test('el PM ve sus obras terminadas en garantía y sus fotos, de solo lectura', async ({ page }) => {
   await entrar(page, 'pm');
-  await page.getByRole('link', { name: t.es('inicio.terminadas', { n: 1 }) }).click();
+  // cuántas depende de las pruebas que ya cerraron otra obra de Carlos (cerrar-obra.spec): se busca OB-003
+  await page.getByRole('link', { name: /^Obras terminadas \(\d+\)$/ }).click();
   await expect(page.getByRole('heading', { name: es.terminadas.titulo })).toBeVisible();
   const obra = page.locator('article').filter({ hasText: 'OB-003 · Familia López' });
   await expect(obra).toContainText(t.es('terminadas.tarde', { n: 63 }));
