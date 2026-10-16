@@ -32,6 +32,8 @@ export async function guardarPresupuestoObra(
     lineas: { espacioId: string; etapaId: string | null; costo: number; margen?: number | null }[];
     margenObjetivo: number;
     contrato: number | null;
+    /** Los pies lineales cotizados de los espacios con etapas por pie lineal (D-086). */
+    medidas: { espacioId: string; piesLineales: number }[];
   },
 ): Promise<Resultado<ResultadoPresupuesto>> {
   const r = await comoMiembro((tx) => guardarPresupuesto(tx, entrada), await exigirDueno());

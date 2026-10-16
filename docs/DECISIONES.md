@@ -1523,3 +1523,16 @@ el costo por pie² (o por pie lineal) de cada etapa con los datos de la empresa.
   presupuesto cuando haya obras suficientes. La revisión de puntos de control y pruebas de inundación del legacy
   queda para después.
 
+## D-086 · Cada etapa se cotiza por pie² o por pie lineal
+
+**Decisión del dueño:** que cada etapa diga cómo se cotiza, para que el presupuesto y el histórico hablen en esa unidad
+y más adelante se recomiende su costo con las obras de la empresa.
+- **En el catálogo,** cada etapa del presupuesto tiene su unidad: **pie²** (tile, pintura; la de siempre) o **pie
+  lineal** (cubiertas, zoclos). Se elige al crearla y se cambia ahí mismo (`etapas.unidad`, `cambiarUnidadEtapa`).
+- **En el presupuesto,** cada espacio muestra sus pies² y, si alguna de sus etapas va por pie lineal, pide sus **pies
+  lineales** (los cotizados, con su rastro en `correcciones`; antes solo se capturaban al verificar la medida). Cada
+  etapa con costo dice su costo y su precio por su unidad ("Costo $50/ft lineal · Precio $76.92/ft lineal").
+- **Al cerrar** (D-085), el histórico guarda la unidad de cada etapa y su costo real por ella
+  (`historico_etapas.unidad`, `costo_por_unidad`); el costo por pie² se sigue guardando.
+- **Pendiente:** la recomendación del costo de cada etapa con ese histórico, cuando haya obras suficientes.
+

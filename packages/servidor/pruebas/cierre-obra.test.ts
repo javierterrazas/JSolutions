@@ -72,15 +72,26 @@ describe('el cierre de una obra', () => {
 
       // la demolición del baño: $975 presupuestados, $180 reales, por pie²
       const etapas = await tx<
-        { presupuestado: string; costo_real: string; pies2: string; costo_por_pie2: string | null }[]
+        {
+          presupuestado: string;
+          costo_real: string;
+          pies2: string;
+          costo_por_pie2: string | null;
+          unidad: string;
+          costo_por_unidad: string | null;
+        }[]
       >`
-        select h.presupuestado, h.costo_real, h.pies2, h.costo_por_pie2 from historico_etapas h
+        select h.presupuestado, h.costo_real, h.pies2, h.costo_por_pie2, h.unidad, h.costo_por_unidad
+        from historico_etapas h
         join etapas et on et.id = h.etapa_id
         where h.obra_id = ${OBRAS.a1Carlos} and et.nombre_es = 'Demolición'`;
       expect(etapas).toHaveLength(1);
       expect(etapas[0]!.presupuestado).toBe('975.00');
       expect(etapas[0]!.costo_real).toBe('180.00');
       expect(Number(etapas[0]!.costo_por_pie2)).toBeCloseTo(180 / Number(etapas[0]!.pies2), 4);
+      // se cotiza por pie²: su costo por unidad es el de pie² (D-086)
+      expect(etapas[0]!.unidad).toBe('pie2');
+      expect(etapas[0]!.costo_por_unidad).toBe(etapas[0]!.costo_por_pie2);
       // la demolición se terminó el mismo día que empezó: un día real
       const duraciones = await tx<{ dias_reales: number }[]>`
         select dias_reales from historico_duraciones where obra_id = ${OBRAS.a1Carlos}`;

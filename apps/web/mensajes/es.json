@@ -302,7 +302,13 @@
     "contratoSigue": "Es la suma de los precios. Puedes cambiarlo, por ejemplo para redondearlo.",
     "usarSuma": "Usar la suma de los precios",
     "margenContrato": "Con este contrato, tu margen queda en {margen}",
-    "porciento": "%"
+    "porciento": "%",
+    "medidaPies2": "Medida: {n} ft²",
+    "piesLineales": "Pies lineales",
+    "piesLinealesDe": "Pies lineales de {espacio}",
+    "porPie2": "Costo {costo}/ft² · Precio {precio}/ft²",
+    "porPieLineal": "Costo {costo}/ft lineal · Precio {precio}/ft lineal",
+    "faltanLineales": "Escribe los pies lineales del espacio para ver el costo por pie lineal."
   },
   "inicioPm": {
     "racha": "{n, plural, =0 {Sin racha todavía} one {# día seguido cerrado} other {# días seguidos cerrados}}",
@@ -452,7 +458,7 @@
     "tamanoAyuda": "Decide cuánto pesa este tipo en el avance de una obra combinada: un baño completo suma 90 y un closet 30. Se reparte parejo entre las partidas; después puedes afinar cada una.",
     "crearTipo": "Crear tipo",
     "etapas": "Etapas del presupuesto",
-    "etapasAyuda": "El presupuesto se captura por etapa. Una partida sin etapa cae en \"Otras partidas\".",
+    "etapasAyuda": "El presupuesto se captura por etapa, y cada una se cotiza por pie² o por pie lineal (cubiertas, zoclos). Una partida sin etapa cae en \"Otras partidas\".",
     "nuevaEtapa": "Nueva etapa",
     "nombreEtapa": "Nombre de la etapa",
     "nombreEtapaEjemplo": "Pintura",
@@ -494,7 +500,13 @@
     "guardar": "Guardar",
     "darDeBajaTipo": "Dar de baja este tipo",
     "darDeBajaAyuda": "Ya no se ofrece en obras nuevas; las obras que lo usan no cambian.",
-    "reactivarTipo": "Reactivar este tipo"
+    "reactivarTipo": "Reactivar este tipo",
+    "unidad": "Se cotiza por",
+    "unidadDe": "Cómo se cotiza {etapa}",
+    "unidades": {
+      "pie2": "Pie²",
+      "pie_lineal": "Pie lineal"
+    }
   },
   "sinSenal": {
     "titulo": "Sin señal",

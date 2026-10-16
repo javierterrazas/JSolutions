@@ -37,6 +37,8 @@ const EntradaPresupuesto = z.object({
   margenObjetivo: margen.nullish(),
   /** El contrato con el cliente; sin él, no se toca. */
   contrato: z.number().min(0).nullish(),
+  /** Los pies lineales cotizados de cada espacio, para las etapas que se cotizan por pie lineal (D-086). */
+  medidas: z.array(z.object({ espacioId: uuid, piesLineales: z.number().min(0).max(100_000) })).default([]),
   motivo: motivo.default('Presupuesto actualizado'),
 });
 export type EntradaPresupuesto = z.input<typeof EntradaPresupuesto>;
@@ -155,6 +157,16 @@ export async function guardarPresupuesto(
     await tx`update presupuesto_etapas set monto = 0, costo = ${a.costo === null ? null : 0} where id = ${a.id}`;
     if (Number(a.monto)) await rastro('presupuesto_etapas', a.id, 'monto', Number(a.monto), 0);
     if (Number(a.costo)) await rastro('presupuesto_etapas', a.id, 'costo', Number(a.costo), 0);
+  }
+
+  // los pies lineales cotizados de cada espacio, si cambiaron, con su rastro
+  for (const m of e.medidas) {
+    const [esp] = await tx<{ lineales: string }[]>`
+      select pies_lineales_cotizados as lineales from espacios where id = ${m.espacioId} and obra_id = ${e.obraId}`;
+    if (!esp) throw new ErrorDeNegocio('espacio_no_encontrado');
+    if (Number(esp.lineales) === m.piesLineales) continue;
+    await tx`update espacios set pies_lineales_cotizados = ${m.piesLineales} where id = ${m.espacioId}`;
+    await rastro('espacios', m.espacioId, 'pies_lineales_cotizados', Number(esp.lineales), m.piesLineales);
   }
 
   // el margen de la obra y su contrato, si vienen y cambiaron

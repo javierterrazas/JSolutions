@@ -61,9 +61,14 @@ export interface PresupuestoParaCapturar {
     id: string;
     nombre: string;
     generales: boolean;
+    /** Sus medidas vigentes (las verificadas, o las cotizadas): con ellas sale el costo por unidad (D-086). */
+    pies2: number;
+    piesLineales: number;
     etapas: readonly {
       etapaId: string | null;
       nombre: Nombre | null;
+      /** Cómo se cotiza la etapa; "Otras partidas", por pie². */
+      unidad: 'pie2' | 'pie_lineal';
       partidas: number;
       monto: number;
       costo: number | null;
@@ -96,9 +101,16 @@ export async function presupuestoParaCapturar(
   const etapas = new Map(
     (
       await tx<
-        { id: string; es: string; en: string | null }[]
-      >`select id, nombre_es as es, nombre_en as en from etapas`
-    ).map((e) => [e.id, { es: e.es, en: e.en }]),
+        { id: string; es: string; en: string | null; unidad: 'pie2' | 'pie_lineal' }[]
+      >`select id, nombre_es as es, nombre_en as en, unidad from etapas`
+    ).map((e) => [e.id, { nombre: { es: e.es, en: e.en }, unidad: e.unidad }]),
+  );
+  const lineales = new Map(
+    (
+      await tx<{ id: string; lineales: string }[]>`
+        select id, coalesce(pies_lineales_verificados, pies_lineales_cotizados) as lineales
+        from espacios where obra_id = ${obraId}`
+    ).map((e) => [e.id, Number(e.lineales)]),
   );
   const montos = new Map(
     (
@@ -116,9 +128,12 @@ export async function presupuestoParaCapturar(
     id: e.id,
     nombre: nombresEspacio.get(e.id) ?? '',
     generales: e.generales,
+    pies2: e.pies2,
+    piesLineales: lineales.get(e.id) ?? 0,
     etapas: etapasDeEspacio(e).map((x) => ({
       etapaId: x.etapaId,
-      nombre: x.etapaId ? (etapas.get(x.etapaId) ?? null) : null,
+      nombre: x.etapaId ? (etapas.get(x.etapaId)?.nombre ?? null) : null,
+      unidad: (x.etapaId ? etapas.get(x.etapaId)?.unidad : null) ?? 'pie2',
       partidas: x.partidas.length,
       monto: montos.get(claveEtapa(e.id, x.etapaId))?.monto ?? 0,
       costo: montos.get(claveEtapa(e.id, x.etapaId))?.costo ?? null,

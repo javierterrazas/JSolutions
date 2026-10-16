@@ -26,7 +26,8 @@ export interface TipoDeLaLista {
 export interface CatalogoDeTipos {
   /** Generales de obra primero, después los activos en su orden y al final los dados de baja. */
   readonly tipos: readonly TipoDeLaLista[];
-  readonly etapas: readonly { id: string; nombre: Nombre }[];
+  /** Las etapas del presupuesto, con la unidad con que se cotizan (D-086). */
+  readonly etapas: readonly { id: string; nombre: Nombre; unidad: UnidadEtapa }[];
 }
 
 export async function catalogoDeTipos(tx: Tx, ahora = new Date()): Promise<CatalogoDeTipos> {
@@ -38,8 +39,8 @@ export async function catalogoDeTipos(tx: Tx, ahora = new Date()): Promise<Catal
            (select count(*)::int from plantillas_partida p where p.tipo_espacio_id = t.id and p.activa) as partidas
     from tipos_espacio t
     order by t.es_generales desc, t.activo desc, t.orden, t.nombre_es`;
-  const etapas = await tx<{ id: string; es: string; en: string | null }[]>`
-    select id, nombre_es as es, nombre_en as en from etapas where activa order by orden, nombre_es`;
+  const etapas = await tx<{ id: string; es: string; en: string | null; unidad: UnidadEtapa }[]>`
+    select id, nombre_es as es, nombre_en as en, unidad from etapas where activa order by orden, nombre_es`;
   return {
     tipos: tipos.map((t) => ({
       id: t.id,
@@ -48,7 +49,7 @@ export async function catalogoDeTipos(tx: Tx, ahora = new Date()): Promise<Catal
       activo: t.activo,
       partidas: t.partidas,
     })),
-    etapas: etapas.map((e) => ({ id: e.id, nombre: { es: e.es, en: e.en } })),
+    etapas: etapas.map((e) => ({ id: e.id, nombre: { es: e.es, en: e.en }, unidad: e.unidad })),
   };
 }
 
@@ -109,8 +110,8 @@ export async function tipoParaEditar(
            etapa_id, hito_id, activa
     from plantillas_partida where tipo_espacio_id = ${tipoId}
     order by activa desc, orden, nombre_es`;
-  const etapas = await tx<{ id: string; es: string; en: string | null }[]>`
-    select id, nombre_es as es, nombre_en as en from etapas where activa order by orden, nombre_es`;
+  const etapas = await tx<{ id: string; es: string; en: string | null; unidad: UnidadEtapa }[]>`
+    select id, nombre_es as es, nombre_en as en, unidad from etapas where activa order by orden, nombre_es`;
   const hitos = await tx<{ id: string; clave: string; es: string; en: string | null }[]>`
     select id, clave, nombre_es as es, nombre_en as en from hitos_calidad where activo order by orden, clave`;
   const oficios = await tx<{ id: string; es: string; en: string | null }[]>`
@@ -131,7 +132,7 @@ export async function tipoParaEditar(
       hitoId: p.hito_id,
       activa: p.activa,
     })),
-    etapas: etapas.map((e) => ({ id: e.id, nombre: { es: e.es, en: e.en } })),
+    etapas: etapas.map((e) => ({ id: e.id, nombre: { es: e.es, en: e.en }, unidad: e.unidad })),
     hitos: hitos.map((h) => ({ id: h.id, clave: h.clave, nombre: { es: h.es, en: h.en } })),
     oficios: oficios.map((o) => ({ id: o.id, nombre: { es: o.es, en: o.en } })),
   };
@@ -360,7 +361,11 @@ export async function cambiarActivaPartida(
 
 // ------------------------------------------------------------------ etapas
 
-const EntradaEtapa = z.object({ nombre: textoCorto.nullish(), nombreEn });
+/** Cómo se cotiza una etapa (D-086): por pie² (tile, pintura) o por pie lineal (cubiertas, zoclos). */
+export type UnidadEtapa = 'pie2' | 'pie_lineal';
+const unidad = z.enum(['pie2', 'pie_lineal']);
+
+const EntradaEtapa = z.object({ nombre: textoCorto.nullish(), nombreEn, unidad: unidad.default('pie2') });
 
 /**
  * Una etapa nueva del presupuesto: un tipo de trabajo (Pintura). Va al final. Errores: `etapa_sin_nombre`,
@@ -379,9 +384,21 @@ export async function crearEtapa(
   if ((await tx`select 1 from etapas where lower(nombre_es) = lower(${nombre})`).length)
     throw new ErrorDeNegocio('etapa_repetida');
   const [et] = await tx<{ id: string }[]>`
-    insert into etapas (empresa_id, nombre_es, nombre_en, orden)
+    insert into etapas (empresa_id, nombre_es, nombre_en, orden, unidad)
     values (${s.empresaId}, ${nombre}, ${enIngles(e.nombreEn)},
-            (select coalesce(max(orden), 0) + 1 from etapas))
+            (select coalesce(max(orden), 0) + 1 from etapas), ${e.unidad})
     returning id`;
   return { etapaId: et!.id };
+}
+
+/** Cambia cómo se cotiza una etapa (D-086). Solo el dueño o el administrador. Error: `etapa_no_encontrada`. */
+export async function cambiarUnidadEtapa(
+  tx: Tx,
+  entrada: { etapaId: string; unidad: UnidadEtapa },
+  ahora = new Date(),
+): Promise<void> {
+  const e = validarEntrada(z.object({ etapaId: uuid, unidad }), entrada);
+  exigirDueno(await leerSesion(tx, ahora));
+  const r = await tx`update etapas set unidad = ${e.unidad} where id = ${e.etapaId}`;
+  if (!r.count) throw new ErrorDeNegocio('etapa_no_encontrada');
 }

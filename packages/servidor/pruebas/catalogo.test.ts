@@ -4,6 +4,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import {
   agregarEspacio,
   cambiarActivaPartida,
+  cambiarUnidadEtapa,
   cambiarActivoTipo,
   catalogoDeTipos,
   copiarTipoObra,
@@ -218,8 +219,26 @@ describe('etapas', () => {
       await guardarPartidaCatalogo(tx, { tipoId: bano, nombre: 'Pintar techo', etapaId });
     }));
 
-  it('el PM no crea etapas', () =>
+  it('cada etapa se cotiza por pie² o por pie lineal (D-086)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const { etapaId } = await crearEtapa(tx, { nombre: 'Cubierta', unidad: 'pie_lineal' });
+      const de = async (id: string) => (await catalogoDeTipos(tx)).etapas.find((x) => x.id === id)!.unidad;
+      expect(await de(etapaId)).toBe('pie_lineal');
+      const demolicion = await idDe(tx, 'etapas', 'Demolición');
+      expect(await de(demolicion)).toBe('pie2');
+      await cambiarUnidadEtapa(tx, { etapaId: demolicion, unidad: 'pie_lineal' });
+      expect(await de(demolicion)).toBe('pie_lineal');
+      expect(
+        await codigo(tx, () => cambiarUnidadEtapa(tx, { etapaId: OBRAS.a1Carlos, unidad: 'pie2' })),
+      ).toBe('etapa_no_encontrada');
+    }));
+
+  it('el PM no crea etapas ni les cambia la unidad', () =>
     probarComo(USUARIOS.carlos, async (tx) => {
       expect(await codigo(tx, () => crearEtapa(tx, { nombre: 'Pintura' }))).toBe('solo_dueno');
+      const demolicion = (await tx<{ id: string }[]>`select id from etapas limit 1`)[0]!.id;
+      expect(await codigo(tx, () => cambiarUnidadEtapa(tx, { etapaId: demolicion, unidad: 'pie2' }))).toBe(
+        'solo_dueno',
+      );
     }));
 });

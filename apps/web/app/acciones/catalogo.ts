@@ -3,6 +3,7 @@
 import {
   cambiarActivaPartida,
   cambiarActivoTipo,
+  cambiarUnidadEtapa,
   copiarTipoObra,
   crearEtapa,
   crearTipoObra,
@@ -113,9 +114,26 @@ export async function cambiarActivaDePartida(
 
 export async function crearEtapaNueva(_previo: Resultado | null, formulario: FormData): Promise<Resultado> {
   const r = await comoMiembro(
-    (tx) => crearEtapa(tx, { nombre: texto(formulario, 'nombre'), nombreEn: texto(formulario, 'nombreEn') }),
+    (tx) =>
+      crearEtapa(tx, {
+        nombre: texto(formulario, 'nombre'),
+        nombreEn: texto(formulario, 'nombreEn'),
+        unidad: formulario.get('unidad') === 'pie_lineal' ? 'pie_lineal' : 'pie2',
+      }),
     await exigirDueno(),
   );
+  if (r.ok) revalidatePath('/catalogo', 'layout');
+  return r.ok ? { ok: true, datos: undefined } : r;
+}
+
+/** Cambia cómo se cotiza una etapa: por pie² o por pie lineal (D-086). */
+export async function cambiarUnidad(
+  etapaId: string,
+  _previo: Resultado | null,
+  formulario: FormData,
+): Promise<Resultado> {
+  const unidad = formulario.get('unidad') === 'pie_lineal' ? 'pie_lineal' : 'pie2';
+  const r = await comoMiembro((tx) => cambiarUnidadEtapa(tx, { etapaId, unidad }), await exigirDueno());
   if (r.ok) revalidatePath('/catalogo', 'layout');
   return r.ok ? { ok: true, datos: undefined } : r;
 }

@@ -6,6 +6,7 @@ import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { NuevaEtapa } from './nueva-etapa';
 import { NuevoTipo } from './nuevo-tipo';
+import { UnidadEtapa } from './unidad-etapa';
 
 export default async function Catalogo() {
   const acceso = await exigirDueno();
@@ -38,7 +39,11 @@ export default async function Catalogo() {
       />
       <h2 className="mt-2 text-lg font-bold text-marca">{t('etapas')}</h2>
       <p className="text-sm text-slate-600">{t('etapasAyuda')}</p>
-      <p className="text-slate-700">{datos.etapas.map((e) => nombre(e.nombre)).join(' · ')}</p>
+      <ul className="flex flex-col gap-2">
+        {datos.etapas.map((e) => (
+          <UnidadEtapa key={e.id} etapaId={e.id} nombre={nombre(e.nombre)} unidad={e.unidad} />
+        ))}
+      </ul>
       <NuevaEtapa key={datos.etapas.length} />
     </Marco>
   );
