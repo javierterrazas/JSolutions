@@ -1552,3 +1552,11 @@ inicio, **"Histórico"** (`/historico`), con lo que guardó el cierre (D-085). S
   su cierre.
 - Promedios simples, como el legacy: cada obra pesa lo mismo (`resumenHistorico`, en @ijm/core).
 
+## D-088 · Un mes de trabajo simulado
+
+**Decisión del dueño:** correr 10 obras de inicio a fin con datos de mercado para encontrar pasos de más, datos que
+sobran y flujos que no cierran, y ver la app con datos. Se cargaron **en IJM Construction, en la nube** (lo eligió el
+dueño, sabiendo que la app no borra), con `packages/servidor/scripts/simular-obras.ts`: usa las mismas funciones que
+la app, a nombre del dueño y de 3 PMs nuevos, día por día con el cronograma de cada obra. Las obras simuladas lo dicen
+en sus notas. Los resultados y los hallazgos están en `docs/SIMULACION.md`.
+
