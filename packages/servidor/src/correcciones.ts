@@ -124,6 +124,13 @@ export async function corregir(
   const { t, r } = await leerRegistro(tx, s, e.tabla, e.registroId, e.motivo, 'editar');
   const cambios = cambiosAplicables(t, r, e.cambios);
   const valores: Record<string, unknown> = Object.fromEntries(cambios.map((c) => [c.campo, c.despues]));
+  // el cobro de una orden de cambio no cambia de concepto: se anula y se registra de nuevo (D-089)
+  if (
+    t === 'cobros' &&
+    'concepto' in valores &&
+    (valores.concepto === 'orden_cambio' || r.concepto === 'orden_cambio')
+  )
+    throw new ErrorDeNegocio('concepto_orden_cambio');
 
   if ('partida_obra_id' in valores) {
     const [p] = await tx<{ espacio_id: string }[]>`
@@ -190,6 +197,14 @@ export async function anular(
     [{ campo: col, antes: 'vigente', despues: 'anulado' }],
     e.motivo,
   );
+  if (t === 'cobros' && r.orden_cambio_id) {
+    // sin otro cobro vigente, la orden regresa a autorizada: ya no está facturada (D-089)
+    await tx`
+      update ordenes_cambio set estado = 'autorizada', facturada_en = null
+      where id = ${String(r.orden_cambio_id)} and estado = 'facturada'
+        and not exists (select 1 from cobros c where c.orden_cambio_id = ${String(r.orden_cambio_id)}
+                          and c.estado = 'vigente')`;
+  }
   if (t === 'pagos_sub') {
     // la orden regresa a donde estaba antes de liquidarse: aprobada, confirmada o emitida (D-074)
     await tx`

@@ -21,6 +21,18 @@ export interface CobroDeObra {
   readonly monto: number;
   readonly metodo: string;
   readonly referencia: string | null;
+  /** La orden de cambio que cobra (D-089): su folio. */
+  readonly ordenCambio: string | null;
+}
+
+/** Una orden de cambio aprobada, con lo que se le ha cobrado (D-089). */
+export interface OrdenPorCobrar {
+  readonly id: string;
+  readonly folio: string;
+  readonly descripcion: string;
+  readonly precio: number;
+  readonly cobrado: number;
+  readonly facturada: boolean;
 }
 
 export interface CobrosDeObra {
@@ -36,6 +48,8 @@ export interface CobrosDeObra {
   readonly cobrado: number;
   readonly porCobrar: number;
   readonly cobros: readonly CobroDeObra[];
+  /** Las órdenes de cambio aprobadas, para cobrarlas: primero las que les falta. */
+  readonly ordenes: readonly OrdenPorCobrar[];
   readonly hoy: Dia;
 }
 
@@ -62,10 +76,32 @@ export async function cobrosDeObra(
     from ordenes_cambio oc join ordenes_cambio_montos m on m.orden_cambio_id = oc.id
     where oc.obra_id = ${obraId} and oc.estado in ('autorizada', 'facturada')`;
   const filas = await tx<(Omit<CobroDeObra, 'monto'> & { monto: string })[]>`
-    select id, folio, to_char(fecha, 'YYYY-MM-DD') as fecha, concepto, monto, metodo, referencia
-    from cobros where obra_id = ${obraId} and estado = 'vigente'
-    order by fecha desc, folio desc`;
+    select c.id, c.folio, to_char(c.fecha, 'YYYY-MM-DD') as fecha, c.concepto, c.monto, c.metodo, c.referencia,
+           oc.folio as "ordenCambio"
+    from cobros c left join ordenes_cambio oc on oc.id = c.orden_cambio_id
+    where c.obra_id = ${obraId} and c.estado = 'vigente'
+    order by c.fecha desc, c.folio desc`;
   const cobros = filas.map((x) => ({ ...x, monto: Number(x.monto) }));
+  const ordenes = (
+    await tx<
+      { id: string; folio: string; descripcion: string; precio: string; cobrado: string; estado: string }[]
+    >`
+      select oc.id, oc.folio, oc.descripcion, m.precio_cliente as precio, oc.estado,
+             (select coalesce(sum(c.monto), 0) from cobros c
+              where c.orden_cambio_id = oc.id and c.estado = 'vigente') as cobrado
+      from ordenes_cambio oc join ordenes_cambio_montos m on m.orden_cambio_id = oc.id
+      where oc.obra_id = ${obraId} and oc.estado in ('autorizada', 'facturada')
+      order by oc.emitida_en`
+  )
+    .map((o) => ({
+      id: o.id,
+      folio: o.folio,
+      descripcion: o.descripcion,
+      precio: Number(o.precio),
+      cobrado: Number(o.cobrado),
+      facturada: o.estado === 'facturada',
+    }))
+    .sort((x, y) => Number(x.cobrado >= x.precio) - Number(y.cobrado >= y.precio));
   const contrato = f ? Number(f.contrato) : null;
   const cambios = Number(c?.cambios ?? 0);
   const total = (contrato ?? 0) + cambios;
@@ -80,6 +116,7 @@ export async function cobrosDeObra(
     cobrado,
     porCobrar: total - cobrado,
     cobros,
+    ordenes,
     hoy: s.hoy,
   };
 }
@@ -91,12 +128,15 @@ const EntradaCobro = z.object({
   monto: z.number().nullish(),
   metodo: z.enum(METODOS_COBRO).nullish(),
   referencia: textoCorto.nullish(),
+  /** Con concepto "orden de cambio": cuál (D-089). */
+  ordenCambioId: uuid.nullish(),
 });
 
 /**
  * Registra un pago del cliente (legacy: duCobro). Sin fecha, es de hoy; no después de hoy. También en una obra ya
- * entregada (la liquidación suele llegar después), no en una cerrada. Errores: `faltan`, `monto_invalido`,
- * `dia_futuro`, `obra_no_encontrada`, `obra_cerrada`.
+ * entregada (la liquidación suele llegar después), no en una cerrada. El de una orden de cambio dice cuál, y la orden
+ * queda facturada (D-089). Errores: `faltan`, `monto_invalido`, `dia_futuro`, `obra_no_encontrada`, `obra_cerrada`,
+ * `falta_orden_cambio`, `orden_no_autorizada`.
  */
 export async function registrarCobro(
   tx: Tx,
@@ -119,10 +159,22 @@ export async function registrarCobro(
     where id = ${e.obraId}`;
   if (!obra) throw new ErrorDeNegocio('obra_no_encontrada');
   if (obra.cerrada) throw new ErrorDeNegocio('obra_cerrada');
+  const orden = e.concepto === 'orden_cambio' ? (e.ordenCambioId ?? null) : null;
+  if (e.concepto === 'orden_cambio') {
+    if (!orden) throw new ErrorDeNegocio('falta_orden_cambio');
+    const [oc] = await tx<{ estado: string }[]>`
+      select estado from ordenes_cambio where id = ${orden} and obra_id = ${e.obraId}`;
+    if (!oc || !['autorizada', 'facturada'].includes(oc.estado))
+      throw new ErrorDeNegocio('orden_no_autorizada');
+  }
   const [c] = await tx<{ id: string; folio: string }[]>`
-    insert into cobros (empresa_id, obra_id, fecha, concepto, monto, metodo, referencia)
+    insert into cobros (empresa_id, obra_id, fecha, concepto, monto, metodo, referencia, orden_cambio_id)
     values (${s.empresaId}, ${e.obraId}, ${fecha}, ${e.concepto!}, ${Number(e.monto)}, ${e.metodo!},
-            ${e.referencia?.trim() || null})
+            ${e.referencia?.trim() || null}, ${orden})
     returning id, folio`;
+  // cobrada (aunque sea una parte, como "50% al aprobar"), la orden queda facturada
+  if (orden)
+    await tx`update ordenes_cambio set estado = 'facturada', facturada_en = now()
+             where id = ${orden} and estado = 'autorizada'`;
   return { cobroId: c!.id, folio: c!.folio };
 }

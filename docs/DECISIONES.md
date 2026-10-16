@@ -1560,3 +1560,14 @@ dueño, sabiendo que la app no borra), con `packages/servidor/scripts/simular-ob
 la app, a nombre del dueño y de 3 PMs nuevos, día por día con el cronograma de cada obra. Las obras simuladas lo dicen
 en sus notas. Los resultados y los hallazgos están en `docs/SIMULACION.md`.
 
+## D-089 · El cobro de una orden de cambio la factura
+
+**Hallazgo de la simulación (D-088):** ningún paso de la app pasaba una orden de cambio a "facturada", y al cerrar cada
+obra la revisión avisaba como grave "órdenes aprobadas sin facturar", aunque ya se hubieran cobrado.
+- **El cobro con concepto "orden de cambio" dice cuál** (`cobros.orden_cambio_id`): en Cobros, al elegir ese concepto,
+  se elige la orden (las aprobadas, primero las que les falta cobrar) y el monto se llena con lo que le falta.
+- **Cobrada, aunque sea una parte** (como "50% al aprobar"), la orden queda **facturada**. Si ese cobro se anula y no
+  le queda otro, regresa a autorizada. El cobro de una orden no cambia de concepto: se anula y se registra de nuevo.
+- **Al cerrar la obra,** el aviso queda como "órdenes de cambio aprobadas sin cobrar", que ahora sí significa eso.
+- Las órdenes de antes que ya se cobraron sin decir cuál siguen "autorizadas"; el cierre las avisa una vez.
+

@@ -1315,7 +1315,26 @@ async function eventos(d: Dia) {
           '#386641',
         );
     }
-    // el cobro de avance al pasar la mitad, y el de cada orden aprobada
+    // el cobro de cada orden aprobada (D-089): la deja facturada
+    for (const oc of await sql<{ id: string; precio: string }[]>`
+      select oc.id, m.precio_cliente as precio from ordenes_cambio oc
+      join ordenes_cambio_montos m on m.orden_cambio_id = oc.id
+      where oc.obra_id = ${o.id} and oc.estado = 'autorizada'`)
+      await como(DU, d, o.folio, 'cobro de la orden de cambio', (tx) =>
+        S.registrarCobro(
+          tx,
+          {
+            obraId: o.id,
+            fecha: d,
+            concepto: 'orden_cambio',
+            ordenCambioId: oc.id,
+            monto: Number(oc.precio),
+            metodo: 'zelle',
+          },
+          A(d, '18:10'),
+        ),
+      );
+    // el cobro de avance al pasar la mitad
     const cobros = await sql<
       { concepto: string; monto: string }[]
     >`select concepto, monto from cobros where obra_id = ${o.id}`;

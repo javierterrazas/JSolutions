@@ -57,7 +57,7 @@ cada lunes, y al terminar: medida verificada, punch, cobro final y cierre de la 
 
 ## Hallazgos: flujos que no cierran
 
-1. **Las órdenes de cambio nunca pasan a "facturada".** No hay ningún paso en la app que lo haga (ni el cobro con
+1. **Resuelto en D-089.** **Las órdenes de cambio nunca pasan a "facturada".** No hay ningún paso en la app que lo haga (ni el cobro con
    concepto "orden de cambio"). Al cerrar cada obra, la revisión avisa como grave "órdenes aprobadas sin facturar",
    aunque ya se hayan cobrado. *Propuesta:* que el cobro de una orden de cambio la marque facturada (eligiendo la
    orden al cobrar), o quitar el estado "facturada" y el aviso.

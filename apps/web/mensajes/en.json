@@ -231,7 +231,10 @@
     "celular_ya_registrado": "That cell number already belongs to a member.",
     "margen_invalido": "The margin has to be from 0% to less than 100%.",
     "obra_ya_cerrada": "That job is already closed.",
-    "obra_sin_arrancar": "The job hasn't started yet: it can't be closed."
+    "obra_sin_arrancar": "The job hasn't started yet: it can't be closed.",
+    "falta_orden_cambio": "Choose which change order is being collected.",
+    "orden_no_autorizada": "That change order isn't approved by the client.",
+    "concepto_orden_cambio": "A change order payment can't change its concept: void it and record it again."
   },
   "obras": {
     "titulo": "Jobs",
@@ -1107,7 +1110,11 @@
       "cheque": "Check",
       "efectivo": "Cash",
       "tarjeta": "Card"
-    }
+    },
+    "ordenCambio": "Change order",
+    "ordenOpcion": "{folio} · {descripcion} ({falta} left)",
+    "sinOrdenes": "This job has no approved change orders to collect.",
+    "conceptoOrden": "Change order {folio}"
   },
   "subcontratistas": {
     "titulo": "Subcontractors",
@@ -1442,7 +1449,7 @@
     "avisos": {
       "falta_cobrar": "{monto} still to collect from the client.",
       "oc_sin_responder": "{n, plural, one {# change order without the client's answer.} other {# change orders without the client's answer.}}",
-      "oc_sin_facturar": "{n, plural, one {# approved change order not invoiced.} other {# approved change orders not invoiced.}}",
+      "oc_sin_facturar": "{n, plural, one {# approved change order not collected.} other {# approved change orders not collected.}}",
       "partidas_sin_terminar": "{n, plural, one {# unfinished task: finish it, or remove it if it wasn't done on this job.} other {# unfinished tasks: finish them, or remove them if they weren't done on this job.}}",
       "subs_por_pagar": "{monto} still to pay the subcontractors.",
       "ot_sin_aprobar": "{n, plural, one {# work order the PM didn't approve.} other {# work orders the PM didn't approve.}}",
