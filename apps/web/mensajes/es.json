@@ -228,7 +228,9 @@
     "cambio_no_autorizado": "El cliente todavía no aprueba esa orden de cambio.",
     "celular_invalido": "Ese celular no está completo: escribe los 10 dígitos (o el número con + y el código de su país).",
     "celular_ya_registrado": "Ese celular ya es de un miembro.",
-    "margen_invalido": "El margen tiene que ser de 0% a menos de 100%."
+    "margen_invalido": "El margen tiene que ser de 0% a menos de 100%.",
+    "obra_ya_cerrada": "Esa obra ya está cerrada.",
+    "obra_sin_arrancar": "La obra todavía no arranca: no se puede cerrar."
   },
   "obras": {
     "titulo": "Obras",
@@ -886,7 +888,9 @@
     "cuadrillaAyuda": "Toca a un trabajador para ver sus horas por etapa, aproximadas.",
     "etapaPrecio": "Se cobra {precio}",
     "margenEsperado": "Margen esperado: {pct}",
-    "margenProyectado": "Si lo que falta sale como se presupuestó: {pct}"
+    "margenProyectado": "Si lo que falta sale como se presupuestó: {pct}",
+    "cerrarObra": "Cerrar la obra",
+    "verCierre": "Ver el cierre de la obra"
   },
   "datosObra": {
     "titulo": "Datos de la obra",
@@ -1396,5 +1400,52 @@
     "celularAyuda": "Con su celular entra a la app. No le llega ningún mensaje: tú le mandas el enlace.",
     "correoOpcional": "Correo del dueño (opcional)",
     "duenoContacto": "Dueño: {dueno} ({contacto})"
+  },
+  "cerrarObra": {
+    "titulo": "Cerrar la obra",
+    "volver": "Volver a la obra",
+    "intro": "Al entregarla, ciérrala: se guardan sus números finales y lo que costó cada etapa por pie², para aprender a cotizar. Cerrada, ya no se edita.",
+    "yaCerrada": "Obra cerrada; se entregó el {dia}.",
+    "contratoOriginal": "Contrato original",
+    "ordenesCambio": "Órdenes de cambio",
+    "contratoFinal": "Contrato final",
+    "cobrado": "Cobrado",
+    "presupuestado": "Costo presupuestado",
+    "costo": "Costo real",
+    "desglose": "Desglose",
+    "desgloseValor": "Material {material} · Cuadrilla {cuadrilla} · Subs {sub}",
+    "noCalidad": "Costo de no calidad",
+    "margen": "Margen bruto",
+    "desviacion": "Desviación contra lo presupuestado",
+    "diasReportados": "Días cerrados por el PM",
+    "pendientes": "Lo que falta",
+    "sinPendientes": "No falta nada: la obra está lista para cerrarse.",
+    "gravedad": {
+      "alto": "Grave:",
+      "medio": "Revisa:",
+      "bajo": "Nota:"
+    },
+    "aviso": "{gravedad} {texto}",
+    "avisos": {
+      "falta_cobrar": "Faltan {monto} por cobrarle al cliente.",
+      "oc_sin_responder": "{n, plural, one {Hay # orden de cambio sin respuesta del cliente.} other {Hay # órdenes de cambio sin respuesta del cliente.}}",
+      "oc_sin_facturar": "{n, plural, one {Hay # orden de cambio aprobada sin facturar.} other {Hay # órdenes de cambio aprobadas sin facturar.}}",
+      "partidas_sin_terminar": "{n, plural, one {# partida sin terminar: termínala, o quítala si no se hizo en esta obra.} other {# partidas sin terminar: termínalas, o quítalas si no se hicieron en esta obra.}}",
+      "subs_por_pagar": "Faltan {monto} por pagarle a los subcontratistas.",
+      "ot_sin_aprobar": "{n, plural, one {Hay # orden de trabajo que el PM no aprobó.} other {Hay # órdenes de trabajo que el PM no aprobó.}}",
+      "punch_abiertos": "{n, plural, one {Hay # pendiente del punch list sin cerrar.} other {Hay # pendientes del punch list sin cerrar.}}",
+      "gastos_sin_recibo": "{n, plural, one {# gasto sin foto del recibo.} other {# gastos sin foto del recibo.}}",
+      "sin_presupuesto": "Sin presupuesto por etapa: no se podrá medir qué tan bien se estimó.",
+      "costos_sin_partida": "{n, plural, one {# costo sin partida: no entra al costo de ninguna etapa.} other {# costos sin partida: no entran al costo de ninguna etapa.}}"
+    },
+    "cerrarTitulo": "Cerrar",
+    "fechaEntrega": "Día de la entrega",
+    "garantia": "Meses de garantía",
+    "ayuda": "Con la fecha de entrega cuentan los días de la obra y empieza la garantía.",
+    "cerrar": "Cerrar la obra",
+    "confirmar": "Falta algo grave (arriba). ¿La cierras de todos modos?",
+    "cerrarDeTodosModos": "Cerrar de todos modos",
+    "cerrada": "Obra cerrada. Su resumen y su histórico quedaron guardados.",
+    "sinArrancar": "La obra todavía no arranca: no se puede cerrar."
   }
 }

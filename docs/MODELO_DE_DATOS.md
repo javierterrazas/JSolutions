@@ -145,7 +145,7 @@ aquí se deduce.
 | `cobros` 💲 | Cobros | `folio`, `fecha`, `concepto`, `monto`, `metodo`, `referencia`, `estado` | lee y escribe | — |
 | `entregas` | Entrega | una por obra: `fecha_entrega`, `garantia_meses`, `garantia_vence`, `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido`, `visita_11m`, `notas` | lee y escribe | vista: `fecha_entrega` |
 | `obras_cerradas` 💲 | Obras_Cerradas | la foto fija del cierre: fechas, días de ciclo, contrato, órdenes de cambio, presupuesto, materiales, cuadrilla, subcontratos, costo total, margen, desvío, cobrado, no calidad, días reportados, pies² | lee | — |
-| `historico_etapas` 💲 | (nueva) | al cerrar: por espacio y etapa, presupuestado, costo real, pies² y costo por pie² | lee | — |
+| `historico_etapas` 💲 | (nueva) | al cerrar (D-085): por espacio y etapa, presupuestado, costo real, pies², pies lineales y costo por pie² | lee | — |
 | `historico_duraciones` | (nueva) | al cerrar: días planeados y reales de cada partida | lee | — |
 
 ### Sistema

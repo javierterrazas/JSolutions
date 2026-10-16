@@ -228,7 +228,9 @@
     "cambio_no_autorizado": "The client hasn't approved that change order yet.",
     "celular_invalido": "That cell number isn't complete: type all 10 digits (or the number with + and its country code).",
     "celular_ya_registrado": "That cell number already belongs to a member.",
-    "margen_invalido": "The margin has to be from 0% to less than 100%."
+    "margen_invalido": "The margin has to be from 0% to less than 100%.",
+    "obra_ya_cerrada": "That job is already closed.",
+    "obra_sin_arrancar": "The job hasn't started yet: it can't be closed."
   },
   "obras": {
     "titulo": "Jobs",
@@ -886,7 +888,9 @@
     "cuadrillaAyuda": "Tap a worker to see their hours by stage, approximate.",
     "etapaPrecio": "Charged {precio}",
     "margenEsperado": "Expected margin: {pct}",
-    "margenProyectado": "If the rest goes as budgeted: {pct}"
+    "margenProyectado": "If the rest goes as budgeted: {pct}",
+    "cerrarObra": "Close the job",
+    "verCierre": "See the job closing"
   },
   "datosObra": {
     "titulo": "Job details",
@@ -1396,5 +1400,52 @@
     "celularAyuda": "They sign in to the app with their cell number. No message is sent to it: you send them the link.",
     "correoOpcional": "Owner's email (optional)",
     "duenoContacto": "Owner: {dueno} ({contacto})"
+  },
+  "cerrarObra": {
+    "titulo": "Close the job",
+    "volver": "Back to the job",
+    "intro": "When you deliver it, close it: its final numbers and what each stage cost per sq ft are saved, to learn how to quote. Once closed, it can't be edited.",
+    "yaCerrada": "Job closed; delivered on {dia}.",
+    "contratoOriginal": "Original contract",
+    "ordenesCambio": "Change orders",
+    "contratoFinal": "Final contract",
+    "cobrado": "Collected",
+    "presupuestado": "Budgeted cost",
+    "costo": "Actual cost",
+    "desglose": "Breakdown",
+    "desgloseValor": "Material {material} · Crew {cuadrilla} · Subs {sub}",
+    "noCalidad": "Cost of poor quality",
+    "margen": "Gross margin",
+    "desviacion": "Deviation from budget",
+    "diasReportados": "Days closed by the PM",
+    "pendientes": "What's missing",
+    "sinPendientes": "Nothing is missing: the job is ready to close.",
+    "gravedad": {
+      "alto": "Serious:",
+      "medio": "Check:",
+      "bajo": "Note:"
+    },
+    "aviso": "{gravedad} {texto}",
+    "avisos": {
+      "falta_cobrar": "{monto} still to collect from the client.",
+      "oc_sin_responder": "{n, plural, one {# change order without the client's answer.} other {# change orders without the client's answer.}}",
+      "oc_sin_facturar": "{n, plural, one {# approved change order not invoiced.} other {# approved change orders not invoiced.}}",
+      "partidas_sin_terminar": "{n, plural, one {# unfinished task: finish it, or remove it if it wasn't done on this job.} other {# unfinished tasks: finish them, or remove them if they weren't done on this job.}}",
+      "subs_por_pagar": "{monto} still to pay the subcontractors.",
+      "ot_sin_aprobar": "{n, plural, one {# work order the PM didn't approve.} other {# work orders the PM didn't approve.}}",
+      "punch_abiertos": "{n, plural, one {# open punch list item.} other {# open punch list items.}}",
+      "gastos_sin_recibo": "{n, plural, one {# expense without a receipt photo.} other {# expenses without a receipt photo.}}",
+      "sin_presupuesto": "No budget by stage: estimate accuracy can't be measured.",
+      "costos_sin_partida": "{n, plural, one {# cost without a task: it isn't counted in any stage.} other {# costs without a task: they aren't counted in any stage.}}"
+    },
+    "cerrarTitulo": "Close",
+    "fechaEntrega": "Delivery date",
+    "garantia": "Warranty months",
+    "ayuda": "The job days are counted to the delivery date, and the warranty starts then.",
+    "cerrar": "Close the job",
+    "confirmar": "Something serious is missing (above). Close it anyway?",
+    "cerrarDeTodosModos": "Close anyway",
+    "cerrada": "Job closed. Its summary and history were saved.",
+    "sinArrancar": "The job hasn't started yet: it can't be closed."
   }
 }
