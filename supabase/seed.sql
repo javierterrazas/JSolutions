@@ -241,8 +241,8 @@ begin
   values (p_obra, p_empresa, '2026-08-03', '2026-08-28', 25, 24000, 1000, 25000, 15000, 5200, 4100, 6300, 15600,
           0.376, 0.04, 25000, 180, 19, 45);
   insert into public.historico_etapas (empresa_id, obra_id, espacio_id, tipo_espacio_id, etapa_id, presupuestado,
-                                       costo_real, pies2, costo_por_pie2)
-    select p_empresa, p_obra, s.id, s.tipo_espacio_id, pe.etapa_id, pe.monto, 1620, 45, 36
+                                       costo_real, pies2, costo_por_pie2, costo_por_unidad)
+    select p_empresa, p_obra, s.id, s.tipo_espacio_id, pe.etapa_id, pe.monto, 1620, 45, 36, 36
     from public.presupuesto_etapas pe join public.espacios s on s.id = pe.espacio_id where pe.obra_id = p_obra;
   insert into public.historico_duraciones (empresa_id, obra_id, partida_obra_id, tipo_espacio_id, plantilla_id,
                                            dias_planeados, dias_reales)

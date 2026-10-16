@@ -15,3 +15,4 @@ export * from './correcciones';
 export * from './acceso';
 export * from './suscripcion';
 export * from './margen';
+export * from './historico';

@@ -17,7 +17,8 @@
     "subcontratistas": "Subcontratistas",
     "indicadores": "Indicadores",
     "miEmpresa": "Mi empresa",
-    "plataforma": "Plataforma"
+    "plataforma": "Plataforma",
+    "historico": "Histórico"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -1459,5 +1460,42 @@
     "cerrarDeTodosModos": "Cerrar de todos modos",
     "cerrada": "Obra cerrada. Su resumen y su histórico quedaron guardados.",
     "sinArrancar": "La obra todavía no arranca: no se puede cerrar."
+  },
+  "historico": {
+    "titulo": "Histórico",
+    "volver": "Volver al inicio",
+    "sinObras": "Todavía no hay obras cerradas. Cuando entregues una obra, ciérrala desde su seguimiento (\"Cerrar la obra\") y aquí aparecerán sus números.",
+    "contexto": "{n, plural, one {# obra cerrada} other {# obras cerradas}}. Promedios simples: cada obra pesa lo mismo.",
+    "margen": "Margen promedio",
+    "desviacion": "Desviación promedio",
+    "duracion": "Duración promedio",
+    "ventaPie": "Cobras por ft²",
+    "costoPieNota": "Te cuesta {costo}",
+    "dias": "{n, plural, one {# día} other {# días}}",
+    "porPie2": "{monto}/ft²",
+    "porPieLineal": "{monto}/ft lineal",
+    "tendenciaPuntos": "{v} puntos",
+    "tendenciaDias": "{v} días",
+    "tendenciaAyuda": "Debajo de cada cifra: tus últimas 3 obras contra las 3 anteriores (verde, mejor; rojo, peor).",
+    "porTipo": "Por tipo de obra",
+    "obras": "{n, plural, one {# obra} other {# obras}}",
+    "sinTipo": "Sin espacios",
+    "lineaGrupo": "Margen {margen} · Desviación {desviacion} · {dias}",
+    "lineaPie": "Cobras {venta} · Te cuesta {costo}",
+    "porUnidad": "Lo que cuesta cada etapa",
+    "porUnidadAyuda": "Lo que costó de verdad cada etapa por su unidad, en tus obras cerradas. De aquí saldrá la recomendación al cotizar.",
+    "tipoEtapa": "{tipo} · {etapa}",
+    "otras": "Otras partidas",
+    "rango": "{n, plural, one {# obra} other {# obras}} · de {minimo} a {maximo}",
+    "sinUnidad": "Todavía no hay etapas cerradas con su medida.",
+    "porMes": "Por mes de entrega",
+    "lineaMes": "Contratos {contrato} · Costo {costo} · Margen {margen}",
+    "garantias": "Garantías y reseñas",
+    "lineaGarantias": "{reclamos, plural, =0 {Sin reclamos de garantía} one {# reclamo de garantía} other {# reclamos de garantía}} ({costo}; {abiertos, plural, =0 {ninguno abierto} one {# abierto} other {# abiertos}}) · {resenas} de {entregas} clientes dejaron reseña",
+    "cerradas": "Obras cerradas",
+    "obraEncabezado": "{folio} · {cliente}",
+    "lineaObra": "{tipo} · entregada el {entrega} · {dias}",
+    "lineaObraDinero": "Contrato {contrato} · Costo {costo} · Desviación {desviacion}",
+    "lineaObraGarantia": "{reclamos, plural, =0 {Sin reclamos} one {# reclamo} other {# reclamos}} ({costo}) · {resena, select, si {dejó reseña} other {sin reseña}}"
   }
 }

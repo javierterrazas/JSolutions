@@ -17,7 +17,8 @@
     "subcontratistas": "Subcontractors",
     "indicadores": "Metrics",
     "miEmpresa": "My company",
-    "plataforma": "Platform"
+    "plataforma": "Platform",
+    "historico": "History"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -1459,5 +1460,42 @@
     "cerrarDeTodosModos": "Close anyway",
     "cerrada": "Job closed. Its summary and history were saved.",
     "sinArrancar": "The job hasn't started yet: it can't be closed."
+  },
+  "historico": {
+    "titulo": "History",
+    "volver": "Back to home",
+    "sinObras": "No closed jobs yet. When you deliver a job, close it from its follow-up (\"Close the job\") and its numbers will show up here.",
+    "contexto": "{n, plural, one {# closed job} other {# closed jobs}}. Simple averages: each job counts the same.",
+    "margen": "Average margin",
+    "desviacion": "Average deviation",
+    "duracion": "Average duration",
+    "ventaPie": "You charge per sq ft",
+    "costoPieNota": "It costs you {costo}",
+    "dias": "{n, plural, one {# day} other {# days}}",
+    "porPie2": "{monto}/sq ft",
+    "porPieLineal": "{monto}/linear ft",
+    "tendenciaPuntos": "{v} points",
+    "tendenciaDias": "{v} days",
+    "tendenciaAyuda": "Under each figure: your last 3 jobs vs. the 3 before (green, better; red, worse).",
+    "porTipo": "By job type",
+    "obras": "{n, plural, one {# job} other {# jobs}}",
+    "sinTipo": "No spaces",
+    "lineaGrupo": "Margin {margen} · Deviation {desviacion} · {dias}",
+    "lineaPie": "You charge {venta} · It costs you {costo}",
+    "porUnidad": "What each stage costs",
+    "porUnidadAyuda": "What each stage really cost per its unit, in your closed jobs. The quoting recommendation will come from here.",
+    "tipoEtapa": "{tipo} · {etapa}",
+    "otras": "Other tasks",
+    "rango": "{n, plural, one {# job} other {# jobs}} · from {minimo} to {maximo}",
+    "sinUnidad": "No closed stages with their measurement yet.",
+    "porMes": "By delivery month",
+    "lineaMes": "Contracts {contrato} · Cost {costo} · Margin {margen}",
+    "garantias": "Warranties and reviews",
+    "lineaGarantias": "{reclamos, plural, =0 {No warranty claims} one {# warranty claim} other {# warranty claims}} ({costo}; {abiertos, plural, =0 {none open} one {# open} other {# open}}) · {resenas} of {entregas} clients left a review",
+    "cerradas": "Closed jobs",
+    "obraEncabezado": "{folio} · {cliente}",
+    "lineaObra": "{tipo} · delivered {entrega} · {dias}",
+    "lineaObraDinero": "Contract {contrato} · Cost {costo} · Deviation {desviacion}",
+    "lineaObraGarantia": "{reclamos, plural, =0 {No claims} one {# claim} other {# claims}} ({costo}) · {resena, select, si {left a review} other {no review}}"
   }
 }
