@@ -51,7 +51,7 @@ export interface RevisionDeCierre {
   readonly hoy: Dia;
 }
 
-const ARRANCADA = ['en_obra', 'en_cierre'];
+const ARRANCADA = ['en_obra'];
 
 async function revisar(tx: Tx, obraId: string, ahora: Date) {
   const lectura = await lecturaParaCierre(tx, obraId, ahora);

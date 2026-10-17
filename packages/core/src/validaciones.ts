@@ -399,26 +399,24 @@ export function validarOrdenTrabajo(
   return { ok: true };
 }
 
-export type AvisoPagoSub = 'sin_confirmar' | 'sin_aprobar' | 'papeles' | 'sobrepago';
+export type AvisoPagoSub = 'sin_aprobar' | 'papeles' | 'sobrepago';
 
 /**
  * Un pago a un sub, siempre contra su orden (legacy: duPagoSub). Cada advertencia se confirma por separado, en este
- * orden: un anticipo antes de que el sub confirme por escrito (`sin_confirmar`), una liquidación antes de que el PM
- * apruebe el trabajo (`sin_aprobar`), el sub sin papeles en regla (`papeles`; no cuenta que falte la fecha del seguro,
+ * orden: una liquidación antes de que se reciba el trabajo (`sin_aprobar`), el sub sin papeles en regla (`papeles`; no cuenta que falte la fecha del seguro,
  * como el legacy), y pagar más que el precio cerrado (`sobrepago`: el extra va en una orden de cambio). Devuelve si
- * con este pago queda liquidada. Error: `monto_invalido`.
+ * con este pago queda liquidada. El legacy también avisaba de un anticipo antes de que el sub confirmara por escrito;
+ * ya no se confirma (D-091). Error: `monto_invalido`.
  */
 export function validarPagoSub(
   p: { monto: number | null; concepto: 'anticipo' | 'parcial' | 'liquidacion' },
-  orden: { confirmada: boolean; aprobada: boolean; precio: number; pagado: number },
+  orden: { aprobada: boolean; precio: number; pagado: number },
   papeles: readonly AvisoPapeles[],
   confirmado: readonly string[],
 ): { ok: true; liquida: boolean } | { ok: false; confirmar: AvisoPagoSub; total?: number } {
   const monto = Number(p.monto) || 0;
   if (monto <= 0) throw new ErrorDeNegocio('monto_invalido');
   const acepta = (c: AvisoPagoSub) => confirmado.includes(c);
-  if (p.concepto === 'anticipo' && !orden.confirmada && !acepta('sin_confirmar'))
-    return { ok: false, confirmar: 'sin_confirmar' };
   if (p.concepto === 'liquidacion' && !orden.aprobada && !acepta('sin_aprobar'))
     return { ok: false, confirmar: 'sin_aprobar' };
   if (papeles.some((a) => a.codigo !== 'sin_seguro') && !acepta('papeles'))

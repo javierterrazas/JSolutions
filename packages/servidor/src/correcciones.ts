@@ -217,7 +217,11 @@ export async function anular(
   return { yaEstaba: false };
 }
 
-/** Anula un cierre completo: la bitácora y el avance y la cuadrilla que se registraron con ella. */
+/**
+ * Anula un cierre completo: la bitácora y el avance y la cuadrilla que se registraron con ella. Las órdenes que ese
+ * cierre aprobó al terminar su partida, si la partida ya no queda terminada y no se han liquidado, regresan a
+ * confirmada o emitida (D-091).
+ */
 export async function anularCierre(
   tx: Tx,
   entrada: { bitacoraId: string; motivo: string },
@@ -235,5 +239,15 @@ export async function anularCierre(
       n++;
     }
   }
+  await tx`
+    update ordenes_trabajo ot
+    set estado = case when confirmada_en is not null then 'confirmada'::estado_orden_trabajo
+                      else 'emitida'::estado_orden_trabajo end,
+        aprobada_en = null, aprobada_por = null
+    where ot.estado = 'aprobada'
+      and ot.partida_obra_id in (select partida_obra_id from avance where bitacora_id = ${e.bitacoraId}
+                                   and estado = 'terminada')
+      and not exists (select 1 from avance a where a.partida_obra_id = ot.partida_obra_id
+                        and a.estado = 'terminada' and a.estado_registro = 'vigente')`;
   return { registros: n };
 }

@@ -161,7 +161,7 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
           {t('retrabajos')}
         </Link>
         {/* cerrar la obra al entregarla, o ver su cierre (D-085) */}
-        {['en_obra', 'en_cierre', 'entregada'].includes(s.obra.estado) ? (
+        {['en_obra', 'entregada'].includes(s.obra.estado) ? (
           <Link
             href={`/obras/${s.obra.id}/cerrar`}
             className={`${estilos.botonSecundario} col-span-2 flex items-center justify-center px-2 text-center`}

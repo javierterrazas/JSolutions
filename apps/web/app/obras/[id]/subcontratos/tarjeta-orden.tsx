@@ -1,7 +1,8 @@
 'use client';
-// Una orden de trabajo (D-074): el sub, la partida, el alcance, las fechas, en qué va (emitida, confirmada por el sub,
-// aprobada por el PM, pagada o cancelada), su precio, lo pagado y el saldo. Pagarle al sub contra ella (con los
-// avisos del legacy, que se confirman uno por uno), anular un pago con su motivo, o cancelarla si no tiene pagos.
+// Una orden de trabajo (D-074): el sub, la partida, el alcance, las fechas, en qué va (emitida, el sub ya llegó,
+// trabajo recibido al terminar su partida, pagada o cancelada), su precio, lo pagado y el saldo. Pagarle al sub contra
+// ella (con los avisos del legacy, que se confirman uno por uno), anular un pago con su motivo, o cancelarla si no
+// tiene pagos. Recibido el trabajo, se liquida con un toque: lo que falta, hoy, por transferencia (D-091).
 import type { Nombre, OrdenDeTrabajo } from '@ijm/servidor';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { startTransition, useActionState, useRef, useState } from 'react';
@@ -122,6 +123,17 @@ export function TarjetaOrden({
     null,
   );
   const [rCancelar, cancelar, cancelando] = useActionState(cancelarOrden.bind(null, obraId, o.id), null);
+  const [rLiquidar, liquidarAccion, liquidando] = useActionState(pagarSub.bind(null, obraId, o.id), null);
+  const avisoLiquidar = rLiquidar?.ok && !rLiquidar.datos.ok ? rLiquidar.datos : null;
+  const liquidar = (confirmados: string[] = []) => {
+    const f = new FormData();
+    f.set('concepto', 'liquidacion');
+    f.set('monto', String(o.saldo));
+    f.set('fecha', hoy);
+    f.set('metodo', 'transferencia');
+    f.set('confirmado', confirmados.join(','));
+    startTransition(() => liquidarAccion(f));
+  };
   const aviso = rPago?.ok && !rPago.datos.ok ? rPago.datos : null;
   const enviar = (extra: string[] = []) => {
     if (!formulario.current) return;
@@ -164,6 +176,41 @@ export function TarjetaOrden({
           <dd className={`font-semibold ${o.saldo > 0 ? 'text-amber-800' : ''}`}>{dinero.format(o.saldo)}</dd>
         </div>
       </dl>
+      {abierta && o.estado === 'aprobada' && o.saldo > 0 && !pagando ? (
+        <div className="flex flex-col gap-2 rounded-xl bg-emerald-50 p-3">
+          <p className="text-sm font-semibold text-emerald-900">
+            {t('porLiquidar', { monto: dinero.format(o.saldo) })}
+          </p>
+          {avisoLiquidar ? (
+            <div role="alert" className="flex flex-col gap-2 rounded-xl bg-amber-50 p-3 text-amber-900">
+              <p>
+                {t(`avisos.${avisoLiquidar.confirmar}`, {
+                  total: dinero.format(avisoLiquidar.total ?? 0),
+                  precio: dinero.format(o.precio),
+                })}
+              </p>
+              <button
+                type="button"
+                disabled={liquidando}
+                onClick={() => liquidar([avisoLiquidar.confirmar])}
+                className="min-h-12 rounded-xl bg-amber-800 px-4 font-semibold text-white disabled:opacity-50"
+              >
+                {t('pagarAsi')}
+              </button>
+            </div>
+          ) : (
+            <button type="button" disabled={liquidando} onClick={() => liquidar()} className={estilos.boton}>
+              {t('liquidar', { monto: dinero.format(o.saldo) })}
+            </button>
+          )}
+          <MensajeError problema={rLiquidar && !rLiquidar.ok ? rLiquidar : null} />
+        </div>
+      ) : null}
+      {rLiquidar?.ok && rLiquidar.datos.ok ? (
+        <p role="status" className="text-sm font-semibold text-emerald-800">
+          {t('pagoRegistrado', { folio: rLiquidar.datos.folio })}
+        </p>
+      ) : null}
       {o.pagos.length ? (
         <ul className="flex flex-col gap-1">
           {o.pagos.map((p) => (

@@ -734,12 +734,9 @@ for (let d = a.desde as Dia; d <= a.hasta!; d = sumarDias(d, 1)) {
             precio,
           });
       } else if (ot && !ot.confirmada) {
-        const ok = await como(PM, d, o.folio, `PM confirma OT ${p.nombre}`, (tx) =>
-          S.confirmarOrden(tx, { ordenId: ot.id }, A(d, '08:20')),
-        );
-        if (ok !== null) {
-          ot.confirmada = true;
-          // el anticipo del 30% al confirmar
+        // desde D-091 el PM ya no confirma: el anticipo del 30% al día siguiente de emitirla
+        ot.confirmada = true;
+        {
           await conConfirmaciones((confirmado) =>
             como(DU, d, o.folio, `anticipo al sub ${p.nombre}`, (tx) =>
               S.registrarPagoSub(
@@ -759,14 +756,9 @@ for (let d = a.desde as Dia; d <= a.hasta!; d = sumarDias(d, 1)) {
         }
       }
     }
-    // las órdenes de lo ya terminado: el PM las aprueba y el dueño liquida
+    // las órdenes de lo ya terminado: el cierre del PM las aprobó (D-091) y el dueño liquida
     for (const ot of st.ots.filter((x) => x.partida && terminada(st, x.partida) && x.estado !== 'pagada')) {
-      if (!ot.aprobada) {
-        const ok = await como(PM, d, o.folio, 'PM aprueba OT', (tx) =>
-          S.aprobarOrden(tx, { ordenId: ot.id }, A(d, '08:25')),
-        );
-        if (ok !== null) ot.aprobada = true;
-      }
+      ot.aprobada = true;
       if (ot.aprobada && ot.precio - ot.pagado > 0)
         await conConfirmaciones((confirmado) =>
           como(DU, d, o.folio, 'liquidación al sub', (tx) =>

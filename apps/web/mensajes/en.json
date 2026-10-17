@@ -170,7 +170,7 @@
     "tipo_sin_partidas": "Enter at least one line item, one per line.",
     "tipo_generales": "General conditions cannot be deactivated: every job has it.",
     "partida_sin_nombre": "Enter the name of the line item.",
-    "partida_repetida": "That type already has a line item with that name.",
+    "partida_repetida": "You chose the same line item twice.",
     "partida_inexistente": "That line item no longer exists.",
     "falta_oficio": "Choose the subcontractor's trade.",
     "etapa_inexistente": "That stage no longer exists.",
@@ -250,7 +250,6 @@
       "sin_presupuesto": "No budget",
       "lista_para_arranque": "Ready to start",
       "en_obra": "In progress",
-      "en_cierre": "Closing out",
       "entregada": "Delivered"
     },
     "encabezado": "{folio} · {cliente}",
@@ -338,8 +337,6 @@
     "libre": "Nothing scheduled",
     "llega": "{sub} arrives ({obra})",
     "partidaDia": "{obra} · {espacio} · {partida}",
-    "porConfirmar": "Orders to confirm",
-    "ordenConfirmar": "{sub} · starts {dia} ({obra})",
     "cambios": "Approved change orders",
     "cambio": "{descripcion} ({obra})",
     "cambioDias": "{n, plural, =0 {no extra days} one {+# day} other {+# days}}",
@@ -354,8 +351,7 @@
     "estado": {
       "sin_presupuesto": "No budget",
       "lista_para_arranque": "Ready to start",
-      "en_obra": "In progress",
-      "en_cierre": "Closing out"
+      "en_obra": "In progress"
     },
     "cerrarDia": "Close the day",
     "cerrarEseDia": "Close that day",
@@ -373,7 +369,10 @@
     "marcarHecha": "Mark as done",
     "guardando": "Saving…",
     "cancelar": "Cancel",
-    "cambioHecho": "✓ Done on {dia}"
+    "cambioHecho": "✓ Done on {dia}",
+    "subsPorLlegar": "Subs coming",
+    "subsPorLlegarAyuda": "Call them to confirm they're coming. In your daily close you mark whether they showed up.",
+    "subLlega": "{sub} · {dia} ({obra})"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -687,22 +686,6 @@
     "respuesta": "Your answer for the PM",
     "respuestaEjemplo": "Yes, replace it before closing. I already ordered the material; it arrives tomorrow.",
     "contestar": "Answer and close the alert"
-  },
-  "ordenes": {
-    "titulo": "Subs",
-    "volver": "Back to home",
-    "obra": "{folio} · {cliente}",
-    "nada": "No work orders are waiting on you for this job.",
-    "porConfirmar": "Waiting for confirmation",
-    "porConfirmarAyuda": "Call the sub before the date. When they confirm in writing that they will show up, mark it here.",
-    "porAprobar": "Subs on site",
-    "porAprobarAyuda": "They already showed up. When you walk the finished work together, approve it: that is what lets the sub get paid.",
-    "oficioPartida": "{oficio} · {espacio} · {partida}",
-    "fechas": "From {inicio} to {fin}",
-    "llamar": "Call · {telefono}",
-    "confirmo": "Confirmed in writing",
-    "aprobar": "Approve the work",
-    "confirmarAprobar": "Approve the work? The sub will be able to get paid. Only approve what you already walked with them."
   },
   "entrega": {
     "titulo": "Handover",
@@ -1183,7 +1166,6 @@
     "fin": "End",
     "emitir": "Issue order",
     "cancelar": "Cancel",
-    "emitida": "Order {folio} issued. The PM sees it to confirm it.",
     "otra": "Issue another",
     "papelesConfirmar": "Before sending this sub to the job:",
     "emitirAsi": "Issue anyway",
@@ -1203,8 +1185,8 @@
     "pagoLinea": "{dia} · {concepto}",
     "estados": {
       "emitida": "Issued",
-      "confirmada": "Confirmed",
-      "aprobada": "Approved",
+      "confirmada": "Showed up",
+      "aprobada": "Received",
       "pagada": "Paid",
       "cancelada": "Canceled"
     },
@@ -1222,8 +1204,7 @@
       "tarjeta_empresa": "Company card"
     },
     "avisos": {
-      "sin_confirmar": "This sub has not confirmed the order in writing yet. An advance before confirmation is money without commitment.",
-      "sin_aprobar": "The PM has not approved the work yet. The rule is that subs get paid against approved work.",
+      "sin_aprobar": "Its line item isn't finished yet. The rule is that the sub gets paid for received work.",
       "papeles": "This sub does not have their paperwork in order (insurance or license). Paying them like this leaves you exposed.",
       "sobrepago": "With this payment you would be at {total} against an order of {precio}. If it is extra work, it goes in a change order."
     },
@@ -1233,9 +1214,15 @@
     "nuevoInicio": "New start",
     "nuevoFin": "New end",
     "motivo": "Reason",
-    "reprogramarAyuda": "Move the dates instead of canceling the order. The sub has to confirm it again; if they did not show up, the no-show is counted.",
-    "reprogramada": "Order rescheduled. The PM sees it so the sub confirms it again.",
-    "reprogramadaConFalta": "Order rescheduled and the no-show counted."
+    "reprogramarAyuda": "Move the dates instead of canceling the order. If the sub didn't show up, the miss is counted.",
+    "reprogramada": "Order rescheduled. The PM will mark it in the daily close when the sub shows up.",
+    "reprogramadaConFalta": "Order rescheduled and the no-show counted.",
+    "partidas": "Line items",
+    "partidasAyuda": "Check the ones this sub does; each with its dates and price.",
+    "emitidas": "{n, plural, one {Order issued: {folios}.} other {# orders issued: {folios}.}}",
+    "emitirVarias": "Issue {n} orders",
+    "porLiquidar": "Work received: {monto} left to pay.",
+    "liquidar": "Pay off {monto}"
   },
   "indicadores": {
     "titulo": "Metrics",

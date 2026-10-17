@@ -59,12 +59,12 @@ describe('el inicio del PM', () => {
       expect(r.semana.some((d) => d.partidas.length > 0)).toBe(true);
     }));
 
-  it('lo pendiente: la orden por confirmar, las órdenes de cambio a ejecutar, su aviso abierto y su gasto sin recibo', () =>
+  it('lo pendiente: el sub por llegar, las órdenes de cambio a ejecutar, su aviso abierto y su gasto sin recibo', () =>
     probarComo(USUARIOS.carlos, async (tx) => {
       const r = await inicioDelPm(tx, enAustin('2026-10-08'));
       // los folios los pone la base (asignar_folio): se revisa lo demás
-      // la emitida sin confirmar; la pagada no
-      expect(r.porConfirmar).toEqual([
+      // la emitida que ya debía llegar y el PM no ha marcado; la pagada no (D-091)
+      expect(r.subsPorLlegar).toEqual([
         expect.objectContaining({
           obra: 'OB-001',
           folio: expect.stringMatching(/^OT-/),
@@ -112,6 +112,6 @@ describe('el inicio del PM', () => {
     probarComo(USUARIOS.duenoA, async (tx) => {
       const r = await inicioDelPm(tx, enAustin('2026-10-08'));
       expect(r.obras).toEqual([]);
-      expect(r.porConfirmar).toEqual([]);
+      expect(r.subsPorLlegar).toEqual([]);
     }));
 });

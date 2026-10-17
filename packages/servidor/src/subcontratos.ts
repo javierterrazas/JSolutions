@@ -1,8 +1,9 @@
 // Los subcontratos de una obra, para el dueño (D-074; legacy: admin/servidor.js duCrearOT, duCancelarOT, duPagoSub):
-// emitir órdenes de trabajo con precio cerrado (el compromiso de costo de esa partida), cancelarlas si no tienen
-// pagos, y pagarle a cada sub siempre contra su orden, con los avisos del legacy. El PM confirma y aprueba las órdenes
-// en su app (ordenes.ts); los pagos se corrigen y anulan con motivo (corregir, anular). Lleva dinero: solo el dueño o
-// el administrador.
+// emitir órdenes de trabajo con precio cerrado (el compromiso de costo de esa partida; varias del mismo sub de una
+// vez, D-091), cancelarlas si no tienen pagos, y pagarle a cada sub siempre contra su orden, con los avisos del legacy.
+// Las órdenes se mueven solas con el cierre del día del PM (D-091): llegar las confirma y terminar la partida las
+// aprueba. Los pagos se corrigen y anulan con motivo (corregir, anular). Lleva dinero: solo el dueño o el
+// administrador.
 import {
   type AvisoPagoSub,
   type AvisoPapeles,
@@ -51,9 +52,9 @@ export interface OrdenDeTrabajo {
   readonly inicio: Dia;
   readonly fin: Dia;
   readonly estado: 'emitida' | 'confirmada' | 'aprobada' | 'pagada' | 'cancelada';
-  /** El sub la confirmó por escrito (el PM lo anota). */
+  /** El sub ya llegó (lo marca el cierre del PM). */
   readonly confirmada: boolean;
-  /** El PM aprobó el trabajo. */
+  /** Su partida se terminó: el trabajo se recibió y se le puede liquidar (D-091). */
   readonly aprobada: boolean;
   /** Si el sub llegó el día de arranque (lo marca el cierre del PM); null si todavía no se sabe. */
   readonly sePresento: boolean | null;
@@ -240,65 +241,111 @@ export async function subcontratosDeObra(
   };
 }
 
-const EntradaOrden = z.object({
-  obraId: uuid,
-  subId: uuid.nullish(),
+const PartidaDeOrden = z.object({
   partidaId: uuid.nullish(),
-  alcance: textoLargo.nullish(),
   inicio: dia.nullish(),
   fin: dia.nullish(),
   precio: z.number().nullish(),
+});
+
+const EntradaOrdenes = z.object({
+  obraId: uuid,
+  subId: uuid.nullish(),
+  alcance: textoLargo.nullish(),
+  partidas: z.array(PartidaDeOrden).max(30).default([]),
   confirmado: z.array(z.string().max(40)).max(10).default([]),
 });
+
+const EntradaOrden = PartidaDeOrden.extend({
+  obraId: uuid,
+  subId: uuid.nullish(),
+  alcance: textoLargo.nullish(),
+  confirmado: z.array(z.string().max(40)).max(10).default([]),
+});
+
+export type ResultadoOrdenesTrabajo =
+  | { readonly ok: true; readonly ordenes: readonly { ordenId: string; folio: string }[] }
+  | { readonly ok: false; readonly confirmar: 'papeles'; readonly avisos: readonly AvisoPapeles[] };
 
 export type ResultadoOrdenTrabajo =
   | { readonly ok: true; readonly ordenId: string; readonly folio: string }
   | { readonly ok: false; readonly confirmar: 'papeles'; readonly avisos: readonly AvisoPapeles[] };
 
 /**
- * Emite una orden de trabajo a un sub activo, por una partida de la obra, con precio cerrado. Si al sub le faltan
- * papeles, pide confirmar y no guarda nada. Errores: `faltan`, `fin_antes_del_inicio`, `precio_cerrado`,
- * `obra_no_encontrada`, `obra_cerrada`, `sub_no_activo`, `partida_de_otra_obra`.
+ * Emite de una vez las órdenes de un sub activo, una por partida de la obra, cada una con sus fechas y su precio
+ * cerrado y el mismo alcance (D-091). Todas o ninguna. Si al sub le faltan papeles, pide confirmar y no guarda nada.
+ * Errores: `faltan`, `fin_antes_del_inicio`, `precio_cerrado`, `obra_no_encontrada`, `obra_cerrada`, `sub_no_activo`,
+ * `partida_de_otra_obra`, `partida_repetida`.
  */
-export async function emitirOrdenTrabajo(
+export async function emitirOrdenesTrabajo(
   tx: Tx,
-  entrada: z.input<typeof EntradaOrden>,
+  entrada: z.input<typeof EntradaOrdenes>,
   ahora = new Date(),
-): Promise<ResultadoOrdenTrabajo> {
-  const e = validarEntrada(EntradaOrden, entrada);
+): Promise<ResultadoOrdenesTrabajo> {
+  const e = validarEntrada(EntradaOrdenes, entrada);
   const s = await leerSesion(tx, ahora);
   exigirDueno(s);
   const obra = await obraAbierta(tx, e.obraId);
   if (!obra) throw new ErrorDeNegocio('obra_no_encontrada');
   if (obra.cerrada) throw new ErrorDeNegocio('obra_cerrada');
+  if (!e.partidas.length) throw new ErrorDeNegocio('faltan', { campos: ['partida'] });
+  const ids = e.partidas.map((p) => p.partidaId).filter((x): x is string => !!x);
+  if (new Set(ids).size !== ids.length) throw new ErrorDeNegocio('partida_repetida');
   const sub = e.subId ? await papelesDe(tx, s, e.subId) : null;
   if (e.subId && !sub?.activo) throw new ErrorDeNegocio('sub_no_activo');
-  const r = validarOrdenTrabajo(
-    {
-      subId: e.subId ?? null,
-      partidaId: e.partidaId ?? null,
-      alcance: e.alcance ?? null,
-      inicio: e.inicio ?? null,
-      fin: e.fin ?? null,
-      precio: e.precio ?? null,
-    },
-    sub?.avisos ?? [],
-    e.confirmado,
+  let confirmar: Extract<ResultadoOrdenesTrabajo, { ok: false }> | null = null;
+  for (const p of e.partidas) {
+    const r = validarOrdenTrabajo(
+      {
+        subId: e.subId ?? null,
+        partidaId: p.partidaId ?? null,
+        alcance: e.alcance ?? null,
+        inicio: p.inicio ?? null,
+        fin: p.fin ?? null,
+        precio: p.precio ?? null,
+      },
+      sub?.avisos ?? [],
+      e.confirmado,
+    );
+    if (!r.ok) confirmar = r;
+  }
+  if (confirmar) return confirmar;
+  const espacios = new Map(
+    (
+      await tx<{ id: string; espacio_id: string }[]>`
+        select id, espacio_id from partidas_obra where id in ${tx(ids)} and obra_id = ${e.obraId}`
+    ).map((x) => [x.id, x.espacio_id]),
   );
-  if (!r.ok) return r;
-  const [p] = await tx<{ espacio_id: string }[]>`
-    select espacio_id from partidas_obra where id = ${e.partidaId!} and obra_id = ${e.obraId}`;
-  if (!p) throw new ErrorDeNegocio('partida_de_otra_obra');
-  const [ot] = await tx<{ id: string; folio: string }[]>`
-    insert into ordenes_trabajo (empresa_id, obra_id, subcontratista_id, espacio_id, partida_obra_id, alcance,
-                                 inicio_programado, fin_programado)
-    values (${s.empresaId}, ${e.obraId}, ${e.subId!}, ${p.espacio_id}, ${e.partidaId!}, ${e.alcance!.trim()},
-            ${e.inicio!}, ${e.fin!})
-    returning id, folio`;
-  await tx`
-    insert into ordenes_trabajo_precios (orden_trabajo_id, empresa_id, precio)
-    values (${ot!.id}, ${s.empresaId}, ${e.precio!})`;
-  return { ok: true, ordenId: ot!.id, folio: ot!.folio };
+  if (espacios.size !== ids.length) throw new ErrorDeNegocio('partida_de_otra_obra');
+  const ordenes: { ordenId: string; folio: string }[] = [];
+  for (const p of e.partidas) {
+    const [ot] = await tx<{ id: string; folio: string }[]>`
+      insert into ordenes_trabajo (empresa_id, obra_id, subcontratista_id, espacio_id, partida_obra_id, alcance,
+                                   inicio_programado, fin_programado)
+      values (${s.empresaId}, ${e.obraId}, ${e.subId!}, ${espacios.get(p.partidaId!)!}, ${p.partidaId!},
+              ${e.alcance!.trim()}, ${p.inicio!}, ${p.fin!})
+      returning id, folio`;
+    await tx`
+      insert into ordenes_trabajo_precios (orden_trabajo_id, empresa_id, precio)
+      values (${ot!.id}, ${s.empresaId}, ${p.precio!})`;
+    ordenes.push({ ordenId: ot!.id, folio: ot!.folio });
+  }
+  return { ok: true, ordenes };
+}
+
+/** Emite una sola orden de trabajo (emitirOrdenesTrabajo con una partida). */
+export async function emitirOrdenTrabajo(
+  tx: Tx,
+  entrada: z.input<typeof EntradaOrden>,
+  ahora = new Date(),
+): Promise<ResultadoOrdenTrabajo> {
+  const { obraId, subId, alcance, confirmado, ...partida } = validarEntrada(EntradaOrden, entrada);
+  const r = await emitirOrdenesTrabajo(
+    tx,
+    { obraId, subId, alcance, confirmado, partidas: [partida] },
+    ahora,
+  );
+  return r.ok ? { ok: true, ...r.ordenes[0]! } : r;
 }
 
 /**
@@ -360,14 +407,12 @@ export async function registrarPagoSub(
       obra_id: string;
       sub_id: string;
       estado: string;
-      confirmada: boolean;
       aprobada: boolean;
       precio: string | null;
       pagado: string;
     }[]
   >`
-    select ot.obra_id, ot.subcontratista_id as sub_id, ot.estado, ot.confirmada_en is not null as confirmada,
-           ot.aprobada_en is not null as aprobada, pr.precio,
+    select ot.obra_id, ot.subcontratista_id as sub_id, ot.estado, ot.aprobada_en is not null as aprobada, pr.precio,
            (select coalesce(sum(p.monto), 0) from pagos_sub p where p.orden_trabajo_id = ot.id and p.estado = 'vigente')
              as pagado
     from ordenes_trabajo ot left join ordenes_trabajo_precios pr on pr.orden_trabajo_id = ot.id
@@ -381,7 +426,7 @@ export async function registrarPagoSub(
   const pagado = Number(ot.pagado);
   const r = validarPagoSub(
     { monto: e.monto ?? null, concepto: e.concepto! },
-    { confirmada: ot.confirmada, aprobada: ot.aprobada, precio, pagado },
+    { aprobada: ot.aprobada, precio, pagado },
     papeles,
     e.confirmado,
   );
@@ -406,8 +451,7 @@ const EntradaReprogramar = z.object({
 /**
  * Reprograma una orden cuando el sub no llegó o cambió la fecha (legacy: duReprogramarOT), en vez de cancelarla y
  * emitir otra. Si el sub no llegó, la falta queda contada (alimenta la tasa de presentación de subs); la orden
- * regresa a emitida, sin confirmación ni asistencia, para que el sub la confirme otra vez y el PM marque cuándo sí
- * llegue. No una aprobada, pagada o cancelada, ni en una obra cerrada. El cambio de fechas queda en correcciones con
+ * regresa a emitida, sin confirmación ni asistencia, para que el PM marque en su cierre cuándo sí llegue. No una aprobada, pagada o cancelada, ni en una obra cerrada. El cambio de fechas queda en correcciones con
  * su motivo. Errores: `faltan`, `falta_motivo`, `fin_antes_del_inicio`, `registro_no_encontrado`,
  * `orden_no_reprogramable`, `obra_cerrada`, `sin_cambios`.
  */

@@ -1,6 +1,6 @@
 'use client';
-// Emitir una orden de trabajo a un sub (D-074): por una partida, con alcance, fechas y precio cerrado. Si al sub le
-// faltan papeles, lo dice y deja emitirla de todos modos.
+// Emitir órdenes de trabajo a un sub (D-074; varias de una vez, D-091): se eligen sus partidas, cada una con sus fechas
+// y su precio cerrado, con un mismo alcance. Si al sub le faltan papeles, lo dice y deja emitirlas de todos modos.
 import type { Nombre, SubcontratosDeObra } from '@ijm/servidor';
 import { useLocale, useTranslations } from 'next-intl';
 import { startTransition, useActionState, useRef, useState } from 'react';
@@ -28,9 +28,11 @@ export function FormularioOrden({
   const [vuelta, setVuelta] = useState(0);
   const [visto, setVisto] = useState<typeof resultado>(null);
   const [confirmado, setConfirmado] = useState<string[]>([]);
+  const [elegidas, setElegidas] = useState<string[]>([]);
   const formulario = useRef<HTMLFormElement>(null);
 
-  const emitida = resultado?.ok && resultado.datos.ok && resultado !== visto ? resultado.datos : null;
+  const emitidas =
+    resultado?.ok && resultado.datos.ok && resultado !== visto ? resultado.datos.ordenes : null;
   const papeles = resultado?.ok && !resultado.datos.ok && resultado !== visto ? resultado.datos : null;
   const enviar = (extra: string[] = []) => {
     if (!formulario.current) return;
@@ -40,12 +42,14 @@ export function FormularioOrden({
     f.set('confirmado', todos.join(','));
     startTransition(() => accion(f));
   };
+  const elegir = (id: string, si: boolean) =>
+    setElegidas((xs) => (si ? [...xs, id] : xs.filter((x) => x !== id)));
 
-  if (emitida)
+  if (emitidas)
     return (
       <div className="flex flex-col gap-3">
         <p role="status" className="rounded-2xl bg-emerald-50 p-4 font-semibold text-emerald-900">
-          {t('emitida', { folio: emitida.folio })}
+          {t('emitidas', { n: emitidas.length, folios: emitidas.map((o) => o.folio).join(', ') })}
         </p>
         <button
           type="button"
@@ -53,6 +57,7 @@ export function FormularioOrden({
           onClick={() => {
             setVisto(resultado);
             setConfirmado([]);
+            setElegidas([]);
             setVuelta((v) => v + 1);
           }}
         >
@@ -68,6 +73,7 @@ export function FormularioOrden({
       </button>
     );
 
+  const campo = 'flex flex-col gap-1 text-sm font-medium text-slate-800';
   return (
     <form
       key={vuelta}
@@ -99,23 +105,72 @@ export function FormularioOrden({
           ))}
         </select>
       </label>
-      <label className={estilos.etiqueta}>
-        {t('partida')}
-        <select name="partida" required defaultValue="" className={estilos.campo}>
-          <option value="" disabled>
-            {t('elegirPartida')}
-          </option>
-          {espacios.map((e) => (
-            <optgroup key={e.id} label={e.nombre}>
-              {e.partidas.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {nombre(p.nombre)}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-      </label>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-base font-medium text-slate-800">{t('partidas')}</legend>
+        <p className="text-sm text-slate-600">{t('partidasAyuda')}</p>
+        {espacios.map((e) => (
+          <div key={e.id} className="flex flex-col gap-1">
+            <p className="text-sm font-semibold text-slate-700">{e.nombre}</p>
+            {e.partidas.map((p) => {
+              const si = elegidas.includes(p.id);
+              return (
+                <div
+                  key={p.id}
+                  role="group"
+                  aria-label={nombre(p.nombre)}
+                  className={si ? 'rounded-xl border border-marca/40 bg-marca/5 p-2' : ''}
+                >
+                  <label className="flex min-h-11 items-center gap-3">
+                    <input
+                      type="checkbox"
+                      name="partida"
+                      value={p.id}
+                      checked={si}
+                      onChange={(x) => elegir(p.id, x.target.checked)}
+                      className="size-5 accent-marca"
+                    />
+                    {nombre(p.nombre)}
+                  </label>
+                  {si ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className={campo}>
+                        {t('inicio')}
+                        <input
+                          name={`inicio-${p.id}`}
+                          type="date"
+                          required
+                          defaultValue={hoy}
+                          className={estilos.campo}
+                        />
+                      </label>
+                      <label className={campo}>
+                        {t('fin')}
+                        <input
+                          name={`fin-${p.id}`}
+                          type="date"
+                          required
+                          defaultValue={hoy}
+                          className={estilos.campo}
+                        />
+                      </label>
+                      <label className={`${campo} col-span-2`}>
+                        {t('precio')}
+                        <input
+                          name={`precio-${p.id}`}
+                          inputMode="decimal"
+                          required
+                          placeholder="0.00"
+                          className={estilos.campo}
+                        />
+                      </label>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </fieldset>
       <label className={estilos.etiqueta}>
         {t('alcance')}
         <textarea
@@ -126,20 +181,6 @@ export function FormularioOrden({
           placeholder={t('alcanceEjemplo')}
           className={`${estilos.campo} py-2`}
         />
-      </label>
-      <div className="grid grid-cols-2 gap-2">
-        <label className={estilos.etiqueta}>
-          {t('inicio')}
-          <input name="inicio" type="date" required defaultValue={hoy} className={estilos.campo} />
-        </label>
-        <label className={estilos.etiqueta}>
-          {t('fin')}
-          <input name="fin" type="date" required defaultValue={hoy} className={estilos.campo} />
-        </label>
-      </div>
-      <label className={estilos.etiqueta}>
-        {t('precio')}
-        <input name="precio" inputMode="decimal" required placeholder="0.00" className={estilos.campo} />
       </label>
       {papeles ? (
         <div role="alert" className="flex flex-col gap-2 rounded-xl bg-amber-50 p-3 text-amber-900">
@@ -164,8 +205,8 @@ export function FormularioOrden({
         >
           {t('cancelar')}
         </button>
-        <button type="submit" disabled={enviando} className={`${estilos.boton} flex-1`}>
-          {t('emitir')}
+        <button type="submit" disabled={enviando || !elegidas.length} className={`${estilos.boton} flex-1`}>
+          {elegidas.length > 1 ? t('emitirVarias', { n: elegidas.length }) : t('emitir')}
         </button>
       </div>
     </form>

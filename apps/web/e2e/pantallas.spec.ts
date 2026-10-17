@@ -7,7 +7,7 @@ import { expect, type Page, test } from '@playwright/test';
 import { en, entrar, es, OBRAS } from './apoyo';
 
 const PANTALLAS = [
-  ...['', 'cierre', 'calidad', 'gasto', 'aviso', 'ordenes', 'entrega', 'album'].map((p) =>
+  ...['', 'cierre', 'calidad', 'gasto', 'aviso', 'entrega', 'album'].map((p) =>
     p ? `/obras/${OBRAS.carlos}/${p}` : '/',
   ),
   '/obras/terminadas',

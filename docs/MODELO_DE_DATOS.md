@@ -92,7 +92,7 @@ Aquí son columnas (D-021).
 
 | Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `obras` | Proyectos | `folio`, `cliente`, `telefono_cliente` (10 dígitos o más), `direccion`, `pm_id`, `fecha_inicio`, `fecha_fin_estimada` (no antes del inicio), `fecha_fin_real`, `estado`, `notas` | lee y escribe | lee |
+| `obras` | Proyectos | `folio`, `cliente`, `telefono_cliente` (10 dígitos o más), `direccion`, `pm_id`, `fecha_inicio`, `fecha_fin_estimada` (no antes del inicio), `fecha_fin_real`, `estado` (`en_cierre` sigue en el tipo de la base pero no se usa, D-091), `notas` | lee y escribe | lee |
 | `obras_finanzas` 💲 | Proyectos.contrato_original | `contrato_original` (mayor a cero), `margen_objetivo` (el margen que se busca en la obra, D-084) | lee y escribe | — |
 | `espacios` | Areas | `tipo_espacio_id`, `nombre`, `orden`; **dos medidas** (D-014): `pies2_cotizados`, `pies_lineales_cotizados` y `pies2_verificados`, `pies_lineales_verificados` con `verificado_por` y `verificado_en` | lee y escribe | lee; verifica la medida mediante el servidor |
 | `partidas_obra` | Partidas_Obra | la copia de la plantilla (`plantilla_id` de origen) o una partida solo de esta obra; `estado` (`activa`/`quitada`) | lee y escribe | lee |
@@ -127,7 +127,7 @@ al inicio, 2 al final. El recibo de un gasto es una foto con `ref_tipo = 'gasto'
 
 | Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `ordenes_trabajo` | Ordenes_Trabajo | `folio`, `subcontratista_id`, `espacio_id`, `partida_obra_id` (obligatoria: sin partida no hay costeo), `alcance`, `inicio_programado`, `fin_programado`, `estado`, `confirmada_en`, `se_presento`, `aprobada_en`, `aprobada_por`, `faltas` | lee y escribe | emitidas, confirmadas y aprobadas (D-017); confirma, marca llegada y aprueba mediante el servidor |
+| `ordenes_trabajo` | Ordenes_Trabajo | `folio`, `subcontratista_id`, `espacio_id`, `partida_obra_id` (obligatoria: sin partida no hay costeo), `alcance`, `inicio_programado`, `fin_programado`, `estado`, `confirmada_en`, `se_presento`, `aprobada_en`, `aprobada_por`, `faltas` | lee y escribe | emitidas, confirmadas y aprobadas (D-017); su cierre del día marca la llegada (confirma) y, al terminar la partida, la aprueba (D-091) |
 | `ordenes_trabajo_precios` 💲 | Ordenes_Trabajo.precio | `precio` (cerrado, mayor a cero) | lee y escribe | — |
 | `pagos_sub` 💲 | Pagos_Sub | `folio`, `orden_trabajo_id`, `fecha`, `concepto` (`anticipo`/`parcial`/`liquidacion`), `monto`, `metodo`, `referencia`, `estado` | lee y escribe | — |
 | `ordenes_cambio` | Ordenes_Cambio | `folio`, `fecha_hallazgo`, `motivo`, `descripcion`, `dias_impacto`, `estado` (`propuesta`/`autorizada`/`rechazada`/`facturada`), `emitida_en`, `autorizada_en`, `facturada_en`, `condicion_pago`, `aviso_id` | lee y escribe | vista: autorizadas y facturadas, sin `condicion_pago` ni `facturada_en` (D-017) |
