@@ -143,7 +143,7 @@ aquí se deduce.
 | Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
 | `cobros` 💲 | Cobros | `folio`, `fecha`, `concepto`, `monto`, `metodo`, `referencia`, `estado`, `orden_cambio_id` (la orden de cambio que cobra; la deja facturada, D-089) | lee y escribe | — |
-| `entregas` | Entrega | una por obra: `fecha_entrega`, `garantia_meses`, `garantia_vence`, `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido`, `visita_11m` (los marca el dueño, D-090), `notas` | lee y escribe | vista: `fecha_entrega` |
+| `entregas` | Entrega | una por obra: `fecha_entrega`, `garantia_meses`, `garantia_vence`, `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido` (los marca el dueño, D-090), `visita_11m` (sin usar: el dueño no la quiere), `notas` | lee y escribe | vista: `fecha_entrega` |
 | `obras_cerradas` 💲 | Obras_Cerradas | la foto fija del cierre: fechas, días de ciclo, contrato, órdenes de cambio, presupuesto, materiales, cuadrilla, subcontratos, costo total, margen, desvío, cobrado, no calidad, días reportados, pies² | lee | — |
 | `historico_etapas` 💲 | (nueva) | al cerrar (D-085): por espacio y etapa, presupuestado, costo real, pies², pies lineales, costo por pie², y la unidad de la etapa con su costo por ella (D-086) | lee | — |
 | `historico_duraciones` | (nueva) | al cerrar: días planeados y reales de cada partida | lee | — |

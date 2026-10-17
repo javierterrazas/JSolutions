@@ -1557,21 +1557,18 @@
   "posventa": {
     "titulo": "After delivery",
     "volver": "Back home",
-    "intro": "What's left with delivered jobs: open warranty claims, reviews to request and the 11-month visits, before the warranty ends.",
+    "intro": "What's left with delivered jobs: open warranty claims and reviews to request.",
     "garantias": "Open warranty claims",
     "sinResena": "No review",
-    "visitas": "11-month visit",
     "reclamoDesde": "Since {dia}",
     "entregada": "Delivered on {dia}",
     "pedida": "Already requested",
-    "vence": "Warranty ends on {dia}",
     "nada": "Nothing pending.",
     "pasos": {
       "autoriza_fotos": "Allowed us to use the photos",
       "resena_pedida": "Review requested",
       "resena_recibida": "Left a review",
-      "referido_pedido": "Referral requested",
-      "visita_11m": "11-month visit done"
+      "referido_pedido": "Referral requested"
     }
   }
 }

@@ -4,8 +4,9 @@
 // - Un **retrabajo** es un error propio que se paga (repetir una hilada de tile): nace cerrado, con su costo y los días
 //   que se perdieron. No es una orden de cambio: esa la paga el cliente.
 // - Una **garantía** es un reclamo del cliente después de la entrega: nace abierta y se cierra con lo que costó.
-// - **Después de la entrega** (la "cosecha" del legacy): las fotos autorizadas, la reseña pedida y recibida, el
-//   referido y la visita de los 11 meses, en la entrega de la obra.
+// - **Después de la entrega** (la "cosecha" del legacy): las fotos autorizadas, la reseña pedida y recibida y el
+//   referido, en la entrega de la obra. La visita de los 11 meses del legacy no: el dueño no la quiere
+//   (`entregas.visita_11m` se queda sin usar).
 // Lleva dinero: solo el dueño o el administrador.
 import { type Dia, ErrorDeNegocio, sumarDias } from '@ijm/core';
 import { z } from 'zod';
@@ -136,7 +137,6 @@ export const PASOS_POSVENTA = [
   'resena_pedida',
   'resena_recibida',
   'referido_pedido',
-  'visita_11m',
 ] as const;
 export type PasoPosventa = (typeof PASOS_POSVENTA)[number];
 
@@ -156,7 +156,7 @@ export async function posventaDeObra(
   exigirDueno(await leerSesion(tx, ahora));
   const [e] = await tx<(Record<PasoPosventa, boolean> & { entrega: Dia; vence: Dia })[]>`
     select to_char(fecha_entrega, 'YYYY-MM-DD') as entrega, to_char(garantia_vence, 'YYYY-MM-DD') as vence,
-           autoriza_fotos, resena_pedida, resena_recibida, referido_pedido, visita_11m
+           autoriza_fotos, resena_pedida, resena_recibida, referido_pedido
     from entregas where obra_id = ${obraId}`;
   if (!e) return null;
   const { entrega, vence, ...pasos } = e;
@@ -195,8 +195,6 @@ export interface PendientesDePosventa {
     entrega: Dia;
     pedida: boolean;
   }[];
-  /** Las garantías que vencen en menos de 40 días sin la visita de los 11 meses. */
-  readonly visitas: readonly { obraId: string; folio: string; cliente: string; vence: Dia }[];
 }
 
 /** Lo que falta después de entregar, para el inicio del dueño (legacy: la cosecha y las garantías abiertas). */
@@ -214,11 +212,5 @@ export async function pendientesDePosventa(tx: Tx, ahora = new Date()): Promise<
     where o.estado = 'entregada' and not e.resena_recibida and e.fecha_entrega <= ${sumarDias(s.hoy, -3)}
       and e.garantia_vence >= ${s.hoy}
     order by e.fecha_entrega`;
-  const visitas = await tx<PendientesDePosventa['visitas'][number][]>`
-    select e.obra_id as "obraId", o.folio, o.cliente, to_char(e.garantia_vence, 'YYYY-MM-DD') as vence
-    from entregas e join obras o on o.id = e.obra_id
-    where o.estado = 'entregada' and not e.visita_11m
-      and e.garantia_vence between ${s.hoy} and ${sumarDias(s.hoy, 40)}
-    order by e.garantia_vence`;
-  return { garantias, sinResena, visitas };
+  return { garantias, sinResena };
 }

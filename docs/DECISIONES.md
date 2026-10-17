@@ -1581,7 +1581,7 @@ ya existían (del legacy: duNoCalidad, duGarantia, duCerrarGarantia y la cosecha
   fue de uno, el subcontratista. Una **garantía** es un reclamo del cliente después de la entrega: solo en una obra
   entregada, nace abierta y se cierra ("Atendida") con lo que costó.
 - **Después de la entrega** (en el cierre de la obra, ya cerrada): las fotos autorizadas, la reseña pedida y
-  recibida, el referido y la visita de los 11 meses, cada uno con un toque; y el botón para registrar un reclamo.
+  recibida y el referido, cada uno con un toque; y el botón para registrar un reclamo. La visita de los 11 meses del
+  legacy no: el dueño no la quiere (`entregas.visita_11m` se queda sin usar).
 - **En el inicio del dueño,** "N pendientes después de la entrega" (rojo si hay un reclamo abierto) lleva a
-  `/posventa`: los reclamos abiertos, las obras entregadas hace 3 días o más sin reseña y las garantías que vencen en
-  menos de 40 días sin la visita de los 11 meses.
+  `/posventa`: los reclamos abiertos y las obras entregadas hace 3 días o más sin reseña.

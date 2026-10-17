@@ -1,6 +1,5 @@
 // Después de la entrega, para el dueño (D-090; legacy: la cosecha y las garantías abiertas del tablero): los reclamos
-// de garantía abiertos, las obras entregadas sin reseña y las visitas de los 11 meses que se acercan. Cada una lleva a
-// donde se atiende.
+// de garantía abiertos y las obras entregadas sin reseña. Cada una lleva a donde se atiende.
 import { pendientesDePosventa } from '@ijm/servidor';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
@@ -40,7 +39,7 @@ export default async function Posventa() {
         <MensajeError problema={r} />
       </Marco>
     );
-  const { garantias, sinResena, visitas } = r.datos;
+  const { garantias, sinResena } = r.datos;
   // un día de negocio a mediodía, para que ninguna zona horaria lo mueva de día
   const dia = (d: string) => formato.dateTime(new Date(`${d}T12:00:00`), { dateStyle: 'medium' });
   const obra = (x: { folio: string; cliente: string }) => `${x.folio} · ${x.cliente}`;
@@ -74,19 +73,7 @@ export default async function Posventa() {
           ))}
         </Seccion>
       ) : null}
-      {visitas.length ? (
-        <Seccion titulo={t('visitas')}>
-          {visitas.map((x) => (
-            <Fila
-              key={x.obraId}
-              href={`/obras/${x.obraId}/cerrar`}
-              titulo={obra(x)}
-              detalle={t('vence', { dia: dia(x.vence) })}
-            />
-          ))}
-        </Seccion>
-      ) : null}
-      {!garantias.length && !sinResena.length && !visitas.length ? (
+      {!garantias.length && !sinResena.length ? (
         <p className="rounded-xl bg-emerald-50 p-3 text-emerald-900">{t('nada')}</p>
       ) : null}
     </Marco>

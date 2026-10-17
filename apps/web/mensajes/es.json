@@ -1557,21 +1557,18 @@
   "posventa": {
     "titulo": "Después de la entrega",
     "volver": "Volver al inicio",
-    "intro": "Lo que falta con las obras ya entregadas: los reclamos de garantía abiertos, las reseñas por pedir y las visitas de los 11 meses, antes de que venza la garantía.",
+    "intro": "Lo que falta con las obras ya entregadas: los reclamos de garantía abiertos y las reseñas por pedir.",
     "garantias": "Reclamos de garantía abiertos",
     "sinResena": "Sin reseña",
-    "visitas": "Visita de los 11 meses",
     "reclamoDesde": "Desde el {dia}",
     "entregada": "Entregada el {dia}",
     "pedida": "Ya se pidió",
-    "vence": "La garantía vence el {dia}",
     "nada": "No hay nada pendiente.",
     "pasos": {
       "autoriza_fotos": "Autorizó usar las fotos",
       "resena_pedida": "Se le pidió la reseña",
       "resena_recibida": "Dejó la reseña",
-      "referido_pedido": "Se le pidió un referido",
-      "visita_11m": "Visita de los 11 meses hecha"
+      "referido_pedido": "Se le pidió un referido"
     }
   }
 }

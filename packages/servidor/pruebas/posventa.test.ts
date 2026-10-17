@@ -87,10 +87,6 @@ describe('retrabajos y garantías', () => {
         true,
       );
       expect((await pendientesDePosventa(tx, semana)).sinResena).toEqual([]);
-
-      // un mes antes de que venza la garantía: la visita de los 11 meses
-      const mes11 = enAustin('2027-10-01', 9);
-      expect((await pendientesDePosventa(tx, mes11)).visitas.map((x) => x.folio)).toEqual(['OB-003']);
     }));
 
   it('el PM no lo ve', () =>

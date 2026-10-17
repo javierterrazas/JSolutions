@@ -1,6 +1,6 @@
 'use client';
-// Después de la entrega (D-090; legacy: la cosecha): las fotos autorizadas, la reseña pedida y recibida, el referido y
-// la visita de los 11 meses. Cada paso se marca o desmarca con un toque.
+// Después de la entrega (D-090; legacy: la cosecha): las fotos autorizadas, la reseña pedida y recibida y el referido.
+// Cada paso se marca o desmarca con un toque.
 import type { PASOS_POSVENTA as Pasos, PasoPosventa } from '@ijm/servidor';
 import { useTranslations } from 'next-intl';
 import { useOptimistic, useState, useTransition } from 'react';
@@ -14,7 +14,6 @@ const PASOS = [
   'resena_pedida',
   'resena_recibida',
   'referido_pedido',
-  'visita_11m',
 ] as const satisfies typeof Pasos;
 
 export function PasosPosventa({

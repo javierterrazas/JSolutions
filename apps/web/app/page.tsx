@@ -35,11 +35,9 @@ export default async function Inicio() {
   // y los avisos de los PMs que esperan respuesta (D-050)
   const abiertos = yo.rol !== 'pm' ? await comoMiembro((tx) => avisosAbiertos(tx), acceso) : null;
   const avisos = abiertos?.ok ? abiertos.datos : [];
-  // las garantías abiertas, las reseñas por pedir y las visitas de los 11 meses (D-090)
+  // las garantías abiertas y las reseñas por pedir (D-090)
   const despues = yo.rol !== 'pm' ? await comoMiembro((tx) => pendientesDePosventa(tx), acceso) : null;
-  const porAtender = despues?.ok
-    ? despues.datos.garantias.length + despues.datos.sinResena.length + despues.datos.visitas.length
-    : 0;
+  const porAtender = despues?.ok ? despues.datos.garantias.length + despues.datos.sinResena.length : 0;
   // el plan de esta semana, para el cumplimiento: se congela la primera vez que el dueño abre la app en la semana
   // (D-079). Si falla, el inicio se muestra igual: se vuelve a intentar al abrir otra vez.
   if (yo.rol !== 'pm')
