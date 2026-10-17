@@ -18,7 +18,8 @@
     "indicadores": "Indicadores",
     "miEmpresa": "Mi empresa",
     "plataforma": "Plataforma",
-    "historico": "Histórico"
+    "historico": "Histórico",
+    "posventa": "{n, plural, one {# pendiente después de la entrega} other {# pendientes después de la entrega}}"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -157,7 +158,7 @@
     "foto_invalida": "La foto no se pudo leer.",
     "foto_no_subida": "La foto no se subió.",
     "foto_no_comprometida": "Esa foto no corresponde a este cierre.",
-    "registro_no_encontrado": "No se encontró el cierre.",
+    "registro_no_encontrado": "No se encontró el registro.",
     "correccion_sin_senal": "Para corregir un cierre se necesita señal. Inténtalo cuando haya.",
     "sesion_vencida": "Tu sesión venció: escribe tu PIN y vuelve a intentarlo.",
     "falta_motivo": "Escribe qué corregiste.",
@@ -234,7 +235,10 @@
     "obra_sin_arrancar": "La obra todavía no arranca: no se puede cerrar.",
     "falta_orden_cambio": "Elige cuál orden de cambio se cobra.",
     "orden_no_autorizada": "Esa orden de cambio no está aprobada por el cliente.",
-    "concepto_orden_cambio": "El cobro de una orden de cambio no cambia de concepto: anúlalo y regístralo de nuevo."
+    "concepto_orden_cambio": "El cobro de una orden de cambio no cambia de concepto: anúlalo y regístralo de nuevo.",
+    "garantia_sin_entrega": "Las garantías se registran ya entregada la obra.",
+    "ya_cerrado": "Ya estaba atendido.",
+    "sin_entrega": "Esta obra todavía no se entrega."
   },
   "obras": {
     "titulo": "Obras",
@@ -906,7 +910,8 @@
     "margenEsperado": "Margen esperado: {pct}",
     "margenProyectado": "Si lo que falta sale como se presupuestó: {pct}",
     "cerrarObra": "Cerrar la obra",
-    "verCierre": "Ver el cierre de la obra"
+    "verCierre": "Ver el cierre de la obra",
+    "retrabajos": "Retrabajos y garantías"
   },
   "datosObra": {
     "titulo": "Datos de la obra",
@@ -1466,7 +1471,10 @@
     "confirmar": "Falta algo grave (arriba). ¿La cierras de todos modos?",
     "cerrarDeTodosModos": "Cerrar de todos modos",
     "cerrada": "Obra cerrada. Su resumen y su histórico quedaron guardados.",
-    "sinArrancar": "La obra todavía no arranca: no se puede cerrar."
+    "sinArrancar": "La obra todavía no arranca: no se puede cerrar.",
+    "despues": "Después de la entrega",
+    "garantiaHasta": "Garantía hasta el {dia}.",
+    "reclamo": "Registrar un reclamo de garantía"
   },
   "historico": {
     "titulo": "Histórico",
@@ -1504,5 +1512,66 @@
     "lineaObra": "{tipo} · entregada el {entrega} · {dias}",
     "lineaObraDinero": "Contrato {contrato} · Costo {costo} · Desviación {desviacion}",
     "lineaObraGarantia": "{reclamos, plural, =0 {Sin reclamos} one {# reclamo} other {# reclamos}} ({costo}) · {resena, select, si {dejó reseña} other {sin reseña}}"
+  },
+  "retrabajos": {
+    "titulo": "Retrabajos y garantías",
+    "volver": "Volver al seguimiento",
+    "intro": "Un retrabajo es un error nuestro que se paga, como repetir una hilada de tile; no es una orden de cambio, esa la paga el cliente. Una garantía es un reclamo del cliente después de la entrega. Su costo sale en los indicadores y en el cierre de la obra.",
+    "nuevo": "Registrar",
+    "tipo": "Tipo",
+    "tipos": {
+      "retrabajo": "Retrabajo",
+      "garantia": "Garantía"
+    },
+    "ayudaRetrabajo": "Ya se hizo: pon lo que costó y los días que se perdieron.",
+    "ayudaGarantia": "Queda abierta hasta que se atienda; ahí pones lo que costó.",
+    "garantiaAlEntregar": "Las garantías se registran ya entregada la obra.",
+    "descripcion": "¿Qué pasó?",
+    "causa": "Causa",
+    "sinCausa": "Sin definir",
+    "causas": {
+      "error_instalacion": "Error de instalación",
+      "error_especificacion": "Error de especificación",
+      "error_estimacion": "Error de estimación",
+      "material_defectuoso": "Material defectuoso",
+      "falta_supervision": "Falta de supervisión"
+    },
+    "sub": "Subcontratista",
+    "sinSub": "Fue nuestro",
+    "costo": "Costo",
+    "dias": "Días perdidos",
+    "registrarRetrabajo": "Registrar retrabajo",
+    "registrarGarantia": "Registrar reclamo",
+    "registrado": "Registrado: {folio}.",
+    "otro": "Registrar otro",
+    "registrados": "Registrados: {n} · {total}",
+    "ninguno": "Esta obra no tiene retrabajos ni garantías.",
+    "encabezadoRegistro": "{folio} · {tipo}",
+    "separador": " · ",
+    "diasPerdidos": "{n, plural, one {# día perdido} other {# días perdidos}}",
+    "abierta": "Abierta: falta atenderla.",
+    "costoAtender": "Lo que costó",
+    "cerrarGarantia": "Atendida",
+    "atendida": "Atendida el {dia}."
+  },
+  "posventa": {
+    "titulo": "Después de la entrega",
+    "volver": "Volver al inicio",
+    "intro": "Lo que falta con las obras ya entregadas: los reclamos de garantía abiertos, las reseñas por pedir y las visitas de los 11 meses, antes de que venza la garantía.",
+    "garantias": "Reclamos de garantía abiertos",
+    "sinResena": "Sin reseña",
+    "visitas": "Visita de los 11 meses",
+    "reclamoDesde": "Desde el {dia}",
+    "entregada": "Entregada el {dia}",
+    "pedida": "Ya se pidió",
+    "vence": "La garantía vence el {dia}",
+    "nada": "No hay nada pendiente.",
+    "pasos": {
+      "autoriza_fotos": "Autorizó usar las fotos",
+      "resena_pedida": "Se le pidió la reseña",
+      "resena_recibida": "Dejó la reseña",
+      "referido_pedido": "Se le pidió un referido",
+      "visita_11m": "Visita de los 11 meses hecha"
+    }
   }
 }

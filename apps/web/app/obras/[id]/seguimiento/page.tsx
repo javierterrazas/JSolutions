@@ -149,9 +149,16 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
         </Link>
         <Link
           href={`/obras/${s.obra.id}/subcontratos`}
-          className={`${estilos.botonSecundario} col-span-2 flex items-center justify-center px-2 text-center`}
+          className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
         >
           {t('subcontratos')}
+        </Link>
+        {/* los errores propios que se pagan y los reclamos de garantía (D-090) */}
+        <Link
+          href={`/obras/${s.obra.id}/retrabajos`}
+          className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
+        >
+          {t('retrabajos')}
         </Link>
         {/* cerrar la obra al entregarla, o ver su cierre (D-085) */}
         {['en_obra', 'en_cierre', 'entregada'].includes(s.obra.estado) ? (

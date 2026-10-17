@@ -31,6 +31,7 @@ export * from './plan-semanal';
 export * from './plataforma';
 export * from './cierre-obra';
 export * from './historico';
+export * from './posventa';
 export * from './marca';
 export * from './correcciones';
 export * from './acceso';
