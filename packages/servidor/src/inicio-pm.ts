@@ -19,6 +19,7 @@ import {
   rachaDeCierres,
   type Responsable,
   semanaDelPM,
+  sumarDias,
 } from '@ijm/core';
 import type { Tx } from './conexion';
 import type { Nombre } from './consultas-obra';
@@ -27,7 +28,7 @@ import { leerSesion } from './sesion';
 /** Los días laborables que muestra la semana del PM: con el sábado, seis (D-028). */
 export const DIAS_SEMANA_PM = 6;
 
-export type EstadoObra = 'sin_presupuesto' | 'lista_para_arranque' | 'en_obra' | 'en_cierre';
+export type EstadoObra = 'sin_presupuesto' | 'lista_para_arranque' | 'en_obra';
 
 export interface ObraDelPm {
   readonly id: string;
@@ -69,7 +70,8 @@ export interface InicioPm {
   readonly racha: number;
   readonly obras: readonly ObraDelPm[];
   readonly semana: readonly DiaDeLaSemana[];
-  readonly porConfirmar: readonly {
+  /** Los subs que llegan en los próximos 2 días (o ya debían llegar) y el PM no ha marcado: para llamarles (D-091). */
+  readonly subsPorLlegar: readonly {
     obraId: string;
     obra: string;
     folio: string;
@@ -113,7 +115,7 @@ export interface InicioPm {
   }[];
 }
 
-const VACIO = { porConfirmar: [], cambios: [], avisosAbiertos: [], respuestas: [], sinRecibo: [] } as const;
+const VACIO = { subsPorLlegar: [], cambios: [], avisosAbiertos: [], respuestas: [], sinRecibo: [] } as const;
 
 export async function inicioDelPm(tx: Tx, ahora = new Date()): Promise<InicioPm> {
   const s = await leerSesion(tx, ahora);
@@ -183,11 +185,11 @@ export async function inicioDelPm(tx: Tx, ahora = new Date()): Promise<InicioPm>
       estado: OrdenSemana['estado'];
       inicio: Dia | null;
       fin: Dia | null;
-      confirmada: boolean;
+      sinMarcar: boolean;
     }[]
   >`
     select o.id, o.folio, o.obra_id, coalesce(s.nombre, '') as sub, s.telefono, o.partida_obra_id as partida, o.estado,
-           o.inicio_programado as inicio, o.fin_programado as fin, o.confirmada_en is not null as confirmada
+           o.inicio_programado as inicio, o.fin_programado as fin, o.se_presento is null as "sinMarcar"
     from ordenes_trabajo o left join subcontratistas_pm s on s.id = o.subcontratista_id
     where o.obra_id = any(${ids})`;
   const cambios = await tx<
@@ -365,8 +367,14 @@ export async function inicioDelPm(tx: Tx, ahora = new Date()): Promise<InicioPm>
     racha,
     obras: lista,
     semana,
-    porConfirmar: ordenes
-      .filter((x) => x.estado === 'emitida' && !x.confirmada && x.inicio)
+    subsPorLlegar: ordenes
+      .filter(
+        (x) =>
+          ['emitida', 'confirmada'].includes(x.estado) &&
+          x.sinMarcar &&
+          x.inicio &&
+          x.inicio <= sumarDias(hoy, 2),
+      )
       .sort((a, b) => (a.inicio! < b.inicio! ? -1 : 1))
       .map((x) => ({
         obraId: x.obra_id,

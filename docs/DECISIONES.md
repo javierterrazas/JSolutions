@@ -1585,3 +1585,24 @@ ya existían (del legacy: duNoCalidad, duGarantia, duCerrarGarantia y la cosecha
   legacy no: el dueño no la quiere (`entregas.visita_11m` se queda sin usar).
 - **En el inicio del dueño,** "N pendientes después de la entrega" (rojo si hay un reclamo abierto) lleva a
   `/posventa`: los reclamos abiertos y las obras entregadas hace 3 días o más sin reseña.
+
+## D-091 · Sin "en cierre" y órdenes de trabajo con menos toques
+
+**Hallazgos de la simulación (D-088), decisión del dueño:**
+- **El estado "en cierre" se quita de la app:** ningún paso llevaba una obra ahí y nadie lo leía. La etapa entre
+  terminar el trabajo y cerrar la obra ya la cubren el punch list del PM y la revisión de "Cerrar la obra". La obra va
+  de "en obra" a "entregada". El valor sigue en el tipo de la base (Postgres no quita valores de un enum sin rehacerlo),
+  sin uso.
+- **Órdenes de trabajo: de 6 toques a 3** (emitir → confirmar → anticipo → llegó → aprobar → liquidar):
+  - **El dueño emite varias de una vez:** elige el sub, palomea sus partidas (cada una con sus fechas y su precio) y
+    escribe un alcance para todas (`emitirOrdenesTrabajo`; todas o ninguna).
+  - **El PM ya no confirma ni aprueba a mano** (se quitan `/obras/[id]/ordenes`, `confirmarOrden` y `aprobarOrden`):
+    en su cierre del día, marcar que el sub **llegó** confirma la orden, y **terminar la partida** (ya con su
+    inspección) la **aprueba** a su nombre: el trabajo se recibió. Si ese cierre se anula y la partida ya no queda
+    terminada, la orden regresa (si no se ha liquidado).
+  - **El dueño liquida con un toque:** la orden recibida dice "Trabajo recibido: falta pagarle $X" y el botón
+    "Liquidar $X" (hoy, por transferencia). El anticipo y los pagos parciales siguen en "Registrar pago".
+  - El pago ya no avisa de "anticipo antes de que el sub confirme": esa confirmación ya no existe. Sigue el aviso de
+    liquidar antes de recibir el trabajo.
+  - **En el inicio del PM**, "Subs por llegar" (los de los próximos 2 días, o los que ya debían llegar, sin marcar),
+    con su teléfono para llamarles; es un recordatorio, no un paso.

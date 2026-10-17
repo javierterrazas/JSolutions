@@ -37,7 +37,7 @@ export interface ObraDeLaLista {
   readonly folio: string;
   readonly cliente: string;
   readonly direccion: string;
-  readonly estado: 'sin_presupuesto' | 'lista_para_arranque' | 'en_obra' | 'en_cierre' | 'entregada';
+  readonly estado: 'sin_presupuesto' | 'lista_para_arranque' | 'en_obra' | 'entregada';
   readonly pm: string;
   readonly inicio: string;
 }

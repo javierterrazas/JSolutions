@@ -170,7 +170,7 @@
     "tipo_sin_partidas": "Escribe al menos una partida, una por renglón.",
     "tipo_generales": "Generales de obra no se da de baja: toda obra lo tiene.",
     "partida_sin_nombre": "Escribe el nombre de la partida.",
-    "partida_repetida": "Ese tipo ya tiene una partida con ese nombre.",
+    "partida_repetida": "Elegiste la misma partida dos veces.",
     "partida_inexistente": "Esa partida ya no existe.",
     "falta_oficio": "Elige el oficio del subcontratista.",
     "etapa_inexistente": "Esa etapa ya no existe.",
@@ -250,7 +250,6 @@
       "sin_presupuesto": "Sin presupuesto",
       "lista_para_arranque": "Lista para arranque",
       "en_obra": "En obra",
-      "en_cierre": "En cierre",
       "entregada": "Entregada"
     },
     "encabezado": "{folio} · {cliente}",
@@ -338,8 +337,6 @@
     "libre": "Nada programado",
     "llega": "Llega {sub} ({obra})",
     "partidaDia": "{obra} · {espacio} · {partida}",
-    "porConfirmar": "Órdenes por confirmar",
-    "ordenConfirmar": "{sub} · empieza el {dia} ({obra})",
     "cambios": "Órdenes de cambio aprobadas",
     "cambio": "{descripcion} ({obra})",
     "cambioDias": "{n, plural, =0 {sin días extra} one {+# día} other {+# días}}",
@@ -354,8 +351,7 @@
     "estado": {
       "sin_presupuesto": "Sin presupuesto",
       "lista_para_arranque": "Lista para arranque",
-      "en_obra": "En obra",
-      "en_cierre": "En cierre"
+      "en_obra": "En obra"
     },
     "cerrarDia": "Cerrar el día",
     "cerrarEseDia": "Cerrar ese día",
@@ -373,7 +369,10 @@
     "marcarHecha": "Marcar hecha",
     "guardando": "Guardando…",
     "cancelar": "Cancelar",
-    "cambioHecho": "✓ Hecha el {dia}"
+    "cambioHecho": "✓ Hecha el {dia}",
+    "subsPorLlegar": "Subs por llegar",
+    "subsPorLlegarAyuda": "Llámales para confirmar que vienen. En tu cierre del día marcas si llegaron.",
+    "subLlega": "{sub} · {dia} ({obra})"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -687,22 +686,6 @@
     "respuesta": "Tu respuesta para el PM",
     "respuestaEjemplo": "Sí, reemplázala antes de cerrar. Ya pedí el material; llega mañana.",
     "contestar": "Contestar y cerrar el aviso"
-  },
-  "ordenes": {
-    "titulo": "Subs",
-    "volver": "Volver al inicio",
-    "obra": "{folio} · {cliente}",
-    "nada": "No hay órdenes de trabajo que esperen algo de ti en esta obra.",
-    "porConfirmar": "Falta que confirmen",
-    "porConfirmarAyuda": "Llámale al sub antes de la fecha. Cuando confirme por escrito que llega, márcalo aquí.",
-    "porAprobar": "Subs en obra",
-    "porAprobarAyuda": "Ya llegaron. Cuando caminen juntos el trabajo terminado, apruébalo: con eso el sub cobra.",
-    "oficioPartida": "{oficio} · {espacio} · {partida}",
-    "fechas": "Del {inicio} al {fin}",
-    "llamar": "Llamar · {telefono}",
-    "confirmo": "Confirmó por escrito",
-    "aprobar": "Aprobar el trabajo",
-    "confirmarAprobar": "¿Aprobar el trabajo? El sub podrá cobrar. Solo apruebas lo que ya caminaste con él."
   },
   "entrega": {
     "titulo": "Entrega",
@@ -1183,7 +1166,6 @@
     "fin": "Fin",
     "emitir": "Emitir orden",
     "cancelar": "Cancelar",
-    "emitida": "Orden {folio} emitida. El PM la ve para confirmarla.",
     "otra": "Emitir otra",
     "papelesConfirmar": "Antes de mandar a este sub a la obra:",
     "emitirAsi": "Emitirla de todos modos",
@@ -1203,8 +1185,8 @@
     "pagoLinea": "{dia} · {concepto}",
     "estados": {
       "emitida": "Emitida",
-      "confirmada": "Confirmada",
-      "aprobada": "Aprobada",
+      "confirmada": "Llegó",
+      "aprobada": "Recibida",
       "pagada": "Pagada",
       "cancelada": "Cancelada"
     },
@@ -1222,8 +1204,7 @@
       "tarjeta_empresa": "Tarjeta de la empresa"
     },
     "avisos": {
-      "sin_confirmar": "Este sub todavía no confirma la orden por escrito. Un anticipo antes de la confirmación es dinero sin compromiso.",
-      "sin_aprobar": "El PM todavía no aprueba el trabajo. La regla es que el sub cobra contra trabajo aprobado.",
+      "sin_aprobar": "Su partida todavía no se termina. La regla es que el sub cobra contra trabajo recibido.",
       "papeles": "Este sub no tiene sus papeles en regla (seguro o licencia). Pagarle así te deja expuesto.",
       "sobrepago": "Con este pago llevarías {total} contra una orden de {precio}. Si es trabajo extra, va en una orden de cambio."
     },
@@ -1233,9 +1214,15 @@
     "nuevoInicio": "Nuevo inicio",
     "nuevoFin": "Nuevo fin",
     "motivo": "Motivo",
-    "reprogramarAyuda": "Mueve las fechas en vez de cancelar la orden. El sub la tiene que confirmar otra vez; si no llegó, la falta queda contada.",
-    "reprogramada": "Orden reprogramada. El PM la ve para que el sub la confirme otra vez.",
-    "reprogramadaConFalta": "Orden reprogramada y la falta del sub, contada."
+    "reprogramarAyuda": "Mueve las fechas en vez de cancelar la orden. Si el sub no llegó, la falta queda contada.",
+    "reprogramada": "Orden reprogramada. El PM marcará en su cierre cuando el sub llegue.",
+    "reprogramadaConFalta": "Orden reprogramada y la falta del sub, contada.",
+    "partidas": "Partidas",
+    "partidasAyuda": "Palomea las que hace este sub; cada una con sus fechas y su precio.",
+    "emitidas": "{n, plural, one {Orden emitida: {folios}.} other {# órdenes emitidas: {folios}.}}",
+    "emitirVarias": "Emitir {n} órdenes",
+    "porLiquidar": "Trabajo recibido: falta pagarle {monto}.",
+    "liquidar": "Liquidar {monto}"
   },
   "indicadores": {
     "titulo": "Indicadores",

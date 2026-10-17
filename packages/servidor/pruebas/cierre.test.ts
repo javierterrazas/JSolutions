@@ -3,6 +3,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
+  anularCierre,
   cerrarDia,
   cierreDeClave,
   cierreParaCorregir,
@@ -66,6 +67,31 @@ describe('cerrar el día', () => {
       expect(mo).toEqual({ partida_obra_id: d.rough.id, espacio_id: d.rough.espacio, cantidad: '8.00' });
       const [o] = await tx`select estado, se_presento from ordenes_trabajo where id = ${ot.id}`;
       expect(o).toEqual({ estado: 'confirmada', se_presento: true });
+    }));
+
+  it('terminar la partida aprueba la orden del sub a nombre del PM; anular ese cierre la regresa (D-091)', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const d = await datosDe(tx, OBRAS.a1Carlos);
+      const ot = d.ordenes.find((o) => o.estado === 'emitida')!;
+      const r = await cerrarDia(
+        tx,
+        {
+          obraId: OBRAS.a1Carlos,
+          partidas: [d.rough.id],
+          terminadas: [d.rough.id],
+          subs: [{ ordenTrabajoId: ot.id, llego: true }],
+          fotosPorSubir: 1,
+        },
+        LUNES,
+      );
+      const [o] = await tx`
+        select estado, aprobada_por, confirmada_en is not null as confirmada from ordenes_trabajo where id = ${ot.id}`;
+      expect(o).toEqual({ estado: 'aprobada', aprobada_por: MIEMBROS.carlos, confirmada: true });
+
+      await como(tx, USUARIOS.duenoA);
+      await anularCierre(tx, { bitacoraId: r.bitacoraId, motivo: 'Se cerró en la obra equivocada' }, LUNES);
+      const [despues] = await tx`select estado, aprobada_en from ordenes_trabajo where id = ${ot.id}`;
+      expect(despues).toEqual({ estado: 'confirmada', aprobada_en: null });
     }));
 
   it('un solo cierre por obra y día', () =>

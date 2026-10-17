@@ -1,13 +1,13 @@
 'use server';
-// Los subcontratos de una obra (D-074): el dueño emite órdenes de trabajo, las cancela, y les paga a los subs contra
-// su orden, confirmando los avisos uno por uno.
+// Los subcontratos de una obra (D-074): el dueño emite órdenes de trabajo (varias de una vez, D-091), las cancela, y
+// les paga a los subs contra su orden, confirmando los avisos uno por uno; la recibida se liquida con un toque.
 import {
   anular,
   cancelarOrdenTrabajo,
-  emitirOrdenTrabajo,
+  emitirOrdenesTrabajo,
   registrarPagoSub,
   reprogramarOrdenTrabajo,
-  type ResultadoOrdenTrabajo,
+  type ResultadoOrdenesTrabajo,
   type ResultadoPagoSub,
 } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
@@ -30,21 +30,28 @@ function refrescar(obraId: string) {
   revalidatePath(`/obras/${obraId}/seguimiento`);
 }
 
+/** Las partidas elegidas, cada una con sus campos `inicio-<id>`, `fin-<id>` y `precio-<id>`. */
 export async function emitirOrden(
   obraId: string,
-  _previo: Resultado<ResultadoOrdenTrabajo> | null,
+  _previo: Resultado<ResultadoOrdenesTrabajo> | null,
   f: FormData,
-): Promise<Resultado<ResultadoOrdenTrabajo>> {
+): Promise<Resultado<ResultadoOrdenesTrabajo>> {
+  const partidas = f.getAll('partida').map((x) => {
+    const id = String(x);
+    return {
+      partidaId: id,
+      inicio: texto(f, `inicio-${id}`),
+      fin: texto(f, `fin-${id}`),
+      precio: numero(f, `precio-${id}`),
+    };
+  });
   const r = await comoMiembro(
     (tx) =>
-      emitirOrdenTrabajo(tx, {
+      emitirOrdenesTrabajo(tx, {
         obraId,
         subId: texto(f, 'sub'),
-        partidaId: texto(f, 'partida'),
         alcance: texto(f, 'alcance'),
-        inicio: texto(f, 'inicio'),
-        fin: texto(f, 'fin'),
-        precio: numero(f, 'precio'),
+        partidas,
         confirmado: confirmado(f),
       }),
     await exigirDueno(),

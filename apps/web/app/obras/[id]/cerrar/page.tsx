@@ -120,7 +120,7 @@ export default async function CerrarObra({ params }: { params: Promise<{ id: str
               <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">{t('sinPendientes')}</p>
             )}
           </section>
-          {['en_obra', 'en_cierre'].includes(c.obra.estado) ? (
+          {c.obra.estado === 'en_obra' ? (
             <FormularioCierreObra obraId={c.obra.id} hoy={c.hoy} inicio={c.obra.inicio} />
           ) : (
             <p className="text-sm text-slate-600">{t('sinArrancar')}</p>

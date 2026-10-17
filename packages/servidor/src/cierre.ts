@@ -1,6 +1,8 @@
 // Cerrar el día (legacy: pm/servidor.js pmCerrarDia). Un solo paso: en qué partidas se trabajó, cuáles quedaron
 // terminadas, quién de la cuadrilla estuvo, si llegó el sub y cuántas fotos se suben (ahora o después). Escribe
 // bitácora, partidas, subs, avance y cuadrilla, y la obra arranca con su primer día de trabajo. Todo o nada.
+// Las órdenes de los subs se mueven solas (D-091): la que llega queda confirmada, y la de una partida que se termina
+// (con su inspección) queda aprobada a nombre del PM: el trabajo del sub se recibió y se le puede liquidar.
 import {
   type Dia,
   diaDeCaptura,
@@ -238,7 +240,8 @@ export async function cerrarDia(
     for (const x of e.subs) {
       await tx`update ordenes_trabajo
                set se_presento = ${x.llego},
-                   estado = case when ${x.llego} and estado = 'emitida' then 'confirmada'::estado_orden_trabajo else estado end
+                   estado = case when ${x.llego} and estado = 'emitida' then 'confirmada'::estado_orden_trabajo else estado end,
+                   confirmada_en = case when ${x.llego} then coalesce(confirmada_en, ${ahora}) else confirmada_en end
                where id = ${x.ordenTrabajoId}`;
     }
   }
@@ -264,6 +267,13 @@ export async function cerrarDia(
         dia: elDia,
       })),
     )}`;
+  }
+
+  // la partida terminada (ya pasó su inspección): el trabajo del sub se recibió y su orden queda aprobada (D-091)
+  if (terminadas.length) {
+    await tx`
+      update ordenes_trabajo set estado = 'aprobada', aprobada_en = ${ahora}, aprobada_por = ${s.miembroId}
+      where obra_id = ${e.obraId} and partida_obra_id in ${tx(terminadas)} and estado in ('emitida', 'confirmada')`;
   }
 
   // cuadrilla: un renglón por trabajador; sin partida, la primera del día

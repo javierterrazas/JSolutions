@@ -4,6 +4,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import {
   anular,
   cancelarOrdenTrabajo,
+  emitirOrdenesTrabajo,
   emitirOrdenTrabajo,
   registrarPagoSub,
   reprogramarOrdenTrabajo,
@@ -69,6 +70,43 @@ describe('los subcontratos de una obra', () => {
       expect(
         (await emitirOrdenTrabajo(tx, orden(sub.id, partida.id, { confirmado: ['papeles'] }), LUNES)).ok,
       ).toBe(true);
+    }));
+
+  it('emite de una vez las órdenes de un sub para varias partidas, cada una con sus fechas y su precio (D-091)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const { d, sub, partida } = await datos(tx);
+      const otra = d.espacios.flatMap((e) => e.partidas).find((p) => p.id !== partida.id)!;
+      const lote = {
+        obraId: OBRAS.a1Carlos,
+        subId: sub.id,
+        alcance: 'Plomería del baño completa',
+        partidas: [
+          { partidaId: partida.id, inicio: '2026-10-20', fin: '2026-10-21', precio: 450 },
+          { partidaId: otra.id, inicio: '2026-10-28', fin: '2026-10-28', precio: 300 },
+        ],
+      };
+      const r = await emitirOrdenesTrabajo(tx, lote, LUNES);
+      expect(r.ok && r.ordenes.map((o) => o.folio)).toEqual([
+        expect.stringMatching(/^OT-\d{4}$/),
+        expect.stringMatching(/^OT-\d{4}$/),
+      ]);
+      expect((await datos(tx)).d.comprometido).toBe(2300 + 750);
+      // todas o ninguna: una mal y no se guarda ninguna
+      expect(
+        await codigo(tx, () =>
+          emitirOrdenesTrabajo(
+            tx,
+            { ...lote, partidas: [lote.partidas[0]!, { ...lote.partidas[1]!, precio: 0 }] },
+            LUNES,
+          ),
+        ),
+      ).toBe('precio_cerrado');
+      expect(
+        await codigo(tx, () =>
+          emitirOrdenesTrabajo(tx, { ...lote, partidas: [lote.partidas[0]!, lote.partidas[0]!] }, LUNES),
+        ),
+      ).toBe('partida_repetida');
+      expect((await datos(tx)).d.comprometido).toBe(2300 + 750);
     }));
 
   it('rechaza lo que no cuadra; no a un sub de baja ni en una obra entregada; el PM no emite', () =>

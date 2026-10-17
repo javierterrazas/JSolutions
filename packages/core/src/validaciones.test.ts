@@ -420,10 +420,11 @@ describe('la orden de trabajo y el pago a un sub', () => {
   });
 
   it('cada advertencia del pago se confirma por separado, en el orden del legacy', () => {
-    const orden = { confirmada: false, aprobada: false, precio: 2000, pagado: 500 };
+    const orden = { aprobada: false, precio: 2000, pagado: 500 };
+    // un anticipo ya no pide que el sub haya confirmado (D-091)
     expect(validarPagoSub({ monto: 500, concepto: 'anticipo' }, orden, [], [])).toEqual({
-      ok: false,
-      confirmar: 'sin_confirmar',
+      ok: true,
+      liquida: false,
     });
     expect(validarPagoSub({ monto: 1500, concepto: 'liquidacion' }, orden, vencido, ['sin_aprobar'])).toEqual(
       {

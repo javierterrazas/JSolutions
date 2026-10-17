@@ -603,7 +603,7 @@ export async function seguimientoDeObra(
     select id, folio, to_char(dia, 'YYYY-MM-DD') as dia, sin_trabajo, motivo_sin_trabajo as motivo, tardio, incidencia
     from bitacora where obra_id = ${e.obraId} and estado = 'vigente'`;
   const porDia = new Map(bitacora.map((b) => [b.dia, b]));
-  const arranco = ['en_obra', 'en_cierre', 'entregada'].includes(c.o.estado);
+  const arranco = ['en_obra', 'entregada'].includes(c.o.estado);
   const todos: Dia[] = [];
   for (let d = hasta; d >= c.o.inicio; d = sumarDias(d, -1))
     if (porDia.has(d) || (arranco && esLaborable(d, s.calendario))) todos.push(d);

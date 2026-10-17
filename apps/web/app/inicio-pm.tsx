@@ -184,17 +184,16 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
         </Seccion>
       ) : null}
 
-      {datos.porConfirmar.length ? (
-        <Seccion titulo={t('porConfirmar')}>
+      {datos.subsPorLlegar.length ? (
+        <Seccion titulo={t('subsPorLlegar')}>
+          <p className="text-sm text-slate-600">{t('subsPorLlegarAyuda')}</p>
           <ul className="flex flex-col gap-2">
-            {datos.porConfirmar.map((o) => (
+            {datos.subsPorLlegar.map((o) => (
               <li
                 key={o.folio}
                 className={`${estilos.tarjeta} flex items-center justify-between gap-2 text-sm`}
               >
-                <Link href={`/obras/${o.obraId}/ordenes`} className="text-marca underline">
-                  {t('ordenConfirmar', { sub: o.sub, dia: dia(o.inicio), obra: o.obra })}
-                </Link>
+                <span>{t('subLlega', { sub: o.sub, dia: dia(o.inicio), obra: o.obra })}</span>
                 {o.telefono ? (
                   <a href={`tel:${o.telefono}`} className="font-medium text-marca underline">
                     {o.telefono}

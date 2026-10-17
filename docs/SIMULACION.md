@@ -64,7 +64,7 @@ cada lunes, y al terminar: medida verificada, punch, cobro final y cierre de la 
 2. **Resuelto en D-090.** **No hay dónde registrar retrabajos ni reclamos de garantía** (`no_calidad`). Los indicadores de costo de no calidad
    y garantías siempre salen en cero, y el histórico no puede contar reclamos.
 3. **Resuelto en D-090.** **No hay dónde marcar la reseña del cliente** (ni pedirla). El indicador de reseñas sale en rojo para siempre.
-4. **El estado "en cierre" no se usa:** ninguna acción lleva una obra a "en cierre"; pasa de "en obra" a "entregada" al
+4. **Resuelto en D-091.** **El estado "en cierre" no se usa:** ninguna acción lleva una obra a "en cierre"; pasa de "en obra" a "entregada" al
    cerrarla. Sobra, o falta el paso (por ejemplo, al terminar todas las partidas).
 
 ## Hallazgos: datos que se guardan y nadie llena
@@ -80,7 +80,7 @@ cada lunes, y al terminar: medida verificada, punch, cobro final y cierre de la 
 
 - **La revisión de gastos del PM:** con el límite de $300, el dueño tuvo que revisar ~14% de los gastos del PM (uno o
   dos al día con 10 obras). *Propuesta:* subir el límite o revisar en lote.
-- **Las órdenes de trabajo llevan muchos toques:** emitir (dueño) → confirmar (PM) → anticipo (dueño) → reportar que
+- **Resuelto en D-091.** **Las órdenes de trabajo llevan muchos toques:** emitir (dueño) → confirmar (PM) → anticipo (dueño) → reportar que
   llegó (PM, cada día) → aprobar (PM) → liquidar (dueño). Seis pasos por partida subcontratada; en un baño son 6
   partidas. *Propuesta:* que el PM confirme y apruebe desde su cierre del día, y que la liquidación se proponga sola al
   aprobar.
