@@ -30,11 +30,13 @@ export async function registrarPago(
         monto: numero(f, 'monto'),
         metodo: texto(f, 'metodo') as never,
         referencia: texto(f, 'referencia'),
+        ordenCambioId: texto(f, 'ordenCambio'),
       }),
     await exigirDueno(),
   );
   if (!r.ok) return r;
   refrescar(obraId);
+  revalidatePath(`/obras/${obraId}/cambios`);
   return { ok: true, datos: { folio: r.datos.folio } };
 }
 

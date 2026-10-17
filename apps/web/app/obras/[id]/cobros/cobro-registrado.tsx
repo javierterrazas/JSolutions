@@ -40,7 +40,12 @@ export function CobroRegistrado({
     <li className={`${estilos.tarjeta} flex flex-col gap-2`}>
       <div className="flex items-baseline justify-between gap-2">
         <p className="font-semibold">
-          {t('montoConcepto', { monto: dinero.format(c.monto), concepto: t(`conceptos.${c.concepto}`) })}
+          {t('montoConcepto', {
+            monto: dinero.format(c.monto),
+            concepto: c.ordenCambio
+              ? t('conceptoOrden', { folio: c.ordenCambio })
+              : t(`conceptos.${c.concepto}`),
+          })}
         </p>
         <p className="shrink-0 text-xs text-slate-500">{c.folio}</p>
       </div>

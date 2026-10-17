@@ -40,6 +40,7 @@ describe('los cobros al cliente', () => {
           monto: 7200,
           metodo: 'zelle',
           referencia: null,
+          ordenCambio: null,
         },
       ]);
     }));
@@ -104,5 +105,50 @@ describe('los cobros al cliente', () => {
       expect(await codigo(tx, () => registrarCobro(tx, pago(), LUNES))).toBe('solo_dueno');
       expect(await codigo(tx, () => cobrosDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))).toBe('solo_dueno');
       expect(await tx`select id from cobros`).toHaveLength(0);
+    }));
+
+  it('el cobro de una orden de cambio dice cuál y la deja facturada; anulado, regresa a autorizada (D-089)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const [oc] = await tx<{ id: string }[]>`
+        select id from ordenes_cambio where obra_id = ${OBRAS.a1Carlos} and estado = 'autorizada'`;
+      const [propuesta] = await tx<{ id: string }[]>`
+        select id from ordenes_cambio where obra_id = ${OBRAS.a1Carlos} and estado = 'propuesta'`;
+      const base = {
+        obraId: OBRAS.a1Carlos,
+        concepto: 'orden_cambio' as const,
+        monto: 500,
+        metodo: 'zelle' as const,
+      };
+      expect(await codigo(tx, () => registrarCobro(tx, base, LUNES))).toBe('falta_orden_cambio');
+      expect(
+        await codigo(tx, () => registrarCobro(tx, { ...base, ordenCambioId: propuesta!.id }, LUNES)),
+      ).toBe('orden_no_autorizada');
+
+      // la mitad al aprobar: ya queda facturada, con lo cobrado a cuenta
+      const { cobroId } = await registrarCobro(tx, { ...base, ordenCambioId: oc!.id }, LUNES);
+      const [e] =
+        await tx`select estado, facturada_en is not null as f from ordenes_cambio where id = ${oc!.id}`;
+      expect(e).toEqual({ estado: 'facturada', f: true });
+      const c = (await cobrosDeObra(tx, { obraId: OBRAS.a1Carlos }, LUNES))!;
+      expect(c.ordenes.find((x) => x.id === oc!.id)).toMatchObject({
+        cobrado: 500,
+        precio: 1000,
+        facturada: true,
+      });
+      expect(c.cobros.find((x) => x.id === cobroId)!.ordenCambio).toMatch(/^OC-/);
+
+      // no cambia de concepto: se anula; anulado, la orden ya no está facturada
+      expect(
+        await codigo(tx, () =>
+          corregir(
+            tx,
+            { tabla: 'cobros', registroId: cobroId, cambios: { concepto: 'hito' }, motivo: 'Me equivoqué' },
+            LUNES,
+          ),
+        ),
+      ).toBe('concepto_orden_cambio');
+      await anular(tx, { tabla: 'cobros', registroId: cobroId, motivo: 'Se registró dos veces' }, LUNES);
+      const [d] = await tx`select estado, facturada_en from ordenes_cambio where id = ${oc!.id}`;
+      expect(d).toEqual({ estado: 'autorizada', facturada_en: null });
     }));
 });

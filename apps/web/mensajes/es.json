@@ -231,7 +231,10 @@
     "celular_ya_registrado": "Ese celular ya es de un miembro.",
     "margen_invalido": "El margen tiene que ser de 0% a menos de 100%.",
     "obra_ya_cerrada": "Esa obra ya está cerrada.",
-    "obra_sin_arrancar": "La obra todavía no arranca: no se puede cerrar."
+    "obra_sin_arrancar": "La obra todavía no arranca: no se puede cerrar.",
+    "falta_orden_cambio": "Elige cuál orden de cambio se cobra.",
+    "orden_no_autorizada": "Esa orden de cambio no está aprobada por el cliente.",
+    "concepto_orden_cambio": "El cobro de una orden de cambio no cambia de concepto: anúlalo y regístralo de nuevo."
   },
   "obras": {
     "titulo": "Obras",
@@ -1107,7 +1110,11 @@
       "cheque": "Cheque",
       "efectivo": "Efectivo",
       "tarjeta": "Tarjeta"
-    }
+    },
+    "ordenCambio": "Orden de cambio",
+    "ordenOpcion": "{folio} · {descripcion} (falta {falta})",
+    "sinOrdenes": "Esta obra no tiene órdenes de cambio aprobadas por cobrar.",
+    "conceptoOrden": "Orden de cambio {folio}"
   },
   "subcontratistas": {
     "titulo": "Subcontratistas",
@@ -1442,7 +1449,7 @@
     "avisos": {
       "falta_cobrar": "Faltan {monto} por cobrarle al cliente.",
       "oc_sin_responder": "{n, plural, one {Hay # orden de cambio sin respuesta del cliente.} other {Hay # órdenes de cambio sin respuesta del cliente.}}",
-      "oc_sin_facturar": "{n, plural, one {Hay # orden de cambio aprobada sin facturar.} other {Hay # órdenes de cambio aprobadas sin facturar.}}",
+      "oc_sin_facturar": "{n, plural, one {Hay # orden de cambio aprobada sin cobrar.} other {Hay # órdenes de cambio aprobadas sin cobrar.}}",
       "partidas_sin_terminar": "{n, plural, one {# partida sin terminar: termínala, o quítala si no se hizo en esta obra.} other {# partidas sin terminar: termínalas, o quítalas si no se hicieron en esta obra.}}",
       "subs_por_pagar": "Faltan {monto} por pagarle a los subcontratistas.",
       "ot_sin_aprobar": "{n, plural, one {Hay # orden de trabajo que el PM no aprobó.} other {Hay # órdenes de trabajo que el PM no aprobó.}}",

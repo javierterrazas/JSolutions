@@ -50,3 +50,17 @@ test('el dueño registra, corrige y anula un pago del cliente; el cliente ve sus
   await expect(pagos).not.toContainText(/Zelle|Cheque/);
   await cliente.close();
 });
+
+test('el cobro de una orden de cambio dice cuál y trae lo que le falta (D-089)', async ({ page }) => {
+  await entrar(page, 'dueno');
+  await page.goto(`/obras/${OBRAS.carlos}/cobros`);
+  await page
+    .getByRole('combobox', { name: es.cobros.concepto })
+    .selectOption({ label: es.cobros.conceptos.orden_cambio });
+  // elige la primera orden aprobada y pone lo que le falta por cobrar ($1,000 en el seed)
+  await expect(page.getByRole('combobox', { name: es.cobros.ordenCambio })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: es.cobros.monto })).toHaveValue('1000');
+  await page.getByRole('button', { name: es.cobros.registrar }).click();
+  await expect(page.getByRole('status')).toContainText(/Pago registrado: COB-\d{4}/);
+  await expect(page.getByText(/Orden de cambio OC-\d+/).first()).toBeVisible();
+});

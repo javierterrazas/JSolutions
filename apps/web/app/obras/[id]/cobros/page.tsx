@@ -66,7 +66,7 @@ export default async function Cobros({ params }: PageProps<'/obras/[id]/cobros'>
       {c.cerrada ? (
         <p className={estilos.tarjeta}>{t('cerrada')}</p>
       ) : (
-        <FormularioCobro obraId={c.obra.id} hoy={c.hoy} />
+        <FormularioCobro obraId={c.obra.id} hoy={c.hoy} ordenes={c.ordenes} />
       )}
 
       <section className="flex flex-col gap-3">
