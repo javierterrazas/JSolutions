@@ -61,15 +61,16 @@ cada lunes, y al terminar: medida verificada, punch, cobro final y cierre de la 
    concepto "orden de cambio"). Al cerrar cada obra, la revisión avisa como grave "órdenes aprobadas sin facturar",
    aunque ya se hayan cobrado. *Propuesta:* que el cobro de una orden de cambio la marque facturada (eligiendo la
    orden al cobrar), o quitar el estado "facturada" y el aviso.
-2. **No hay dónde registrar retrabajos ni reclamos de garantía** (`no_calidad`). Los indicadores de costo de no calidad
+2. **Resuelto en D-090.** **No hay dónde registrar retrabajos ni reclamos de garantía** (`no_calidad`). Los indicadores de costo de no calidad
    y garantías siempre salen en cero, y el histórico no puede contar reclamos.
-3. **No hay dónde marcar la reseña del cliente** (ni pedirla). El indicador de reseñas sale en rojo para siempre.
+3. **Resuelto en D-090.** **No hay dónde marcar la reseña del cliente** (ni pedirla). El indicador de reseñas sale en rojo para siempre.
 4. **El estado "en cierre" no se usa:** ninguna acción lleva una obra a "en cierre"; pasa de "en obra" a "entregada" al
    cerrarla. Sobra, o falta el paso (por ejemplo, al terminar todas las partidas).
 
 ## Hallazgos: datos que se guardan y nadie llena
 
-- En la entrega: `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido`, `visita_11m` (del legacy).
+- **Resuelto en D-090.** En la entrega: `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido`,
+  `visita_11m` (del legacy).
 - En los miembros: `tarjeta_ultimos4` (se copia a cada gasto, pero no hay pantalla para ponerla).
 - La fecha de entrega se guarda tres veces (`obras.fecha_fin_real`, `entregas.fecha_entrega`,
   `obras_cerradas.fecha_fin_real`); el contrato dos (`obras_finanzas`, `obras_cerradas`, este como foto al cierre, que

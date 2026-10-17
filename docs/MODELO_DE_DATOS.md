@@ -132,7 +132,7 @@ al inicio, 2 al final. El recibo de un gasto es una foto con `ref_tipo = 'gasto'
 | `pagos_sub` 💲 | Pagos_Sub | `folio`, `orden_trabajo_id`, `fecha`, `concepto` (`anticipo`/`parcial`/`liquidacion`), `monto`, `metodo`, `referencia`, `estado` | lee y escribe | — |
 | `ordenes_cambio` | Ordenes_Cambio | `folio`, `fecha_hallazgo`, `motivo`, `descripcion`, `dias_impacto`, `estado` (`propuesta`/`autorizada`/`rechazada`/`facturada`), `emitida_en`, `autorizada_en`, `facturada_en`, `condicion_pago`, `aviso_id` | lee y escribe | vista: autorizadas y facturadas, sin `condicion_pago` ni `facturada_en` (D-017) |
 | `ordenes_cambio_montos` 💲 | Ordenes_Cambio | `costo_estimado`, `precio_cliente` | lee y escribe | — |
-| `no_calidad` 💲 | No_Calidad | `folio`, `tipo` (`retrabajo`/`garantia`), `causa`, `subcontratista_id`, `costo`, `dias_perdidos`, `descripcion`, `estado`, `cerrado_en` | lee y escribe | — |
+| `no_calidad` 💲 | No_Calidad | `folio`, `tipo` (`retrabajo`/`garantia`), `causa`, `subcontratista_id`, `costo`, `dias_perdidos`, `descripcion`, `estado`, `cerrado_en`; el retrabajo nace cerrado, la garantía abierta y solo en una obra entregada (D-090) | lee y escribe | — |
 
 El margen de una orden de cambio se calcula (`(precio - costo) / precio`); no se guarda. Si de un aviso sale una
 orden de cambio, la orden apunta al aviso (`aviso_id`); el legacy marcaba además el aviso (`genera_oc`), que
@@ -143,7 +143,7 @@ aquí se deduce.
 | Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
 | `cobros` 💲 | Cobros | `folio`, `fecha`, `concepto`, `monto`, `metodo`, `referencia`, `estado`, `orden_cambio_id` (la orden de cambio que cobra; la deja facturada, D-089) | lee y escribe | — |
-| `entregas` | Entrega | una por obra: `fecha_entrega`, `garantia_meses`, `garantia_vence`, `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido`, `visita_11m`, `notas` | lee y escribe | vista: `fecha_entrega` |
+| `entregas` | Entrega | una por obra: `fecha_entrega`, `garantia_meses`, `garantia_vence`, `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido` (los marca el dueño, D-090), `visita_11m` (sin usar: el dueño no la quiere), `notas` | lee y escribe | vista: `fecha_entrega` |
 | `obras_cerradas` 💲 | Obras_Cerradas | la foto fija del cierre: fechas, días de ciclo, contrato, órdenes de cambio, presupuesto, materiales, cuadrilla, subcontratos, costo total, margen, desvío, cobrado, no calidad, días reportados, pies² | lee | — |
 | `historico_etapas` 💲 | (nueva) | al cerrar (D-085): por espacio y etapa, presupuestado, costo real, pies², pies lineales, costo por pie², y la unidad de la etapa con su costo por ella (D-086) | lee | — |
 | `historico_duraciones` | (nueva) | al cerrar: días planeados y reales de cada partida | lee | — |

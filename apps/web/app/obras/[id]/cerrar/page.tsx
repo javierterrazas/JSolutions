@@ -1,13 +1,15 @@
 // Cerrar una obra al entregarla (D-085; legacy: el precierre y el cierre del dueño): sus números finales, lo que falta
 // (lo grave primero) y el cierre, que guarda su resumen y su histórico para aprender a cotizar. Ya cerrada, su
-// resumen. Solo el dueño o el administrador.
-import { revisionDeCierre } from '@ijm/servidor';
+// resumen y lo de después de la entrega (D-090). Solo el dueño o el administrador.
+import { posventaDeObra, revisionDeCierre } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../../componentes/marco';
 import { FormularioCierreObra } from './formulario-cierre-obra';
+import { PasosPosventa } from './pasos-posventa';
 
 const COLOR = {
   alto: 'bg-red-50 text-red-900',
@@ -21,6 +23,7 @@ export default async function CerrarObra({ params }: { params: Promise<{ id: str
   const r = await comoMiembro((tx) => revisionDeCierre(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();
   const c = r.datos;
+  const despues = c.cerrada ? await comoMiembro((tx) => posventaDeObra(tx, { obraId: id }), acceso) : null;
   const [t, to, idioma, formato] = await Promise.all([
     getTranslations('cerrarObra'),
     getTranslations('obras'),
@@ -75,6 +78,22 @@ export default async function CerrarObra({ params }: { params: Promise<{ id: str
           </div>
         ))}
       </dl>
+
+      {despues?.ok && despues.datos ? (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-xl font-bold text-marca">{t('despues')}</h2>
+          <p className="text-sm text-slate-700">
+            {t('garantiaHasta', { dia: dia(despues.datos.garantiaVence) })}
+          </p>
+          <PasosPosventa obraId={c.obra.id} pasos={despues.datos.pasos} />
+          <Link
+            href={`/obras/${c.obra.id}/retrabajos`}
+            className={`${estilos.botonSecundario} flex items-center justify-center`}
+          >
+            {t('reclamo')}
+          </Link>
+        </section>
+      ) : null}
 
       {!c.cerrada ? (
         <>

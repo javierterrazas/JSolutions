@@ -18,7 +18,8 @@
     "indicadores": "Metrics",
     "miEmpresa": "My company",
     "plataforma": "Platform",
-    "historico": "History"
+    "historico": "History",
+    "posventa": "{n, plural, one {# pending after delivery} other {# pending after delivery}}"
   },
   "idioma": {
     "etiqueta": "Language",
@@ -157,7 +158,7 @@
     "foto_invalida": "The photo couldn't be read.",
     "foto_no_subida": "The photo didn't upload.",
     "foto_no_comprometida": "That photo doesn't belong to this close.",
-    "registro_no_encontrado": "The close wasn't found.",
+    "registro_no_encontrado": "That record wasn't found.",
     "correccion_sin_senal": "Correcting a close needs signal. Try again when you have it.",
     "sesion_vencida": "Your session expired: enter your PIN and try again.",
     "falta_motivo": "Write what you corrected.",
@@ -234,7 +235,10 @@
     "obra_sin_arrancar": "The job hasn't started yet: it can't be closed.",
     "falta_orden_cambio": "Choose which change order is being collected.",
     "orden_no_autorizada": "That change order isn't approved by the client.",
-    "concepto_orden_cambio": "A change order payment can't change its concept: void it and record it again."
+    "concepto_orden_cambio": "A change order payment can't change its concept: void it and record it again.",
+    "garantia_sin_entrega": "Warranty claims are recorded once the job is delivered.",
+    "ya_cerrado": "It was already handled.",
+    "sin_entrega": "This job hasn't been delivered yet."
   },
   "obras": {
     "titulo": "Jobs",
@@ -906,7 +910,8 @@
     "margenEsperado": "Expected margin: {pct}",
     "margenProyectado": "If the rest goes as budgeted: {pct}",
     "cerrarObra": "Close the job",
-    "verCierre": "See the job closing"
+    "verCierre": "See the job closing",
+    "retrabajos": "Rework and warranty"
   },
   "datosObra": {
     "titulo": "Job details",
@@ -1466,7 +1471,10 @@
     "confirmar": "Something serious is missing (above). Close it anyway?",
     "cerrarDeTodosModos": "Close anyway",
     "cerrada": "Job closed. Its summary and history were saved.",
-    "sinArrancar": "The job hasn't started yet: it can't be closed."
+    "sinArrancar": "The job hasn't started yet: it can't be closed.",
+    "despues": "After delivery",
+    "garantiaHasta": "Warranty until {dia}.",
+    "reclamo": "Record a warranty claim"
   },
   "historico": {
     "titulo": "History",
@@ -1504,5 +1512,63 @@
     "lineaObra": "{tipo} · delivered {entrega} · {dias}",
     "lineaObraDinero": "Contract {contrato} · Cost {costo} · Deviation {desviacion}",
     "lineaObraGarantia": "{reclamos, plural, =0 {No claims} one {# claim} other {# claims}} ({costo}) · {resena, select, si {left a review} other {no review}}"
+  },
+  "retrabajos": {
+    "titulo": "Rework and warranty",
+    "volver": "Back to the job",
+    "intro": "Rework is our own mistake that we pay for, like redoing a row of tile; it isn't a change order, which the client pays. A warranty claim is the client's complaint after delivery. Its cost shows in the indicators and in the job's closeout.",
+    "nuevo": "Record",
+    "tipo": "Type",
+    "tipos": {
+      "retrabajo": "Rework",
+      "garantia": "Warranty"
+    },
+    "ayudaRetrabajo": "Already done: enter what it cost and the days lost.",
+    "ayudaGarantia": "It stays open until it's handled; then you enter what it cost.",
+    "garantiaAlEntregar": "Warranty claims are recorded once the job is delivered.",
+    "descripcion": "What happened?",
+    "causa": "Cause",
+    "sinCausa": "Not defined",
+    "causas": {
+      "error_instalacion": "Installation error",
+      "error_especificacion": "Specification error",
+      "error_estimacion": "Estimating error",
+      "material_defectuoso": "Defective material",
+      "falta_supervision": "Lack of supervision"
+    },
+    "sub": "Subcontractor",
+    "sinSub": "It was ours",
+    "costo": "Cost",
+    "dias": "Days lost",
+    "registrarRetrabajo": "Record rework",
+    "registrarGarantia": "Record claim",
+    "registrado": "Recorded: {folio}.",
+    "otro": "Record another",
+    "registrados": "Recorded: {n} · {total}",
+    "ninguno": "This job has no rework or warranty claims.",
+    "encabezadoRegistro": "{folio} · {tipo}",
+    "separador": " · ",
+    "diasPerdidos": "{n, plural, one {# day lost} other {# days lost}}",
+    "abierta": "Open: still to be handled.",
+    "costoAtender": "What it cost",
+    "cerrarGarantia": "Handled",
+    "atendida": "Handled on {dia}."
+  },
+  "posventa": {
+    "titulo": "After delivery",
+    "volver": "Back home",
+    "intro": "What's left with delivered jobs: open warranty claims and reviews to request.",
+    "garantias": "Open warranty claims",
+    "sinResena": "No review",
+    "reclamoDesde": "Since {dia}",
+    "entregada": "Delivered on {dia}",
+    "pedida": "Already requested",
+    "nada": "Nothing pending.",
+    "pasos": {
+      "autoriza_fotos": "Allowed us to use the photos",
+      "resena_pedida": "Review requested",
+      "resena_recibida": "Left a review",
+      "referido_pedido": "Referral requested"
+    }
   }
 }
