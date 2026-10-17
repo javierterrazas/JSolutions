@@ -84,7 +84,7 @@ cada lunes, y al terminar: medida verificada, punch, cobro final y cierre de la 
   llegó (PM, cada día) → aprobar (PM) → liquidar (dueño). Seis pasos por partida subcontratada; en un baño son 6
   partidas. *Propuesta:* que el PM confirme y apruebe desde su cierre del día, y que la liquidación se proponga sola al
   aprobar.
-- **La misma inspección sirve para dos partidas:** en la cocina, gabinetes y countertop usan el mismo punto de control
+- **Resuelto en D-092 (se queda así, a propósito).** **La misma inspección sirve para dos partidas:** en la cocina, gabinetes y countertop usan el mismo punto de control
   (PC4); la app deja terminar la segunda con la inspección de la primera. *Propuesta:* exigir una inspección hecha
   después de que la partida arrancó.
 - **La cuadrilla no alcanzó** un día con 8 trabajadores para 9 obras activas, y la app no lo anticipa: no hay vista de

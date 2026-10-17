@@ -257,6 +257,36 @@ describe('calidad', () => {
     );
   });
 
+  it('al volver a inspeccionar, la foto que ya se tomó la vez pasada cuenta (D-092)', () => {
+    const base = { puntos, noAplica: [], exigePruebaAgua: false, pruebaAguaSinFugas: false };
+    expect(fotosQuePide(puntos, ['p1', 'p2', 'p3'], [], ['p1'])).toEqual(['p3']);
+    expect(
+      calificarInspeccion({ ...base, cumple: ['p1', 'p2', 'p3'], fotos: 1, conFotoPrevia: ['p1'] }).resultado,
+    ).toBe('aprobado');
+  });
+
+  it('una inspección por punto y espacio: la aprobada sirve para todas sus partidas (D-092)', () => {
+    const aprobada = [
+      {
+        espacioId: 'cocina',
+        hitoId: 'PC4',
+        resultado: 'aprobado' as const,
+        realizadaEn: '2026-10-09T10:00:00Z',
+      },
+    ];
+    expect(
+      error(() =>
+        exigirInspecciones(
+          [
+            { partidaId: 'gabinetes', espacioId: 'cocina', hitoId: 'PC4' },
+            { partidaId: 'countertop', espacioId: 'cocina', hitoId: 'PC4' },
+          ],
+          aprobada,
+        ),
+      ),
+    ).toBeNull();
+  });
+
   it('qué preguntas piden foto: de las estándar, las 9 críticas, con o sin acentos; las de la empresa, lo suyo', () => {
     expect(pideFoto('Prueba de presión de plomería sostenida', false)).toBe(true);
     expect(pideFoto('Estructura visible sin dano por agua ni termita', false)).toBe(true);

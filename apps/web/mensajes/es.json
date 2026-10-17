@@ -578,7 +578,12 @@
     "faltaPrueba": "Falta la prueba de inundación",
     "ultimaConFuga": "La última prueba marcó fuga.",
     "pruebaComo": "Tapa el desagüe, llena la zona húmeda y toma la foto del nivel. Vuelve en 24 horas con otra foto.",
-    "arrancarPrueba": "Arrancar la prueba"
+    "arrancarPrueba": "Arrancar la prueba",
+    "todoCumple": "Todo cumple",
+    "soloFallaron": "{n, plural, one {Solo falta revisar lo que falló la vez pasada: # pregunta.} other {Solo falta revisar lo que falló la vez pasada: # preguntas.}} Lo demás queda como estaba, con sus fotos.",
+    "verTodas": "Ver las {n} preguntas",
+    "verSoloFallaron": "{n, plural, one {Ver solo la que falló} other {Ver solo las # que fallaron}}",
+    "noAplicaRecordado": "{n, plural, one {# pregunta ya viene en No aplica, como la última vez en un espacio de este tipo.} other {# preguntas ya vienen en No aplica, como la última vez en un espacio de este tipo.}}"
   },
   "gasto": {
     "titulo": "Gastos",
