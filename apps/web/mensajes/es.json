@@ -1591,7 +1591,10 @@
       "resena_pedida": "Se le pidió la reseña",
       "resena_recibida": "Dejó la reseña",
       "referido_pedido": "Se le pidió un referido"
-    }
+    },
+    "si": "Sí",
+    "no": "No",
+    "ayudaPasos": "Si el cliente no quiso, márcalo \"No\": queda resuelto y deja de salir en tus pendientes."
   },
   "semanaCuadrilla": {
     "titulo": "Horas de la semana",

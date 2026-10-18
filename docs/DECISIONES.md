@@ -1684,3 +1684,11 @@ dueño (`editarEmpresa`, función `plataforma_editar_empresa`, migración `20261
   viejo queda libre y el nuevo, apartado. Los dueños que entran con correo (los de antes) pueden quedarse sin celular,
   y su cuenta de Auth no se toca.
 - Cambiar a la persona dueña de la empresa (pasarla a otro) no está aquí: es otra cosa.
+
+## D-098 · Después de la entrega, también "No"
+
+**Lo pidió el dueño:** si el cliente no quiere dejar reseña (o no autoriza las fotos), el paso se quedaba sin marcar y
+la alerta de "sin reseña" seguía en sus pendientes. Ahora cada paso tiene "Sí" y "No": el "No" es que el cliente no
+quiso, queda resuelto y sale de los pendientes; tocar el que ya está marcado lo regresa a pendiente
+(`entregas.pasos_no`, migración `20261031000100_posventa_no`; `marcarPosventa` con `valor`). Los indicadores y el
+histórico siguen contando como reseña solo la que sí se recibió.

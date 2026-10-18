@@ -139,11 +139,13 @@ export const PASOS_POSVENTA = [
   'referido_pedido',
 ] as const;
 export type PasoPosventa = (typeof PASOS_POSVENTA)[number];
+/** Un paso: hecho ("sí"), resuelto en "no" (el cliente no quiso, D-098) o pendiente (null). */
+export type ValorPaso = 'si' | 'no' | null;
 
 export interface PosventaDeObra {
   readonly fechaEntrega: Dia;
   readonly garantiaVence: Dia;
-  readonly pasos: Readonly<Record<PasoPosventa, boolean>>;
+  readonly pasos: Readonly<Record<PasoPosventa, ValorPaso>>;
 }
 
 /** Lo hecho después de la entrega de una obra; null si no tiene entrega. */
@@ -154,27 +156,37 @@ export async function posventaDeObra(
 ): Promise<PosventaDeObra | null> {
   const { obraId } = validarEntrada(z.object({ obraId: uuid }), entrada);
   exigirDueno(await leerSesion(tx, ahora));
-  const [e] = await tx<(Record<PasoPosventa, boolean> & { entrega: Dia; vence: Dia })[]>`
+  const [e] = await tx<(Record<PasoPosventa, boolean> & { entrega: Dia; vence: Dia; no: PasoPosventa[] })[]>`
     select to_char(fecha_entrega, 'YYYY-MM-DD') as entrega, to_char(garantia_vence, 'YYYY-MM-DD') as vence,
-           autoriza_fotos, resena_pedida, resena_recibida, referido_pedido
+           autoriza_fotos, resena_pedida, resena_recibida, referido_pedido, pasos_no as no
     from entregas where obra_id = ${obraId}`;
   if (!e) return null;
-  const { entrega, vence, ...pasos } = e;
-  return { fechaEntrega: entrega, garantiaVence: vence, pasos };
+  const pasos = Object.fromEntries(
+    PASOS_POSVENTA.map((p) => [p, e[p] ? 'si' : e.no.includes(p) ? 'no' : null]),
+  ) as Record<PasoPosventa, ValorPaso>;
+  return { fechaEntrega: e.entrega, garantiaVence: e.vence, pasos };
 }
 
-/** Marca o desmarca un paso de después de la entrega. Error: `sin_entrega`. */
+/**
+ * Pone un paso de después de la entrega en "sí", en "no" (el cliente no quiso: queda resuelto y sale de los
+ * pendientes, D-098) o lo regresa a pendiente (null). Error: `sin_entrega`.
+ */
 export async function marcarPosventa(
   tx: Tx,
-  entrada: { obraId: string; paso: PasoPosventa; hecho: boolean },
+  entrada: { obraId: string; paso: PasoPosventa; valor: ValorPaso },
   ahora = new Date(),
 ): Promise<void> {
   const e = validarEntrada(
-    z.object({ obraId: uuid, paso: z.enum(PASOS_POSVENTA), hecho: z.boolean() }),
+    z.object({ obraId: uuid, paso: z.enum(PASOS_POSVENTA), valor: z.enum(['si', 'no']).nullable() }),
     entrada,
   );
   exigirDueno(await leerSesion(tx, ahora));
-  const r = await tx`update entregas set ${tx({ [e.paso]: e.hecho })} where obra_id = ${e.obraId}`;
+  const r = await tx`
+    update entregas
+    set ${tx({ [e.paso]: e.valor === 'si' })},
+        pasos_no = case when ${e.valor === 'no'} then array_append(array_remove(pasos_no, ${e.paso}), ${e.paso})
+                        else array_remove(pasos_no, ${e.paso}) end
+    where obra_id = ${e.obraId}`;
   if (!r.count) throw new ErrorDeNegocio('sin_entrega');
 }
 
@@ -187,7 +199,7 @@ export interface PendientesDePosventa {
     reclamo: string;
     desde: Date;
   }[];
-  /** Las obras entregadas hace 3 días o más sin reseña. */
+  /** Las obras entregadas hace 3 días o más sin reseña (ni marcada en "no", D-098). */
   readonly sinResena: readonly {
     obraId: string;
     folio: string;
@@ -209,7 +221,8 @@ export async function pendientesDePosventa(tx: Tx, ahora = new Date()): Promise<
     select e.obra_id as "obraId", o.folio, o.cliente, to_char(e.fecha_entrega, 'YYYY-MM-DD') as entrega,
            e.resena_pedida as pedida
     from entregas e join obras o on o.id = e.obra_id
-    where o.estado = 'entregada' and not e.resena_recibida and e.fecha_entrega <= ${sumarDias(s.hoy, -3)}
+    where o.estado = 'entregada' and not e.resena_recibida and not ('resena_recibida' = any(e.pasos_no))
+      and e.fecha_entrega <= ${sumarDias(s.hoy, -3)}
       and e.garantia_vence >= ${s.hoy}
     order by e.fecha_entrega`;
   return { garantias, sinResena };

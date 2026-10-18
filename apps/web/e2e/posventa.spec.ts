@@ -35,12 +35,29 @@ test('retrabajo en obra; cerrada, la reseña y un reclamo de garantía que se at
   // después de la entrega: la reseña se marca y se queda marcada
   await page.reload();
   await expect(page.getByRole('heading', { name: es.cerrarObra.despues })).toBeVisible();
-  const resena = page.getByRole('checkbox', { name: es.posventa.pasos.resena_pedida });
-  await resena.check();
-  await expect(resena).toBeChecked();
+  const resena = page
+    .getByRole('group', { name: es.posventa.pasos.resena_pedida })
+    .getByRole('button', { name: es.posventa.si });
+  await resena.click();
+  await expect(resena).toHaveAttribute('aria-pressed', 'true');
+  // el cliente no quiso dejar la reseña: "No", y queda resuelto (D-098)
+  const noDejo = page
+    .getByRole('group', { name: es.posventa.pasos.resena_recibida })
+    .getByRole('button', { name: es.posventa.no });
+  await noDejo.click();
+  await expect(noDejo).toHaveAttribute('aria-pressed', 'true');
   await page.waitForLoadState('networkidle');
   await page.reload();
-  await expect(page.getByRole('checkbox', { name: es.posventa.pasos.resena_pedida })).toBeChecked();
+  await expect(
+    page
+      .getByRole('group', { name: es.posventa.pasos.resena_pedida })
+      .getByRole('button', { name: es.posventa.si }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(
+    page
+      .getByRole('group', { name: es.posventa.pasos.resena_recibida })
+      .getByRole('button', { name: es.posventa.no }),
+  ).toHaveAttribute('aria-pressed', 'true');
 
   // un reclamo de garantía: nace abierto y sale en los pendientes
   await page.getByRole('link', { name: es.cerrarObra.reclamo }).click();

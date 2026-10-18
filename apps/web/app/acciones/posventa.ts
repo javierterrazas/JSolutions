@@ -1,6 +1,12 @@
 'use server';
 // Los retrabajos, las garantías y lo de después de la entrega (D-090). Llevan dinero: solo el dueño.
-import { cerrarGarantia, marcarPosventa, type PasoPosventa, registrarNoCalidad } from '@ijm/servidor';
+import {
+  cerrarGarantia,
+  marcarPosventa,
+  type PasoPosventa,
+  registrarNoCalidad,
+  type ValorPaso,
+} from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
 import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
 
@@ -59,9 +65,9 @@ export async function cerrarLaGarantia(
 export async function marcarPasoPosventa(
   obraId: string,
   paso: PasoPosventa,
-  hecho: boolean,
+  valor: ValorPaso,
 ): Promise<Resultado<void>> {
-  const r = await comoMiembro((tx) => marcarPosventa(tx, { obraId, paso, hecho }), await exigirDueno());
+  const r = await comoMiembro((tx) => marcarPosventa(tx, { obraId, paso, valor }), await exigirDueno());
   if (!r.ok) return r;
   refrescar(obraId);
   return { ok: true, datos: undefined };
