@@ -64,6 +64,34 @@ describe('la pantalla de cerrar el día', () => {
       expect(despues.subs).toEqual([]);
     }));
 
+  it('cada trabajador dice lo que ya lleva ese día en otras obras, aunque sean de otro PM (D-093)', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const lunes = enAustin('2026-10-12', 18);
+      const d = (await datosParaCierre(tx, { obraId: OBRAS.a1Carlos }, lunes))!;
+      const pedro = d.trabajadores.find((t) => t.nombre === 'Pedro')!;
+      expect(pedro.yaLleva).toBe(0);
+      const partida = d.espacios[0]!.partidas[0]!;
+      await cerrarDia(
+        tx,
+        {
+          obraId: OBRAS.a1Carlos,
+          partidas: [partida.id],
+          cuadrilla: [{ trabajadorId: pedro.id, cantidad: 10 }],
+          fotosPorSubir: 1,
+        },
+        lunes,
+      );
+      // en su propia obra no cuenta; en la de Luis, sí
+      expect(
+        (await datosParaCierre(tx, { obraId: OBRAS.a1Carlos }, lunes))!.trabajadores.find(
+          (t) => t.id === pedro.id,
+        )!.yaLleva,
+      ).toBe(0);
+      await como(tx, USUARIOS.luis);
+      const luis = (await datosParaCierre(tx, { obraId: OBRAS.a2Luis }, lunes))!;
+      expect(luis.trabajadores.find((t) => t.id === pedro.id)!.yaLleva).toBe(10);
+    }));
+
   it('la obra de otro PM no se abre', () =>
     probarComo(USUARIOS.luis, async (tx) => {
       expect(await datosParaCierre(tx, { obraId: OBRAS.a1Carlos }, enAustin('2026-10-08'))).toBeNull();

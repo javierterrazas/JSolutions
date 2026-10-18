@@ -33,6 +33,11 @@ export interface DatosCierre {
     nombre: string;
     puesto: string | null;
     tipoPago: 'hora' | 'dia';
+    /**
+     * Lo que ya lleva ese día en OTRAS obras (horas, o días si cobra por día), aunque sean de otro PM: para que el PM
+     * sepa cuánto le puede poner sin pasar de 16 horas o de un día (D-093).
+     */
+    yaLleva: number;
   }[];
   /** Las órdenes de trabajo cuyo sub se espera ese día y todavía no se reporta si llegó. */
   readonly subs: readonly {
@@ -125,6 +130,13 @@ export async function datosParaCierre(
     { id: string; nombre: string; puesto: string | null; tipo_pago: 'hora' | 'dia' }[]
   >`
     select id, nombre, puesto, tipo_pago from trabajadores where activo order by nombre`;
+  // lo que cada uno ya lleva ese día en otras obras de la empresa (la base suma todas, aunque no sean de este PM)
+  const yaLleva = new Map<string, number>();
+  for (const r of await tx<{ trabajador_id: string; obra_id: string; cantidad: string }[]>`
+    select trabajador_id, obra_id, cantidad from public.cuadrilla_del_dia(${elDia})`) {
+    if (r.obra_id !== obra.id)
+      yaLleva.set(r.trabajador_id, (yaLleva.get(r.trabajador_id) ?? 0) + Number(r.cantidad));
+  }
   // los subs que se esperan ese día: su orden ya empezó, sigue viva y no se ha reportado si llegó
   const subs = await tx<
     {
@@ -158,6 +170,7 @@ export async function datosParaCierre(
       nombre: t.nombre,
       puesto: t.puesto,
       tipoPago: t.tipo_pago,
+      yaLleva: yaLleva.get(t.id) ?? 0,
     })),
     subs: subs.map((x) => ({
       ordenId: x.id,

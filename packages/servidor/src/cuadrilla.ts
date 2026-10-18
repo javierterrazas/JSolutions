@@ -5,7 +5,7 @@
 //
 // El salario tiene historial (D-031): cada día trabajado se cuesta con la tarifa vigente ese día. Cambiarlo agrega una
 // tarifa desde una fecha; lo ya trabajado antes no cambia.
-import { type Dia, ErrorDeNegocio, exigir } from '@ijm/core';
+import { type Dia, diaSemana, ErrorDeNegocio, exigir, sumarDias } from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import { dia, textoCorto, uuid, validarEntrada } from './entrada';
@@ -80,6 +80,120 @@ export async function cuadrilla(tx: Tx, ahora = new Date()): Promise<Cuadrilla> 
     };
   });
   return { hoy: s.hoy, trabajadores: lista };
+}
+
+// ------------------------------------------------------------------ la semana de la cuadrilla
+export interface ObraDeLaSemana {
+  readonly obraId: string;
+  readonly folio: string;
+  readonly cliente: string;
+  /** Horas, o días si cobra por día. */
+  readonly cantidad: number;
+  readonly dias: readonly { dia: Dia; cantidad: number }[];
+}
+
+export interface TrabajadorDeLaSemana {
+  readonly id: string;
+  readonly nombre: string;
+  readonly puesto: string | null;
+  readonly tipoPago: TipoPago;
+  /** Horas, o días si cobra por día. */
+  readonly total: number;
+  /** Lo que cuesta su semana con la tarifa vigente de cada día; null si algún día no tenía tarifa. */
+  readonly costo: number | null;
+  readonly obras: readonly ObraDeLaSemana[];
+}
+
+export interface SemanaDeLaCuadrilla {
+  /** De lunes a domingo. */
+  readonly inicio: Dia;
+  readonly fin: Dia;
+  readonly anterior: Dia;
+  /** Null si la semana es la de hoy: no hay siguiente. */
+  readonly siguiente: Dia | null;
+  /** Solo los que trabajaron esa semana, por nombre. */
+  readonly trabajadores: readonly TrabajadorDeLaSemana[];
+}
+
+/**
+ * La semana de la cuadrilla (D-094): las horas (o días) de cada trabajador de lunes a domingo, en qué obras y qué
+ * días, y lo que cuesta. Para la nómina. Sin `semana`, la de hoy; con un día cualquiera, la semana que lo contiene.
+ * Lleva dinero: solo el dueño o el administrador.
+ */
+export async function semanaDeLaCuadrilla(
+  tx: Tx,
+  entrada: { semana?: string | null } = {},
+  ahora = new Date(),
+): Promise<SemanaDeLaCuadrilla> {
+  const e = validarEntrada(z.object({ semana: dia.nullish() }), entrada);
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  const lunesDe = (d: Dia) => sumarDias(d, 1 - diaSemana(d));
+  const hoyLunes = lunesDe(s.hoy);
+  const pedida = e.semana ? lunesDe(e.semana) : hoyLunes;
+  const inicio = pedida > hoyLunes ? hoyLunes : pedida;
+  const fin = sumarDias(inicio, 6);
+  const filas = await tx<
+    {
+      trabajador_id: string;
+      nombre: string;
+      puesto: string | null;
+      tipo_pago: TipoPago;
+      obra_id: string;
+      folio: string;
+      cliente: string;
+      dia: Dia;
+      cantidad: string;
+      tarifa: string | null;
+    }[]
+  >`
+    select m.trabajador_id, t.nombre, t.puesto, t.tipo_pago, m.obra_id, o.folio, o.cliente,
+           to_char(m.dia, 'YYYY-MM-DD') as dia, sum(m.cantidad) as cantidad,
+           (select x.tarifa from tarifas_trabajador x where x.trabajador_id = m.trabajador_id
+              and x.vigente_desde <= m.dia order by x.vigente_desde desc limit 1) as tarifa
+    from mano_obra m join trabajadores t on t.id = m.trabajador_id join obras o on o.id = m.obra_id
+    where m.estado = 'vigente' and m.dia between ${inicio} and ${fin}
+    group by m.trabajador_id, t.nombre, t.puesto, t.tipo_pago, m.obra_id, o.folio, o.cliente, m.dia
+    order by t.nombre, o.folio, m.dia`;
+  const porTrabajador = new Map<string, (typeof filas)[number][]>();
+  for (const f of filas)
+    porTrabajador.set(f.trabajador_id, [...(porTrabajador.get(f.trabajador_id) ?? []), f]);
+  const redondo = (n: number) => Math.round(n * 100) / 100;
+  const trabajadores = [...porTrabajador.values()].map((suyas) => {
+    const t = suyas[0]!;
+    const obras = new Map<string, ObraDeLaSemana>();
+    for (const f of suyas) {
+      const o = obras.get(f.obra_id) ?? {
+        obraId: f.obra_id,
+        folio: f.folio,
+        cliente: f.cliente,
+        cantidad: 0,
+        dias: [],
+      };
+      obras.set(f.obra_id, {
+        ...o,
+        cantidad: redondo(o.cantidad + Number(f.cantidad)),
+        dias: [...o.dias, { dia: f.dia, cantidad: Number(f.cantidad) }],
+      });
+    }
+    const sinTarifa = suyas.some((f) => f.tarifa === null);
+    return {
+      id: t.trabajador_id,
+      nombre: t.nombre,
+      puesto: t.puesto,
+      tipoPago: t.tipo_pago,
+      total: redondo(suyas.reduce((a, f) => a + Number(f.cantidad), 0)),
+      costo: sinTarifa ? null : redondo(suyas.reduce((a, f) => a + Number(f.cantidad) * Number(f.tarifa), 0)),
+      obras: [...obras.values()].sort((a, b) => b.cantidad - a.cantidad),
+    };
+  });
+  return {
+    inicio,
+    fin,
+    anterior: sumarDias(inicio, -7),
+    siguiente: inicio < hoyLunes ? sumarDias(inicio, 7) : null,
+    trabajadores,
+  };
 }
 
 const tarifa = z.coerce.number();

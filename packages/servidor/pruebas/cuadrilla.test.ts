@@ -9,6 +9,7 @@ import {
   cuadrilla,
   datosParaCierre,
   editarTrabajador,
+  semanaDeLaCuadrilla,
   type Tx,
 } from '../src/index';
 import { codigo, como, enAustin, OBRAS, probarComo, servidor, USUARIOS } from './apoyo';
@@ -140,5 +141,40 @@ describe('la cuadrilla del dueño', () => {
       await cambiarActivoTrabajador(tx, { trabajadorId: juan.id, activo: true }, LUNES);
       await como(tx, USUARIOS.carlos);
       expect(await enElCierre(tx)).toContain('Juan');
+    }));
+});
+
+describe('la semana de la cuadrilla (D-094)', () => {
+  it('cada trabajador con sus horas de lunes a domingo, en qué obras y qué días, y lo que cuesta', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const s = await semanaDeLaCuadrilla(tx, { semana: '2026-10-07' }, LUNES);
+      expect(s).toMatchObject({
+        inicio: '2026-10-05',
+        fin: '2026-10-11',
+        anterior: '2026-09-28',
+        siguiente: '2026-10-12',
+      });
+      const pedro = s.trabajadores.find((t) => t.nombre === 'Pedro')!;
+      const [{ horas }] = await tx<{ horas: string }[]>`
+        select sum(m.cantidad) as horas from mano_obra m join trabajadores t on t.id = m.trabajador_id
+        where t.nombre = 'Pedro' and m.estado = 'vigente' and m.dia between '2026-10-05' and '2026-10-11'`;
+      expect(pedro.total).toBe(Number(horas));
+      expect(pedro.costo).toBe(Math.round(Number(horas) * 22.5 * 100) / 100);
+      expect(pedro.obras.reduce((a, o) => a + o.cantidad, 0)).toBe(Number(horas));
+      expect(pedro.obras.map((o) => o.folio)).toContain('OB-001');
+      expect(pedro.obras[0]!.dias[0]).toEqual({ dia: '2026-10-05', cantidad: expect.any(Number) });
+      // quien no trabajó esa semana no sale
+      expect(s.trabajadores.every((t) => t.total > 0)).toBe(true);
+    }));
+
+  it('sin semana, la de hoy (sin siguiente); una del futuro tampoco; el PM no la ve', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      expect(await semanaDeLaCuadrilla(tx, {}, LUNES)).toMatchObject({
+        inicio: '2026-10-12',
+        siguiente: null,
+      });
+      expect((await semanaDeLaCuadrilla(tx, { semana: '2026-12-01' }, LUNES)).inicio).toBe('2026-10-12');
+      await como(tx, USUARIOS.carlos);
+      expect(await codigo(tx, () => semanaDeLaCuadrilla(tx, {}, LUNES))).toBe('solo_dueno');
     }));
 });
