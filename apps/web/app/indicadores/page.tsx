@@ -58,6 +58,9 @@ export default async function Indicadores() {
   // un día de negocio a mediodía, para que ninguna zona horaria lo mueva de día
   const dia = (d: string) =>
     formato.dateTime(new Date(`${d}T12:00:00`), { weekday: 'short', day: 'numeric', month: 'short' });
+  // los días sin cerrar, cortos y sin comas propias: "lun 12, mar 13"
+  const diaCorto = (d: string) =>
+    formato.dateTime(new Date(`${d}T12:00:00`), { weekday: 'short', day: 'numeric' }).replace(',', '');
   const dinero = formatoDinero(idioma);
   const numero = (n: number, decimales = 0) =>
     new Intl.NumberFormat(idioma === 'en' ? 'en-US' : 'es-MX', {
@@ -150,7 +153,7 @@ export default async function Indicadores() {
                                 {
                                   n: o.cantidad,
                                   monto: dinero.format(o.monto ?? 0),
-                                  dias: (o.dias ?? []).map((x) => dia(x)).join(', '),
+                                  dias: (o.dias ?? []).map((x) => diaCorto(x)).join(', '),
                                 } as never,
                               )}
                             </span>
