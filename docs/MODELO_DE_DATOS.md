@@ -76,7 +76,7 @@ dar de baja a un miembro, o desactivar su empresa, le corta el acceso en ese ins
 | --- | --- | --- | --- | --- |
 | `tipos_espacio` | Partidas_Catalogo.tipo_obra | Baño, Cocina, Closet…; `es_generales` marca "Generales de obra" (uno por empresa) | lee y escribe | lee |
 | `oficios` | Subcontratistas.oficio, Partidas_Catalogo.quien | Plomería, Eléctrico, Tile…; `requiere_licencia` (Texas: plomería, electricidad, HVAC) | lee y escribe | lee |
-| `etapas` | Partidas_Catalogo.etapa | etapas del presupuesto: Demolición, Plomería, Tile…; `unidad` (`pie2` o `pie_lineal`, D-086) | lee y escribe | lee |
+| `etapas` | Partidas_Catalogo.etapa | etapas del presupuesto: Demolición, Plomería, Tile…; `unidad` (`pie2` o `pie_lineal`, D-086; o `fijo` por espacio, D-095) | lee y escribe | lee |
 | `hitos_calidad` | Checklist_Calidad.hito | `clave` (`PC1`…), `nombre`; `exige_prueba_agua` (el PC3) | lee y escribe | lee |
 | `puntos_control` | Checklist_Calidad | las preguntas de cada hito, `requiere_foto` | lee y escribe | lee |
 | `plantillas_partida` | Partidas_Catalogo | por tipo de espacio: `orden`, `nombre`, `hito_id`, `peso`, `dias`, `responsable` (`cuadrilla`/`pm`/`subcontratista` + `oficio_id`), `paralelo`, `espera`, `etapa_id` | lee y escribe | — |
@@ -145,7 +145,7 @@ aquí se deduce.
 | `cobros` 💲 | Cobros | `folio`, `fecha`, `concepto`, `monto`, `metodo`, `referencia`, `estado`, `orden_cambio_id` (la orden de cambio que cobra; la deja facturada, D-089) | lee y escribe | — |
 | `entregas` | Entrega | una por obra: `fecha_entrega`, `garantia_meses`, `garantia_vence`, `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido` (los marca el dueño, D-090), `visita_11m` (sin usar: el dueño no la quiere), `notas` | lee y escribe | vista: `fecha_entrega` |
 | `obras_cerradas` 💲 | Obras_Cerradas | la foto fija del cierre: fechas, días de ciclo, contrato, órdenes de cambio, presupuesto, materiales, cuadrilla, subcontratos, costo total, margen, desvío, cobrado, no calidad, días reportados, pies² | lee | — |
-| `historico_etapas` 💲 | (nueva) | al cerrar (D-085): por espacio y etapa, presupuestado, costo real, pies², pies lineales, costo por pie², y la unidad de la etapa con su costo por ella (D-086) | lee | — |
+| `historico_etapas` 💲 | (nueva) | al cerrar (D-085): por espacio y etapa, presupuestado, costo real, pies², pies lineales, costo por pie², y la unidad de la etapa con su costo por ella (D-086; la fija, por espacio, D-095) | lee | — |
 | `historico_duraciones` | (nueva) | al cerrar: días planeados y reales de cada partida | lee | — |
 
 ### Sistema

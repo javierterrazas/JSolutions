@@ -106,6 +106,18 @@ describe('el cierre de una obra', () => {
       });
     }));
 
+  it('una etapa fija guarda su costo por espacio (D-095)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      await tx`update etapas set unidad = 'fijo' where nombre_es = 'Demolición'`;
+      await cerrarObra(tx, { obraId: OBRAS.a1Carlos, fechaEntrega: '2026-10-12', forzar: true }, LUNES);
+      const [h] = await tx<{ unidad: string; costo_real: string; costo_por_unidad: string }[]>`
+        select h.unidad, h.costo_real, h.costo_por_unidad from historico_etapas h
+        join etapas et on et.id = h.etapa_id
+        where h.obra_id = ${OBRAS.a1Carlos} and et.nombre_es = 'Demolición'`;
+      expect(h!.unidad).toBe('fijo');
+      expect(Number(h!.costo_por_unidad)).toBe(Number(h!.costo_real));
+    }));
+
   it('no con una fecha que no ha llegado ni antes del arranque; el PM no cierra', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const base = { obraId: OBRAS.a1Carlos, forzar: true };

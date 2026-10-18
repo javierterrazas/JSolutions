@@ -1640,3 +1640,28 @@ trabajó. En Cuadrilla, "Horas de la semana" (`/cuadrilla/semana`, `semanaDeLaCu
 uno con sus horas (o días, si cobra por día) y lo que cuesta con la tarifa vigente de cada día (para la nómina); al
 tocarlo, sus obras con sus horas y qué días. Arriba, el total de la cuadrilla y su costo; se navega a la semana
 anterior y a la siguiente (no al futuro). Solo el dueño o el administrador: lleva salarios.
+
+## D-095 · Lo que cuesta cada etapa según el tamaño
+
+**Decisión del dueño:** encontrar la mejor forma de calcular el costo por pie² o por pie lineal, y saber qué etapas
+mueven más el precio y cuáles casi no cambian con el tamaño.
+- **El modelo:** cada etapa cuesta `base + tarifa × medida`. El tile crece casi todo con los pies²; los gabinetes, con
+  los pies lineales; la plomería cuesta casi lo mismo en un baño chico que en uno grande (3 salidas son 3 salidas).
+- **Una unidad más: "Fijo por espacio"** (`etapas.unidad = 'fijo'`, migración `20261028000100_etapa_fija`). Su costo
+  por unidad en el histórico es el costo por espacio.
+- **El análisis** (`analizarCostosEtapa`, en @ijm/core): por tipo de espacio y etapa, con las obras cerradas, ajusta
+  base + tarifa por mínimos cuadrados contra los pies² y contra los pies lineales (el histórico guarda los dos). Hace
+  falta 5 obras de tamaños distintos (al menos 15% de variación); con menos, solo la mediana del costo por unidad (o
+  por espacio, si es fija). De ahí: qué parte del costo crece con el tamaño, cuánto sube por cada 10 unidades más (lo
+  que más mueve el precio) y si conviene cotizarla de otra forma (fija si el tamaño explica menos del 30% de su costo;
+  por la otra medida si la explica claramente mejor; por su medida si es fija y el tamaño explica más del 60%).
+- **En el histórico:** "Lo que más mueve el precio" y, en "Lo que cuesta cada etapa", su costo típico, su base +
+  tarifa, qué tanto depende del tamaño y la sugerencia.
+- **En el presupuesto:** cada etapa con historia dice "Sugerido: $X (de N obras cerradas)", calculado con las medidas
+  del espacio, y se usa con un toque.
+- **La clasificación inicial de IJM Construction** (la aprobó el dueño): por pie², tile, carpintería y muros,
+  impermeabilización, pintura, piso, demolición (su base sale del ajuste) y muros y pintura del closet; por pie lineal,
+  vanity y countertop, gabinetes, countertop, backsplash y sistema de closet; fijas, generales de obra, plomería,
+  eléctrico, vidrio y accesorios y appliances.
+- Las 5 obras cerradas de la simulación (D-088) no sirven para esto: su costo se generó proporcional a los pies². El
+  análisis empieza a decir algo con las obras reales.

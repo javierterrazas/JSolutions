@@ -2,7 +2,13 @@
 // obra con sus partidas, y las etapas del presupuesto. Cada espacio copia las partidas de su tipo al crearse
 // (copiarPartidas), así que cambiar el catálogo solo afecta a los espacios nuevos. Nada se borra: un tipo o una
 // partida se dan de baja, y la auditoría guarda cada cambio.
-import { ErrorDeNegocio, partidasDeTipoNuevo, type Responsable } from '@ijm/core';
+import {
+  ErrorDeNegocio,
+  partidasDeTipoNuevo,
+  type Responsable,
+  UNIDADES_ETAPA,
+  type UnidadEtapa,
+} from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import type { Nombre } from './consultas-obra';
@@ -362,8 +368,8 @@ export async function cambiarActivaPartida(
 // ------------------------------------------------------------------ etapas
 
 /** Cómo se cotiza una etapa (D-086): por pie² (tile, pintura) o por pie lineal (cubiertas, zoclos). */
-export type UnidadEtapa = 'pie2' | 'pie_lineal';
-const unidad = z.enum(['pie2', 'pie_lineal']);
+export type { UnidadEtapa };
+const unidad = z.enum(UNIDADES_ETAPA);
 
 const EntradaEtapa = z.object({ nombre: textoCorto.nullish(), nombreEn, unidad: unidad.default('pie2') });
 

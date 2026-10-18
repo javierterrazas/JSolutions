@@ -45,6 +45,7 @@ export function NuevaEtapa() {
         <select name="unidad" defaultValue="pie2" className={estilos.campo}>
           <option value="pie2">{t('unidades.pie2')}</option>
           <option value="pie_lineal">{t('unidades.pie_lineal')}</option>
+          <option value="fijo">{t('unidades.fijo')}</option>
         </select>
       </label>
       <MensajeError problema={resultado && !resultado.ok ? resultado : null} />

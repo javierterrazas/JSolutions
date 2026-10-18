@@ -1,17 +1,17 @@
 // El histórico de las obras cerradas, para el dueño (D-087; legacy: admin/servidor.js duHistorico): cada obra con sus
-// números finales, los promedios por mes y por tipo de obra (resumenHistorico), la tendencia, el costo real por unidad
-// de cada etapa (costosPorUnidad, lo que se recomendará al cotizar) y las garantías. Lee lo que guardó el cierre
-// (D-085). Lleva dinero: solo el dueño o el administrador.
+// números finales, los promedios por mes y por tipo de obra (resumenHistorico), la tendencia, lo que cuesta cada
+// etapa según el tamaño (analizarCostosEtapa, D-095: lo que se sugiere al cotizar) y las garantías. Lee lo que guardó
+// el cierre (D-085). Lleva dinero: solo el dueño o el administrador.
 import {
-  type CostoPorUnidad,
-  costosPorUnidad,
+  type AnalisisEtapa,
+  analizarCostosEtapa,
   type Dia,
   type ObraCerrada,
   type ResumenHistorico,
   resumenHistorico,
 } from '@ijm/core';
 import type { Tx } from './conexion';
-import type { Nombre } from './consultas-obra';
+import { muestrasDeEtapas, type Nombre } from './consultas-obra';
 import { exigirDueno, leerSesion } from './sesion';
 
 export interface ObraDelHistorico extends ObraCerrada {
@@ -27,7 +27,7 @@ export interface ObraDelHistorico extends ObraCerrada {
   readonly resena: boolean;
 }
 
-export interface CostoPorUnidadDeEtapa extends CostoPorUnidad {
+export interface CostoDeEtapa extends AnalisisEtapa {
   readonly tipoEspacio: Nombre;
   /** Null: "Otras partidas". */
   readonly etapa: Nombre | null;
@@ -37,8 +37,8 @@ export interface HistoricoDeObras {
   /** De la entrega más reciente a la más vieja. */
   readonly obras: readonly ObraDelHistorico[];
   readonly resumen: ResumenHistorico;
-  /** Por tipo de espacio y etapa. */
-  readonly porUnidad: readonly CostoPorUnidadDeEtapa[];
+  /** Lo que cuesta cada etapa según el tamaño, por tipo de espacio (D-095). */
+  readonly costos: readonly CostoDeEtapa[];
   readonly garantias: {
     reclamos: number;
     costo: number;
@@ -115,7 +115,7 @@ export async function historicoDeObras(tx: Tx, ahora = new Date()): Promise<Hist
     };
   });
 
-  const etapas = await tx<
+  const nombres = await tx<
     {
       tipo: string;
       tipo_es: string;
@@ -123,33 +123,31 @@ export async function historicoDeObras(tx: Tx, ahora = new Date()): Promise<Hist
       etapa: string | null;
       etapa_es: string | null;
       etapa_en: string | null;
-      unidad: 'pie2' | 'pie_lineal';
-      costo: string | null;
     }[]
   >`
-    select h.tipo_espacio_id as tipo, t.nombre_es as tipo_es, t.nombre_en as tipo_en, h.etapa_id as etapa,
-           et.nombre_es as etapa_es, et.nombre_en as etapa_en, h.unidad, h.costo_por_unidad as costo
+    select distinct h.tipo_espacio_id as tipo, t.nombre_es as tipo_es, t.nombre_en as tipo_en, h.etapa_id as etapa,
+           et.nombre_es as etapa_es, et.nombre_en as etapa_en
     from historico_etapas h
     join tipos_espacio t on t.id = h.tipo_espacio_id
     left join etapas et on et.id = h.etapa_id`;
-  const nombreTipo = new Map(etapas.map((e) => [e.tipo, { es: e.tipo_es, en: e.tipo_en }]));
+  const nombreTipo = new Map(nombres.map((e) => [e.tipo, { es: e.tipo_es, en: e.tipo_en }]));
   const nombreEtapa = new Map(
-    etapas.filter((e) => e.etapa).map((e) => [e.etapa!, { es: e.etapa_es!, en: e.etapa_en }]),
+    nombres.filter((e) => e.etapa).map((e) => [e.etapa!, { es: e.etapa_es!, en: e.etapa_en }]),
   );
-  const porUnidad = costosPorUnidad(
-    etapas.map((e) => ({
-      tipoEspacioId: e.tipo,
-      etapaId: e.etapa,
-      unidad: e.unidad,
-      costoPorUnidad: e.costo === null ? null : Number(e.costo),
-    })),
-  )
+  // cómo se cotiza hoy cada etapa: la sugerencia es contra eso
+  const unidades = new Map(
+    (await tx<{ id: string; unidad: AnalisisEtapa['unidad'] }[]>`select id, unidad from etapas`).map((x) => [
+      x.id,
+      x.unidad,
+    ]),
+  );
+  const costos = analizarCostosEtapa(await muestrasDeEtapas(tx), unidades)
     .map((c) => ({
       ...c,
       tipoEspacio: nombreTipo.get(c.tipoEspacioId)!,
       etapa: c.etapaId ? (nombreEtapa.get(c.etapaId) ?? null) : null,
     }))
-    .sort((a, b) => a.tipoEspacio.es.localeCompare(b.tipoEspacio.es) || b.n - a.n);
+    .sort((a, b) => a.tipoEspacio.es.localeCompare(b.tipoEspacio.es) || b.costoTipico - a.costoTipico);
 
   const [g] = await tx<
     { reclamos: number; costo: string; abiertos: number; resenas: number; entregas: number }[]
@@ -164,7 +162,7 @@ export async function historicoDeObras(tx: Tx, ahora = new Date()): Promise<Hist
   return {
     obras,
     resumen: resumenHistorico(obras),
-    porUnidad,
+    costos,
     garantias: {
       reclamos: g!.reclamos,
       costo: Number(g!.costo),

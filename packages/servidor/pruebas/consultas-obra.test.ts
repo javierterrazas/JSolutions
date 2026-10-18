@@ -57,6 +57,9 @@ describe('las pantallas del dueño leen', () => {
       expect(p.total).toBe(0);
       const banoPrincipal = p.espacios[1]!;
       expect(banoPrincipal.etapas.every((x) => x.monto === 0 && x.partidas > 0)).toBe(true);
+      // la demolición del baño trae lo que costó en OB-003, cerrada ($36/ft²): de ahí sale el costo sugerido (D-095)
+      const demolicion = banoPrincipal.etapas.find((x) => x.nombre?.es === 'Demolición')!;
+      expect(demolicion.historia).toMatchObject({ n: 1, unidad: 'pie2', porUnidad: 36 });
 
       // lo que guarda el dueño es lo que vuelve a leer
       const etapa = banoPrincipal.etapas[0]!;

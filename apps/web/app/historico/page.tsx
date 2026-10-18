@@ -1,6 +1,7 @@
 // El histórico de las obras cerradas, para el dueño (D-087; legacy: el histórico del tablero): cómo le ha ido, la
-// tendencia de sus últimas obras, los promedios por tipo de obra y por mes, lo que costó de verdad cada etapa por su
-// unidad (de ahí se aprende a cotizar), las garantías y cada obra cerrada. Lleva dinero: solo el dueño.
+// tendencia de sus últimas obras, los promedios por tipo de obra y por mes, lo que cuesta cada etapa según el tamaño y
+// lo que más mueve el precio (D-095; de ahí sale el costo sugerido al cotizar), las garantías y cada obra cerrada.
+// Lleva dinero: solo el dueño.
 import { historicoDeObras } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
@@ -46,6 +47,11 @@ export default async function Historico() {
   const dias = (x: number | null) => (x === null ? '—' : t('dias', { n: Math.round(x) }));
   const porPie = (x: number | null) => (x === null ? '—' : t('porPie2', { monto: dinero(x) }));
   const nombre = (n: { es: string; en: string | null }) => (idioma === 'en' ? n.en : null) ?? n.es;
+  // las etapas que más suben el costo al crecer el espacio: las que ya tienen base + tarifa (D-095)
+  const mueven = h.costos
+    .filter((c) => c.ajuste && c.ajuste.parteDelTamano >= 0.3)
+    .sort((a, b) => b.ajuste!.por10 - a.ajuste!.por10)
+    .slice(0, 6);
   // un día de negocio a mediodía, para que ninguna zona horaria lo mueva de día
   const dia = (d: string) => formato.dateTime(new Date(`${d}T12:00:00`), { dateStyle: 'medium' });
   const mes = (m: string) =>
@@ -126,13 +132,42 @@ export default async function Historico() {
         </ul>
       </Seccion>
 
+      <Seccion titulo={t('masMueven')}>
+        <p className="text-sm text-slate-600">{t('masMuevenAyuda')}</p>
+        {mueven.length ? (
+          <ul className="flex flex-col gap-2">
+            {mueven.map((c) => (
+              <li
+                key={`${c.tipoEspacioId}-${c.etapaId}`}
+                className={`${estilos.tarjeta} flex justify-between gap-2 text-sm`}
+              >
+                <span className="font-semibold">
+                  {t('tipoEtapa', {
+                    tipo: nombre(c.tipoEspacio),
+                    etapa: c.etapa ? nombre(c.etapa) : t('otras'),
+                  })}
+                </span>
+                <span className="text-right">
+                  {t('mueve', {
+                    monto: dinero(c.ajuste!.por10),
+                    unidad: t(`unidadCorta.${c.ajuste!.medida}`),
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-slate-600">{t('sinMueven')}</p>
+        )}
+      </Seccion>
+
       <Seccion titulo={t('porUnidad')}>
         <p className="text-sm text-slate-600">{t('porUnidadAyuda')}</p>
-        {h.porUnidad.length ? (
+        {h.costos.length ? (
           <ul className="flex flex-col gap-2">
-            {h.porUnidad.map((c) => (
+            {h.costos.map((c) => (
               <li
-                key={`${c.tipoEspacioId}-${c.etapaId}-${c.unidad}`}
+                key={`${c.tipoEspacioId}-${c.etapaId}`}
                 className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}
               >
                 <span className="flex justify-between gap-2 font-semibold">
@@ -142,13 +177,41 @@ export default async function Historico() {
                       etapa: c.etapa ? nombre(c.etapa) : t('otras'),
                     })}
                   </span>
-                  <span>
-                    {t(c.unidad === 'pie_lineal' ? 'porPieLineal' : 'porPie2', { monto: dinero(c.promedio) })}
+                  <span className="text-right">
+                    {c.unidad === 'fijo' || c.porUnidad === null
+                      ? t('porEspacio', { monto: dinero(c.costoTipico) })
+                      : t(c.unidad === 'pie_lineal' ? 'porPieLineal' : 'porPie2', {
+                          monto: dinero(c.porUnidad),
+                        })}
                   </span>
                 </span>
-                <span className="text-slate-600">
-                  {t('rango', { n: c.n, minimo: dinero(c.minimo), maximo: dinero(c.maximo) })}
-                </span>
+                {c.ajuste ? (
+                  <span className="text-slate-700">
+                    {[
+                      t('ajuste', {
+                        base: dinero(Math.max(0, c.ajuste.base)),
+                        tarifa: dinero(c.ajuste.tarifa),
+                        unidad: t(`unidadCorta.${c.ajuste.medida}`),
+                      }),
+                      c.ajuste.parteDelTamano < 0.3
+                        ? t('casiFija')
+                        : t('parteTamano', { pct: pct(c.ajuste.parteDelTamano) }),
+                    ].join(t('separador'))}
+                  </span>
+                ) : (
+                  <span className="text-slate-600">{t('faltanObras', { n: c.n })}</span>
+                )}
+                {c.sugerida ? (
+                  <span className="font-medium text-amber-800">
+                    {t(
+                      c.sugerida === 'fijo'
+                        ? 'sugerirFijo'
+                        : c.sugerida === 'pie_lineal'
+                          ? 'sugerirLineal'
+                          : 'sugerirPie2',
+                    )}
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>

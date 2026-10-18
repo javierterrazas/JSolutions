@@ -10,6 +10,7 @@ import {
   guardarPartidaCatalogo,
   renombrarTipoObra,
 } from '@ijm/servidor';
+import { UNIDADES_ETAPA, type UnidadEtapa } from '@ijm/core';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
@@ -112,13 +113,19 @@ export async function cambiarActivaDePartida(
   return r.ok ? { ok: true, datos: undefined } : r;
 }
 
+/** La unidad elegida; lo que no sea una, por pie². */
+const unidadDe = (f: FormData): UnidadEtapa => {
+  const u = String(f.get('unidad') ?? '');
+  return (UNIDADES_ETAPA as readonly string[]).includes(u) ? (u as UnidadEtapa) : 'pie2';
+};
+
 export async function crearEtapaNueva(_previo: Resultado | null, formulario: FormData): Promise<Resultado> {
   const r = await comoMiembro(
     (tx) =>
       crearEtapa(tx, {
         nombre: texto(formulario, 'nombre'),
         nombreEn: texto(formulario, 'nombreEn'),
-        unidad: formulario.get('unidad') === 'pie_lineal' ? 'pie_lineal' : 'pie2',
+        unidad: unidadDe(formulario),
       }),
     await exigirDueno(),
   );
@@ -126,13 +133,13 @@ export async function crearEtapaNueva(_previo: Resultado | null, formulario: For
   return r.ok ? { ok: true, datos: undefined } : r;
 }
 
-/** Cambia cómo se cotiza una etapa: por pie² o por pie lineal (D-086). */
+/** Cambia cómo se cotiza una etapa: por pie², por pie lineal (D-086) o fija por espacio (D-095). */
 export async function cambiarUnidad(
   etapaId: string,
   _previo: Resultado | null,
   formulario: FormData,
 ): Promise<Resultado> {
-  const unidad = formulario.get('unidad') === 'pie_lineal' ? 'pie_lineal' : 'pie2';
+  const unidad = unidadDe(formulario);
   const r = await comoMiembro((tx) => cambiarUnidadEtapa(tx, { etapaId, unidad }), await exigirDueno());
   if (r.ok) revalidatePath('/catalogo', 'layout');
   return r.ok ? { ok: true, datos: undefined } : r;

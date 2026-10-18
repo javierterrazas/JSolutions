@@ -268,9 +268,9 @@ export async function cerrarObra(
       const esp = espacio.get(x.espacioId)!;
       const pies2 = esp.generales ? 0 : Number(esp.pies2);
       const piesLineales = esp.generales ? 0 : (lineales.get(x.espacioId) ?? 0);
-      // la unidad con que se cotiza la etapa (D-086), y su costo real por esa unidad
+      // la unidad con que se cotiza la etapa (D-086), y su costo real por esa unidad; la fija, por espacio (D-095)
       const unidad = (x.etapaId ? unidadDe.get(x.etapaId) : null) ?? 'pie2';
-      const medida = unidad === 'pie_lineal' ? piesLineales : pies2;
+      const medida = unidad === 'fijo' ? 1 : unidad === 'pie_lineal' ? piesLineales : pies2;
       return {
         empresa_id: s.empresaId,
         obra_id: e.obraId,

@@ -315,7 +315,10 @@
     "piesLinealesDe": "Pies lineales de {espacio}",
     "porPie2": "Costo {costo}/ft² · Precio {precio}/ft²",
     "porPieLineal": "Costo {costo}/ft lineal · Precio {precio}/ft lineal",
-    "faltanLineales": "Escribe los pies lineales del espacio para ver el costo por pie lineal."
+    "faltanLineales": "Escribe los pies lineales del espacio para ver el costo por pie lineal.",
+    "sugerido": "{n, plural, one {Sugerido: {costo} (de # obra cerrada)} other {Sugerido: {costo} (de # obras cerradas)}}",
+    "usarSugerido": "Usar",
+    "fijoPorEspacio": "Precio fijo por espacio: no depende del tamaño."
   },
   "inicioPm": {
     "racha": "{n, plural, =0 {Sin racha todavía} one {# día seguido cerrado} other {# días seguidos cerrados}}",
@@ -516,7 +519,8 @@
     "unidadDe": "Cómo se cotiza {etapa}",
     "unidades": {
       "pie2": "Pie²",
-      "pie_lineal": "Pie lineal"
+      "pie_lineal": "Pie lineal",
+      "fijo": "Fijo por espacio"
     }
   },
   "sinSenal": {
@@ -1495,7 +1499,7 @@
     "lineaGrupo": "Margen {margen} · Desviación {desviacion} · {dias}",
     "lineaPie": "Cobras {venta} · Te cuesta {costo}",
     "porUnidad": "Lo que cuesta cada etapa",
-    "porUnidadAyuda": "Lo que costó de verdad cada etapa por su unidad, en tus obras cerradas. De aquí saldrá la recomendación al cotizar.",
+    "porUnidadAyuda": "En tus obras cerradas. Con 5 o más obras de tamaños distintos se sabe qué parte de cada etapa es fija y cuál crece con el tamaño; de aquí sale el costo que se sugiere al cotizar.",
     "tipoEtapa": "{tipo} · {etapa}",
     "otras": "Otras partidas",
     "rango": "{n, plural, one {# obra} other {# obras}} · de {minimo} a {maximo}",
@@ -1508,7 +1512,24 @@
     "obraEncabezado": "{folio} · {cliente}",
     "lineaObra": "{tipo} · entregada el {entrega} · {dias}",
     "lineaObraDinero": "Contrato {contrato} · Costo {costo} · Desviación {desviacion}",
-    "lineaObraGarantia": "{reclamos, plural, =0 {Sin reclamos} one {# reclamo} other {# reclamos}} ({costo}) · {resena, select, si {dejó reseña} other {sin reseña}}"
+    "lineaObraGarantia": "{reclamos, plural, =0 {Sin reclamos} one {# reclamo} other {# reclamos}} ({costo}) · {resena, select, si {dejó reseña} other {sin reseña}}",
+    "porEspacio": "{monto} por espacio",
+    "ajuste": "Base {base} + {tarifa} por {unidad}",
+    "parteTamano": "El tamaño explica el {pct} de su costo",
+    "casiFija": "Casi no cambia con el tamaño",
+    "sugerirFijo": "Conviene cobrarla fija por espacio.",
+    "sugerirPie2": "Conviene cotizarla por pie².",
+    "sugerirLineal": "Conviene cotizarla por pie lineal.",
+    "faltanObras": "{n, plural, one {Con # obra cerrada: hacen falta 5 de tamaños distintos para saber qué parte es fija.} other {Con # obras cerradas: hacen falta 5 de tamaños distintos para saber qué parte es fija.}}",
+    "masMueven": "Lo que más mueve el precio",
+    "masMuevenAyuda": "Cuánto sube el costo de cada etapa por cada 10 unidades más de tamaño.",
+    "mueve": "+{monto} por cada 10 {unidad}",
+    "sinMueven": "Todavía no hay suficientes obras cerradas de tamaños distintos para saberlo.",
+    "unidadCorta": {
+      "pie2": "ft²",
+      "pie_lineal": "ft lineales"
+    },
+    "separador": " · "
   },
   "retrabajos": {
     "titulo": "Retrabajos y garantías",
