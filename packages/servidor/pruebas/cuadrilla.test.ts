@@ -155,9 +155,10 @@ describe('la semana de la cuadrilla (D-094)', () => {
         siguiente: '2026-10-12',
       });
       const pedro = s.trabajadores.find((t) => t.nombre === 'Pedro')!;
-      const [{ horas }] = await tx<{ horas: string }[]>`
+      const [suma] = await tx<{ horas: string }[]>`
         select sum(m.cantidad) as horas from mano_obra m join trabajadores t on t.id = m.trabajador_id
         where t.nombre = 'Pedro' and m.estado = 'vigente' and m.dia between '2026-10-05' and '2026-10-11'`;
+      const horas = suma!.horas;
       expect(pedro.total).toBe(Number(horas));
       expect(pedro.costo).toBe(Math.round(Number(horas) * 22.5 * 100) / 100);
       expect(pedro.obras.reduce((a, o) => a + o.cantidad, 0)).toBe(Number(horas));
