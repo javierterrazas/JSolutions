@@ -238,7 +238,9 @@
     "concepto_orden_cambio": "El cobro de una orden de cambio no cambia de concepto: anúlalo y regístralo de nuevo.",
     "garantia_sin_entrega": "Las garantías se registran ya entregada la obra.",
     "ya_cerrado": "Ya estaba atendido.",
-    "sin_entrega": "Esta obra todavía no se entrega."
+    "sin_entrega": "Esta obra todavía no se entrega.",
+    "falta_celular": "Este dueño entra con su celular: no puede quedarse sin él.",
+    "faltan_datos": "Faltan el nombre de la empresa o el del dueño."
   },
   "obras": {
     "titulo": "Obras",
@@ -1425,7 +1427,9 @@
     "celular": "Celular del dueño",
     "celularAyuda": "Con su celular entra a la app. No le llega ningún mensaje: tú le mandas el enlace.",
     "correoOpcional": "Correo del dueño (opcional)",
-    "duenoContacto": "Dueño: {dueno} ({contacto})"
+    "duenoContacto": "Dueño: {dueno} ({contacto})",
+    "editarDatos": "Editar datos",
+    "celularEditarAyuda": "Con su celular entra a la app. Si lo cambias, el anterior queda libre."
   },
   "cerrarObra": {
     "titulo": "Cerrar la obra",

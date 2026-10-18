@@ -1672,3 +1672,15 @@ D-083 dejó en la base las versiones de `invitar_pm` (5 argumentos) y `plataform
 celular, mientras la app que las usaba seguía publicada. Ya nadie las usa: se quitan (migración
 `20261029000100_quitar_funciones_viejas`). Las de ahora las llamaban por dentro, así que primero se reescriben con todo
 su cuerpo (con las mismas firmas, sus permisos se quedan) y después se borran las viejas.
+
+## D-097 · Editar una empresa desde la plataforma
+
+**Lo pidió quien administra la plataforma:** poder corregir el nombre de una empresa y los datos de su dueño. En la
+cuenta de la empresa, "Editar datos": el nombre y la ciudad de la empresa, y el nombre, el celular y el correo de su
+dueño (`editarEmpresa`, función `plataforma_editar_empresa`, migración `20261030000100_plataforma_editar_empresa`).
+- Un celular que ya es de otro miembro, de cualquier empresa, no se acepta (`celular_ya_registrado`).
+- Si el dueño entra con su celular (cuenta con dirección interna `@celular.invalid`, D-083), no puede quedarse sin él
+  (`falta_celular`), y si cambia, su dirección de Auth cambia con él (`cambiarCorreo`, con la API de Auth): el celular
+  viejo queda libre y el nuevo, apartado. Los dueños que entran con correo (los de antes) pueden quedarse sin celular,
+  y su cuenta de Auth no se toca.
+- Cambiar a la persona dueña de la empresa (pasarla a otro) no está aquí: es otra cosa.

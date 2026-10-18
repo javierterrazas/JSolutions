@@ -1,9 +1,11 @@
 'use server';
-// La plataforma (D-080): dar de alta una empresa, su suscripción, sus pagos, suspenderla y reinvitar a su dueño.
+// La plataforma (D-080): dar de alta una empresa, editarla (D-097), su suscripción, sus pagos, suspenderla y reinvitar
+// a su dueño.
 // Entra quien administra la plataforma, con su celular y su PIN como cualquier miembro; la base revisa que lo sea.
 import {
   altaDeEmpresa,
   cambiarActivaEmpresa,
+  editarEmpresa,
   guardarSuscripcion,
   registrarPagoPlataforma,
   reinvitarDueno,
@@ -58,6 +60,33 @@ export async function darDeAlta(
       enlace: await enlaceDeInvitacion(r.datos.token),
     },
   };
+}
+
+/** El nombre y la ciudad de la empresa, y el nombre, el celular y el correo de su dueño (D-097). */
+export async function editarLaEmpresa(
+  empresaId: string,
+  _previo: Resultado | null,
+  f: FormData,
+): Promise<Resultado> {
+  const r = await comoMiembro(
+    (tx) =>
+      editarEmpresa(
+        tx,
+        {
+          empresaId,
+          empresa: texto(f, 'empresa'),
+          ciudad: texto(f, 'ciudad'),
+          dueno: texto(f, 'dueno'),
+          celular: texto(f, 'celular'),
+          correo: texto(f, 'correo'),
+        },
+        auth().cambiarCorreo,
+      ),
+    await exigirPlataforma(),
+  );
+  if (!r.ok) return r;
+  revalidatePath('/plataforma', 'layout');
+  return { ok: true, datos: undefined };
 }
 
 export async function guardarLaSuscripcion(

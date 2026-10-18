@@ -1,5 +1,5 @@
-// La plataforma (D-080): quien la administra da de alta empresas, les pone plan, precio y vencimiento, anota sus pagos,
-// las suspende y reinvita a su dueño. Todo pasa por funciones de la base (20261020000100_plataforma.sql), que
+// La plataforma (D-080): quien la administra da de alta empresas, las edita (D-097), les pone plan, precio y
+// vencimiento, anota sus pagos, las suspende y reinvita a su dueño. Todo pasa por funciones de la base (20261020000100_plataforma.sql), que
 // revisan que el usuario de la sesión administre la plataforma y devuelven de cada empresa solo su cuenta: nada de sus
 // obras, sus clientes ni su dinero. Aquí también, lo que cada empresa ve de su propia suscripción.
 import {
@@ -14,13 +14,22 @@ import {
 import postgres from 'postgres';
 import { z } from 'zod';
 import { cuentaDeCelular, nuevoSecreto, type UsuarioDeCorreo } from './acceso';
+import type { CambiarCorreo } from './auth';
 import type { Tx } from './conexion';
 import { dia, uuid, validarEntrada } from './entrada';
 
 export type Plan = 'basico' | 'pro' | 'empresa';
 export type MetodoPagoPlataforma = 'zelle' | 'transferencia' | 'efectivo' | 'tarjeta' | 'otro';
 
-const DE_LA_BASE = new Set(['solo_plataforma', 'empresa_no_encontrada', 'correo_ya_registrado', 'sin_dueno']);
+const DE_LA_BASE = new Set([
+  'solo_plataforma',
+  'empresa_no_encontrada',
+  'correo_ya_registrado',
+  'celular_ya_registrado',
+  'sin_dueno',
+  'faltan_datos',
+  'falta_celular',
+]);
 
 async function deLaBase<T>(fn: () => Promise<T>): Promise<T> {
   try {
@@ -289,6 +298,40 @@ export async function altaDeEmpresa(
     throw err;
   });
   return { empresaId: r!.id, dueno: e.dueno, token, expira };
+}
+
+const EntradaEdicion = z.object({
+  empresaId: uuid,
+  empresa: z.string().trim().min(1).max(120),
+  ciudad: z.string().trim().max(120).default(''),
+  dueno: z.string().trim().min(1).max(80),
+  /** El celular del dueño; vacío solo si entra con correo (los de antes de D-083). */
+  celular: z.string().trim().max(30).default(''),
+  correo: z.union([z.literal(''), z.string().trim().toLowerCase().pipe(z.email())]).nullish(),
+});
+export type EntradaEdicionEmpresa = z.input<typeof EntradaEdicion>;
+
+/**
+ * Edita una empresa (D-097): su nombre y su ciudad, y el nombre, el celular y el correo de su dueño. Si el celular
+ * cambia y la cuenta del dueño es de celular, su dirección interna de Auth cambia con él (así el celular viejo queda
+ * libre y el nuevo, apartado). Errores: `faltan`/`datos_invalidos`, `celular_invalido`, `falta_celular`, `celular_ya_registrado`,
+ * `empresa_no_encontrada`, `sin_dueno`. Solo quien administra.
+ */
+export async function editarEmpresa(
+  tx: Tx,
+  entrada: EntradaEdicionEmpresa,
+  cambiarCorreo: CambiarCorreo,
+): Promise<void> {
+  const e = validarEntrada(EntradaEdicion, entrada);
+  const cuenta = e.celular ? cuentaDeCelular(e.celular) : null;
+  const [r] = await deLaBase(
+    () => tx<{ user_id: string; correo_auth: string | null; telefono_antes: string | null }[]>`
+      select * from public.plataforma_editar_empresa(${e.empresaId}, ${e.empresa}, ${e.ciudad}, ${e.dueno},
+                                                     ${cuenta?.celular ?? null}, ${e.correo || null})`,
+  );
+  // la dirección de Auth sigue al celular solo en las cuentas de celular; las de correo de antes se quedan
+  if (cuenta && r && r.telefono_antes !== cuenta.celular && r.correo_auth?.endsWith('@celular.invalid'))
+    await cambiarCorreo(r.user_id, cuenta.correo);
 }
 
 /** Otra invitación para el dueño de una empresa; anula las que no usó. Solo quien administra. */

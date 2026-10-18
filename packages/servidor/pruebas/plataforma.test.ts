@@ -6,6 +6,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import {
   altaDeEmpresa,
   cambiarActivaEmpresa,
+  editarEmpresa,
   empresaDeLaPlataforma,
   empresasDeLaPlataforma,
   esAdminPlataforma,
@@ -223,5 +224,90 @@ describe('la plataforma', () => {
         where empresa_id = ${inv.empresaId}`;
       // quien administra no lee las invitaciones de otra empresa (ni sus obras)
       expect(n!.vivas).toBe(0);
+    }));
+
+  it('quien administra edita la empresa y a su dueño; el celular de otro no (D-097)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const usuarioDeCorreo = (c: string) => authLocal().usuarioDeCorreo(c);
+      const alta = (empresa: string, celular: string) =>
+        altaDeEmpresa(
+          tx,
+          {
+            empresa,
+            dueno: 'Ana',
+            celular,
+            plan: 'basico',
+            precio: 0,
+            ciclo: 'mensual',
+            enPrueba: false,
+            venceEl: null,
+          },
+          usuarioDeCorreo,
+        );
+      const [c1, c2, c3] = [celularNuevo(), celularNuevo(), celularNuevo()];
+      const { empresaId } = await alta('Pisos del Sur', c1);
+      await alta('Pisos del Este', c2);
+      const cambios: [string, string][] = [];
+      const cambiarCorreo = async (id: string, correo: string) => {
+        cambios.push([id, correo]);
+      };
+
+      await editarEmpresa(
+        tx,
+        {
+          empresaId,
+          empresa: 'Pisos y Baños del Sur',
+          ciudad: 'Houston, TX',
+          dueno: 'Ana María',
+          celular: c3,
+          correo: 'ana@sur.test',
+        },
+        cambiarCorreo,
+      );
+      const e = (await empresaDeLaPlataforma(tx, { empresaId }))!.empresa;
+      expect(e).toMatchObject({
+        nombre: 'Pisos y Baños del Sur',
+        ciudad: 'Houston, TX',
+        dueno: 'Ana María',
+        telefono: `+1${c3}`,
+        correo: 'ana@sur.test',
+      });
+      // la dirección interna de Auth sigue al celular nuevo
+      expect(cambios).toEqual([[expect.any(String), expect.stringContaining(`${c3}@celular.invalid`)]]);
+
+      // con el mismo celular, la dirección no se toca
+      await editarEmpresa(
+        tx,
+        { empresaId, empresa: 'Pisos del Sur', dueno: 'Ana', celular: c3 },
+        cambiarCorreo,
+      );
+      expect(cambios).toHaveLength(1);
+      expect((await empresaDeLaPlataforma(tx, { empresaId }))!.empresa).toMatchObject({
+        correo: null,
+        ciudad: null,
+      });
+
+      expect(
+        await codigo(tx, () =>
+          editarEmpresa(tx, { empresaId, empresa: 'X', dueno: 'Ana', celular: c2 }, cambiarCorreo),
+        ),
+      ).toBe('celular_ya_registrado');
+      // entra con su celular: no se queda sin él
+      expect(
+        await codigo(tx, () =>
+          editarEmpresa(tx, { empresaId, empresa: 'X', dueno: 'Ana', celular: '' }, cambiarCorreo),
+        ),
+      ).toBe('falta_celular');
+      expect(
+        await codigo(tx, () =>
+          editarEmpresa(tx, { empresaId, empresa: ' ', dueno: 'Ana', celular: c3 }, cambiarCorreo),
+        ),
+      ).toBe('datos_invalidos');
+      await como(tx, USUARIOS.carlos);
+      expect(
+        await codigo(tx, () =>
+          editarEmpresa(tx, { empresaId, empresa: 'X', dueno: 'Y', celular: c3 }, cambiarCorreo),
+        ),
+      ).toBe('solo_plataforma');
     }));
 });
