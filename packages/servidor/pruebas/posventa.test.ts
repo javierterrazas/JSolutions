@@ -77,16 +77,30 @@ describe('retrabajos y garantías', () => {
     probarComo(USUARIOS.duenoA, async (tx) => {
       const p = (await posventaDeObra(tx, { obraId: OBRAS.a3Entregada }, LUNES))!;
       expect(p).toMatchObject({ fechaEntrega: '2026-10-30', garantiaVence: '2027-10-30' });
-      expect(p.pasos.resena_recibida).toBe(false);
+      expect(p.pasos.resena_recibida).toBeNull();
 
       // a la semana de entregar, sin reseña
       const semana = enAustin('2026-11-06', 9);
       expect((await pendientesDePosventa(tx, semana)).sinResena.map((x) => x.folio)).toEqual(['OB-003']);
-      await marcarPosventa(tx, { obraId: OBRAS.a3Entregada, paso: 'resena_recibida', hecho: true }, semana);
+      await marcarPosventa(tx, { obraId: OBRAS.a3Entregada, paso: 'resena_recibida', valor: 'si' }, semana);
       expect((await posventaDeObra(tx, { obraId: OBRAS.a3Entregada }, semana))!.pasos.resena_recibida).toBe(
-        true,
+        'si',
       );
       expect((await pendientesDePosventa(tx, semana)).sinResena).toEqual([]);
+
+      // de vuelta a pendiente, sale otra vez; en "no" (el cliente no quiso), queda resuelta (D-098)
+      await marcarPosventa(tx, { obraId: OBRAS.a3Entregada, paso: 'resena_recibida', valor: null }, semana);
+      expect((await pendientesDePosventa(tx, semana)).sinResena.map((x) => x.folio)).toEqual(['OB-003']);
+      await marcarPosventa(tx, { obraId: OBRAS.a3Entregada, paso: 'resena_recibida', valor: 'no' }, semana);
+      const despues = (await posventaDeObra(tx, { obraId: OBRAS.a3Entregada }, semana))!;
+      expect(despues.pasos.resena_recibida).toBe('no');
+      expect((await pendientesDePosventa(tx, semana)).sinResena).toEqual([]);
+      // del "no" al "sí": ya no queda en la lista del "no"
+      await marcarPosventa(tx, { obraId: OBRAS.a3Entregada, paso: 'resena_recibida', valor: 'si' }, semana);
+      const [e] = await tx<
+        { no: string[] }[]
+      >`select pasos_no as no from entregas where obra_id = ${OBRAS.a3Entregada}`;
+      expect(e!.no).toEqual([]);
     }));
 
   it('el PM no lo ve', () =>

@@ -1591,7 +1591,10 @@
       "resena_pedida": "Review requested",
       "resena_recibida": "Left a review",
       "referido_pedido": "Referral requested"
-    }
+    },
+    "si": "Yes",
+    "no": "No",
+    "ayudaPasos": "If the client declined, mark it \"No\": it is settled and stops showing in your pending list."
   },
   "semanaCuadrilla": {
     "titulo": "This week's hours",

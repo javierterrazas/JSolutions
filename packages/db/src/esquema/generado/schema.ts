@@ -799,7 +799,7 @@ export const etapas = pgTable(
     pgPolicy('dueno edita', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
     pgPolicy('la empresa lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
     check('etapas_nombre_es_check', sql`btrim(nombre_es) <> ''::text`),
-    check('etapas_unidad_check', sql`unidad = ANY (ARRAY['pie2'::text, 'pie_lineal'::text])`),
+    check('etapas_unidad_check', sql`unidad = ANY (ARRAY['pie2'::text, 'pie_lineal'::text, 'fijo'::text])`),
   ],
 );
 
@@ -1306,6 +1306,7 @@ export const entregas = pgTable(
     creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
     creado_por: uuid(),
     actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    pasos_no: text().array().default(['']).notNull(),
   },
   (table) => [
     index('entregas_empresa_id_idx').using('btree', table.empresa_id.asc().nullsLast().op('uuid_ops')),
@@ -1330,6 +1331,10 @@ export const entregas = pgTable(
     pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
     check('entregas_check', sql`garantia_vence >= fecha_entrega`),
     check('entregas_garantia_meses_check', sql`garantia_meses >= 0`),
+    check(
+      'entregas_pasos_no_check',
+      sql`pasos_no <@ ARRAY['autoriza_fotos'::text, 'resena_pedida'::text, 'resena_recibida'::text, 'referido_pedido'::text]`,
+    ),
   ],
 );
 
@@ -1489,7 +1494,10 @@ export const historico_etapas = pgTable(
     }),
     pgPolicy('dueno lee', { as: 'permissive', for: 'select', to: ['authenticated'] }),
     check('historico_etapas_pies_lineales_check', sql`pies_lineales >= (0)::numeric`),
-    check('historico_etapas_unidad_check', sql`unidad = ANY (ARRAY['pie2'::text, 'pie_lineal'::text])`),
+    check(
+      'historico_etapas_unidad_check',
+      sql`unidad = ANY (ARRAY['pie2'::text, 'pie_lineal'::text, 'fijo'::text])`,
+    ),
   ],
 );
 
