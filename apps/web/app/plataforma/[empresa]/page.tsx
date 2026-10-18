@@ -1,5 +1,5 @@
-// La cuenta de una empresa en la plataforma (D-080): su estado, su dueño, cuánto la usa, su suscripción, sus pagos,
-// reinvitar a su dueño y suspenderla. Solo quien administra la plataforma.
+// La cuenta de una empresa en la plataforma (D-080): su estado, su dueño, cuánto la usa, editar sus datos y los de su
+// dueño (D-097), su suscripción, sus pagos, reinvitar a su dueño y suspenderla. Solo quien administra la plataforma.
 import { formatoCelular, siguienteVencimiento } from '@ijm/core';
 import { empresaDeLaPlataforma, hoyDeLaPlataforma } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
@@ -10,7 +10,13 @@ import { exigirPlataforma } from '@/lib/plataforma';
 import { Marco, estilos } from '../../componentes/marco';
 import { MensajeError } from '../../componentes/mensaje-error';
 import { COLOR_ESTADO } from '../estados';
-import { FormularioPago, FormularioSuscripcion, ReinvitarDueno, SuspenderEmpresa } from './formularios';
+import {
+  FormularioEmpresa,
+  FormularioPago,
+  FormularioSuscripcion,
+  ReinvitarDueno,
+  SuspenderEmpresa,
+} from './formularios';
 
 export default async function CuentaDeEmpresa({ params }: { params: Promise<{ empresa: string }> }) {
   const { empresa: empresaId } = await params;
@@ -62,6 +68,17 @@ export default async function CuentaDeEmpresa({ params }: { params: Promise<{ em
           {t('creada', { dia: formato.dateTime(e.creadaEn, { dateStyle: 'medium' }) })}
         </span>
       </div>
+
+      <FormularioEmpresa
+        empresaId={e.id}
+        valores={{
+          empresa: e.nombre,
+          ciudad: e.ciudad ?? '',
+          dueno: e.dueno ?? '',
+          celular: e.telefono ? formatoCelular(e.telefono) : '',
+          correo: e.correo ?? '',
+        }}
+      />
 
       <FormularioPago
         empresaId={e.id}

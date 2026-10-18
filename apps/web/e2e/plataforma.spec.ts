@@ -1,6 +1,6 @@
 // La plataforma (D-080): quien la administra (en el seed, el dueño de IJM) ve las empresas, anota un pago, da de alta
 // una empresa con el enlace para su dueño y la suspende; cuando la suscripción vence y pasa la gracia, la app queda
-// en solo lectura y el PM lo ve en su inicio.
+// en solo lectura y el PM lo ve en su inicio. También edita los datos de una empresa y de su dueño (D-097).
 import { expect, test } from '@playwright/test';
 import { admin, entrar, es, hoy, otroCelular } from './apoyo';
 
@@ -71,4 +71,32 @@ test('vencida la gracia, la app queda en solo lectura y el PM lo ve; el PM no en
   } finally {
     await db.from('suscripciones').update({ vence_el: null }).eq('empresa_id', IJM);
   }
+});
+
+test('quien administra edita los datos de una empresa y de su dueño (D-097)', async ({ page }) => {
+  await entrar(page, 'dueno');
+  await page.goto('/plataforma');
+  await page.getByRole('link', { name: /Remodelaciones del Valle/ }).click();
+  const datos = page
+    .locator('form')
+    .filter({ has: page.getByRole('heading', { name: es.plataforma.editarDatos }) });
+  await page.getByRole('button', { name: es.plataforma.editarDatos }).click();
+  const ciudad = page.getByRole('textbox', { name: es.plataforma.ciudad });
+  const antes = await ciudad.inputValue();
+  await page.getByRole('textbox', { name: es.plataforma.empresa }).fill('Remodelaciones del Valle Sur');
+  await ciudad.fill('San Antonio, TX');
+  await page.getByRole('textbox', { name: es.plataforma.correoOpcional }).fill('valle@remodela.test');
+  await datos.getByRole('button', { name: es.plataforma.guardar }).click();
+  await expect(page.getByRole('status')).toHaveText(es.plataforma.guardado);
+  await expect(page.getByRole('heading', { level: 1, name: 'Remodelaciones del Valle Sur' })).toBeVisible();
+  await expect(page.getByText('San Antonio, TX')).toBeVisible();
+  await expect(page.getByText(/valle@remodela\.test/)).toBeVisible();
+
+  // se deja como estaba, para las demás pruebas
+  await page.getByRole('button', { name: es.plataforma.editarDatos }).click();
+  await page.getByRole('textbox', { name: es.plataforma.empresa }).fill('Remodelaciones del Valle');
+  await page.getByRole('textbox', { name: es.plataforma.ciudad }).fill(antes);
+  await page.getByRole('textbox', { name: es.plataforma.correoOpcional }).fill('');
+  await datos.getByRole('button', { name: es.plataforma.guardar }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Remodelaciones del Valle' })).toBeVisible();
 });

@@ -238,7 +238,9 @@
     "concepto_orden_cambio": "A change order payment can't change its concept: void it and record it again.",
     "garantia_sin_entrega": "Warranty claims are recorded once the job is delivered.",
     "ya_cerrado": "It was already handled.",
-    "sin_entrega": "This job hasn't been delivered yet."
+    "sin_entrega": "This job hasn't been delivered yet.",
+    "falta_celular": "This owner signs in with their cell: it cannot be left empty.",
+    "faltan_datos": "The company or owner name is missing."
   },
   "obras": {
     "titulo": "Jobs",
@@ -1425,7 +1427,9 @@
     "celular": "Owner's cell phone",
     "celularAyuda": "They sign in to the app with their cell number. No message is sent to it: you send them the link.",
     "correoOpcional": "Owner's email (optional)",
-    "duenoContacto": "Owner: {dueno} ({contacto})"
+    "duenoContacto": "Owner: {dueno} ({contacto})",
+    "editarDatos": "Edit details",
+    "celularEditarAyuda": "They sign in with their cell. If you change it, the old one is freed."
   },
   "cerrarObra": {
     "titulo": "Close the job",

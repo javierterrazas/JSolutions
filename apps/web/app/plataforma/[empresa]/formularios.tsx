@@ -1,9 +1,11 @@
 'use client';
-// La cuenta de una empresa (D-080): cambiar su suscripción, anotar un pago, reinvitar a su dueño y suspenderla.
+// La cuenta de una empresa (D-080): editar sus datos y los de su dueño (D-097), cambiar su suscripción, anotar un
+// pago, reinvitar a su dueño y suspenderla.
 import { useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
 import {
   cambiarActiva,
+  editarLaEmpresa,
   guardarLaSuscripcion,
   registrarPago,
   reinvitarAlDueno,
@@ -19,6 +21,86 @@ const Listo = ({ texto }: { texto: string }) => (
     {texto}
   </p>
 );
+
+/** Los datos de la empresa y de su dueño; cerrado hasta que se toca "Editar datos". */
+export function FormularioEmpresa({
+  empresaId,
+  valores,
+}: {
+  empresaId: string;
+  valores: { empresa: string; ciudad: string; dueno: string; celular: string; correo: string };
+}) {
+  const t = useTranslations('plataforma');
+  const [abierto, setAbierto] = useState(false);
+  const [r, accion, enviando] = useActionState(
+    async (previo: Awaited<ReturnType<typeof editarLaEmpresa>> | null, f: FormData) => {
+      const x = await editarLaEmpresa(empresaId, previo, f);
+      if (x.ok) setAbierto(false);
+      return x;
+    },
+    null,
+  );
+  if (!abierto)
+    return (
+      <div className="flex flex-col gap-2">
+        {r?.ok ? <Listo texto={t('guardado')} /> : null}
+        <button type="button" onClick={() => setAbierto(true)} className={estilos.botonSecundario}>
+          {t('editarDatos')}
+        </button>
+      </div>
+    );
+  return (
+    <form onSubmit={enviarSinVaciar(accion)} className={`${estilos.tarjeta} flex flex-col gap-3`}>
+      <h2 className="font-semibold text-marca">{t('editarDatos')}</h2>
+      <label className={estilos.etiqueta}>
+        {t('empresa')}
+        <input
+          name="empresa"
+          required
+          maxLength={120}
+          defaultValue={valores.empresa}
+          className={estilos.campo}
+        />
+      </label>
+      <label className={estilos.etiqueta}>
+        {t('ciudad')}
+        <input name="ciudad" maxLength={120} defaultValue={valores.ciudad} className={estilos.campo} />
+      </label>
+      <label className={estilos.etiqueta}>
+        {t('dueno')}
+        <input name="dueno" required maxLength={80} defaultValue={valores.dueno} className={estilos.campo} />
+      </label>
+      <label className={estilos.etiqueta}>
+        {t('celular')}
+        <input
+          name="celular"
+          type="tel"
+          inputMode="tel"
+          defaultValue={valores.celular}
+          className={estilos.campo}
+        />
+        <span className="text-sm font-normal text-slate-600">{t('celularEditarAyuda')}</span>
+      </label>
+      <label className={estilos.etiqueta}>
+        {t('correoOpcional')}
+        <input name="correo" type="email" defaultValue={valores.correo} className={estilos.campo} />
+      </label>
+      <MensajeError problema={r && !r.ok ? r : null} />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setAbierto(false)}
+          className={`${estilos.botonSecundario} flex-1`}
+        >
+          {t('cancelar')}
+        </button>
+        <button type="submit" disabled={enviando} className={`${estilos.boton} flex-1`}>
+          {t('guardar')}
+        </button>
+      </div>
+    </form>
+  );
+}
 
 export function FormularioSuscripcion({
   empresaId,
