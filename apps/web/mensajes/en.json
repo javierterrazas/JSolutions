@@ -429,7 +429,11 @@
     "fotosGuardadas": "{n, plural, one {# photo already saved; it stays with the close.} other {# photos already saved; they stay with the close.}}",
     "porQue": "What did you correct? (it stays on record)",
     "guardarCorreccion": "Save the correction",
-    "hacerInspeccion": "Do the inspection"
+    "hacerInspeccion": "Do the inspection",
+    "yaLlevaHoras": "Already has {horas} h on another job: {quedan} h left.",
+    "yaLlevaDia": "Already worked a full day on another job.",
+    "yaLlevaMedioDia": "Already worked half a day on another job.",
+    "pasaDe16": "Over 16 hours for the day: enter {quedan} h or less."
   },
   "cola": {
     "pendientes": "{n, plural, one {# record waiting to send} other {# records waiting to send}} from this phone (closes, expenses, alerts and their photos).",
@@ -810,7 +814,8 @@
     "desdeFecha": "{salario} from {dia}",
     "darDeBaja": "Deactivate",
     "reactivar": "Reactivate",
-    "dadosDeBaja": "Inactive"
+    "dadosDeBaja": "Inactive",
+    "semana": "This week's hours"
   },
   "seguimiento": {
     "volver": "Back to jobs",
@@ -1562,5 +1567,22 @@
       "resena_recibida": "Left a review",
       "referido_pedido": "Referral requested"
     }
+  },
+  "semanaCuadrilla": {
+    "titulo": "This week's hours",
+    "volver": "Back to the crew",
+    "rango": "{inicio} to {fin}",
+    "anterior": "← Previous week",
+    "siguiente": "Next week →",
+    "totalCuadrilla": "Whole crew",
+    "costo": "Cost",
+    "separador": " · ",
+    "ayuda": "Tap a name to see which jobs and days they worked.",
+    "horas": "{n, plural, one {# h} other {# h}}",
+    "dias": "{n, plural, one {# day} other {# days}}",
+    "sinTarifa": "No wage",
+    "obra": "{folio} · {cliente}",
+    "diaCantidad": "{dia}: {cantidad}",
+    "nadie": "No one on the crew has hours logged this week."
   }
 }

@@ -3,6 +3,7 @@
 // cierre del día, nunca su salario.
 import { cuadrilla } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
@@ -23,6 +24,10 @@ export default async function Cuadrilla() {
   return (
     <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
+      {/* las horas de cada uno en la semana, para la nómina (D-094) */}
+      <Link href="/cuadrilla/semana" className={`${estilos.boton} flex items-center justify-center`}>
+        {t('semana')}
+      </Link>
       {!r.ok ? <MensajeError problema={r} /> : null}
       <datalist id="puestos">
         {puestos.map((p) => (

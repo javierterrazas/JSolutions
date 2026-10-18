@@ -1623,3 +1623,20 @@ simulación (D-088): la inspección de gabinetes (PC4) servía también para el 
 - Sin migración: las respuestas de cada pregunta ya se guardaban (`inspeccion_respuestas`).
 - Del catálogo (lo decide el dueño en Catálogo): el closet lleva PC1 y PC4, con preguntas pensadas para baño; con lo
   de "No aplica" recordado pesa menos, pero se puede quitar el punto de control de esas partidas.
+
+## D-093 · El cierre dice lo que cada trabajador ya lleva en otras obras
+
+**Hallazgo de la simulación (D-088):** el PM se enteraba de que un trabajador pasaba de 16 horas (o de un día) hasta
+enviar su cierre, que la app rechazaba. Ahora, en la cuadrilla del cierre, cada uno dice lo que ya lleva ese día en
+otras obras, aunque sean de otro PM ("Ya lleva 10 h en otra obra: le quedan 6 h"); si se pasa, el campo se marca
+en rojo con lo máximo que se le puede poner, y al que cobra por día solo se le ofrece lo que le queda (medio día, o
+nada). La regla sigue en el servidor (`validarCuadrilla`); esto solo la anticipa. Sin señal, el dato es el de cuando
+se guardó la copia.
+
+## D-094 · Las horas de la semana de la cuadrilla
+
+**Decisión del dueño:** un resumen semanal con las horas de cada trabajador y, al tocar su nombre, en qué obras
+trabajó. En Cuadrilla, "Horas de la semana" (`/cuadrilla/semana`, `semanaDeLaCuadrilla`): de lunes a domingo, cada
+uno con sus horas (o días, si cobra por día) y lo que cuesta con la tarifa vigente de cada día (para la nómina); al
+tocarlo, sus obras con sus horas y qué días. Arriba, el total de la cuadrilla y su costo; se navega a la semana
+anterior y a la siguiente (no al futuro). Solo el dueño o el administrador: lleva salarios.

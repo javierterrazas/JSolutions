@@ -77,3 +77,24 @@ test('el dueño da de alta, edita, cambia el salario y da de baja; el PM lo ve e
   await tarjeta(page, 'Juan').getByRole('button', { name: es.cuadrilla.reactivar }).click();
   await expect(tarjeta(page, 'Juan').getByRole('button', { name: es.cuadrilla.darDeBaja })).toBeVisible();
 });
+
+test('las horas de la semana: cada uno con su total y su costo; al tocarlo, sus obras y sus días (D-094)', async ({
+  page,
+}) => {
+  await entrar(page, 'dueno');
+  await page.goto('/cuadrilla');
+  await page.getByRole('link', { name: es.cuadrilla.semana }).click();
+  await expect(page.getByRole('heading', { level: 1, name: es.semanaCuadrilla.titulo })).toBeVisible();
+  // la semana del seed: Pedro tiene horas el lunes 5 de octubre en OB-001
+  await page.goto('/cuadrilla/semana?semana=2026-10-07');
+  await expect(page.getByText('Del 5 oct al 11 oct 2026')).toBeVisible();
+  const pedro = page.locator('details').filter({ hasText: 'Pedro' });
+  await expect(pedro).toContainText(/\d+ h/);
+  await expect(pedro).toContainText(/\$[\d,.]+/);
+  await expect(pedro.getByText(/^OB-001 · /)).toBeHidden();
+  await pedro.getByText('Pedro', { exact: true }).click();
+  await expect(pedro.getByText(/^OB-001 · /)).toBeVisible();
+  await expect(pedro).toContainText(/lun 5: \d+ h/);
+  await page.getByRole('link', { name: es.semanaCuadrilla.siguiente }).click();
+  await expect(page).toHaveURL(/semana=2026-10-12/);
+});

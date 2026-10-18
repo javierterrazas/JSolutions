@@ -429,7 +429,11 @@
     "fotosGuardadas": "{n, plural, one {# foto ya guardada; se queda con el cierre.} other {# fotos ya guardadas; se quedan con el cierre.}}",
     "porQue": "¿Qué corregiste? (queda en el registro)",
     "guardarCorreccion": "Guardar la corrección",
-    "hacerInspeccion": "Hacer la inspección"
+    "hacerInspeccion": "Hacer la inspección",
+    "yaLlevaHoras": "Ya lleva {horas} h en otra obra: le quedan {quedan} h.",
+    "yaLlevaDia": "Ya trabajó el día completo en otra obra.",
+    "yaLlevaMedioDia": "Ya trabajó medio día en otra obra.",
+    "pasaDe16": "Pasa de 16 horas en el día: ponle {quedan} h o menos."
   },
   "cola": {
     "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres, gastos, avisos y sus fotos).",
@@ -810,7 +814,8 @@
     "desdeFecha": "{salario} desde el {dia}",
     "darDeBaja": "Dar de baja",
     "reactivar": "Reactivar",
-    "dadosDeBaja": "Dados de baja"
+    "dadosDeBaja": "Dados de baja",
+    "semana": "Horas de la semana"
   },
   "seguimiento": {
     "volver": "Volver a obras",
@@ -1562,5 +1567,22 @@
       "resena_recibida": "Dejó la reseña",
       "referido_pedido": "Se le pidió un referido"
     }
+  },
+  "semanaCuadrilla": {
+    "titulo": "Horas de la semana",
+    "volver": "Volver a la cuadrilla",
+    "rango": "Del {inicio} al {fin}",
+    "anterior": "← Semana anterior",
+    "siguiente": "Semana siguiente →",
+    "totalCuadrilla": "Toda la cuadrilla",
+    "costo": "Costo",
+    "separador": " · ",
+    "ayuda": "Toca el nombre para ver en qué obras y qué días trabajó.",
+    "horas": "{n, plural, one {# h} other {# h}}",
+    "dias": "{n, plural, one {# día} other {# días}}",
+    "sinTarifa": "Sin salario",
+    "obra": "{folio} · {cliente}",
+    "diaCantidad": "{dia}: {cantidad}",
+    "nadie": "Nadie de la cuadrilla tiene horas anotadas esta semana."
   }
 }

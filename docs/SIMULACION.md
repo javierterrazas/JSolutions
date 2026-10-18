@@ -89,7 +89,7 @@ cada lunes, y al terminar: medida verificada, punch, cobro final y cierre de la 
   después de que la partida arrancó.
 - **La cuadrilla no alcanzó** un día con 8 trabajadores para 9 obras activas, y la app no lo anticipa: no hay vista de
   quién va a qué obra mañana.
-- **Las horas de un trabajador en dos obras:** del 10 al 15 de octubre, Jose Luna ya tenía 10 horas en la obra real
+- **Resuelto en D-093.** **Las horas de un trabajador en dos obras:** del 10 al 15 de octubre, Jose Luna ya tenía 10 horas en la obra real
   OB-001; la app no dejó cargarle más de 16 en el día y rechazó esos cierres de Wilson Home (bien). Pero el PM se
   entera hasta que envía su cierre. *Propuesta:* al capturar la cuadrilla, mostrar las horas que ese trabajador ya
   lleva hoy en otras obras.
