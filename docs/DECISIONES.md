@@ -1665,3 +1665,10 @@ mueven más el precio y cuáles casi no cambian con el tamaño.
   eléctrico, vidrio y accesorios y appliances.
 - Las 5 obras cerradas de la simulación (D-088) no sirven para esto: su costo se generó proporcional a los pies². El
   análisis empieza a decir algo con las obras reales.
+
+## D-096 · Sin las funciones de antes del celular
+
+D-083 dejó en la base las versiones de `invitar_pm` (5 argumentos) y `plataforma_alta_empresa` (13 argumentos) sin
+celular, mientras la app que las usaba seguía publicada. Ya nadie las usa: se quitan (migración
+`20261029000100_quitar_funciones_viejas`). Las de ahora las llamaban por dentro, así que primero se reescriben con todo
+su cuerpo (con las mismas firmas, sus permisos se quedan) y después se borran las viejas.
