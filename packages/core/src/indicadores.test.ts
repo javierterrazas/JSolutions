@@ -3,6 +3,7 @@ import { CALENDARIO_LEGACY, CALENDARIO_POR_DEFECTO } from './fechas';
 import {
   calcularIndicadores,
   type DatosIndicadores,
+  detallePorObra,
   INDICADORES,
   semaforo,
   tasaDeCierre,
@@ -120,5 +121,70 @@ describe('los 19 indicadores', () => {
       ).find((x) => x.clave === 'avisos_fuera_de_sla')!;
     expect(a(24)).toMatchObject({ valor: 1, semaforo: 'rojo', datos: { slaHoras: 24 } }); // con meta 0, el ámbar llega a 0.5
     expect(a(26).valor).toBe(0);
+  });
+});
+
+describe('el detalle por obra de los seis del lunes (D-099)', () => {
+  const AHORA = new Date('2026-10-12T14:00:00Z');
+  const horasAntes = (h: number) => new Date(AHORA.getTime() - h * 3_600_000);
+  const d: DatosIndicadores = {
+    ...VACIO,
+    obras: [
+      { id: 'A', enObra: true, inicio: '2026-09-28', contrato: 20000 },
+      { id: 'B', enObra: true, inicio: '2026-09-28', contrato: 10000 },
+    ],
+    // A cerró de lunes a viernes; B se olvidó el miércoles y el viernes
+    cierres: [
+      ...['2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09'].map((dia) => ({
+        obraId: 'A',
+        dia,
+        conTrabajo: true,
+      })),
+      ...['2026-10-05', '2026-10-06', '2026-10-08'].map((dia) => ({ obraId: 'B', dia, conTrabajo: true })),
+    ],
+    avisos: [
+      { obraId: 'B', abiertoEn: horasAntes(30), abierto: true, respondidoEn: null },
+      { obraId: 'A', abiertoEn: horasAntes(2), abierto: true, respondidoEn: null },
+    ],
+    gastosPM: [
+      { obraId: 'A', monto: 120, registradoEn: horasAntes(100), conRecibo: false },
+      { obraId: 'A', monto: 80, registradoEn: horasAntes(90), conRecibo: false },
+      { obraId: 'B', monto: 50, registradoEn: horasAntes(100), conRecibo: true },
+    ],
+    ordenesTrabajo: [
+      {
+        id: 'ot1',
+        obraId: 'A',
+        cancelada: false,
+        precio: 2000,
+        sePresento: true,
+        faltas: 0,
+        aprobada: false,
+      },
+      { id: 'ot2', obraId: 'B', cancelada: false, precio: 500, sePresento: true, faltas: 0, aprobada: true },
+    ],
+    pagosSub: [{ ordenTrabajoId: 'ot2', liquidacion: true, monto: 500 }],
+    noCalidad: [{ obraId: 'B', garantia: false, costo: 300, diasPerdidos: 1 }],
+    ordenesCambio: [
+      { obraId: 'A', propuesta: true, autorizada: false, emitidaEn: horasAntes(60), costo: 100, precio: 200 },
+    ],
+  };
+  const det = detallePorObra(d, CFG, AHORA, '2026-10-12', CALENDARIO_LEGACY);
+
+  it('cada uno con sus obras, y solo las que mueven el número', () => {
+    expect(det.tasa_cierre_dia).toEqual([{ obraId: 'B', cantidad: 2, dias: ['2026-10-07', '2026-10-09'] }]);
+    expect(det.avisos_fuera_de_sla).toEqual([{ obraId: 'B', cantidad: 1 }]);
+    expect(det.oc_fuera_de_sla).toEqual([{ obraId: 'A', cantidad: 1 }]);
+    expect(det.cargos_sin_recibo).toEqual([{ obraId: 'A', cantidad: 2, monto: 200 }]);
+    expect(det.saldo_subcontratistas).toEqual([{ obraId: 'A', cantidad: 1, monto: 2000 }]);
+    expect(det.no_calidad_sobre_contratos).toEqual([{ obraId: 'B', cantidad: 1, monto: 300 }]);
+  });
+
+  it('cuadra con el indicador', () => {
+    const i = calcularIndicadores(d, CFG, AHORA, '2026-10-12', CALENDARIO_LEGACY);
+    const valor = (k: string) => i.find((x) => x.clave === k)!.valor;
+    expect(det.avisos_fuera_de_sla!.reduce((a, x) => a + x.cantidad, 0)).toBe(valor('avisos_fuera_de_sla'));
+    expect(det.cargos_sin_recibo!.reduce((a, x) => a + x.cantidad, 0)).toBe(valor('cargos_sin_recibo'));
+    expect(det.saldo_subcontratistas!.reduce((a, x) => a + x.monto!, 0)).toBe(valor('saldo_subcontratistas'));
   });
 });

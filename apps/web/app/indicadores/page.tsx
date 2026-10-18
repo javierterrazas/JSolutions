@@ -1,6 +1,6 @@
 // Los indicadores de la empresa, para el dueño (D-075; legacy: el tablero de kpis_): arriba los seis del lunes, lo
-// primero que hay que ver; abajo los 19 por proceso, cada uno con su valor, su meta, su semáforo y qué revela. Lleva
-// dinero: solo el dueño o el administrador.
+// primero que hay que ver (el que no está en verde se toca para ver qué obras lo mueven, D-099); abajo los 19 por
+// proceso, cada uno con su valor, su meta, su semáforo y qué revela. Lleva dinero: solo el dueño o el administrador.
 import type { Indicador } from '@ijm/core';
 import {
   congelarPlanSemanal,
@@ -9,6 +9,7 @@ import {
   indicadoresDeLaEmpresa,
 } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
@@ -22,6 +23,15 @@ const COLOR: Record<Indicador['semaforo'], { borde: string; punto: string; texto
   info: { borde: 'border-slate-200', punto: 'bg-slate-400', texto: 'text-slate-800' },
 };
 const PROCESOS = ['P3', 'P4', 'P5', 'P6'] as const;
+/** Dónde se atiende cada uno de los seis del lunes, en cada obra (D-099). */
+const DONDE: Partial<Record<Indicador['clave'], (obraId: string) => string>> = {
+  tasa_cierre_dia: (id) => `/obras/${id}/seguimiento`,
+  avisos_fuera_de_sla: () => '/avisos',
+  oc_fuera_de_sla: (id) => `/obras/${id}/cambios`,
+  cargos_sin_recibo: (id) => `/obras/${id}/seguimiento`,
+  saldo_subcontratistas: (id) => `/obras/${id}/subcontratos`,
+  no_calidad_sobre_contratos: (id) => `/obras/${id}/retrabajos`,
+};
 
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
@@ -99,18 +109,62 @@ export default async function Indicadores() {
 
       <Seccion titulo={t('principales')}>
         <ul className="grid grid-cols-2 gap-2">
-          {principales.map((i) => (
-            <li
-              key={i.clave}
-              className={`flex flex-col gap-1 rounded-2xl border-2 bg-white p-3 ${COLOR[i.semaforo].borde}`}
-            >
-              <span className="text-sm leading-tight text-slate-700">{nombre(i)}</span>
-              <span className={`text-2xl font-bold ${COLOR[i.semaforo].texto}`}>
-                {i.sinDatos ? '—' : valor(i, i.valor)}
-              </span>
-              {meta(i) ? <span className="text-xs text-slate-600">{meta(i)}</span> : null}
-            </li>
-          ))}
+          {principales.map((i) => {
+            const cara = (
+              <>
+                <span className="text-sm leading-tight text-slate-700">{nombre(i)}</span>
+                <span className={`text-2xl font-bold ${COLOR[i.semaforo].texto}`}>
+                  {i.sinDatos ? '—' : valor(i, i.valor)}
+                </span>
+                {meta(i) ? <span className="text-xs text-slate-600">{meta(i)}</span> : null}
+              </>
+            );
+            // el que no está en verde y tiene obras detrás se abre para verlas (D-099)
+            const obras = i.semaforo !== 'verde' ? (d.detalle[i.clave] ?? []) : [];
+            return (
+              <li
+                key={i.clave}
+                className={`rounded-2xl border-2 bg-white p-3 has-[[open]]:col-span-2 ${COLOR[i.semaforo].borde}`}
+              >
+                {obras.length ? (
+                  <details>
+                    <summary className="flex cursor-pointer list-none flex-col gap-1">
+                      {cara}
+                      <span className="text-xs font-semibold text-marca underline">
+                        {t('verObras', { n: obras.length })}
+                      </span>
+                    </summary>
+                    <ul className="mt-2 flex flex-col gap-2 border-t border-slate-200 pt-2">
+                      {obras.map((o) => (
+                        <li key={o.obraId}>
+                          <Link
+                            href={DONDE[i.clave]?.(o.obraId) ?? `/obras/${o.obraId}/seguimiento`}
+                            className="flex flex-col text-sm"
+                          >
+                            <span className="font-semibold text-marca underline">
+                              {t('obraDetalle', { folio: o.folio, cliente: o.cliente })}
+                            </span>
+                            <span className="text-slate-700">
+                              {t(
+                                `detalle.${i.clave}` as never,
+                                {
+                                  n: o.cantidad,
+                                  monto: dinero.format(o.monto ?? 0),
+                                  dias: (o.dias ?? []).map((x) => dia(x)).join(', '),
+                                } as never,
+                              )}
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : (
+                  <div className="flex flex-col gap-1">{cara}</div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </Seccion>
 

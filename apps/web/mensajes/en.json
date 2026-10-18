@@ -1315,6 +1315,16 @@
       "sinPlan": "No plan was saved last week. It saves itself the first time you open the app in the week.",
       "linea": "{espacio} · {partida}",
       "detalle": "{prevista} · {resultado}"
+    },
+    "verObras": "{n, plural, one {See the job} other {See the # jobs}}",
+    "obraDetalle": "{folio} · {cliente}",
+    "detalle": {
+      "tasa_cierre_dia": "{n, plural, one {# day not closed: {dias}} other {# days not closed: {dias}}}",
+      "avisos_fuera_de_sla": "{n, plural, one {# alert not answered in time} other {# alerts not answered in time}}",
+      "oc_fuera_de_sla": "{n, plural, one {# change order awaiting the client} other {# change orders awaiting the client}}",
+      "cargos_sin_recibo": "{n, plural, one {# charge without receipt · {monto}} other {# charges without receipt · {monto}}}",
+      "saldo_subcontratistas": "{monto} owed to subs",
+      "no_calidad_sobre_contratos": "{monto} in rework and warranty"
     }
   },
   "miEmpresa": {
