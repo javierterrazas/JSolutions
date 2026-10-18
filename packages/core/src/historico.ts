@@ -1,6 +1,6 @@
 // El histórico de las obras cerradas (D-087; legacy: admin/servidor.js duHistorico): sus promedios por mes y por tipo
-// de obra, la tendencia de las últimas obras y el costo real por unidad de cada etapa. Promedios simples, como el
-// legacy: cada obra pesa lo mismo.
+// de obra y la tendencia de las últimas obras. Promedios simples, como el legacy: cada obra pesa lo mismo. Lo que
+// cuesta cada etapa según el tamaño está en costos-etapa.ts (D-095).
 
 export interface ObraCerrada {
   readonly obraId: string;
@@ -92,46 +92,4 @@ export function resumenHistorico(obras: readonly ObraCerrada[]): ResumenHistoric
     porTipo: porClave(obras, (o) => o.tipo).sort((a, b) => b.n - a.n || a.clave.localeCompare(b.clave)),
     tendencia: { margen: delta('margen'), desviacion: delta('desviacion'), dias: delta('dias') },
   };
-}
-
-export interface EtapaCerrada {
-  readonly tipoEspacioId: string;
-  readonly etapaId: string | null;
-  readonly unidad: 'pie2' | 'pie_lineal';
-  /** Lo que costó de verdad por su unidad; null sin medida. */
-  readonly costoPorUnidad: number | null;
-}
-
-export interface CostoPorUnidad {
-  readonly tipoEspacioId: string;
-  readonly etapaId: string | null;
-  readonly unidad: 'pie2' | 'pie_lineal';
-  readonly n: number;
-  readonly promedio: number;
-  readonly minimo: number;
-  readonly maximo: number;
-}
-
-/**
- * Lo que costó de verdad cada etapa por su unidad, por tipo de espacio: es lo que se recomendará al cotizar. Solo
- * las etapas cerradas con medida.
- */
-export function costosPorUnidad(etapas: readonly EtapaCerrada[]): CostoPorUnidad[] {
-  const g = new Map<string, { e: EtapaCerrada; v: number[] }>();
-  for (const e of etapas) {
-    if (e.costoPorUnidad === null || !(e.costoPorUnidad > 0)) continue;
-    const k = `${e.tipoEspacioId}|${e.etapaId ?? ''}|${e.unidad}`;
-    const x = g.get(k) ?? { e, v: [] };
-    x.v.push(e.costoPorUnidad);
-    g.set(k, x);
-  }
-  return [...g.values()].map(({ e, v }) => ({
-    tipoEspacioId: e.tipoEspacioId,
-    etapaId: e.etapaId,
-    unidad: e.unidad,
-    n: v.length,
-    promedio: v.reduce((a, b) => a + b, 0) / v.length,
-    minimo: Math.min(...v),
-    maximo: Math.max(...v),
-  }));
 }

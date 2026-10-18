@@ -2,8 +2,9 @@
 // El presupuesto por etapa (D-084): de cada etapa de cada espacio, lo que se espera gastar (costo) y el margen; el
 // precio sale solo (costo / (1 − margen), el margen sobre el precio). Abajo, la suma de los costos y de los precios,
 // y el contrato, que sigue a la suma de los precios hasta que el dueño lo cambia (por ejemplo, para redondearlo).
-// Al guardar, la obra queda lista para arranque si cada espacio tiene al menos una etapa con costo.
-import { margenDe, precioConMargen } from '@ijm/core';
+// Al guardar, la obra queda lista para arranque si cada espacio tiene al menos una etapa con costo. Con obras
+// cerradas, cada etapa sugiere su costo según el tamaño del espacio (D-095), y se usa con un toque.
+import { type AnalisisEtapa, costoSugerido, margenDe, precioConMargen, type UnidadEtapa } from '@ijm/core';
 import { useLocale, useTranslations } from 'next-intl';
 import { startTransition, useActionState, useState } from 'react';
 import { formatoDinero } from '@/lib/dinero';
@@ -20,7 +21,9 @@ interface Espacio {
   etapas: {
     etapaId: string | null;
     nombre: string | null;
-    unidad: 'pie2' | 'pie_lineal';
+    unidad: UnidadEtapa;
+    /** Lo que ha costado en obras cerradas de este tipo de espacio (D-095). */
+    historia: AnalisisEtapa | null;
     partidas: number;
     /** Su precio. */
     monto: number;
@@ -82,8 +85,8 @@ export function FormularioPresupuesto({
     Object.fromEntries(espacios.map((e) => [e.id, e.piesLineales ? String(e.piesLineales) : ''])),
   );
   const conLineal = (e: Espacio) => e.etapas.some((x) => x.unidad === 'pie_lineal');
-  const medidaDe = (e: Espacio, unidad: 'pie2' | 'pie_lineal') =>
-    unidad === 'pie_lineal' ? numero(lineales[e.id] ?? '') : e.pies2;
+  const medidaDe = (e: Espacio, unidad: UnidadEtapa) =>
+    unidad === 'fijo' ? 0 : unidad === 'pie_lineal' ? numero(lineales[e.id] ?? '') : e.pies2;
 
   const dinero = (n: number) => formatoDinero(idioma).format(n);
   const margenDeObra = fraccion(margenObra) ?? margenObjetivo;
@@ -205,6 +208,30 @@ export function FormularioPresupuesto({
                     </label>
                   </div>
                   <p className="text-right text-sm">{t('precio', { precio: dinero(precioDe(k)) })}</p>
+                  {/* lo que ha costado en obras cerradas, según el tamaño (D-095) */}
+                  {(() => {
+                    const s = x.historia
+                      ? costoSugerido(x.historia, {
+                          pies2: e.pies2,
+                          piesLineales: numero(lineales[e.id] ?? ''),
+                        })
+                      : null;
+                    if (s === null || !x.historia) return null;
+                    return (
+                      <p className="flex items-center justify-end gap-2 text-xs text-slate-600">
+                        <span>{t('sugerido', { costo: dinero(s), n: x.historia.n })}</span>
+                        {numero(costos[k] ?? '') !== s ? (
+                          <button
+                            type="button"
+                            onClick={() => setCostos((c) => ({ ...c, [k]: String(s) }))}
+                            className="min-h-9 rounded-lg border border-marca px-2 font-semibold text-marca"
+                          >
+                            {t('usarSugerido')}
+                          </button>
+                        ) : null}
+                      </p>
+                    );
+                  })()}
                   {/* el costo y el precio por la unidad de la etapa (D-086) */}
                   {numero(costos[k] ?? '') ? (
                     medidaDe(e, x.unidad) ? (
@@ -216,6 +243,8 @@ export function FormularioPresupuesto({
                       </p>
                     ) : x.unidad === 'pie_lineal' ? (
                       <p className="text-right text-xs text-amber-800">{t('faltanLineales')}</p>
+                    ) : x.unidad === 'fijo' ? (
+                      <p className="text-right text-xs text-slate-600">{t('fijoPorEspacio')}</p>
                     ) : null
                   ) : null}
                 </div>

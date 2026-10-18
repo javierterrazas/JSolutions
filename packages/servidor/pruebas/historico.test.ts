@@ -10,7 +10,7 @@ afterAll(() => servidor.sql.end());
 const LUNES = enAustin('2026-10-12', 9);
 
 describe('el histórico de obras', () => {
-  it('cada obra cerrada con sus números, sus promedios y el costo por unidad de cada etapa', () =>
+  it('cada obra cerrada con sus números, sus promedios y lo que cuesta cada etapa', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const h = await historicoDeObras(tx, LUNES);
       expect(h.obras).toHaveLength(1);
@@ -27,22 +27,25 @@ describe('el histórico de obras', () => {
       expect(h.obras[0]!.costoPie).toBeCloseTo(15600 / 45, 6);
       expect(h.resumen.total.n).toBe(1);
       expect(h.resumen.porTipo.map((g) => g.clave)).toEqual(['Baño']);
-      expect(h.porUnidad).toEqual([
+      // con una sola obra no se sabe qué parte es fija (D-095): solo su costo por unidad
+      expect(h.costos).toEqual([
         expect.objectContaining({
           tipoEspacio: { es: 'Baño', en: 'Bathroom' },
           etapa: expect.objectContaining({ es: 'Demolición' }),
           unidad: 'pie2',
           n: 1,
-          promedio: 36,
+          porUnidad: 36,
+          ajuste: null,
+          sugerida: null,
         }),
       ]);
 
-      // otra obra cerrada: va primero, y su demolición entra al promedio por unidad
+      // otra obra cerrada: va primero, y su demolición entra a lo que cuesta la etapa
       await cerrarObra(tx, { obraId: OBRAS.a1Carlos, fechaEntrega: '2026-10-12', forzar: true }, LUNES);
       const h2 = await historicoDeObras(tx, LUNES);
       expect(h2.obras.map((o) => o.folio)).toEqual(['OB-001', 'OB-003']);
       expect(h2.resumen.porMes.map((g) => g.clave)).toEqual(['2026-10', '2026-08']);
-      const demolicion = h2.porUnidad.find((x) => x.etapa?.es === 'Demolición')!;
+      const demolicion = h2.costos.find((x) => x.etapa?.es === 'Demolición')!;
       expect(demolicion.n).toBe(2);
     }));
 

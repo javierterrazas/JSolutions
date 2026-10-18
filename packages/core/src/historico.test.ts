@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { costosPorUnidad, type ObraCerrada, resumenHistorico } from './historico';
+import { type ObraCerrada, resumenHistorico } from './historico';
 
 const obra = (n: number, mes: string, tipo: string, margen: number, dias: number): ObraCerrada => ({
   obraId: `o${n}`,
@@ -52,26 +52,5 @@ describe('el histórico de obras cerradas (D-087)', () => {
       desviacion: null,
       dias: null,
     });
-  });
-
-  it('el costo por unidad de cada etapa, por tipo de espacio y unidad; sin medida no cuenta', () => {
-    const c = costosPorUnidad([
-      { tipoEspacioId: 'bano', etapaId: 'tile', unidad: 'pie2', costoPorUnidad: 30 },
-      { tipoEspacioId: 'bano', etapaId: 'tile', unidad: 'pie2', costoPorUnidad: 40 },
-      { tipoEspacioId: 'bano', etapaId: 'tile', unidad: 'pie2', costoPorUnidad: null },
-      { tipoEspacioId: 'cocina', etapaId: 'cubierta', unidad: 'pie_lineal', costoPorUnidad: 80 },
-    ]);
-    expect(c).toEqual([
-      { tipoEspacioId: 'bano', etapaId: 'tile', unidad: 'pie2', n: 2, promedio: 35, minimo: 30, maximo: 40 },
-      {
-        tipoEspacioId: 'cocina',
-        etapaId: 'cubierta',
-        unidad: 'pie_lineal',
-        n: 1,
-        promedio: 80,
-        minimo: 80,
-        maximo: 80,
-      },
-    ]);
   });
 });

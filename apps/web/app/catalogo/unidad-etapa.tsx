@@ -1,5 +1,6 @@
 'use client';
-// La unidad con que se cotiza una etapa (D-086): por pie² o por pie lineal. Se guarda al elegirla.
+// La unidad con que se cotiza una etapa (D-086): por pie², por pie lineal o fija por espacio (D-095). Se guarda al
+// elegirla.
 import { useTranslations } from 'next-intl';
 import { startTransition, useActionState } from 'react';
 import { cambiarUnidad } from '../acciones/catalogo';
@@ -13,7 +14,7 @@ export function UnidadEtapa({
 }: {
   etapaId: string;
   nombre: string;
-  unidad: 'pie2' | 'pie_lineal';
+  unidad: 'pie2' | 'pie_lineal' | 'fijo';
 }) {
   const t = useTranslations('catalogo');
   const [r, accion, enviando] = useActionState(cambiarUnidad.bind(null, etapaId), null);
@@ -35,6 +36,7 @@ export function UnidadEtapa({
         >
           <option value="pie2">{t('unidades.pie2')}</option>
           <option value="pie_lineal">{t('unidades.pie_lineal')}</option>
+          <option value="fijo">{t('unidades.fijo')}</option>
         </select>
       </label>
       <MensajeError problema={r && !r.ok ? r : null} />

@@ -1,6 +1,13 @@
 // Lo que leen las pantallas del dueño para dar de alta una obra y capturar su presupuesto (D-039). Solo leen, con
 // la identidad del dueño: RLS decide qué ve (los montos son de la muralla financiera, D-002).
-import { claveEtapa, etapasDeEspacio } from '@ijm/core';
+import {
+  type AnalisisEtapa,
+  analizarCostosEtapa,
+  claveEtapa,
+  etapasDeEspacio,
+  type MuestraEtapa,
+  type UnidadEtapa,
+} from '@ijm/core';
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import { uuid, validarEntrada } from './entrada';
@@ -68,7 +75,9 @@ export interface PresupuestoParaCapturar {
       etapaId: string | null;
       nombre: Nombre | null;
       /** Cómo se cotiza la etapa; "Otras partidas", por pie². */
-      unidad: 'pie2' | 'pie_lineal';
+      unidad: UnidadEtapa;
+      /** Lo que ha costado en las obras cerradas de este tipo de espacio, para sugerir el costo (D-095). */
+      historia: AnalisisEtapa | null;
       partidas: number;
       monto: number;
       costo: number | null;
@@ -101,7 +110,7 @@ export async function presupuestoParaCapturar(
   const etapas = new Map(
     (
       await tx<
-        { id: string; es: string; en: string | null; unidad: 'pie2' | 'pie_lineal' }[]
+        { id: string; es: string; en: string | null; unidad: UnidadEtapa }[]
       >`select id, nombre_es as es, nombre_en as en, unidad from etapas`
     ).map((e) => [e.id, { nombre: { es: e.es, en: e.en }, unidad: e.unidad }]),
   );
@@ -124,6 +133,13 @@ export async function presupuestoParaCapturar(
   const [f] = await tx<{ margen: string | null; contrato: string | null; empresa: string }[]>`
     select f.margen_objetivo as margen, f.contrato_original as contrato, c.margen_presupuesto as empresa
     from configuracion c left join obras_finanzas f on f.obra_id = ${obraId}`;
+  // lo que ha costado cada etapa en las obras cerradas, para sugerir su costo (D-095)
+  const historia = new Map(
+    analizarCostosEtapa(
+      await muestrasDeEtapas(tx),
+      new Map([...etapas].map(([id, x]) => [id, x.unidad])),
+    ).map((a) => [`${a.tipoEspacioId}|${a.etapaId ?? ''}`, a]),
+  );
   const lista = espacios.map((e) => ({
     id: e.id,
     nombre: nombresEspacio.get(e.id) ?? '',
@@ -134,6 +150,7 @@ export async function presupuestoParaCapturar(
       etapaId: x.etapaId,
       nombre: x.etapaId ? (etapas.get(x.etapaId)?.nombre ?? null) : null,
       unidad: (x.etapaId ? etapas.get(x.etapaId)?.unidad : null) ?? 'pie2',
+      historia: historia.get(`${e.tipoEspacioId}|${x.etapaId ?? ''}`) ?? null,
       partidas: x.partidas.length,
       monto: montos.get(claveEtapa(e.id, x.etapaId))?.monto ?? 0,
       costo: montos.get(claveEtapa(e.id, x.etapaId))?.costo ?? null,
@@ -147,4 +164,19 @@ export async function presupuestoParaCapturar(
     margenObjetivo: Number(f?.margen ?? f?.empresa ?? 0.35),
     contrato: f?.contrato === null || f?.contrato === undefined ? null : Number(f.contrato),
   };
+}
+
+/** Las etapas de las obras cerradas: su costo real y las medidas del espacio (D-095). */
+export async function muestrasDeEtapas(tx: Tx): Promise<MuestraEtapa[]> {
+  return (
+    await tx<{ tipo: string; etapa: string | null; costo: string; pies2: string; lineales: string }[]>`
+      select tipo_espacio_id as tipo, etapa_id as etapa, costo_real as costo, pies2, pies_lineales as lineales
+      from historico_etapas`
+  ).map((x) => ({
+    tipoEspacioId: x.tipo,
+    etapaId: x.etapa,
+    costo: Number(x.costo),
+    pies2: Number(x.pies2),
+    piesLineales: Number(x.lineales),
+  }));
 }

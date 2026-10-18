@@ -219,7 +219,7 @@ describe('etapas', () => {
       await guardarPartidaCatalogo(tx, { tipoId: bano, nombre: 'Pintar techo', etapaId });
     }));
 
-  it('cada etapa se cotiza por pie² o por pie lineal (D-086)', () =>
+  it('cada etapa se cotiza por pie², por pie lineal (D-086) o fija (D-095)', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
       const { etapaId } = await crearEtapa(tx, { nombre: 'Cubierta', unidad: 'pie_lineal' });
       const de = async (id: string) => (await catalogoDeTipos(tx)).etapas.find((x) => x.id === id)!.unidad;
@@ -228,6 +228,9 @@ describe('etapas', () => {
       expect(await de(demolicion)).toBe('pie2');
       await cambiarUnidadEtapa(tx, { etapaId: demolicion, unidad: 'pie_lineal' });
       expect(await de(demolicion)).toBe('pie_lineal');
+      // o fija por espacio (D-095)
+      await cambiarUnidadEtapa(tx, { etapaId: demolicion, unidad: 'fijo' });
+      expect(await de(demolicion)).toBe('fijo');
       expect(
         await codigo(tx, () => cambiarUnidadEtapa(tx, { etapaId: OBRAS.a1Carlos, unidad: 'pie2' })),
       ).toBe('etapa_no_encontrada');

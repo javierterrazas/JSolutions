@@ -315,7 +315,10 @@
     "piesLinealesDe": "Linear feet of {espacio}",
     "porPie2": "Cost {costo}/sq ft · Price {precio}/sq ft",
     "porPieLineal": "Cost {costo}/linear ft · Price {precio}/linear ft",
-    "faltanLineales": "Type the space's linear feet to see the cost per linear foot."
+    "faltanLineales": "Type the space's linear feet to see the cost per linear foot.",
+    "sugerido": "{n, plural, one {Suggested: {costo} (from # closed job)} other {Suggested: {costo} (from # closed jobs)}}",
+    "usarSugerido": "Use",
+    "fijoPorEspacio": "Fixed price per space: doesn't depend on size."
   },
   "inicioPm": {
     "racha": "{n, plural, =0 {No streak yet} one {# day in a row closed} other {# days in a row closed}}",
@@ -516,7 +519,8 @@
     "unidadDe": "How {etapa} is quoted",
     "unidades": {
       "pie2": "Sq ft",
-      "pie_lineal": "Linear ft"
+      "pie_lineal": "Linear ft",
+      "fijo": "Fixed per space"
     }
   },
   "sinSenal": {
@@ -1495,7 +1499,7 @@
     "lineaGrupo": "Margin {margen} · Deviation {desviacion} · {dias}",
     "lineaPie": "You charge {venta} · It costs you {costo}",
     "porUnidad": "What each stage costs",
-    "porUnidadAyuda": "What each stage really cost per its unit, in your closed jobs. The quoting recommendation will come from here.",
+    "porUnidadAyuda": "From your closed jobs. With 5 or more jobs of different sizes we can tell which part of each stage is fixed and which grows with size; that is where the suggested cost comes from.",
     "tipoEtapa": "{tipo} · {etapa}",
     "otras": "Other tasks",
     "rango": "{n, plural, one {# job} other {# jobs}} · from {minimo} to {maximo}",
@@ -1508,7 +1512,24 @@
     "obraEncabezado": "{folio} · {cliente}",
     "lineaObra": "{tipo} · delivered {entrega} · {dias}",
     "lineaObraDinero": "Contract {contrato} · Cost {costo} · Deviation {desviacion}",
-    "lineaObraGarantia": "{reclamos, plural, =0 {No claims} one {# claim} other {# claims}} ({costo}) · {resena, select, si {left a review} other {no review}}"
+    "lineaObraGarantia": "{reclamos, plural, =0 {No claims} one {# claim} other {# claims}} ({costo}) · {resena, select, si {left a review} other {no review}}",
+    "porEspacio": "{monto} per space",
+    "ajuste": "Base {base} + {tarifa} per {unidad}",
+    "parteTamano": "Size explains {pct} of its cost",
+    "casiFija": "Barely changes with size",
+    "sugerirFijo": "Better to charge it fixed per space.",
+    "sugerirPie2": "Better to price it per sq ft.",
+    "sugerirLineal": "Better to price it per linear ft.",
+    "faltanObras": "{n, plural, one {With # closed job: 5 of different sizes are needed to tell which part is fixed.} other {With # closed jobs: 5 of different sizes are needed to tell which part is fixed.}}",
+    "masMueven": "What moves the price most",
+    "masMuevenAyuda": "How much each stage cost goes up for every 10 more units of size.",
+    "mueve": "+{monto} per 10 {unidad}",
+    "sinMueven": "Not enough closed jobs of different sizes to tell yet.",
+    "unidadCorta": {
+      "pie2": "sq ft",
+      "pie_lineal": "linear ft"
+    },
+    "separador": " · "
   },
   "retrabajos": {
     "titulo": "Rework and warranty",

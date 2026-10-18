@@ -1,5 +1,6 @@
 // La unidad de cada etapa (D-086): el dueño dice en el catálogo que una etapa se cotiza por pie lineal, y en el
-// presupuesto escribe los pies lineales del espacio y ve el costo por pie lineal.
+// presupuesto escribe los pies lineales del espacio y ve el costo por pie lineal. Una etapa fija (D-095) no tiene costo
+// por unidad, y lo cerrado sugiere el costo de cada etapa.
 import { expect, test } from '@playwright/test';
 import { entrar, es, obraNueva } from './apoyo';
 
@@ -23,4 +24,28 @@ test('una etapa por pie lineal: en el presupuesto sale su costo por pie lineal',
   await expect(page.getByRole('status')).toHaveText(es.presupuesto.completo);
   await page.reload();
   await expect(page.getByRole('textbox', { name: /^Pies lineales de / })).toHaveValue('20');
+});
+
+test('una etapa fija y el costo sugerido por las obras cerradas (D-095)', async ({ page, browser }) => {
+  const obraId = await obraNueva(browser, `Sugerido ${Date.now()}`);
+  await entrar(page, 'dueno');
+  await page.goto('/catalogo');
+  await page.getByRole('combobox', { name: 'Cómo se cotiza Plomería' }).selectOption('fijo');
+  await page.waitForLoadState('networkidle');
+
+  await page.goto(`/obras/${obraId}/presupuesto`);
+  // la demolición del baño ya se cerró en otras obras: sugiere su costo con los pies² de este baño
+  const sugerido = page.getByText(/^Sugerido: \$[\d,.]+ \(de \d+ obras? cerradas?\)$/).first();
+  await expect(sugerido).toBeVisible();
+  const monto = (await sugerido.innerText()).match(/\$([\d,.]+)/)![1]!.replace(/,/g, '');
+  await page.getByRole('button', { name: es.presupuesto.usarSugerido }).first().click();
+  await expect(page.getByRole('textbox', { name: /^Costo de Demolición/ }).first()).toHaveValue(
+    String(Number(monto)),
+  );
+  // la plomería, fija: no tiene costo por unidad
+  await page
+    .getByRole('textbox', { name: /^Costo de Plomería/ })
+    .first()
+    .fill('1800');
+  await expect(page.getByText(es.presupuesto.fijoPorEspacio)).toBeVisible();
 });
