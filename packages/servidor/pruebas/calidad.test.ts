@@ -109,6 +109,69 @@ describe('la inspección', () => {
       ).toBe('inspeccion_sin_foto');
     }));
 
+  it('volver a inspeccionar: trae lo que falló, y la foto de lo que ya cumplía cuenta (D-092)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const i = await ids(tx);
+      const [empresa] = await tx<
+        { id: string }[]
+      >`select empresa_id as id from obras where id = ${OBRAS.a1Carlos}`;
+      const [p2, p3] = await tx<{ id: string }[]>`
+        insert into puntos_control (empresa_id, hito_id, orden, texto_es) values
+          (${empresa!.id}, ${i.pc1}, 50, 'Muros a plomo'), (${empresa!.id}, ${i.pc1}, 51, 'Subpiso sin tile previo')
+        returning id`;
+      await como(tx, USUARIOS.carlos);
+      const base = { obraId: OBRAS.a1Carlos, espacioId: i.bano, hitoId: i.pc1 };
+      // la foto de la crítica (p1) se toma; el subpiso falla
+      await registrarInspeccion(
+        tx,
+        { ...base, cumple: [...i.puntosPc1, p2!.id], fotos: 1 },
+        new Date(Date.now() + 1000),
+      );
+      const d = (await datosParaInspeccion(tx, base))!;
+      expect(d.previa).toMatchObject({ resultado: 'con_defectos', conFoto: i.puntosPc1 });
+      expect(d.previa!.respuestas[p3!.id]).toBe('no_cumple');
+      // corregido el subpiso: se aprueba sin volver a tomar la foto de p1
+      const r = await registrarInspeccion(
+        tx,
+        { ...base, cumple: [...i.puntosPc1, p2!.id, p3!.id], fotos: 0 },
+        new Date(Date.now() + 2000),
+      );
+      expect(r.resultado).toBe('aprobado');
+    }));
+
+  it('lo que no aplicó en un espacio del mismo tipo ya viene en "No aplica" (D-092)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const i = await ids(tx);
+      const [b] = await tx<{ empresa: string; tipo: string }[]>`
+        select empresa_id as empresa, tipo_espacio_id as tipo from espacios where id = ${i.bano}`;
+      const [p2] = await tx<{ id: string }[]>`
+        insert into puntos_control (empresa_id, hito_id, orden, texto_es)
+        values (${b!.empresa}, ${i.pc1}, 50, 'Subpiso sin tile previo') returning id`;
+      const [otro] = await tx<{ id: string }[]>`
+        insert into espacios (empresa_id, obra_id, tipo_espacio_id, nombre, orden)
+        values (${b!.empresa}, ${OBRAS.a1Carlos}, ${b!.tipo}, 'Baño de visitas', 9) returning id`;
+      await como(tx, USUARIOS.carlos);
+      await registrarInspeccion(
+        tx,
+        {
+          obraId: OBRAS.a1Carlos,
+          espacioId: i.bano,
+          hitoId: i.pc1,
+          cumple: i.puntosPc1,
+          noAplica: [p2!.id],
+          fotos: 1,
+        },
+        new Date(Date.now() + 1000),
+      );
+      const d = (await datosParaInspeccion(tx, {
+        obraId: OBRAS.a1Carlos,
+        espacioId: otro!.id,
+        hitoId: i.pc1,
+      }))!;
+      expect(d.previa).toBeNull();
+      expect(d.noAplicaSugerido).toEqual([p2!.id]);
+    }));
+
   it('PC3 no se aprueba sin una prueba de agua sin fugas en ESE espacio', () =>
     probarComo(USUARIOS.carlos, async (tx) => {
       const i = await ids(tx);

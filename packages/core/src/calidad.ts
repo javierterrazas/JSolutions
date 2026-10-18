@@ -24,8 +24,9 @@ export interface ResultadoInspeccion {
  * aplica" saca la pregunta del total; tiene que quedar al menos una que aplique. La foto se pide solo donde protege
  * ante un reclamo o una garantía (D-058): una por cada pregunta que pide foto y se marca como cumplida. Una
  * inspección sin ninguna así, o con defectos en ellas, se registra sin fotos. El punto de control que exige prueba
- * de agua (PC3) no se aprueba sin una prueba de 24 h sin fuga en ese espacio. Errores: `hito_sin_preguntas`,
- * `ninguno_aplica`, `inspeccion_sin_foto` (con cuántas `piden`), `falta_prueba_agua`.
+ * de agua (PC3) no se aprueba sin una prueba de 24 h sin fuga en ese espacio. Al volver a inspeccionar, la foto de lo
+ * que ya cumplía la vez pasada ya cuenta (`conFotoPrevia`, D-092): solo se pide la de lo que se corrigió. Errores:
+ * `hito_sin_preguntas`, `ninguno_aplica`, `inspeccion_sin_foto` (con cuántas `piden`), `falta_prueba_agua`.
  */
 export function calificarInspeccion(c: {
   readonly puntos: readonly PuntoControl[];
@@ -34,12 +35,13 @@ export function calificarInspeccion(c: {
   readonly fotos: number;
   readonly exigePruebaAgua: boolean;
   readonly pruebaAguaSinFugas: boolean;
+  readonly conFotoPrevia?: readonly string[];
 }): ResultadoInspeccion {
   if (!c.puntos.length) throw new ErrorDeNegocio('hito_sin_preguntas');
   const noAplica = c.puntos.filter((p) => c.noAplica.includes(p.id)).map((p) => p.id);
   const aplican = c.puntos.filter((p) => !noAplica.includes(p.id));
   if (!aplican.length) throw new ErrorDeNegocio('ninguno_aplica');
-  const piden = fotosQuePide(c.puntos, c.cumple, noAplica).length;
+  const piden = fotosQuePide(c.puntos, c.cumple, noAplica, c.conFotoPrevia).length;
   if (c.fotos < piden) throw new ErrorDeNegocio('inspeccion_sin_foto', { piden });
   const defectos = aplican.filter((p) => !c.cumple.includes(p.id)).map((p) => p.id);
   const ok = aplican.length - defectos.length;
@@ -58,12 +60,17 @@ export function calificarInspeccion(c: {
 export const puntosConFoto = (puntos: readonly PuntoControl[], noAplica: readonly string[]): string[] =>
   puntos.filter((p) => p.requiereFoto && !noAplica.includes(p.id)).map((p) => p.id);
 
-/** Las fotos que pide una inspección (D-058): una por cada pregunta que pide foto, aplica y se marca cumplida. */
+/**
+ * Las fotos que pide una inspección (D-058): una por cada pregunta que pide foto, aplica y se marca cumplida, menos
+ * las que ya tienen su foto de la inspección anterior (D-092).
+ */
 export const fotosQuePide = (
   puntos: readonly PuntoControl[],
   cumple: readonly string[],
   noAplica: readonly string[],
-): string[] => puntosConFoto(puntos, noAplica).filter((id) => cumple.includes(id));
+  conFotoPrevia: readonly string[] = [],
+): string[] =>
+  puntosConFoto(puntos, noAplica).filter((id) => cumple.includes(id) && !conFotoPrevia.includes(id));
 
 /** Las 38 preguntas de los puntos de control PC1–PC5 de la plantilla estándar (legacy: PUNTOS_ESTANDAR_). */
 const PUNTOS_ESTANDAR = [
@@ -167,7 +174,9 @@ export interface InspeccionHecha {
 
 /**
  * Ninguna partida con punto de control se termina sin su inspección aprobada, revisada ESPACIO POR ESPACIO:
- * aprobar PC2 del baño no aprueba PC2 de la cocina. Error: `falta_inspeccion`, con la partida, el espacio y el hito.
+ * aprobar PC2 del baño no aprueba PC2 de la cocina. Una inspección por punto y espacio (D-092): si dos partidas del
+ * espacio llevan el mismo punto (gabinetes y countertop con PC4), la aprobada sirve para las dos; no se repite.
+ * Error: `falta_inspeccion`, con la partida, el espacio y el hito.
  */
 export function exigirInspecciones(
   terminadas: readonly {

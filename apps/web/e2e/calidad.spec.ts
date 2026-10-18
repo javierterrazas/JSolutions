@@ -1,5 +1,6 @@
 // La calidad en pantalla (legacy/pruebas/prueba_calidad_ui.js y prueba_noaplica_ui.py), con el seed:
-// - en OB-001 de Carlos, el PC1 del baño ya aprobado: "No aplica", una inspección con defecto y volver a aprobarla;
+// - en OB-001 de Carlos, el PC1 del baño ya aprobado: "No aplica", una inspección con defecto y volver a aprobarla
+//   revisando solo lo que falló (D-092);
 // - en OB-002 de Luis (en inglés), un baño que el dueño agrega con su presupuesto: su demolición sin inspeccionar
 //   no se deja terminar en el cierre, que lleva a la inspección; aprobada, ya se puede marcar terminada (el caso que
 //   dejaba al PM atorado).
@@ -70,9 +71,11 @@ test('la inspección: No aplica, un defecto y aprobarla otra vez', async ({ page
   await expect(pc1).toContainText(es.calidad.conDefectos);
   await expect(pc1).toContainText(/ · 0 de 1 puntos/);
 
-  // se reinspecciona y queda aprobada
+  // se reinspecciona solo lo que falló (D-092), con "Todo cumple", y queda aprobada
   await pc1.getByRole('link', { name: es.calidad.inspeccionarOtraVez }).click();
-  await pregunta.click();
+  await expect(page.getByText(t.es('calidad.soloFallaron', { n: 1 }))).toBeVisible();
+  await page.getByRole('button', { name: es.calidad.todoCumple }).click();
+  await expect(pregunta).toHaveAttribute('aria-pressed', 'true');
   await tomarFoto(page);
   await guardar.click();
   await expect(page.getByRole('status')).toHaveText(es.calidad.guardadaAprobada);

@@ -49,6 +49,8 @@ export default async function Inspeccion({
       <FormularioInspeccion
         ids={{ obraId: d.obra.id, espacioId: d.espacio.id, hitoId: d.hito.id }}
         puntos={d.puntos.map((p) => ({ id: p.id, texto: nombre(p.texto), requiereFoto: p.requiereFoto }))}
+        previa={d.previa}
+        noAplicaSugerido={d.noAplicaSugerido}
       />
     </Marco>
   );

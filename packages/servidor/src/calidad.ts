@@ -179,6 +179,8 @@ export async function datosParaCalidad(
   };
 }
 
+export type RespuestaPunto = 'cumple' | 'no_cumple' | 'no_aplica';
+
 export interface DatosInspeccion {
   readonly obra: { id: string; folio: string; cliente: string };
   readonly espacio: { id: string; nombre: string };
@@ -187,6 +189,37 @@ export interface DatosInspeccion {
   readonly puntos: readonly { id: string; texto: Nombre; requiereFoto: boolean }[];
   /** La prueba de agua del espacio, si el punto la exige. */
   readonly prueba: PruebaAgua | null;
+  /**
+   * La inspección anterior de este punto en este espacio, para volver a inspeccionar solo lo que falló (D-092): sus
+   * respuestas, y las preguntas que ya tienen su foto.
+   */
+  readonly previa: {
+    readonly resultado: 'aprobado' | 'con_defectos';
+    readonly respuestas: Readonly<Record<string, RespuestaPunto>>;
+    readonly conFoto: readonly string[];
+  } | null;
+  /** Sin una con defectos aquí: lo que no aplicó la última vez en un espacio del mismo tipo (D-092). */
+  readonly noAplicaSugerido: readonly string[];
+}
+
+/**
+ * Si la última inspección de un punto en un espacio salió con defectos: sus respuestas y las preguntas que ya tienen
+ * foto, para revisar solo lo que falló. Aprobada, se vuelve a inspeccionar desde cero (algo cambió en la obra).
+ */
+async function inspeccionPrevia(tx: Tx, espacioId: string, hitoId: string) {
+  const [i] = await tx<{ id: string; resultado: 'aprobado' | 'con_defectos' }[]>`
+    select id, resultado from inspecciones where espacio_id = ${espacioId} and hito_id = ${hitoId}
+    order by realizada_en desc limit 1`;
+  if (i?.resultado !== 'con_defectos') return null;
+  const filas = await tx<{ punto: string; respuesta: RespuestaPunto; foto: boolean }[]>`
+    select r.punto_control_id as punto, r.respuesta, p.requiere_foto as foto
+    from inspeccion_respuestas r join puntos_control p on p.id = r.punto_control_id
+    where r.inspeccion_id = ${i.id}`;
+  return {
+    resultado: i.resultado,
+    respuestas: Object.fromEntries(filas.map((f) => [f.punto, f.respuesta])),
+    conFoto: filas.filter((f) => f.foto && f.respuesta === 'cumple').map((f) => f.punto),
+  };
 }
 
 /** La pantalla de una inspección; null si la obra no es del PM o el espacio no es de la obra. */
@@ -207,12 +240,29 @@ export async function datosParaInspeccion(
   const puntos = await tx<{ id: string; es: string; en: string | null; foto: boolean }[]>`
     select id, texto_es as es, texto_en as en, requiere_foto as foto from puntos_control
     where hito_id = ${e.hitoId} and activo order by orden, texto_es`;
+  const previa = await inspeccionPrevia(tx, e.espacioId, e.hitoId);
+  // lo que no aplicó la última vez que se inspeccionó este punto en un espacio del mismo tipo (un closet no lleva
+  // tile), este incluido
+  const noAplicaSugerido = previa
+    ? []
+    : (
+        await tx<{ punto: string }[]>`
+          select r.punto_control_id as punto from inspeccion_respuestas r
+          where r.respuesta = 'no_aplica' and r.inspeccion_id = (
+            select i.id from inspecciones i
+            join espacios x on x.id = i.espacio_id
+            join espacios aqui on aqui.id = ${e.espacioId}
+            where i.hito_id = ${e.hitoId} and x.tipo_espacio_id = aqui.tipo_espacio_id
+            order by i.realizada_en desc limit 1)`
+      ).map((x) => x.punto);
   return {
     obra,
     espacio,
     hito: { id: h.id, clave: h.clave, nombre: { es: h.es, en: h.en }, exigePruebaAgua: h.agua },
     puntos: puntos.map((p) => ({ id: p.id, texto: { es: p.es, en: p.en }, requiereFoto: p.foto })),
     prueba: h.agua ? ((await pruebasDe(tx, e.obraId)).get(e.espacioId) ?? null) : null,
+    previa,
+    noAplicaSugerido,
   };
 }
 
@@ -231,7 +281,8 @@ export type EntradaInspeccion = z.input<typeof EntradaInspeccion>;
 /**
  * Registra la inspección de un punto de control en un espacio (legacy: pmInspeccion). El servidor la califica
  * contra la lista REAL de preguntas; cada pregunta queda con su respuesta y su texto. Lo que no se marcó como
- * cumplido ni como "No aplica" es un defecto. Errores: los de calificarInspeccion (`inspeccion_sin_foto`,
+ * cumplido ni como "No aplica" es un defecto. Al volver a inspeccionar, la foto de lo que ya cumplía la vez pasada
+ * ya cuenta (D-092). Errores: los de calificarInspeccion (`inspeccion_sin_foto`,
  * `hito_sin_preguntas`, `ninguno_aplica`, `falta_prueba_agua`), `obra_no_encontrada`, `espacio_no_encontrado`,
  * `hito_inexistente`.
  */
@@ -258,6 +309,7 @@ export async function registrarInspeccion(
     fotos: e.fotos,
     exigePruebaAgua: hito.agua,
     pruebaAguaSinFugas: hito.agua && (await haySinFugas(tx, e.espacioId)),
+    conFotoPrevia: (await inspeccionPrevia(tx, e.espacioId, e.hitoId))?.conFoto ?? [],
   });
 
   // la partida que se inspecciona: la primera de ese punto en el espacio que no se ha terminado

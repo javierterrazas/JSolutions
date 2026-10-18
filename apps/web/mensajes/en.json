@@ -578,7 +578,12 @@
     "faltaPrueba": "Flood test missing",
     "ultimaConFuga": "The last test found a leak.",
     "pruebaComo": "Plug the drain, fill the wet area and take the photo of the level. Come back in 24 hours with another photo.",
-    "arrancarPrueba": "Start the test"
+    "arrancarPrueba": "Start the test",
+    "todoCumple": "All pass",
+    "soloFallaron": "{n, plural, one {Only what failed last time is left to check: # question.} other {Only what failed last time is left to check: # questions.}} The rest stays as it was, with its photos.",
+    "verTodas": "See all {n} questions",
+    "verSoloFallaron": "{n, plural, one {See only the one that failed} other {See only the # that failed}}",
+    "noAplicaRecordado": "{n, plural, one {# question already comes as N/A, like last time in a space of this type.} other {# questions already come as N/A, like last time in a space of this type.}}"
   },
   "gasto": {
     "titulo": "Expenses",

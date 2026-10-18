@@ -1606,3 +1606,20 @@ ya existían (del legacy: duNoCalidad, duGarantia, duCerrarGarantia y la cosecha
     liquidar antes de recibir el trabajo.
   - **En el inicio del PM**, "Subs por llegar" (los de los próximos 2 días, o los que ya debían llegar, sin marcar),
     con su teléfono para llamarles; es un recordatorio, no un paso.
+
+## D-092 · Inspeccionar solo lo necesario
+
+**Decisión del dueño:** que el PM inspeccione lo menos posible, sin que se le haga demasiado trabajo. Hallazgo de la
+simulación (D-088): la inspección de gabinetes (PC4) servía también para el countertop.
+- **Una inspección por punto de control y espacio:** si dos partidas del espacio llevan el mismo punto (gabinetes y
+  countertop con PC4), la aprobada sirve para las dos. Se queda así a propósito: la propuesta de exigir otra
+  inspección después de arrancar la segunda partida se descarta, porque duplica el trabajo.
+- **"Todo cumple":** un toque marca todas las preguntas (menos las que no aplican); el PM solo desmarca lo que falla.
+- **Volver a inspeccionar solo lo que falló:** si la última inspección salió con defectos, la siguiente muestra solo
+  esas preguntas; lo demás queda como estaba, y la foto de lo que ya cumplía cuenta (no se vuelve a pedir). Puede ver
+  todas si quiere. Si la última estaba aprobada, se inspecciona desde cero (algo cambió en la obra).
+- **"No aplica" se recuerda por tipo de espacio:** lo que no aplicó la última vez en ese punto, en un espacio del mismo
+  tipo (un closet no lleva tile), ya viene marcado.
+- Sin migración: las respuestas de cada pregunta ya se guardaban (`inspeccion_respuestas`).
+- Del catálogo (lo decide el dueño en Catálogo): el closet lleva PC1 y PC4, con preguntas pensadas para baño; con lo
+  de "No aplica" recordado pesa menos, pero se puede quitar el punto de control de esas partidas.
