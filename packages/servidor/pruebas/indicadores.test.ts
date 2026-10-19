@@ -42,6 +42,11 @@ describe('los indicadores de la empresa', () => {
       expect(de('cumplimiento_semanal').valor).toBeGreaterThanOrEqual(0);
       expect(de('cumplimiento_semanal').valor).toBeLessThanOrEqual(1);
       expect(r.obrasEnCurso).toBeGreaterThan(0);
+      // qué obras están detrás del saldo con los subs, con su folio y su cliente (D-099); suman lo del indicador
+      const saldo = r.detalle.saldo_subcontratistas!;
+      expect(saldo.map((x) => x.folio)).toContain('OB-001');
+      expect(saldo.find((x) => x.folio === 'OB-001')).toMatchObject({ cliente: expect.any(String) });
+      expect(saldo.reduce((a, x) => a + x.monto!, 0)).toBeCloseTo(Number(b!.saldo), 2);
     }));
 
   it('con la meta que la empresa cambió', () =>

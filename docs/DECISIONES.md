@@ -1692,3 +1692,17 @@ la alerta de "sin reseña" seguía en sus pendientes. Ahora cada paso tiene "Sí
 quiso, queda resuelto y sale de los pendientes; tocar el que ya está marcado lo regresa a pendiente
 (`entregas.pasos_no`, migración `20261031000100_posventa_no`; `marcarPosventa` con `valor`). Los indicadores y el
 histórico siguen contando como reseña solo la que sí se recibió.
+
+## D-099 · Qué obras mueven cada uno de los seis del lunes
+
+**Lo pidió el dueño:** al tocar un indicador en rojo, ver qué obras lo causan. En los seis del lunes, el que no está
+en verde y tiene obras detrás se abre (se ensancha a lo ancho) con cada obra, lo suyo y un enlace a donde se atiende:
+- **Tasa de cierre:** los días sin cerrar de la última semana ("2 días sin cerrar: mié 7, vie 9") → su seguimiento.
+- **Avisos fuera de plazo:** cuántos sin contestar a tiempo → Avisos.
+- **Órdenes de cambio sin respuesta:** cuántas esperan al cliente → sus órdenes de cambio.
+- **Cargos sin recibo:** cuántos y cuánto suman → su seguimiento.
+- **Saldo con subcontratistas** (informativo, nunca verde): lo que se les debe en esa obra → sus subcontratos.
+- **Costo de no calidad:** lo que costaron sus retrabajos y garantías → sus retrabajos.
+
+Con las mismas reglas que el indicador (`detallePorObra`, en @ijm/core), así lo de las obras suma lo del número. Los
+datos de los indicadores ya traen la obra de cada aviso, gasto, orden y registro.

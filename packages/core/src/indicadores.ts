@@ -90,14 +90,22 @@ export interface DatosIndicadores {
   /** El cumplimiento de la semana pasada de todas las obras (cumplimientoSemanal). */
   readonly cumplimientoSemanaPasada: Cumplimiento | null;
   readonly avisos: readonly {
+    /** De qué obra (para el detalle por obra, D-099). */
+    readonly obraId?: string;
     readonly abiertoEn: Date;
     readonly abierto: boolean;
     readonly respondidoEn: Date | null;
   }[];
   /** Solo los gastos del PM: las compras de la oficina no llevan recibo de tarjeta. */
-  readonly gastosPM: readonly { readonly registradoEn: Date; readonly conRecibo: boolean }[];
+  readonly gastosPM: readonly {
+    readonly obraId?: string;
+    readonly monto?: number;
+    readonly registradoEn: Date;
+    readonly conRecibo: boolean;
+  }[];
   readonly ordenesTrabajo: readonly {
     readonly id: string;
+    readonly obraId?: string;
     readonly cancelada: boolean;
     readonly precio: number;
     readonly sePresento: boolean | null;
@@ -118,11 +126,13 @@ export interface DatosIndicadores {
   }[];
   readonly entregas: readonly { readonly resenaRecibida: boolean }[];
   readonly noCalidad: readonly {
+    readonly obraId?: string;
     readonly garantia: boolean;
     readonly costo: number;
     readonly diasPerdidos: number;
   }[];
   readonly ordenesCambio: readonly {
+    readonly obraId?: string;
     readonly propuesta: boolean;
     readonly autorizada: boolean;
     readonly emitidaEn: Date | null;
@@ -416,4 +426,94 @@ export function calcularIndicadores(
     diasPerdidos ? { diasPerdidos } : undefined,
   );
   return out;
+}
+
+// ------------------------------------------------------------------ el detalle por obra de los seis del lunes
+/** Una obra que mueve un indicador: cuántas cosas (días sin cerrar, avisos, cargos…), cuánto dinero y qué días. */
+export interface DetalleDeObra {
+  readonly obraId: string;
+  readonly cantidad: number;
+  readonly monto?: number;
+  /** Los días sin cerrar (tasa de cierre). */
+  readonly dias?: readonly Dia[];
+}
+
+/**
+ * Qué obras están detrás de cada uno de los seis del lunes (D-099; lo pidió el dueño): con las mismas reglas que
+ * calcularIndicadores, cada obra con lo suyo, de la que más pesa a la que menos. Solo las obras que mueven el número.
+ */
+export function detallePorObra(
+  d: DatosIndicadores,
+  cfg: Configuracion,
+  ahora: Date,
+  hoy: Dia,
+  cal: Calendario,
+): Partial<Record<ClaveIndicador, DetalleDeObra[]>> {
+  const agrupar = <T>(xs: readonly T[], obra: (x: T) => string | undefined, monto?: (x: T) => number) => {
+    const m = new Map<string, { cantidad: number; monto: number }>();
+    for (const x of xs) {
+      const id = obra(x);
+      if (!id) continue;
+      const g = m.get(id) ?? { cantidad: 0, monto: 0 };
+      m.set(id, { cantidad: g.cantidad + 1, monto: g.monto + (monto ? monto(x) : 0) });
+    }
+    return [...m.entries()]
+      .map(([obraId, g]) => ({ obraId, cantidad: g.cantidad, ...(monto ? { monto: g.monto } : {}) }))
+      .sort((a, b) => (b.monto ?? 0) - (a.monto ?? 0) || b.cantidad - a.cantidad);
+  };
+
+  // los días laborables de la última semana sin cierre, por obra en curso (como tasaDeCierre)
+  const dias = [1, 2, 3, 4, 5, 6, 7].map((i) => sumarDias(hoy, -i)).filter((x) => esLaborable(x, cal));
+  const cerrados = new Set(d.cierres.map((c) => `${c.obraId}|${c.dia}`));
+  const primerDia = new Map<string, Dia>();
+  for (const c of d.cierres) {
+    if (c.conTrabajo && (!primerDia.has(c.obraId) || c.dia < primerDia.get(c.obraId)!))
+      primerDia.set(c.obraId, c.dia);
+  }
+  const sinCierre = d.obras
+    .filter((o) => o.enObra)
+    .map((o) => {
+      const desde = primerDia.get(o.id) ?? o.inicio;
+      const faltan = dias.filter((x) => !(desde && x < desde) && !cerrados.has(`${o.id}|${x}`)).sort();
+      return { obraId: o.id, cantidad: faltan.length, dias: faltan };
+    })
+    .filter((x) => x.cantidad)
+    .sort((a, b) => b.cantidad - a.cantidad);
+
+  // lo que se les debe a los subs, por obra: precio de sus órdenes menos lo pagado
+  const pagado = new Map<string, number>();
+  for (const p of d.pagosSub) pagado.set(p.ordenTrabajoId, (pagado.get(p.ordenTrabajoId) ?? 0) + p.monto);
+  const saldo = new Map<string, number>();
+  for (const o of d.ordenesTrabajo) {
+    if (o.cancelada || !o.obraId) continue;
+    saldo.set(o.obraId, (saldo.get(o.obraId) ?? 0) + o.precio - (pagado.get(o.id) ?? 0));
+  }
+
+  return {
+    tasa_cierre_dia: sinCierre,
+    avisos_fuera_de_sla: agrupar(
+      d.avisos.filter((a) => a.abierto && horasEntre(a.abiertoEn, ahora) > cfg.slaAvisosHoras),
+      (a) => a.obraId,
+    ),
+    oc_fuera_de_sla: agrupar(
+      d.ordenesCambio.filter(
+        (o) => o.propuesta && o.emitidaEn && horasEntre(o.emitidaEn, ahora) > cfg.slaOrdenesCambioHoras,
+      ),
+      (o) => o.obraId,
+    ),
+    cargos_sin_recibo: agrupar(
+      d.gastosPM.filter((g) => !g.conRecibo && horasEntre(g.registradoEn, ahora) > cfg.horasSinRecibo),
+      (g) => g.obraId,
+      (g) => g.monto ?? 0,
+    ),
+    saldo_subcontratistas: [...saldo.entries()]
+      .filter(([, m]) => m > 0.005)
+      .map(([obraId, monto]) => ({ obraId, cantidad: 1, monto }))
+      .sort((a, b) => b.monto - a.monto),
+    no_calidad_sobre_contratos: agrupar(
+      d.noCalidad.filter((n) => n.costo > 0),
+      (n) => n.obraId,
+      (n) => n.costo,
+    ),
+  };
 }

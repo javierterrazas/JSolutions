@@ -1315,6 +1315,16 @@
       "sinPlan": "La semana pasada no quedó plan guardado. Se guarda solo, la primera vez que abres la app en la semana.",
       "linea": "{espacio} · {partida}",
       "detalle": "{prevista} · {resultado}"
+    },
+    "verObras": "{n, plural, one {Ver la obra} other {Ver las # obras}}",
+    "obraDetalle": "{folio} · {cliente}",
+    "detalle": {
+      "tasa_cierre_dia": "{n, plural, one {# día sin cerrar: {dias}} other {# días sin cerrar: {dias}}}",
+      "avisos_fuera_de_sla": "{n, plural, one {# aviso sin contestar a tiempo} other {# avisos sin contestar a tiempo}}",
+      "oc_fuera_de_sla": "{n, plural, one {# orden de cambio sin respuesta del cliente} other {# órdenes de cambio sin respuesta del cliente}}",
+      "cargos_sin_recibo": "{n, plural, one {# cargo sin recibo · {monto}} other {# cargos sin recibo · {monto}}}",
+      "saldo_subcontratistas": "{monto} por pagar a los subs",
+      "no_calidad_sobre_contratos": "{monto} en retrabajos y garantías"
     }
   },
   "miEmpresa": {
