@@ -62,11 +62,14 @@ export async function responderCambio(
         comentario: String(f.get('comentario') ?? '') || null,
         ip: h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
         navegador: h.get('user-agent'),
+        huella: String(f.get('huella') ?? '') || null,
       }),
     );
   } catch (e) {
-    if (esErrorDeNegocio(e)) return { ok: false, codigo: e.codigo };
-    throw e;
+    if (!esErrorDeNegocio(e)) throw e;
+    // el dueño la editó mientras la veía: que vea la nueva
+    if (e.codigo === 'orden_cambiada') revalidatePath(`/cliente/${token}`);
+    return { ok: false, codigo: e.codigo };
   }
   revalidatePath(`/cliente/${token}`);
   return { ok: true, datos: undefined };

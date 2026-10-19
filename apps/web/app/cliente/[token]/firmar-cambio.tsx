@@ -82,7 +82,8 @@ function Firma({
   );
 }
 
-export function FirmarCambio({ token, ordenId }: { token: string; ordenId: string }) {
+/** `huella` es lo que el cliente está viendo de la orden: si el dueño la editó mientras tanto, no se guarda (D-103). */
+export function FirmarCambio({ token, ordenId, huella }: { token: string; ordenId: string; huella: string }) {
   const t = useTranslations('portal');
   const [resultado, accion, enviando] = useActionState(responderCambio.bind(null, token, ordenId), null);
   const lienzo = useRef<HTMLCanvasElement>(null);
@@ -96,6 +97,7 @@ export function FirmarCambio({ token, ordenId }: { token: string; ordenId: strin
         e.preventDefault();
         const f = new FormData(e.currentTarget);
         f.set('decision', noAprobar ? 'rechazada' : 'aprobada');
+        f.set('huella', huella);
         if (!noAprobar && lienzo.current) f.set('firma', lienzo.current.toDataURL('image/png'));
         startTransition(() => accion(f));
       }}

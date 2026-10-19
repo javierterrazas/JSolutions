@@ -2,6 +2,7 @@
 // inicio del administrador y duResponderBloqueo). Los que llevan más tiempo primero, con su compromiso de respuesta.
 // Una lista mínima: las pantallas del dueño llegan en la fase 3.
 import { avisosAbiertos } from '@ijm/servidor';
+import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
@@ -60,6 +61,12 @@ export default async function AvisosAbiertos() {
                 ))}
               </ul>
             ) : null}
+            <Link
+              href={`/obras/${a.obra.id}/cambios?aviso=${a.id}`}
+              className={`${estilos.botonSecundario} flex items-center justify-center`}
+            >
+              {t('hacerOrden')}
+            </Link>
             <ResponderAviso avisoId={a.id} />
           </li>
         ))}

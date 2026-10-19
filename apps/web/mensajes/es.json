@@ -240,7 +240,8 @@
     "ya_cerrado": "Ya estaba atendido.",
     "sin_entrega": "Esta obra todavía no se entrega.",
     "falta_celular": "Este dueño entra con su celular: no puede quedarse sin él.",
-    "faltan_datos": "Faltan el nombre de la empresa o el del dueño."
+    "faltan_datos": "Faltan el nombre de la empresa o el del dueño.",
+    "orden_cambiada": "La orden cambió mientras la veías: revisa la nueva versión y vuelve a responder."
   },
   "obras": {
     "titulo": "Obras",
@@ -718,7 +719,8 @@
     "detiene": "Detiene el avance: hay gente parada",
     "respuesta": "Tu respuesta para el PM",
     "respuestaEjemplo": "Sí, reemplázala antes de cerrar. Ya pedí el material; llega mañana.",
-    "contestar": "Contestar y cerrar el aviso"
+    "contestar": "Contestar y cerrar el aviso",
+    "hacerOrden": "Hacer orden de cambio"
   },
   "entrega": {
     "titulo": "Entrega",
@@ -1093,7 +1095,21 @@
     "noAprobo": "No aprobó",
     "folioMotivo": "{folio} · {motivo}",
     "hechaPor": "Hecha · la marcó {nombre} el {cuando}",
-    "porHacer": "Aprobada: el PM todavía no la marca hecha."
+    "porHacer": "Aprobada: el PM todavía no la marca hecha.",
+    "delAviso": "Del aviso {folio} · {tipo} · {pm} · {dia}",
+    "desdeAvisoAyuda": "Lo de abajo viene del aviso del PM: corrígelo como se lo vas a explicar al cliente. Al emitirla, al PM se le contesta el aviso con el folio de la orden.",
+    "desdeAvisoContestado": "Lo de abajo viene del aviso del PM: corrígelo como se lo vas a explicar al cliente. Ese aviso ya está contestado.",
+    "respuestaAviso": "Se emitió la orden de cambio {folio} para que el cliente la apruebe. Cuando la apruebe te aparece en tu inicio.",
+    "emitidaDelAviso": "{folio} emitida y el aviso {aviso} contestado. El cliente ya la puede aprobar en su portal.",
+    "editar": "Editar",
+    "editarTitulo": "Editar {folio}",
+    "editarAyuda": "Mientras el cliente no responda la puedes corregir; en su portal ve la nueva versión.",
+    "guardar": "Guardar cambios",
+    "guardando": "Guardando…",
+    "guardarAsi": "Guardarla así",
+    "editada": "{folio} actualizada. El cliente ya ve la nueva versión.",
+    "cerrar": "Cerrar",
+    "cancelar": "Cancelar"
   },
   "cobros": {
     "titulo": "Cobros",
