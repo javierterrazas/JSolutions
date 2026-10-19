@@ -6,6 +6,7 @@ import './globals.css';
 import { estadoDeAcceso } from '@/lib/acceso';
 import { COLOR_MARCA, NOMBRE_APP } from './marca';
 import { GENERAL, rutasDeMarca } from './marca/datos';
+import { PulsoDeUso } from './pulso-de-uso';
 import { RegistrarServiceWorker } from './registrar-sw';
 
 // Ningún texto visible queda fijo en el código: todo sale de mensajes/es.json y mensajes/en.json (next-intl).
@@ -48,11 +49,14 @@ export async function generateViewport(): Promise<Viewport> {
 
 export default async function RaizLayout({ children }: { children: ReactNode }) {
   const idioma = await getLocale();
+  // el uso de la app (D-101), solo de quien entró: el portal del cliente y las pantallas de entrar no cuentan
+  const conSesion = (await estadoDeAcceso().catch(() => null))?.estado === 'abierto';
   return (
     <html lang={idioma}>
       <body className="min-h-dvh bg-fondo text-slate-900 antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
         <RegistrarServiceWorker />
+        {conSesion ? <PulsoDeUso /> : null}
       </body>
     </html>
   );

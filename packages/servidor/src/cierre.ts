@@ -28,6 +28,8 @@ const EntradaCierre = z.object({
   tardio: dia.nullish(),
   /** Cuándo se capturó en el teléfono (sin señal se envía después): ISO 8601. */
   capturado: instante.nullish(),
+  /** Cuándo abrió el PM la pantalla del cierre: con `capturado`, cuánto tardó en cerrar el día (D-101). */
+  iniciado: instante.nullish(),
   sinTrabajo: z.boolean().default(false),
   motivo: z.enum(MOTIVOS_SIN_TRABAJO).nullish(),
   incidencia: textoLargo.nullish(),
@@ -185,16 +187,23 @@ export async function cerrarDia(
     })),
   );
 
+  // cuánto tardó en capturarlo (D-101): de que abrió el cierre a que lo terminó; más de 3 horas no es una captura
+  const segundos =
+    e.iniciado && e.capturado
+      ? Math.round((new Date(e.capturado).getTime() - new Date(e.iniciado).getTime()) / 1000)
+      : null;
+  const segundosCaptura = segundos !== null && segundos >= 0 && segundos <= 3 * 3600 ? segundos : null;
+
   // ---------------------------------------------------------------- escribir
   // en un savepoint: si la clave choca, la transacción sigue viva para buscar quién la tiene
   const insertar = () =>
     tx.savepoint(
       (sp) => sp<{ id: string; folio: string }[]>`
     insert into bitacora (empresa_id, obra_id, dia, sin_trabajo, motivo_sin_trabajo, incidencia, tardio, fotos_comprometidas,
-                          clave_envio, corrige_a)
+                          clave_envio, corrige_a, segundos_captura)
     values (${s.empresaId}, ${e.obraId}, ${elDia}, ${e.sinTrabajo}, ${e.sinTrabajo ? e.motivo! : null},
             ${e.incidencia ?? null}, ${tardio}, ${fotosComprometidas}, ${e.claveEnvio ?? null},
-            ${correccion?.corrigeA ?? null})
+            ${correccion?.corrigeA ?? null}, ${segundosCaptura})
     returning id, folio`,
     );
   let bit: { id: string; folio: string } | undefined;

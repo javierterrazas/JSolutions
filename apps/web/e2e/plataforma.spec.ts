@@ -100,3 +100,20 @@ test('quien administra edita los datos de una empresa y de su dueño (D-097)', a
   await datos.getByRole('button', { name: es.plataforma.guardar }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Remodelaciones del Valle' })).toBeVisible();
 });
+
+test('quien administra ve el uso de la app por empresa y por persona; nadie más (D-101)', async ({
+  page,
+}) => {
+  await entrar(page, 'dueno');
+  await page.goto('/plataforma');
+  await page.getByRole('link', { name: es.plataforma.usoDeLaApp }).click();
+  await expect(page.getByRole('heading', { level: 1, name: es.uso.titulo })).toBeVisible();
+  const ijm = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'IJM Construction' }) });
+  await expect(ijm).toContainText(/Carlos Méndez · PM/);
+  // quien entra cuenta: el dueño ya tiene minutos hoy
+  await expect(ijm.locator('li').filter({ hasText: /^Javier · dueño/ })).toContainText(/\d+ min/);
+  await page.getByRole('link', { name: 'Últimos 30 días' }).click();
+  await expect(page).toHaveURL(/dias=30/);
+});

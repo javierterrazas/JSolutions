@@ -49,6 +49,10 @@ export default async function Plataforma() {
       <Link href="/plataforma/nueva" className={`${estilos.boton} flex items-center justify-center`}>
         {t('nueva')}
       </Link>
+      {/* cuánto usa la app cada empresa y cada persona (D-101) */}
+      <Link href="/plataforma/uso" className={`${estilos.botonSecundario} flex items-center justify-center`}>
+        {t('usoDeLaApp')}
+      </Link>
       <ul className="flex flex-col gap-2">
         {empresas.map((e) => (
           <li key={e.id}>

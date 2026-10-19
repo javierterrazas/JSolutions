@@ -15,3 +15,23 @@
     -webkit-text-size-adjust: 100%;
   }
 }
+
+/* El expediente de una obra en papel (D-102): hoja carta, márgenes y el número de página donde el navegador lo
+   permite (Chrome); el fondo blanco y la letra un poco más chica. */
+@media print {
+  @page {
+    size: letter;
+    margin: 14mm 12mm;
+    @bottom-right {
+      content: counter(page) ' / ' counter(pages);
+      font-size: 9pt;
+      color: #64748b;
+    }
+  }
+  html {
+    font-size: 85%;
+  }
+  body {
+    background: white;
+  }
+}

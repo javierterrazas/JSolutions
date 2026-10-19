@@ -2053,6 +2053,7 @@ export const bitacora = pgTable(
     actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
     clave_envio: uuid(),
     corrige_a: uuid(),
+    segundos_captura: integer(),
   },
   (table) => [
     uniqueIndex('bitacora_clave_envio_unica')
@@ -2107,6 +2108,7 @@ export const bitacora = pgTable(
     pgPolicy('pm corrige sus cierres', { as: 'permissive', for: 'update', to: ['servidor_app'] }),
     pgPolicy('pm crea en sus obras', { as: 'permissive', for: 'insert', to: ['servidor_app'] }),
     pgPolicy('pm lee sus obras', { as: 'permissive', for: 'select', to: ['authenticated'] }),
+    check('bitacora_segundos_captura_check', sql`(segundos_captura IS NULL) OR (segundos_captura >= 0)`),
     check('bitacora_check', sql`sin_trabajo = (motivo_sin_trabajo IS NOT NULL)`),
     check('bitacora_check1', sql`(NOT sin_trabajo) OR (fotos_comprometidas = 0)`),
     check('bitacora_folio_asignado', sql`folio IS NOT NULL`),
@@ -2909,3 +2911,31 @@ export const ordenes_cambio_pm = pgView('ordenes_cambio_pm', {
   .as(
     sql`SELECT id, empresa_id, obra_id, folio, descripcion, dias_impacto, autorizada_en FROM ordenes_cambio WHERE empresa_id = (( SELECT empresa_actual() AS empresa_actual)) AND (obra_id IN ( SELECT obras_del_pm() AS obras_del_pm)) AND (estado = ANY (ARRAY['autorizada'::estado_orden_cambio, 'facturada'::estado_orden_cambio]))`,
   );
+
+export const uso_app = pgTable(
+  'uso_app',
+  {
+    empresa_id: uuid().notNull(),
+    miembro_id: uuid().notNull(),
+    dia: date().notNull(),
+    minutos: integer().default(0).notNull(),
+    sesiones: integer().default(0).notNull(),
+    primer_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    ultimo_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('uso_app_empresa_id_dia_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('date_ops'),
+      table.dia.asc().nullsLast().op('uuid_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.miembro_id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'uso_app_empresa_id_miembro_id_fkey',
+    }),
+    primaryKey({ columns: [table.miembro_id, table.dia], name: 'uso_app_pkey' }),
+    check('uso_app_minutos_check', sql`minutos >= 0`),
+    check('uso_app_sesiones_check', sql`sesiones >= 0`),
+  ],
+);

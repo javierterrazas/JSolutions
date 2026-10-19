@@ -1718,3 +1718,31 @@ datos de los indicadores ya traen la obra de cada aviso, gasto, orden y registro
 - **El orden:** en curso, primero las atrasadas y luego las que se entregan antes; entregadas, la más reciente primero.
 - Los filtros van en la dirección (`?estado=…&q=…&periodo=…&pm=…`, sin recargar la página): al abrir una obra y
   regresar, la lista sigue igual. Se filtra en el teléfono, con todas las obras ya leídas.
+
+## D-101 · El uso de la app, solo para quien administra la plataforma
+
+**Lo pidió quien administra la plataforma, y solo él lo ve:** cómo usan la app los administradores y PMs de cada
+empresa. En la plataforma, "Uso de la app" (`/plataforma/uso`, `usoDeLaPlataforma`, función `plataforma_uso`): por
+empresa y por persona, en los últimos 7, 30 o 90 días, los días que la abrió, el tiempo, las veces que entró, la
+última vez, lo que capturó (cierres, gastos, avisos, fotos, cobros) y cuánto tarda cada PM en cerrar el día (la meta
+del piloto es menos de 60 segundos).
+- **Cómo se mide el tiempo:** mientras la app está abierta, a la vista y con señal, avisa cada minuto
+  (`registrar_uso`, tabla `uso_app`: un renglón por persona y día con los minutos y las veces; una vez más cuando pasan
+  15 minutos sin avisar; dos pestañas no duplican el minuto). Sin señal no se cuenta. Nada de lo que escriben ni dónde
+  están; lo que hicieron sale de sus propios registros.
+- **El tiempo del cierre:** el teléfono manda cuándo abrió la pantalla del cierre (`iniciado`) y cuándo lo terminó
+  (`capturado`); la bitácora guarda los segundos (`segundos_captura`; más de 3 horas no cuenta).
+- `uso_app` no la lee nadie directo (RLS sin políticas): solo la plataforma, con su función. Las empresas no la ven.
+
+## D-102 · El expediente de una obra en PDF
+
+**Lo pidió el dueño:** un botón para guardar en PDF todo lo de una obra que quiera. En el seguimiento, "Expediente en
+PDF" (`/obras/[id]/expediente`): se palomean las secciones (resumen con los números, presupuesto por etapa, órdenes de
+cambio con la firma del cliente, cobros, subcontratos, el día a día completo, cuadrilla, calidad —inspecciones con sus
+defectos, pruebas de agua y punch list—, retrabajos y garantías, entrega y, si se quiere, las fotos) y "Descargar PDF"
+abre la opción de imprimir del teléfono o la computadora, donde se elige "Guardar como PDF".
+- **Por qué así (la opción que eligió el dueño):** no cuesta servidor, sale igual que en pantalla y aguanta muchas
+  fotos (las pide de donde ya están). En papel: hoja carta, el encabezado con el logo y el nombre de la empresa, sin
+  los controles, y el número de página donde el navegador lo permite (Chrome).
+- Lo que ninguna pantalla del dueño leía sale de `calidadDeLaObra`; el día a día completo, de `seguimientoDeObra` con
+  `todos`. Las fotos, hasta 15 páginas del álbum. Lleva dinero: solo el dueño o el administrador.

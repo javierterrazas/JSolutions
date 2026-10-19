@@ -169,6 +169,13 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
             {s.obra.estado === 'entregada' ? t('verCierre') : t('cerrarObra')}
           </Link>
         ) : null}
+        {/* todo lo de la obra en un documento para guardar como PDF (D-102) */}
+        <Link
+          href={`/obras/${s.obra.id}/expediente`}
+          className={`${estilos.botonSecundario} col-span-2 flex items-center justify-center px-2 text-center`}
+        >
+          {t('expediente')}
+        </Link>
       </div>
       <EnlaceCliente
         obraId={s.obra.id}

@@ -531,15 +531,19 @@ function calcular(l: Lectura, obraId: string) {
 
 /**
  * El seguimiento completo de una obra de la empresa, con el día a día de `pagina` (desde 0, de 14 en 14 días, lo más
- * reciente primero). Null si la obra no existe. Error: `solo_dueno`.
+ * reciente primero); con `todos`, todos los días (el expediente, D-102). Null si la obra no existe. Error: `solo_dueno`.
  */
 export async function seguimientoDeObra(
   tx: Tx,
-  entrada: { obraId: string; pagina?: number },
+  entrada: { obraId: string; pagina?: number; todos?: boolean },
   ahora = new Date(),
 ): Promise<SeguimientoObra | null> {
   const e = validarEntrada(
-    z.object({ obraId: uuid, pagina: z.number().int().min(0).max(1000).default(0) }),
+    z.object({
+      obraId: uuid,
+      pagina: z.number().int().min(0).max(1000).default(0),
+      todos: z.boolean().default(false),
+    }),
     entrada,
   );
   const s = await leerSesion(tx, ahora);
@@ -611,7 +615,7 @@ export async function seguimientoDeObra(
   for (const d of [...bitacora.map((b) => b.dia), ...gastosObra.map((g) => g.dia)])
     if (!todos.includes(d)) todos.push(d);
   todos.sort((a, b) => (a < b ? 1 : -1));
-  const pagina = todos.slice(e.pagina * DIAS_POR_PAGINA, (e.pagina + 1) * DIAS_POR_PAGINA);
+  const pagina = e.todos ? todos : todos.slice(e.pagina * DIAS_POR_PAGINA, (e.pagina + 1) * DIAS_POR_PAGINA);
   const ids = pagina.map((d) => porDia.get(d)?.id).filter((x): x is string => !!x);
 
   const trabajadas = ids.length
@@ -693,7 +697,7 @@ export async function seguimientoDeObra(
         fotos: b ? (fotos.find((f) => f.ref_id === b.id)?.n ?? 0) : 0,
       };
     }),
-    hayMasDias: todos.length > (e.pagina + 1) * DIAS_POR_PAGINA,
+    hayMasDias: !e.todos && todos.length > (e.pagina + 1) * DIAS_POR_PAGINA,
   };
 }
 
