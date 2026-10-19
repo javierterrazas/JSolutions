@@ -42,7 +42,7 @@ test('las obras se filtran por estado, búsqueda y periodo; al regresar, la list
   await page.getByRole('searchbox', { name: es.obras.buscar }).fill('no existe esta obra');
   await expect(page.getByText(es.obras.ningunaConFiltros)).toBeVisible();
   await page.getByRole('searchbox', { name: es.obras.buscar }).fill('');
-  await page.getByRole('button', { name: es.obras.periodos.anio }).click();
+  await page.getByRole('combobox', { name: es.obras.filtroPeriodo }).selectOption('anio');
   await expect(page).toHaveURL(/periodo=anio/);
   await expect(garcia).toBeVisible();
 });

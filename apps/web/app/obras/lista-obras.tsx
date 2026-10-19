@@ -114,37 +114,35 @@ export function ListaObras({ obras, hoy }: { obras: readonly ObraConResumen[]; h
         aria-label={t('buscar')}
         className={estilos.campo}
       />
-      <div role="group" aria-label={t('filtroPeriodo')} className="-mx-1 flex gap-1 overflow-x-auto px-1">
-        {PERIODOS.map((p) => (
-          <button
-            key={p}
-            type="button"
-            aria-pressed={periodo === p}
-            onClick={() => cambiar({ periodo: p })}
-            className={boton(periodo === p)}
-          >
-            {t(`periodos.${p}`)}
-          </button>
-        ))}
-      </div>
-      {pms.length > 1 ? (
-        <div role="group" aria-label={t('filtroPm')} className="-mx-1 flex gap-1 overflow-x-auto px-1">
-          <button type="button" aria-pressed={!pm} onClick={() => cambiar({ pm: '' })} className={boton(!pm)}>
-            {t('todosLosPm')}
-          </button>
-          {pms.map(([id, nombre]) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={pm === id}
-              onClick={() => cambiar({ pm: pm === id ? '' : id })}
-              className={boton(pm === id)}
-            >
-              {nombre}
-            </button>
+      <div className={`grid gap-2 ${pms.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <select
+          value={periodo}
+          onChange={(e) => cambiar({ periodo: e.target.value as (typeof PERIODOS)[number] })}
+          aria-label={t('filtroPeriodo')}
+          className={estilos.campo}
+        >
+          {PERIODOS.map((p) => (
+            <option key={p} value={p}>
+              {t(`periodos.${p}`)}
+            </option>
           ))}
-        </div>
-      ) : null}
+        </select>
+        {pms.length > 1 ? (
+          <select
+            value={pm}
+            onChange={(e) => cambiar({ pm: e.target.value })}
+            aria-label={t('filtroPm')}
+            className={estilos.campo}
+          >
+            <option value="">{t('todosLosPm')}</option>
+            {pms.map(([id, nombre]) => (
+              <option key={id} value={id}>
+                {nombre}
+              </option>
+            ))}
+          </select>
+        ) : null}
+      </div>
 
       {obras.length === 0 ? (
         <p className="text-slate-600">{t('ninguna')}</p>

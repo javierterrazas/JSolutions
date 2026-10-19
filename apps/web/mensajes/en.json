@@ -274,7 +274,7 @@
       "mes": "This month",
       "trimestre": "Last 3 months",
       "anio": "This year",
-      "todo": "All"
+      "todo": "Any date"
     },
     "todosLosPm": "All PMs",
     "ningunaConFiltros": "No jobs match these filters.",
