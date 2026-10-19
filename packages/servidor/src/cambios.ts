@@ -2,6 +2,9 @@
 // emite con el margen mínimo de la empresa (validarOrdenCambio) y ve cómo respondió el cliente, que las aprueba con
 // su firma en su portal (D-066). El dueño también registra la respuesta que el cliente le dio en papel. Lleva
 // dinero (costo y margen): solo el dueño o el administrador.
+//
+// D-103: una orden puede salir de un aviso del PM (queda ligada y el aviso se contesta solo), y mientras el cliente no
+// responda el dueño la puede editar, para describirla bien después de hablar con él.
 import { type Dia, ErrorDeNegocio, validarOrdenCambio } from '@ijm/core';
 import postgres from 'postgres';
 import { z } from 'zod';
@@ -45,6 +48,19 @@ export interface OrdenDeCambio {
   readonly respuesta: RespuestaDeCambio | null;
   /** Si ya se hizo (D-081): cuándo, quién lo marcó, su nota y sus fotos. */
   readonly hecho: CambioHecho | null;
+  /** El aviso del PM del que salió (D-103), con sus fotos. */
+  readonly aviso: AvisoDeLaOrden | null;
+}
+
+export interface AvisoDeLaOrden {
+  readonly id: string;
+  readonly folio: string;
+  readonly tipo: string;
+  readonly descripcion: string;
+  /** El día en que el PM lo levantó, en la zona de la empresa. */
+  readonly dia: Dia;
+  readonly pm: string | null;
+  readonly fotos: readonly string[];
 }
 
 export interface CambioHecho {
@@ -81,7 +97,7 @@ export async function cambiosDeObra(
     select contrato_original as contrato from obras_finanzas where obra_id = ${obraId}`;
   const [c] = await tx<{ minimo: string }[]>`select margen_minimo_oc as minimo from configuracion`;
   const filas = await tx<
-    (Omit<OrdenDeCambio, 'costo' | 'precio' | 'margen' | 'respuesta' | 'hecho'> & {
+    (Omit<OrdenDeCambio, 'costo' | 'precio' | 'margen' | 'respuesta' | 'hecho' | 'aviso'> & {
       costo: string;
       precio: string;
       r_decision: 'aprobada' | 'rechazada' | null;
@@ -94,6 +110,7 @@ export async function cambiosDeObra(
       h_por: string | null;
       h_nota: string | null;
       h_fotos: string[] | null;
+      aviso_id: string | null;
     })[]
   >`
     select oc.id, oc.folio, oc.motivo, oc.descripcion, to_char(oc.fecha_hallazgo, 'YYYY-MM-DD') as hallazgo,
@@ -103,7 +120,8 @@ export async function cambiosDeObra(
            r.desde_portal as r_portal, r.firma as r_firma,
            h.creado_en as h_cuando, mh.nombre as h_por, h.nota as h_nota,
            (select array_agg(f.id::text order by f.indice) from fotos f
-            where f.ref_tipo = 'cambio_hecho' and f.ref_id = h.id) as h_fotos
+            where f.ref_tipo = 'cambio_hecho' and f.ref_id = h.id) as h_fotos,
+           oc.aviso_id
     from ordenes_cambio oc
     join ordenes_cambio_montos m on m.orden_cambio_id = oc.id
     left join respuestas_cambio r on r.orden_cambio_id = oc.id
@@ -111,6 +129,11 @@ export async function cambiosDeObra(
     left join miembros mh on mh.id = h.creado_por
     where oc.obra_id = ${obraId}
     order by oc.emitida_en desc, oc.folio desc`;
+  const avisos = await avisosDeOrdenes(
+    tx,
+    filas.flatMap((o) => (o.aviso_id ? [o.aviso_id] : [])),
+    s.zona,
+  );
   const ordenes = filas.map((o): OrdenDeCambio => {
     const costo = Number(o.costo);
     const precio = Number(o.precio);
@@ -138,6 +161,7 @@ export async function cambiosDeObra(
           }
         : null,
       hecho: o.h_cuando ? { cuando: o.h_cuando, por: o.h_por, nota: o.h_nota, fotos: o.h_fotos ?? [] } : null,
+      aviso: (o.aviso_id && avisos.get(o.aviso_id)) || null,
     };
   });
   return {
@@ -152,6 +176,49 @@ export async function cambiosDeObra(
   };
 }
 
+/** Los avisos de esos ids, con sus fotos y el día en que se levantaron. */
+async function avisosDeOrdenes(
+  tx: Tx,
+  ids: readonly string[],
+  zona: string,
+): Promise<Map<string, AvisoDeLaOrden>> {
+  if (!ids.length) return new Map();
+  const filas = await tx<(Omit<AvisoDeLaOrden, 'fotos'> & { fotos: string[] | null })[]>`
+    select a.id, a.folio, a.tipo, a.descripcion, to_char((a.creado_en at time zone ${zona})::date, 'YYYY-MM-DD') as dia,
+           m.nombre as pm,
+           (select array_agg(f.id::text order by f.indice) from fotos f
+            where f.ref_tipo = 'aviso' and f.ref_id = a.id) as fotos
+    from avisos a left join miembros m on m.id = a.creado_por
+    where a.id in ${tx([...ids])}`;
+  return new Map(filas.map((a) => [a.id, { ...a, fotos: a.fotos ?? [] }]));
+}
+
+/** El motivo de la orden que corresponde al tipo de aviso; los demás los elige el dueño. */
+const MOTIVO_DEL_AVISO: Partial<Record<string, MotivoCambio>> = {
+  condicion_oculta: 'condicion_oculta',
+  cliente: 'solicitud_cliente',
+  diseno: 'cambio_seleccion',
+};
+
+/**
+ * Un aviso del PM para empezar una orden de cambio desde él (D-103): su texto, su día y sus fotos, y el motivo que le
+ * corresponde. Null si no existe o no es de esa obra.
+ */
+export async function avisoParaOrden(
+  tx: Tx,
+  entrada: { obraId: string; avisoId: string },
+  ahora = new Date(),
+): Promise<(AvisoDeLaOrden & { motivo: MotivoCambio | null; abierto: boolean }) | null> {
+  const e = validarEntrada(z.object({ obraId: uuid, avisoId: uuid }), entrada);
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  const [a] = await tx<{ abierto: boolean }[]>`
+    select estado = 'abierto' as abierto from avisos where id = ${e.avisoId} and obra_id = ${e.obraId}`;
+  if (!a) return null;
+  const aviso = (await avisosDeOrdenes(tx, [e.avisoId], s.zona)).get(e.avisoId)!;
+  return { ...aviso, motivo: MOTIVO_DEL_AVISO[aviso.tipo] ?? null, abierto: a.abierto };
+}
+
 const EntradaOrden = z.object({
   obraId: uuid,
   motivo: z.enum(MOTIVOS_CAMBIO).nullish(),
@@ -162,6 +229,10 @@ const EntradaOrden = z.object({
   dias: z.number().int().min(0).max(365).default(0),
   condicion: z.enum(CONDICIONES_PAGO).default('al_autorizar'),
   forzar: z.boolean().default(false),
+  /** El aviso del PM del que sale (D-103). */
+  avisoId: uuid.nullish(),
+  /** Lo que se le contesta al PM en ese aviso, si sigue abierto; `{folio}` se cambia por el de la orden. */
+  respuestaAviso: z.string().trim().min(5).max(1000).nullish(),
 });
 
 export type ResultadoOrdenDeCambio =
@@ -176,8 +247,9 @@ export type ResultadoOrdenDeCambio =
 
 /**
  * Emite una orden de cambio, por aprobar. Si el precio deja menos del margen mínimo, pide confirmar (como el
- * legacy) y no guarda nada. Errores: `faltan`, `falta_precio`, `obra_no_encontrada`, `obra_cerrada`,
- * `hallazgo_futuro`.
+ * legacy) y no guarda nada. Si sale de un aviso del PM, queda ligada a él y, si el aviso sigue abierto, se contesta
+ * con `respuestaAviso` y se cierra (D-103). Errores: `faltan`, `falta_precio`, `obra_no_encontrada`, `obra_cerrada`,
+ * `hallazgo_futuro`, `registro_no_encontrado` (el aviso no es de esa obra).
  */
 export async function crearOrdenCambio(
   tx: Tx,
@@ -204,16 +276,78 @@ export async function crearOrdenCambio(
   );
   if (!r.ok) return r;
   if (e.hallazgo! > s.hoy) throw new ErrorDeNegocio('hallazgo_futuro');
+  if (e.avisoId) {
+    const [a] = await tx`select 1 from avisos where id = ${e.avisoId} and obra_id = ${e.obraId}`;
+    if (!a) throw new ErrorDeNegocio('registro_no_encontrado');
+  }
 
   const [oc] = await tx<{ id: string; folio: string }[]>`
-    insert into ordenes_cambio (empresa_id, obra_id, fecha_hallazgo, motivo, descripcion, dias_impacto, condicion_pago)
+    insert into ordenes_cambio (empresa_id, obra_id, fecha_hallazgo, motivo, descripcion, dias_impacto, condicion_pago,
+                                aviso_id)
     values (${s.empresaId}, ${e.obraId}, ${e.hallazgo!}, ${e.motivo!}, ${e.descripcion!.trim()}, ${e.dias},
-            ${e.condicion})
+            ${e.condicion}, ${e.avisoId ?? null})
     returning id, folio`;
   await tx`
     insert into ordenes_cambio_montos (orden_cambio_id, empresa_id, costo_estimado, precio_cliente)
     values (${oc!.id}, ${s.empresaId}, ${e.costo!}, ${e.precio!})`;
+  if (e.avisoId && e.respuestaAviso)
+    await tx`
+      update avisos set estado = 'cerrado', respuesta = ${e.respuestaAviso.replaceAll('{folio}', oc!.folio)},
+                        respondido_en = ${ahora}, respondido_por = ${s.miembroId}
+      where id = ${e.avisoId} and estado = 'abierto'`;
   return { ok: true, ordenId: oc!.id, folio: oc!.folio, margen: r.margen };
+}
+
+const EntradaEdicion = EntradaOrden.omit({ obraId: true, avisoId: true, respuestaAviso: true }).extend({
+  ordenId: uuid,
+});
+
+/**
+ * Corrige una orden de cambio que el cliente todavía no responde (D-103): el dueño la describe mejor después de
+ * hablar con él, o ajusta el precio. Las mismas reglas que al emitirla (margen mínimo, hallazgo). Respondida, ya no
+ * cambia: lo que el cliente firmó es lo que queda. Errores: `orden_no_encontrada`, `orden_ya_respondida`, `faltan`,
+ * `falta_precio`, `obra_cerrada`, `hallazgo_futuro`.
+ */
+export async function editarOrdenCambio(
+  tx: Tx,
+  entrada: z.input<typeof EntradaEdicion>,
+  ahora = new Date(),
+): Promise<ResultadoOrdenDeCambio> {
+  const e = validarEntrada(EntradaEdicion, entrada);
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  const [oc] = await tx<{ folio: string; estado: string; obra: string; respondida: boolean }[]>`
+    select oc.folio, oc.estado, o.estado as obra,
+           exists (select 1 from respuestas_cambio r where r.orden_cambio_id = oc.id) as respondida
+    from ordenes_cambio oc join obras o on o.id = oc.obra_id
+    where oc.id = ${e.ordenId} for update of oc`;
+  if (!oc) throw new ErrorDeNegocio('orden_no_encontrada');
+  if (oc.estado !== 'propuesta' || oc.respondida) throw new ErrorDeNegocio('orden_ya_respondida');
+  if (oc.obra === 'entregada') throw new ErrorDeNegocio('obra_cerrada');
+  const [c] = await tx<{ minimo: string }[]>`select margen_minimo_oc as minimo from configuracion`;
+  const r = validarOrdenCambio(
+    {
+      motivo: e.motivo ?? null,
+      descripcion: e.descripcion ?? null,
+      hallazgo: e.hallazgo ?? null,
+      costo: e.costo ?? null,
+      precio: e.precio ?? null,
+      forzar: e.forzar,
+    },
+    Number(c?.minimo ?? 0.35),
+  );
+  if (!r.ok) return r;
+  if (e.hallazgo! > s.hoy) throw new ErrorDeNegocio('hallazgo_futuro');
+  await tx`
+    update ordenes_cambio
+    set motivo = ${e.motivo!}, descripcion = ${e.descripcion!.trim()}, fecha_hallazgo = ${e.hallazgo!},
+        dias_impacto = ${e.dias}, condicion_pago = ${e.condicion}
+    where id = ${e.ordenId}`;
+  await tx`
+    update ordenes_cambio_montos
+    set costo_estimado = ${e.costo!}, precio_cliente = ${e.precio!}
+    where orden_cambio_id = ${e.ordenId}`;
+  return { ok: true, ordenId: e.ordenId, folio: oc.folio, margen: r.margen };
 }
 
 const EntradaRespuesta = z.object({

@@ -122,7 +122,7 @@ export default async function Portal({ params }: PageProps<'/cliente/[token]'>) 
           <p className="text-slate-700">{t('porAprobarAyuda')}</p>
           {porAprobar.map((o) => (
             <Orden key={o.id} o={o}>
-              <FirmarCambio token={token} ordenId={o.id} />
+              <FirmarCambio token={token} ordenId={o.id} huella={o.huella} />
             </Orden>
           ))}
         </Seccion>

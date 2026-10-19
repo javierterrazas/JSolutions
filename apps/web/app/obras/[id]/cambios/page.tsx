@@ -1,13 +1,15 @@
 // Las órdenes de cambio de una obra, para el dueño (D-067): emitirlas, con el margen mínimo, y ver cómo respondió el
 // cliente (con su firma, si fue en su portal), o registrar la respuesta que dio en papel. Lleva dinero: costo,
-// precio y margen. Solo el dueño o el administrador.
-import { cambiosDeObra } from '@ijm/servidor';
+// precio y margen. Solo el dueño o el administrador. Con `?aviso=` empieza la orden desde un aviso del PM, y la que el
+// cliente todavía no responde se puede corregir (D-103).
+import { avisoParaOrden, cambiosDeObra } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { comoMiembro, exigirDueno } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../../componentes/marco';
-import { FormularioCambio } from './formulario-cambio';
+import { AvisoDeLaOrden } from './aviso-de-la-orden';
+import { EditarCambio, FormularioCambio } from './formulario-cambio';
 import { RespuestaPapel } from './respuesta-papel';
 
 const COLOR_ESTADO: Record<string, string> = {
@@ -17,12 +19,22 @@ const COLOR_ESTADO: Record<string, string> = {
   rechazada: 'bg-red-100 text-red-900',
 };
 
-export default async function Cambios({ params }: PageProps<'/obras/[id]/cambios'>) {
+export default async function Cambios({ params, searchParams }: PageProps<'/obras/[id]/cambios'>) {
   const { id } = await params;
+  const { aviso: avisoId } = await searchParams;
   const acceso = await exigirDueno();
-  const r = await comoMiembro((tx) => cambiosDeObra(tx, { obraId: id }), acceso);
-  if (!r.ok || !r.datos) notFound();
-  const c = r.datos;
+  const r = await comoMiembro(
+    async (tx) => ({
+      c: await cambiosDeObra(tx, { obraId: id }),
+      aviso:
+        typeof avisoId === 'string' && /^[0-9a-f-]{36}$/.test(avisoId)
+          ? await avisoParaOrden(tx, { obraId: id, avisoId })
+          : null,
+    }),
+    acceso,
+  );
+  if (!r.ok || !r.datos.c) notFound();
+  const { c, aviso } = r.datos;
   const [t, to, formato, idioma] = await Promise.all([
     getTranslations('cambios'),
     getTranslations('obras'),
@@ -53,7 +65,9 @@ export default async function Cambios({ params }: PageProps<'/obras/[id]/cambios
         </dl>
       ) : null}
 
-      {c.obra.estado !== 'entregada' ? <FormularioCambio obraId={c.obra.id} hoy={c.hoy} /> : null}
+      {c.obra.estado !== 'entregada' ? (
+        <FormularioCambio key={aviso?.id ?? 'nueva'} obraId={c.obra.id} hoy={c.hoy} aviso={aviso} />
+      ) : null}
 
       {c.ordenes.length === 0 ? <p className={estilos.tarjeta}>{t('ninguna')}</p> : null}
       <ul className="flex flex-col gap-3">
@@ -67,7 +81,8 @@ export default async function Cambios({ params }: PageProps<'/obras/[id]/cambios
                 {t(`estados.${o.estado}`)}
               </span>
             </div>
-            <p className="text-slate-900">{o.descripcion}</p>
+            <p className="whitespace-pre-line text-slate-900">{o.descripcion}</p>
+            {o.aviso ? <AvisoDeLaOrden aviso={o.aviso} /> : null}
             <p className="flex flex-wrap gap-x-3 text-sm text-slate-700">
               <span>{t('costoValor', { costo: dinero(o.costo) })}</span>
               <span className="font-semibold">{t('precioValor', { precio: dinero(o.precio) })}</span>
@@ -101,6 +116,23 @@ export default async function Cambios({ params }: PageProps<'/obras/[id]/cambios
             ) : o.estado === 'propuesta' ? (
               <>
                 <p className="text-sm text-amber-900">{t('esperando')}</p>
+                {c.obra.estado !== 'entregada' ? (
+                  <EditarCambio
+                    obraId={c.obra.id}
+                    hoy={c.hoy}
+                    orden={{
+                      id: o.id,
+                      folio: o.folio,
+                      motivo: o.motivo,
+                      descripcion: o.descripcion,
+                      hallazgo: o.hallazgo,
+                      costo: o.costo,
+                      precio: o.precio,
+                      dias: o.dias,
+                      condicion: o.condicion,
+                    }}
+                  />
+                ) : null}
                 <RespuestaPapel obraId={c.obra.id} ordenId={o.id} />
               </>
             ) : null}

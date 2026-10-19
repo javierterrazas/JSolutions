@@ -73,6 +73,33 @@ export interface CambioDelPortal {
   } | null;
   /** Si ya se hizo (D-081): cuándo y sus fotos. */
   readonly hecho: { cuando: string; fotos: readonly string[] } | null;
+  /**
+   * Lo que el cliente está viendo de la orden (D-103): viaja con su respuesta y, si el dueño la editó mientras tanto,
+   * la respuesta no entra y el cliente la vuelve a ver.
+   */
+  readonly huella: string;
+}
+
+/** La huella de lo que el cliente ve de una orden: si algo de esto cambia, su firma ya no es de lo mismo. */
+function huellaDeCambio(o: {
+  motivo: string;
+  descripcion: string;
+  dias: number;
+  condicion: string | null;
+  precio: number | string;
+}): string {
+  return JSON.stringify([o.motivo, o.descripcion, o.dias, o.condicion, Number(o.precio)]);
+}
+
+type CambioDeLaBase = Omit<CambioDelPortal, 'precio' | 'huella'> & { precio: number | string };
+
+async function cambiosDelEnlace(
+  tx: Tx,
+  token: string,
+): Promise<{ contrato: number | null; ordenes: CambioDeLaBase[] } | null> {
+  const [c] = await tx<{ c: { contrato: number | null; ordenes: CambioDeLaBase[] } | null }[]>`
+    select public.cambios_portal_cliente(${token}) as c`;
+  return c?.c ?? null;
 }
 
 interface Datos {
@@ -124,14 +151,7 @@ export async function portalCliente(
   const [r] = await tx<{ d: Datos | null }[]>`select public.portal_cliente(${token}, ${ahora}) as d`;
   const d = r?.d;
   if (!d) return null;
-  const [c] = await tx<
-    {
-      c: {
-        contrato: number | null;
-        ordenes: (Omit<CambioDelPortal, 'precio'> & { precio: number | string })[];
-      };
-    }[]
-  >`select public.cambios_portal_cliente(${token}) as c`;
+  const c = await cambiosDelEnlace(tx, token);
   const [pg] = await tx<
     { p: { folio: string; fecha: Dia; concepto: string; monto: number | string }[] | null }[]
   >`
@@ -192,8 +212,8 @@ export async function portalCliente(
     })),
     fotos: d.fotos.map((f) => ({ id: f.id, dia: f.dia })),
     cambios: {
-      contrato: c?.c.contrato === null || c?.c.contrato === undefined ? null : Number(c.c.contrato),
-      ordenes: (c?.c.ordenes ?? []).map((o) => ({ ...o, precio: Number(o.precio) })),
+      contrato: c?.contrato === null || c?.contrato === undefined ? null : Number(c.contrato),
+      ordenes: (c?.ordenes ?? []).map((o) => ({ ...o, precio: Number(o.precio), huella: huellaDeCambio(o) })),
     },
     pagos: (pg?.p ?? []).map((x) => ({ ...x, monto: Number(x.monto) })),
   };
@@ -209,12 +229,16 @@ const EntradaRespuesta = z.object({
   comentario: z.string().max(1000).nullish(),
   ip: z.string().max(100).nullish(),
   navegador: z.string().max(400).nullish(),
+  /** Lo que el cliente vio de la orden (`CambioDelPortal.huella`). */
+  huella: z.string().max(5000).nullish(),
 });
 
 /**
  * El cliente responde, con su enlace, una orden de cambio por aprobar: aprobada (con su nombre y su firma) queda
- * autorizada; no aprobada, rechazada. Se corre sin identidad: el token es la prueba. Errores: `enlace_invalido`,
- * `orden_no_encontrada`, `orden_ya_respondida`, `falta_nombre`, `falta_firma`.
+ * autorizada; no aprobada, rechazada. Se corre sin identidad: el token es la prueba. Si la orden ya no es la que vio
+ * (el dueño la editó, D-103), no se guarda nada: se revisa después de responder, con la orden ya bloqueada, y el
+ * error deshace la transacción. Errores: `enlace_invalido`, `orden_no_encontrada`, `orden_ya_respondida`,
+ * `falta_nombre`, `falta_firma`, `orden_cambiada`.
  */
 export async function responderCambioCliente(
   tx: Tx,
@@ -227,6 +251,10 @@ export async function responderCambioCliente(
                                              ${e.firma ?? null}, ${e.comentario ?? null}, ${e.ip ?? null},
                                              ${e.navegador ?? null})`,
   );
+  if (e.huella) {
+    const o = (await cambiosDelEnlace(tx, e.token))?.ordenes.find((x) => x.id === e.ordenId);
+    if (!o || huellaDeCambio(o) !== e.huella) throw new ErrorDeNegocio('orden_cambiada');
+  }
 }
 
 /** Un enlace firmado de pocos minutos a una foto del portal. Error: `foto_no_encontrada` (o no se ve ahí). */

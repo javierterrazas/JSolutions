@@ -1746,3 +1746,22 @@ abre la opción de imprimir del teléfono o la computadora, donde se elige "Guar
   los controles, y el número de página donde el navegador lo permite (Chrome).
 - Lo que ninguna pantalla del dueño leía sale de `calidadDeLaObra`; el día a día completo, de `seguimientoDeObra` con
   `todos`. Las fotos, hasta 15 páginas del álbum. Lleva dinero: solo el dueño o el administrador.
+
+## D-103 · La orden de cambio desde el aviso del PM, y corregirla antes de que el cliente responda
+
+**Lo pidió el dueño:** el PM no hace órdenes de cambio; avisa con un aviso (cliente, condición oculta, diseño…). El
+dueño la emitía aparte, volviendo a escribir todo y sin que el PM supiera.
+- **"Hacer orden de cambio"** en cada aviso por contestar (`/avisos`) abre las órdenes de la obra con `?aviso=`: el
+  formulario viene con lo que escribió el PM, el día en que lo levantó y el motivo que le toca (condición oculta →
+  condición oculta, cliente → solicitud del cliente, diseño → cambio de selección; los demás los elige el dueño), y
+  arriba el aviso con sus fotos. El dueño lo reescribe como se lo va a explicar al cliente.
+- **Al emitirla** queda ligada al aviso (`ordenes_cambio.aviso_id`, que ya existía) y, si el aviso seguía abierto, se
+  contesta y se cierra solo: "Se emitió la orden de cambio OC-xxxx para que el cliente la apruebe". La lista de órdenes
+  muestra de qué aviso salió cada una, con sus fotos.
+- **Editar** mientras el cliente no responde (`editarOrdenCambio`): motivo, descripción, hallazgo, costo, precio,
+  días y condición de pago, con las mismas reglas que al emitirla (margen mínimo, hallazgo no futuro, obra no
+  entregada). Respondida —en el portal o en papel— ya no cambia: lo que el cliente firmó es lo que queda.
+- **La firma es de lo que vio:** el portal manda con la respuesta una huella de lo que el cliente tenía en pantalla
+  (motivo, descripción, días, condición y precio). Si el dueño la editó mientras tanto, la respuesta no entra
+  (`orden_cambiada`), la página se recarga con la nueva versión y el cliente vuelve a responder. Se revisa después de
+  responder, con la orden ya bloqueada, y el error deshace todo. Sin migración.

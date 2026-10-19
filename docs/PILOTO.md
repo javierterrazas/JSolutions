@@ -56,6 +56,10 @@ Lo hace el dueño, en este orden, la semana antes de arrancar.
 - **Si se le olvidó cerrar**, la app se lo dice al abrirla, y puede cerrar los 2 días laborables anteriores.
 - **Inspecciones:** al llegar a un punto de control, el PM la hace desde la obra ("Todo cumple" o marca lo que
   falla). Si algo falló, la siguiente vez solo revisa eso.
+- **Si el cliente pide algo extra o aparece algo escondido**, el PM levanta un aviso (tipo Cliente, Condición oculta
+  o Diseño) con fotos. El dueño, en "Avisos por contestar", toca "Hacer orden de cambio": viene llenada con lo del
+  PM, la describe como se la va a explicar al cliente y la emite; al PM se le contesta solo. Mientras el cliente no
+  responda, la puede editar.
 - **Fotos para el cliente:** en el álbum, tocar "Cliente" en las que el cliente debe ver.
 - **En iPhone**, abrir la app al menos una vez cada pocos días: si pasa una semana sin abrirla, Safari puede borrar
   lo que guardó para trabajar sin señal.

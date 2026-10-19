@@ -1,7 +1,13 @@
 'use server';
-// Las órdenes de cambio de una obra (D-067): el dueño las emite y registra la respuesta que el cliente le dio en
-// papel. La del portal la manda el cliente con su enlace (acciones/portal.ts).
-import { crearOrdenCambio, responderCambioDueno, type ResultadoOrdenDeCambio } from '@ijm/servidor';
+// Las órdenes de cambio de una obra (D-067): el dueño las emite (también desde un aviso del PM), las corrige mientras
+// el cliente no responde (D-103) y registra la respuesta que el cliente le dio en papel. La del portal la manda el
+// cliente con su enlace (acciones/portal.ts).
+import {
+  crearOrdenCambio,
+  editarOrdenCambio,
+  responderCambioDueno,
+  type ResultadoOrdenDeCambio,
+} from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
 import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
 
@@ -11,6 +17,17 @@ const numero = (f: FormData, campo: string) => {
   const limpio = String(f.get(campo) ?? '').replace(/[$,\s]/g, '');
   return limpio === '' ? null : Number(limpio);
 };
+/** Lo que el formulario manda de la orden, igual al emitir que al corregir. */
+const deLaOrden = (f: FormData) => ({
+  motivo: texto(f, 'motivo') as never,
+  descripcion: texto(f, 'descripcion'),
+  hallazgo: texto(f, 'hallazgo'),
+  costo: numero(f, 'costo'),
+  precio: numero(f, 'precio'),
+  dias: numero(f, 'dias') ?? 0,
+  condicion: (texto(f, 'condicion') ?? 'al_autorizar') as never,
+  forzar: f.get('forzar') === '1',
+});
 
 export async function emitirCambio(
   obraId: string,
@@ -21,15 +38,27 @@ export async function emitirCambio(
     (tx) =>
       crearOrdenCambio(tx, {
         obraId,
-        motivo: texto(f, 'motivo') as never,
-        descripcion: texto(f, 'descripcion'),
-        hallazgo: texto(f, 'hallazgo'),
-        costo: numero(f, 'costo'),
-        precio: numero(f, 'precio'),
-        dias: numero(f, 'dias') ?? 0,
-        condicion: (texto(f, 'condicion') ?? 'al_autorizar') as never,
-        forzar: f.get('forzar') === '1',
+        ...deLaOrden(f),
+        avisoId: texto(f, 'avisoId'),
+        respuestaAviso: texto(f, 'respuestaAviso'),
       }),
+    await exigirDueno(),
+  );
+  if (r.ok && r.datos.ok) {
+    revalidatePath(`/obras/${obraId}/cambios`);
+    if (f.get('avisoId')) revalidatePath('/avisos');
+  }
+  return r;
+}
+
+export async function editarCambio(
+  obraId: string,
+  ordenId: string,
+  _previo: Resultado<ResultadoOrdenDeCambio> | null,
+  f: FormData,
+): Promise<Resultado<ResultadoOrdenDeCambio>> {
+  const r = await comoMiembro(
+    (tx) => editarOrdenCambio(tx, { ordenId, ...deLaOrden(f) }),
     await exigirDueno(),
   );
   if (r.ok && r.datos.ok) revalidatePath(`/obras/${obraId}/cambios`);

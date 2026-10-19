@@ -240,7 +240,8 @@
     "ya_cerrado": "It was already handled.",
     "sin_entrega": "This job hasn't been delivered yet.",
     "falta_celular": "This owner signs in with their cell: it cannot be left empty.",
-    "faltan_datos": "The company or owner name is missing."
+    "faltan_datos": "The company or owner name is missing.",
+    "orden_cambiada": "The order changed while you were viewing it: review the new version and answer again."
   },
   "obras": {
     "titulo": "Jobs",
@@ -718,7 +719,8 @@
     "detiene": "Stops the work: people are idle",
     "respuesta": "Your answer for the PM",
     "respuestaEjemplo": "Yes, replace it before closing. I already ordered the material; it arrives tomorrow.",
-    "contestar": "Answer and close the alert"
+    "contestar": "Answer and close the alert",
+    "hacerOrden": "Make a change order"
   },
   "entrega": {
     "titulo": "Handover",
@@ -1093,7 +1095,21 @@
     "noAprobo": "Not approved",
     "folioMotivo": "{folio} · {motivo}",
     "hechaPor": "Done · marked by {nombre} on {cuando}",
-    "porHacer": "Approved: the PM hasn't marked it done yet."
+    "porHacer": "Approved: the PM hasn't marked it done yet.",
+    "delAviso": "From alert {folio} · {tipo} · {pm} · {dia}",
+    "desdeAvisoAyuda": "The text below comes from the PM’s alert: rewrite it the way you will explain it to the client. When you issue it, the PM’s alert gets answered with the order number.",
+    "desdeAvisoContestado": "The text below comes from the PM’s alert: rewrite it the way you will explain it to the client. That alert is already answered.",
+    "respuestaAviso": "Change order {folio} was issued for the client to approve. Once approved, it shows up on your home screen.",
+    "emitidaDelAviso": "{folio} issued and alert {aviso} answered. The client can now approve it in their portal.",
+    "editar": "Edit",
+    "editarTitulo": "Edit {folio}",
+    "editarAyuda": "You can correct it until the client answers; their portal shows the new version.",
+    "guardar": "Save changes",
+    "guardando": "Saving…",
+    "guardarAsi": "Save it as is",
+    "editada": "{folio} updated. The client now sees the new version.",
+    "cerrar": "Close",
+    "cancelar": "Cancel"
   },
   "cobros": {
     "titulo": "Payments",
