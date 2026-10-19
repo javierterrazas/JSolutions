@@ -287,7 +287,7 @@
     "direccion": "Address",
     "pm": "PM",
     "elegirPm": "Choose the PM",
-    "sinPms": "There are no active PMs: invite one in Team before creating the job.",
+    "sinPms": "There are no active PMs: invite one in Managers before creating the job.",
     "inicio": "Start date",
     "entrega": "Estimated delivery date",
     "contrato": "Contract ($)",
