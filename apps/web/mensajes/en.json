@@ -1457,7 +1457,8 @@
     "correoOpcional": "Owner's email (optional)",
     "duenoContacto": "Owner: {dueno} ({contacto})",
     "editarDatos": "Edit details",
-    "celularEditarAyuda": "They sign in with their cell. If you change it, the old one is freed."
+    "celularEditarAyuda": "They sign in with their cell. If you change it, the old one is freed.",
+    "usoDeLaApp": "App usage"
   },
   "cerrarObra": {
     "titulo": "Close the job",
@@ -1640,5 +1641,26 @@
     "obra": "{folio} · {cliente}",
     "diaCantidad": "{dia}: {cantidad}",
     "nadie": "No one on the crew has hours logged this week."
+  },
+  "uso": {
+    "titulo": "App usage",
+    "volver": "Back to the platform",
+    "ayuda": "How much each person at each company uses the app. Time is measured with the app open and on screen; offline time isn't counted. Nothing they type and not where they are.",
+    "ultimosDias": "Last {n} days",
+    "resumenEmpresa": "{tiempo} total · {activas} of {total} people used it",
+    "persona": "{nombre} · {rol}",
+    "roles": {
+      "dueno": "owner",
+      "admin": "admin",
+      "pm": "PM"
+    },
+    "uso": "{dias, plural, one {# day} other {# days}} · {sesiones, plural, one {# time} other {# times}} · {promedio} per day",
+    "noEntro": "Didn't open the app in this period.",
+    "ultimaVez": "Last time {cuando}",
+    "nunca": "Has never opened the app.",
+    "acciones": "{cierres} closes · {gastos} expenses · {avisos} alerts · {fotos} photos · {cobros} payments",
+    "cierreTarda": "Closes the day in {s} s on average",
+    "minutos": "{n} min",
+    "horasMinutos": "{h} h {m} min"
   }
 }

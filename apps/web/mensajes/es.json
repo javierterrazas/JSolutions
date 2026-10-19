@@ -1457,7 +1457,8 @@
     "correoOpcional": "Correo del dueño (opcional)",
     "duenoContacto": "Dueño: {dueno} ({contacto})",
     "editarDatos": "Editar datos",
-    "celularEditarAyuda": "Con su celular entra a la app. Si lo cambias, el anterior queda libre."
+    "celularEditarAyuda": "Con su celular entra a la app. Si lo cambias, el anterior queda libre.",
+    "usoDeLaApp": "Uso de la app"
   },
   "cerrarObra": {
     "titulo": "Cerrar la obra",
@@ -1640,5 +1641,26 @@
     "obra": "{folio} · {cliente}",
     "diaCantidad": "{dia}: {cantidad}",
     "nadie": "Nadie de la cuadrilla tiene horas anotadas esta semana."
+  },
+  "uso": {
+    "titulo": "Uso de la app",
+    "volver": "Volver a la plataforma",
+    "ayuda": "Cuánto usa la app cada persona de cada empresa. Se mide el tiempo con la app abierta y a la vista; sin señal no se cuenta. Nada de lo que escriben ni dónde están.",
+    "ultimosDias": "Últimos {n} días",
+    "resumenEmpresa": "{tiempo} en total · {activas} de {total} personas la usaron",
+    "persona": "{nombre} · {rol}",
+    "roles": {
+      "dueno": "dueño",
+      "admin": "administrador",
+      "pm": "PM"
+    },
+    "uso": "{dias, plural, one {# día} other {# días}} · {sesiones, plural, one {# vez} other {# veces}} · {promedio} por día",
+    "noEntro": "No abrió la app en este periodo.",
+    "ultimaVez": "Última vez {cuando}",
+    "nunca": "Nunca ha abierto la app.",
+    "acciones": "{cierres} cierres · {gastos} gastos · {avisos} avisos · {fotos} fotos · {cobros} cobros",
+    "cierreTarda": "Cierra el día en {s} s en promedio",
+    "minutos": "{n} min",
+    "horasMinutos": "{h} h {m} min"
   }
 }

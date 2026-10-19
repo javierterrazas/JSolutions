@@ -85,6 +85,8 @@ export function FormularioCierre({
   const [motivo, setMotivo] = useState(correccion?.motivo ?? '');
   const [notas, setNotas] = useState(correccion?.incidencia ?? '');
   const [porQue, setPorQue] = useState('');
+  // cuándo abrió el cierre: con cuándo lo terminó, cuánto tardó en capturarlo (D-101)
+  const [iniciado] = useState(() => new Date().toISOString());
   // las que van en curso vienen marcadas: casi siempre se sigue con ellas
   const [trabajadas, setTrabajadas] = useState<ReadonlySet<string>>(
     () =>
@@ -157,6 +159,7 @@ export function FormularioCierre({
         obraId: datos.obraId,
         tardio: datos.tardio ? datos.dia : null,
         capturado: new Date().toISOString(),
+        iniciado,
         sinTrabajo,
         motivo: sinTrabajo ? ((motivo || null) as never) : null,
         incidencia: notas.trim() || null,

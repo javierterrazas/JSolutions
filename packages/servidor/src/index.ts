@@ -28,6 +28,7 @@ export * from './subcontratos';
 export * from './indicadores';
 export * from './plan-semanal';
 export * from './plataforma';
+export * from './uso';
 export * from './cierre-obra';
 export * from './historico';
 export * from './posventa';

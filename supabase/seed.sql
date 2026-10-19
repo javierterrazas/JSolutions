@@ -185,6 +185,9 @@ begin
     values (p_empresa, p_obra, s_bano, '2026-10-12 08:00-05', '2026-10-13 09:00-05', 'sin_fugas', p_pm);
   insert into public.punch_list (empresa_id, folio, obra_id, item, fecha_compromiso, creado_por)
     values (p_empresa, 'PUN-0' || f, p_obra, 'Silicón disparejo en el vanity', '2026-10-30', p_pm);
+  -- cuánto usó la app ese PM (D-101)
+  insert into public.uso_app (empresa_id, miembro_id, dia, minutos, sesiones)
+    values (p_empresa, p_pm, date '2026-10-05' + n, 20 + n, 1) on conflict do nothing;
   insert into public.fotos (empresa_id, obra_id, ref_tipo, ref_id, indice, storage_path, creado_por)
     values (p_empresa, p_obra, 'bitacora', bit, 1, p_empresa || '/' || p_obra || '/bitacora/' || bit || '-1.jpg', p_pm);
 

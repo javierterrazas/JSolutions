@@ -106,7 +106,7 @@ La etiqueta de la obra ("Baño + Closet") y los pies² totales no se guardan: sa
 
 | Tabla | Viene de | Qué guarda | D | PM |
 | --- | --- | --- | --- | --- |
-| `bitacora` | Bitacora | `folio`, `obra_id`, `dia`, `sin_trabajo` + `motivo_sin_trabajo` (obligatorio si no hubo trabajo), `incidencia`, `tardio`, `fotos_comprometidas` (0 a 10), `estado`, `enviado_en`. **Un solo cierre vigente por obra y día** | lee y escribe | lee y crea |
+| `bitacora` | Bitacora | `folio`, `obra_id`, `dia`, `sin_trabajo` + `motivo_sin_trabajo` (obligatorio si no hubo trabajo), `incidencia`, `tardio`, `fotos_comprometidas` (0 a 10), `estado`, `enviado_en`, `segundos_captura` (cuánto tardó en capturarlo, D-101). **Un solo cierre vigente por obra y día** | lee y escribe | lee y crea |
 | `bitacora_partidas` | Bitacora.partidas | las partidas trabajadas ese día | lee | lee y crea |
 | `bitacora_subs` | Bitacora.subs_presentes | `orden_trabajo_id`, `llego` | lee | lee y crea |
 | `avance` | Avance | `partida_obra_id`, `estado` (`en_progreso`/`terminada`), `dia`, `bitacora_id` (D-022), `estado_registro` | lee y escribe | lee y crea |
@@ -146,6 +146,7 @@ aquí se deduce.
 | `entregas` | Entrega | una por obra: `fecha_entrega`, `garantia_meses`, `garantia_vence`, `autoriza_fotos`, `resena_pedida`, `resena_recibida`, `referido_pedido` (los marca el dueño, D-090), `pasos_no` (los que quedaron en "No": el cliente no quiso, D-098), `visita_11m` (sin usar: el dueño no la quiere), `notas` | lee y escribe | vista: `fecha_entrega` |
 | `obras_cerradas` 💲 | Obras_Cerradas | la foto fija del cierre: fechas, días de ciclo, contrato, órdenes de cambio, presupuesto, materiales, cuadrilla, subcontratos, costo total, margen, desvío, cobrado, no calidad, días reportados, pies² | lee | — |
 | `historico_etapas` 💲 | (nueva) | al cerrar (D-085): por espacio y etapa, presupuestado, costo real, pies², pies lineales, costo por pie², y la unidad de la etapa con su costo por ella (D-086; la fija, por espacio, D-095) | lee | — |
+| `uso_app` | (nueva) | por miembro y día (D-101): `minutos` con la app abierta y a la vista, `sesiones`, `primer_en`, `ultimo_en`; la escribe `registrar_uso` y solo la lee la plataforma (`plataforma_uso`) | — | — |
 | `historico_duraciones` | (nueva) | al cerrar: días planeados y reales de cada partida | lee | — |
 
 ### Sistema
