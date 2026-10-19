@@ -1733,3 +1733,16 @@ del piloto es menos de 60 segundos).
 - **El tiempo del cierre:** el teléfono manda cuándo abrió la pantalla del cierre (`iniciado`) y cuándo lo terminó
   (`capturado`); la bitácora guarda los segundos (`segundos_captura`; más de 3 horas no cuenta).
 - `uso_app` no la lee nadie directo (RLS sin políticas): solo la plataforma, con su función. Las empresas no la ven.
+
+## D-102 · El expediente de una obra en PDF
+
+**Lo pidió el dueño:** un botón para guardar en PDF todo lo de una obra que quiera. En el seguimiento, "Expediente en
+PDF" (`/obras/[id]/expediente`): se palomean las secciones (resumen con los números, presupuesto por etapa, órdenes de
+cambio con la firma del cliente, cobros, subcontratos, el día a día completo, cuadrilla, calidad —inspecciones con sus
+defectos, pruebas de agua y punch list—, retrabajos y garantías, entrega y, si se quiere, las fotos) y "Descargar PDF"
+abre la opción de imprimir del teléfono o la computadora, donde se elige "Guardar como PDF".
+- **Por qué así (la opción que eligió el dueño):** no cuesta servidor, sale igual que en pantalla y aguanta muchas
+  fotos (las pide de donde ya están). En papel: hoja carta, el encabezado con el logo y el nombre de la empresa, sin
+  los controles, y el número de página donde el navegador lo permite (Chrome).
+- Lo que ninguna pantalla del dueño leía sale de `calidadDeLaObra`; el día a día completo, de `seguimientoDeObra` con
+  `todos`. Las fotos, hasta 15 páginas del álbum. Lleva dinero: solo el dueño o el administrador.
