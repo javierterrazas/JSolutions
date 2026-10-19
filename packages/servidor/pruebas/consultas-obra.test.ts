@@ -23,14 +23,19 @@ describe('las pantallas del dueño leen', () => {
 
   it('las obras de su empresa, y solo de la suya', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
-      const obras = await obrasDeLaEmpresa(tx);
+      const { hoy, obras } = await obrasDeLaEmpresa(tx);
+      expect(hoy).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(obras.map((o) => o.folio).sort()).toEqual(['OB-001', 'OB-002', 'OB-003']);
       expect(obras.find((o) => o.id === OBRAS.a1Carlos)).toMatchObject({
         pm: 'Carlos Méndez',
+        pmId: expect.any(String),
         estado: 'en_obra',
+        entregada: null,
       });
+      // la entregada, con su día de entrega (D-100)
+      expect(obras.find((o) => o.id === OBRAS.a3Entregada)!.entregada).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       await como(tx, USUARIOS.duenoB);
-      expect((await obrasDeLaEmpresa(tx)).map((o) => o.folio)).toEqual(['OB-001']);
+      expect((await obrasDeLaEmpresa(tx)).obras.map((o) => o.folio)).toEqual(['OB-001']);
     }));
 
   it('el presupuesto por capturar: cada espacio con sus etapas y el monto que ya tiene', () =>
