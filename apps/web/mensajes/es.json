@@ -287,7 +287,7 @@
     "direccion": "Dirección",
     "pm": "PM",
     "elegirPm": "Elige al PM",
-    "sinPms": "No hay PMs activos: invita uno en Equipo antes de dar de alta la obra.",
+    "sinPms": "No hay PMs activos: invita uno en Managers antes de dar de alta la obra.",
     "inicio": "Fecha de inicio",
     "entrega": "Fecha de entrega estimada",
     "contrato": "Contrato ($)",
