@@ -136,15 +136,14 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                   ['gasto', 'gastoNuevo', 'gasto'],
                   ['aviso', 'avisoNuevo', 'aviso'],
                   ['calidad', 'calidad', 'calidad'],
-                  ['ordenes', 'ordenesSubs', 'subs'],
                   ['entrega', 'entregaYMedidas', 'entrega'],
                   ['album', 'album', 'fotos'],
                 ] as const
-              ).map(([ruta, texto, icono]) => (
+              ).map(([ruta, texto, icono], i, botones) => (
                 <Link
                   key={ruta}
                   href={`/obras/${o.id}/${ruta}`}
-                  className={`${estilos.botonSecundario} flex min-h-20 flex-col items-center justify-center gap-1 px-2 py-2 text-center leading-tight`}
+                  className={`${estilos.botonSecundario} flex min-h-20 flex-col items-center justify-center gap-1 px-2 py-2 text-center leading-tight ${i === botones.length - 1 && botones.length % 2 ? 'col-span-2' : ''}`}
                 >
                   <Icono nombre={icono} className="size-7" />
                   {t(texto)}
