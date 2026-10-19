@@ -51,6 +51,32 @@ test('cada pantalla del PM se recorre completa, sin salirse a los lados ni choca
   await expect.poll(async () => (await desplazamiento(page)).y).toBeLessThan(max - 300);
 });
 
+/** Las rutas de la app a las que lleva cada enlace de la pantalla (sin repetir). */
+const enlaces = (page: Page) =>
+  page.evaluate(() => [
+    ...new Set(
+      [...document.querySelectorAll<HTMLAnchorElement>('a[href^="/"]')]
+        .map((a) => a.getAttribute('href')!)
+        .filter((h) => !h.startsWith('/fotos/')),
+    ),
+  ]);
+
+test('ningún botón del inicio ni del seguimiento lleva a una pantalla que no existe', async ({ page }) => {
+  for (const [quien, rutas] of [
+    ['pm', ['/']],
+    ['dueno', ['/', `/obras/${OBRAS.carlos}/seguimiento`]],
+  ] as const) {
+    await entrar(page, quien);
+    for (const ruta of rutas) {
+      await page.goto(ruta);
+      for (const href of await enlaces(page)) {
+        const r = await page.request.get(href);
+        expect(r.status(), `${quien}: ${ruta} → ${href}`).toBeLessThan(400);
+      }
+    }
+  }
+});
+
 test('las pantallas del dueño tampoco chocan con el CSP', async ({ page }) => {
   const bloqueado: string[] = [];
   page.on('console', (m) => {
