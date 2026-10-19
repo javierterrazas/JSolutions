@@ -4,6 +4,7 @@ import {
   type AnalisisEtapa,
   analizarCostosEtapa,
   claveEtapa,
+  type Dia,
   etapasDeEspacio,
   type MuestraEtapa,
   type UnidadEtapa,
@@ -46,16 +47,27 @@ export interface ObraDeLaLista {
   readonly direccion: string;
   readonly estado: 'sin_presupuesto' | 'lista_para_arranque' | 'en_obra' | 'entregada';
   readonly pm: string;
+  /** Para filtrar por PM (D-100). */
+  readonly pmId: string;
   readonly inicio: string;
+  /** El día que se entregó; null si no se ha entregado (D-100). */
+  readonly entregada: string | null;
 }
 
-/** Las obras de la empresa, las más recientes primero. */
-export async function obrasDeLaEmpresa(tx: Tx, ahora = new Date()): Promise<ObraDeLaLista[]> {
-  exigirDueno(await leerSesion(tx, ahora));
-  return tx<ObraDeLaLista[]>`
-    select o.id, o.folio, o.cliente, o.direccion, o.estado, m.nombre as pm, o.fecha_inicio::text as inicio
-    from obras o join miembros m on m.id = o.pm_id
+/** Las obras de la empresa, las más recientes primero, y hoy en su zona (para filtrar por periodo, D-100). */
+export async function obrasDeLaEmpresa(
+  tx: Tx,
+  ahora = new Date(),
+): Promise<{ hoy: Dia; obras: ObraDeLaLista[] }> {
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  const obras = await tx<ObraDeLaLista[]>`
+    select o.id, o.folio, o.cliente, o.direccion, o.estado, m.nombre as pm, o.pm_id as "pmId",
+           o.fecha_inicio::text as inicio,
+           case when o.estado = 'entregada' then coalesce(e.fecha_entrega, o.fecha_fin_real)::text end as entregada
+    from obras o join miembros m on m.id = o.pm_id left join entregas e on e.obra_id = o.id
     order by o.creado_en desc`;
+  return { hoy: s.hoy, obras };
 }
 
 export interface PresupuestoParaCapturar {

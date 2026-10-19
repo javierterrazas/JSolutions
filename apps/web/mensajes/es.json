@@ -260,7 +260,25 @@
     "resumen": "{avance} terminado · presupuesto {usado}",
     "resumenSinPresupuesto": "{avance} terminado",
     "tarde": "{n, plural, one {# día tarde} other {# días tarde}}",
-    "entrega": " · entrega {fecha}"
+    "entrega": " · entrega {fecha}",
+    "filtroEstado": "Estado",
+    "filtroPeriodo": "Periodo",
+    "filtroPm": "PM",
+    "filtros": {
+      "curso": "En curso ({n})",
+      "entregadas": "Entregadas ({n})",
+      "todas": "Todas ({n})"
+    },
+    "buscar": "Buscar por folio, cliente o dirección",
+    "periodos": {
+      "mes": "Este mes",
+      "trimestre": "Últimos 3 meses",
+      "anio": "Este año",
+      "todo": "Todo"
+    },
+    "todosLosPm": "Todos los PM",
+    "ningunaConFiltros": "Ninguna obra con estos filtros.",
+    "entregadaEl": " · entregada el {fecha}"
   },
   "obraNueva": {
     "titulo": "Nueva obra",

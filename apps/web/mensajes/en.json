@@ -260,7 +260,25 @@
     "resumen": "{avance} done · budget {usado}",
     "resumenSinPresupuesto": "{avance} done",
     "tarde": "{n, plural, one {# day late} other {# days late}}",
-    "entrega": " · due {fecha}"
+    "entrega": " · due {fecha}",
+    "filtroEstado": "Status",
+    "filtroPeriodo": "Period",
+    "filtroPm": "PM",
+    "filtros": {
+      "curso": "Active ({n})",
+      "entregadas": "Delivered ({n})",
+      "todas": "All ({n})"
+    },
+    "buscar": "Search by number, client or address",
+    "periodos": {
+      "mes": "This month",
+      "trimestre": "Last 3 months",
+      "anio": "This year",
+      "todo": "All"
+    },
+    "todosLosPm": "All PMs",
+    "ningunaConFiltros": "No jobs match these filters.",
+    "entregadaEl": " · delivered {fecha}"
   },
   "obraNueva": {
     "titulo": "New job",

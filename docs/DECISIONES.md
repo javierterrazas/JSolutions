@@ -1706,3 +1706,16 @@ en verde y tiene obras detrás se abre (se ensancha a lo ancho) con cada obra, l
 
 Con las mismas reglas que el indicador (`detallePorObra`, en @ijm/core), así lo de las obras suma lo del número. Los
 datos de los indicadores ya traen la obra de cada aviso, gasto, orden y registro.
+
+## D-100 · Filtrar las obras
+
+**Lo pidió el dueño:** filtrar la lista de obras por fecha o estado. En "Obras":
+- **Pestañas por estado** con cuántas hay: **En curso** (de entrada: sin presupuesto, lista para arranque y en obra),
+  **Entregadas** y **Todas**.
+- **Un buscador** por folio, cliente o dirección, sin importar acentos.
+- **El periodo**, con botones (Este mes, Últimos 3 meses, Este año, Todo): en curso cuenta su inicio; entregadas, su
+  entrega.
+- **Por PM**, si hay más de uno.
+- **El orden:** en curso, primero las atrasadas y luego las que se entregan antes; entregadas, la más reciente primero.
+- Los filtros van en la dirección (`?estado=…&q=…&periodo=…&pm=…`, sin recargar la página): al abrir una obra y
+  regresar, la lista sigue igual. Se filtra en el teléfono, con todas las obras ya leídas.
