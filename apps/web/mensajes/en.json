@@ -456,7 +456,15 @@
     "yaLlevaHoras": "Already has {horas} h on another job: {quedan} h left.",
     "yaLlevaDia": "Already worked a full day on another job.",
     "yaLlevaMedioDia": "Already worked half a day on another job.",
-    "pasaDe16": "Over 16 hours for the day: enter {quedan} h or less."
+    "pasaDe16": "Over 16 hours for the day: enter {quedan} h or less.",
+    "igualQueUltimo": "Same as the last close ({dia})",
+    "horasN": "{n} h",
+    "sinCuadrillaObra": "No one from the crew has worked on this job yet: search for them below.",
+    "agregarTrabajador": "Add someone else",
+    "buscarTrabajador": "Type their name or role",
+    "nadieConEseNombre": "No one by that name.",
+    "agregar": "Add",
+    "verTodos": "See the whole crew ({n})"
   },
   "cola": {
     "pendientes": "{n, plural, one {# record waiting to send} other {# records waiting to send}} from this phone (closes, expenses, alerts and their photos).",

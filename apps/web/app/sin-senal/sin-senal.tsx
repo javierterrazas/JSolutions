@@ -200,6 +200,7 @@ function ObrasSinSenal({ copia }: { copia: CopiaSinSenal }) {
               })),
             })),
             trabajadores: d.trabajadores,
+            ultimoCierre: d.ultimoCierre,
             subs: d.subs.map((s) => ({ ordenId: s.ordenId, sub: s.sub, alcance: s.alcance })),
             motivos: d.motivos,
           }}

@@ -456,7 +456,15 @@
     "yaLlevaHoras": "Ya lleva {horas} h en otra obra: le quedan {quedan} h.",
     "yaLlevaDia": "Ya trabajó el día completo en otra obra.",
     "yaLlevaMedioDia": "Ya trabajó medio día en otra obra.",
-    "pasaDe16": "Pasa de 16 horas en el día: ponle {quedan} h o menos."
+    "pasaDe16": "Pasa de 16 horas en el día: ponle {quedan} h o menos.",
+    "igualQueUltimo": "Igual que el último cierre ({dia})",
+    "horasN": "{n} h",
+    "sinCuadrillaObra": "Todavía nadie de la cuadrilla ha trabajado en esta obra: búscalos abajo.",
+    "agregarTrabajador": "Agregar a alguien más",
+    "buscarTrabajador": "Escribe su nombre o su puesto",
+    "nadieConEseNombre": "Nadie con ese nombre.",
+    "agregar": "Agregar",
+    "verTodos": "Ver a toda la cuadrilla ({n})"
   },
   "cola": {
     "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres, gastos, avisos y sus fotos).",

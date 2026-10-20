@@ -38,7 +38,17 @@ export interface DatosCierre {
      * sepa cuánto le puede poner sin pasar de 16 horas o de un día (D-093).
      */
     yaLleva: number;
+    /** El último día que trabajó en esta obra, en sus últimos 10 cierres (D-104); null si no ha trabajado aquí. */
+    reciente: Dia | null;
   }[];
+  /**
+   * La cuadrilla del último cierre con trabajo de esta obra antes de ese día (D-104), para "Igual que el último
+   * cierre": cuánto puso a cada trabajador activo (horas, o días si cobra por día). Null si todavía no hay.
+   */
+  readonly ultimoCierre: {
+    readonly dia: Dia;
+    readonly cuadrilla: readonly { trabajadorId: string; cantidad: number }[];
+  } | null;
   /** Las órdenes de trabajo cuyo sub se espera ese día y todavía no se reporta si llegó. */
   readonly subs: readonly {
     ordenId: string;
@@ -137,6 +147,32 @@ export async function datosParaCierre(
     if (r.obra_id !== obra.id)
       yaLleva.set(r.trabajador_id, (yaLleva.get(r.trabajador_id) ?? 0) + Number(r.cantidad));
   }
+  // la cuadrilla de esta obra (D-104): quiénes trabajaron en sus últimos 10 cierres con cuadrilla antes de ese día, y
+  // cuánto, sumando lo repartido entre las partidas de cada cierre (D-077)
+  const deLaObra = await tx<{ bitacora: string; dia: Dia; trabajador: string; cantidad: string }[]>`
+    with ultimos as (
+      select b.id, b.dia from bitacora b
+      where b.obra_id = ${obra.id} and b.estado = 'vigente' and b.dia < ${elDia} and b.id is distinct from ${corrige}
+        and exists (select 1 from mano_obra m where m.bitacora_id = b.id and m.estado = 'vigente')
+      order by b.dia desc
+      limit 10)
+    select u.id as bitacora, to_char(u.dia, 'YYYY-MM-DD') as dia, m.trabajador_id as trabajador,
+           sum(m.cantidad)::text as cantidad
+    from ultimos u join mano_obra m on m.bitacora_id = u.id and m.estado = 'vigente'
+    group by u.id, u.dia, m.trabajador_id
+    order by u.dia desc`;
+  const activos = new Set(trabajadores.map((t) => t.id));
+  const reciente = new Map<string, Dia>();
+  for (const r of deLaObra) if (!reciente.has(r.trabajador)) reciente.set(r.trabajador, r.dia);
+  const ultimo = deLaObra[0];
+  const ultimoCierre = ultimo
+    ? {
+        dia: ultimo.dia,
+        cuadrilla: deLaObra
+          .filter((r) => r.bitacora === ultimo.bitacora && activos.has(r.trabajador))
+          .map((r) => ({ trabajadorId: r.trabajador, cantidad: Number(r.cantidad) })),
+      }
+    : null;
   // los subs que se esperan ese día: su orden ya empezó, sigue viva y no se ha reportado si llegó
   const subs = await tx<
     {
@@ -171,7 +207,9 @@ export async function datosParaCierre(
       puesto: t.puesto,
       tipoPago: t.tipo_pago,
       yaLleva: yaLleva.get(t.id) ?? 0,
+      reciente: reciente.get(t.id) ?? null,
     })),
+    ultimoCierre: ultimoCierre?.cuadrilla.length ? ultimoCierre : null,
     subs: subs.map((x) => ({
       ordenId: x.id,
       folio: x.folio,

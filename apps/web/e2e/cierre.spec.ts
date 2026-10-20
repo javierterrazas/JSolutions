@@ -11,10 +11,45 @@ import { en, entrar, es, OBRAS, tomarFoto } from './apoyo';
 const trabajador = (page: Page, titulo: string, nombre: string) =>
   page.locator('fieldset').filter({ hasText: titulo }).locator(':scope > div').filter({ hasText: nombre });
 
+/** Muestra a toda la cuadrilla, no solo a los que ya trabajaron en la obra (D-104). */
+async function verTodos(page: Page): Promise<void> {
+  const ver = page.getByRole('button', { name: /^Ver a toda la cuadrilla/ });
+  if (await ver.count()) await ver.click();
+}
+
+test('la cuadrilla de la obra primero, igual que el último cierre y el buscador (D-104)', async ({
+  page,
+}) => {
+  await entrar(page, 'pm');
+  await page.goto(`/obras/${OBRAS.carlos}/cierre`);
+  const cuadrilla = page.locator('fieldset').filter({ hasText: es.cierre.cuadrilla });
+  // Pedro trabajó en OB-001 (el seed, el lunes 5); Juan no: no sale hasta buscarlo
+  await expect(trabajador(page, es.cierre.cuadrilla, 'Pedro')).toBeVisible();
+  await expect(trabajador(page, es.cierre.cuadrilla, 'Juan')).toHaveCount(0);
+
+  // un toque llena lo del último cierre
+  const igual = cuadrilla.getByRole('button', { name: /^Igual que el último cierre/ });
+  await expect(igual).toContainText('Pedro 8 h');
+  await igual.click();
+  await expect(trabajador(page, es.cierre.cuadrilla, 'Pedro').getByRole('textbox')).toHaveValue('8');
+  await expect(igual).toHaveCount(0);
+
+  // el buscador: por nombre o puesto, sin acentos ni mayúsculas
+  const buscar = cuadrilla.getByRole('searchbox', { name: es.cierre.agregarTrabajador });
+  await buscar.fill('zzz');
+  await expect(cuadrilla.getByText(es.cierre.nadieConEseNombre)).toBeVisible();
+  await buscar.fill('OFIC');
+  await cuadrilla.getByRole('button', { name: /Juan/ }).click();
+  await expect(trabajador(page, es.cierre.cuadrilla, 'Juan').getByRole('combobox')).toHaveValue('0');
+  // con los dos del seed ya en la lista, no queda a quién buscar
+  await expect(buscar).toHaveCount(0);
+});
+
 test('la cuadrilla por día y por hora, y cambiar de idioma no borra lo capturado', async ({ page }) => {
   await entrar(page, 'pm');
   await page.goto(`/obras/${OBRAS.carlos}/cierre`);
   await expect(page.getByRole('heading', { name: es.cierre.titulo })).toBeVisible();
+  await verTodos(page);
 
   // Juan cobra por día: elige entre no vino, día o medio día, sin casilla de horas
   const juan = trabajador(page, es.cierre.cuadrilla, 'Juan');
@@ -103,6 +138,7 @@ test('el cierre tardío desde el inicio, el día sin trabajo y el de hoy', async
   // y el de hoy, sin foto: es opcional (D-059)
   await page.getByRole('link', { name: es.inicioPm.cerrarDia }).click();
   await expect(page.getByRole('heading', { name: es.cierre.titulo })).toBeVisible();
+  await verTodos(page);
   await trabajador(page, es.cierre.cuadrilla, 'Juan')
     .getByRole('combobox')
     .selectOption({ label: es.cierre.diaCompleto });
