@@ -46,8 +46,11 @@ test('el dueño ve cómo va la obra: avance, etapa, presupuesto por etapa, cuadr
   );
 
   // el día a día llega hasta el arranque: en la última página está el cierre del 5 de octubre
-  while (await page.getByRole('link', { name: es.seguimiento.anteriores }).isVisible())
+  // (cada página se espera antes de buscar la siguiente: si no, se le pica al enlace de la que se está yendo)
+  for (let n = 1; await page.getByRole('link', { name: es.seguimiento.anteriores }).isVisible(); n++) {
     await page.getByRole('link', { name: es.seguimiento.anteriores }).click();
+    await expect(page).toHaveURL(new RegExp(`\\?pagina=${n}$`));
+  }
   const primerDia = page.locator('li').filter({ hasText: 'BIT-0001' });
   await expect(primerDia).toContainText(
     t.es('seguimiento.partidaTerminada', {
