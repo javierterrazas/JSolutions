@@ -1830,3 +1830,12 @@ dueño, con dinero.
   planeados contra los reales. De ahí, al cierre y la posventa.
 - Sin migración: todo sale de lo que guarda "Cerrar la obra" (D-085). Por PM, por tamaño y la velocidad por pie²
   quedan para después.
+
+## D-108 · Los feriados, desde Mi empresa
+
+**Lo pidió el dueño** (salió al escribir el manual: no había pantalla y se cargaban por la plataforma). En Mi empresa
+→ **Feriados** (`/empresa/feriados`): los de este año en adelante, cada uno con "Se descansa" o "Se trabaja" (un toque
+lo cambia); **"Agregar los de EE. UU."** de este año o el siguiente (`feriadosDeEstadosUnidos` en core: Año Nuevo,
+Memorial Day, Independencia, Labor Day, Acción de Gracias y el día después, Nochebuena y Navidad; si cae en sábado se
+descansa el viernes y en domingo el lunes; los días que ya tenían uno no cambian), y agregar uno propio. Nada se
+borra: un feriado que ya no aplica se marca "Se trabaja" (D-028). Sin migración.
