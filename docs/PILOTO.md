@@ -54,6 +54,8 @@ Lo hace el dueño, en este orden, la semana antes de arrancar.
 - **Sin señal no pasa nada:** lo capturado queda en el teléfono y se envía solo al volver la señal. Si tarda, en el
   inicio está "Enviar ahora".
 - **Si se le olvidó cerrar**, la app se lo dice al abrirla, y puede cerrar los 2 días laborables anteriores.
+- **La bitácora:** en cada obra, "Bitácora" le muestra al PM sus días cerrados (partidas, cuadrilla, subs, notas y
+  fotos), y le deja corregir el cierre de las últimas 48 horas.
 - **Inspecciones:** al llegar a un punto de control, el PM la hace desde la obra ("Todo cumple" o marca lo que
   falla). Si algo falló, la siguiente vez solo revisa eso.
 - **Si el cliente pide algo extra o aparece algo escondido**, el PM levanta un aviso (tipo Cliente, Condición oculta
