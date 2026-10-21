@@ -84,7 +84,8 @@
     "reactivar": "Reactivar",
     "celularEjemplo": "(512) 555-0101",
     "celularAyuda": "Con su celular entra a la app. No le llega ningún mensaje: tú le mandas el enlace por WhatsApp.",
-    "correoOpcional": "Correo (opcional)"
+    "correoOpcional": "Correo (opcional)",
+    "verDesempeno": "Ver su desempeño"
   },
   "errores": {
     "desconocido": "Algo falló. Intenta de nuevo.",
@@ -1787,5 +1788,60 @@
     "corregir": "Corregir este cierre",
     "recientes": "Más recientes",
     "anteriores": "Días anteriores"
+  },
+  "desempeno": {
+    "titulo": "Desempeño",
+    "volver": "Volver a Managers",
+    "periodo": "Periodo",
+    "periodos": {
+      "30": "30 días",
+      "90": "90 días",
+      "365": "Un año"
+    },
+    "ayuda": "Cada número con su meta y el de toda la empresa. Con pocos datos todavía no se califica.",
+    "grupos": {
+      "disciplina": "Disciplina",
+      "plazos": "Plazos",
+      "dinero": "Dinero",
+      "calidad": "Calidad"
+    },
+    "nombres": {
+      "cierre_a_tiempo": "Días cerrados a tiempo",
+      "segundos_cierre": "Tiempo para cerrar el día",
+      "gastos_con_recibo": "Gastos con foto del recibo",
+      "atraso": "Atraso promedio de sus obras",
+      "cumplimiento_semanal": "Cumplimiento del plan semanal",
+      "presupuesto_en_rojo": "Obras con el presupuesto en rojo",
+      "inspecciones_a_la_primera": "Inspecciones aprobadas a la primera",
+      "punch_a_tiempo": "Punch list cerrado a tiempo",
+      "pruebas_con_fuga": "Pruebas de agua con fuga",
+      "retrabajos": "Retrabajos y garantías"
+    },
+    "valores": {
+      "segundos_cierre": "{n} s",
+      "atraso": "{n, plural, one {# día} other {# días}}",
+      "pruebas_con_fuga": "{n}",
+      "retrabajos": "{n}"
+    },
+    "detalles": {
+      "cierre_a_tiempo": "{aTiempo} de {esperados} días a tiempo · {tardios} tardíos · {olvidados} sin cerrar",
+      "segundos_cierre": "La mitad de sus {cierres} cierres tardó menos que esto.",
+      "gastos_con_recibo": "{gastos} gastos · {sinRecibo} sin recibo",
+      "atraso": "{tarde} de {obras} obras van tarde",
+      "cumplimiento_semanal": "{hechas} de {plan} partidas planeadas se terminaron en su semana",
+      "presupuesto_en_rojo": "{enRojo} de {obras} obras",
+      "inspecciones_a_la_primera": "{aprobadas} de {inspecciones} aprobadas a la primera",
+      "punch_a_tiempo": "{aTiempo} de {cerrados} cerrados a tiempo · {vencidos} abiertos y vencidos",
+      "pruebas_con_fuga": "De {pruebas} pruebas",
+      "retrabajos": "Costo {costo}"
+    },
+    "metaYEmpresa": "Meta {meta} · Empresa {empresa}",
+    "sinDatos": "Sin datos en este periodo.",
+    "pocosDatos": "Pocos datos todavía: no se califica.",
+    "susObras": "Sus obras ({n})",
+    "sinObras": "No tiene obras en curso ni entregadas en este periodo.",
+    "avance": "{pct}% terminado",
+    "tarde": "{n, plural, one {# día tarde} other {# días tarde}}",
+    "presupuestoRojo": "presupuesto en rojo"
   }
 }

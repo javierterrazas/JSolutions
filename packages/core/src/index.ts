@@ -11,6 +11,7 @@ export * from './etapas';
 export * from './validaciones';
 export * from './calidad';
 export * from './indicadores';
+export * from './desempeno';
 export * from './correcciones';
 export * from './acceso';
 export * from './suscripcion';
