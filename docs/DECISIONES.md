@@ -1813,3 +1813,20 @@ dueño, con dinero.
   gastos, 5 partidas planeadas, 3 inspecciones o 3 detalles del punch) el número se muestra sin semáforo. Las obras se
   le cuentan al PM que las lleva hoy (en curso, o entregadas en el periodo).
 - Margen real por PM, rendimiento de la cuadrilla y reseñas necesitan obras cerradas: quedan para después.
+
+## D-107 · Qué obras convienen: la ganancia por día, el ranking y dónde se fue el margen
+
+**Lo pidió el dueño:** analizar las obras terminadas para saber cuáles dejan más margen y toman menos tiempo.
+- **La ganancia por día** (`gananciaPorDia`): contrato final menos costo real, entre los días que duró la obra. Es el
+  número principal del histórico: un margen alto en una obra larga puede dejar menos que uno menor en una corta. El de
+  un grupo (total, por tipo) es la ganancia de todas entre todos sus días, no el promedio de cada obra.
+- **El ranking** ("Qué obras convienen más", arriba en el histórico; `ordenarObrasCerradas`): las obras cerradas de la
+  mejor a la peor por ganancia por día (de entrada), margen, ganancia, menos días o menos atraso. El atraso es la
+  entrega real contra la comprometida (la del alta más los días laborables de las órdenes de cambio aprobadas). Sustituye
+  a la lista de obras cerradas.
+- **El análisis de cada obra** (`/historico/[id]`, `analisisDeObraCerrada`): lo que dejó; el costo real contra el
+  presupuestado y en qué se fue (materiales, cuadrilla, subcontratistas, retrabajos y garantías); cada etapa de cada
+  espacio, real contra presupuesto, la que más se pasó primero; lo que sumaron las órdenes de cambio; los días
+  planeados contra los reales. De ahí, al cierre y la posventa.
+- Sin migración: todo sale de lo que guarda "Cerrar la obra" (D-085). Por PM, por tamaño y la velocidad por pie²
+  quedan para después.

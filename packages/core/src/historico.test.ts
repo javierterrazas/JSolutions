@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type ObraCerrada, resumenHistorico } from './historico';
+import { gananciaPorDia, type ObraCerrada, ordenarObrasCerradas, resumenHistorico } from './historico';
 
 const obra = (n: number, mes: string, tipo: string, margen: number, dias: number): ObraCerrada => ({
   obraId: `o${n}`,
@@ -52,5 +52,29 @@ describe('el histórico de obras cerradas (D-087)', () => {
       desviacion: null,
       dias: null,
     });
+  });
+});
+
+describe('qué obras convienen (D-107)', () => {
+  // A: 40% en 60 días; B: 30% en 15 días; C: 35% en 30 días, entregada 5 días tarde
+  const a = { ...obra(1, '2026-09', 'Baño', 0.4, 60), atraso: 0 };
+  const b = { ...obra(2, '2026-09', 'Baño', 0.3, 15), atraso: null };
+  const c = { ...obra(3, '2026-08', 'Cocina', 0.35, 30), atraso: 5 };
+
+  it('la ganancia por día: la obra corta con menos margen deja más', () => {
+    expect(gananciaPorDia(a)).toBeCloseTo(4000 / 60);
+    expect(gananciaPorDia(b)).toBeCloseTo(3000 / 15);
+    expect(gananciaPorDia({ contrato: 100, costo: 50, dias: 0 })).toBeNull();
+    // la del grupo es la ganancia de todas entre todos sus días, no el promedio de cada una
+    expect(resumenHistorico([a, b]).total.gananciaDia).toBeCloseTo(7000 / 75);
+  });
+
+  it('el ranking, de la mejor a la peor; lo que no tiene el dato va al final', () => {
+    const folios = (xs: { obraId: string }[]) => xs.map((x) => x.obraId);
+    expect(folios(ordenarObrasCerradas([a, b, c], 'ganancia_dia'))).toEqual(['o2', 'o3', 'o1']);
+    expect(folios(ordenarObrasCerradas([a, b, c], 'margen'))).toEqual(['o1', 'o3', 'o2']);
+    expect(folios(ordenarObrasCerradas([a, b, c], 'ganancia'))).toEqual(['o1', 'o3', 'o2']);
+    expect(folios(ordenarObrasCerradas([a, b, c], 'dias'))).toEqual(['o2', 'o3', 'o1']);
+    expect(folios(ordenarObrasCerradas([a, b, c], 'atraso'))).toEqual(['o1', 'o3', 'o2']);
   });
 });
