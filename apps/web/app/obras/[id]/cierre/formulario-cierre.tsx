@@ -16,6 +16,7 @@ import { alCambiar, encolar, enviarPendientes, pendientes, siguienteN } from '@/
 import { comprimirFoto } from '@/lib/comprimir';
 import { estilos } from '../../../componentes/marco';
 import { MensajeError, type Problema } from '../../../componentes/mensaje-error';
+import { CuadrillaDelCierre, type TrabajadorDelCierre, type UltimoCierre } from './cuadrilla-del-cierre';
 
 export interface DatosFormularioCierre {
   readonly obraId: string;
@@ -33,14 +34,9 @@ export interface DatosFormularioCierre {
       faltaInspeccion: boolean;
     }[];
   }[];
-  readonly trabajadores: readonly {
-    id: string;
-    nombre: string;
-    puesto: string | null;
-    tipoPago: 'hora' | 'dia';
-    /** Lo que ya lleva ese día en otras obras (D-093); una copia sin señal vieja no lo trae. */
-    yaLleva?: number;
-  }[];
+  readonly trabajadores: readonly TrabajadorDelCierre[];
+  /** Para "Igual que el último cierre" (D-104); una copia sin señal vieja no lo trae. */
+  readonly ultimoCierre?: UltimoCierre | null;
   readonly subs: readonly { ordenId: string; sub: string; alcance: string }[];
   readonly motivos: readonly string[];
 }
@@ -358,59 +354,13 @@ export function FormularioCierre({
           </fieldset>
 
           {datos.trabajadores.length ? (
-            <fieldset className={`${estilos.tarjeta} flex flex-col gap-2`}>
-              <legend className="px-1 font-semibold text-marca">{t('cuadrilla')}</legend>
-              {datos.trabajadores.map((w) => {
-                // lo que ya lleva hoy en otras obras: cuánto le queda sin pasar de 16 horas o de un día (D-093)
-                const ya = w.yaLleva ?? 0;
-                const tope = w.tipoPago === 'hora' ? Math.max(0, 16 - ya) : Math.max(0, 1 - ya);
-                const pasa = Number(cuadrilla[w.id] || 0) > tope;
-                return (
-                  <div key={w.id} className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm">
-                        {w.nombre}
-                        {w.puesto ? <span className="block text-xs text-slate-500">{w.puesto}</span> : null}
-                        {ya ? (
-                          <span className="block text-xs font-medium text-amber-800">
-                            {w.tipoPago === 'hora'
-                              ? t('yaLlevaHoras', { horas: ya, quedan: tope })
-                              : ya >= 1
-                                ? t('yaLlevaDia')
-                                : t('yaLlevaMedioDia')}
-                          </span>
-                        ) : null}
-                      </span>
-                      {w.tipoPago === 'hora' ? (
-                        <label className="flex items-center gap-2 text-sm">
-                          {t('horas')}
-                          <input
-                            value={cuadrilla[w.id] ?? ''}
-                            onChange={(e) => setCuadrilla((c) => ({ ...c, [w.id]: e.target.value }))}
-                            inputMode="decimal"
-                            aria-invalid={pasa}
-                            className={`${estilos.campo} w-20 text-center ${pasa ? 'border-red-600' : ''}`}
-                          />
-                        </label>
-                      ) : (
-                        <select
-                          value={cuadrilla[w.id] ?? '0'}
-                          onChange={(e) => setCuadrilla((c) => ({ ...c, [w.id]: e.target.value }))}
-                          className={`${estilos.campo} w-36`}
-                        >
-                          <option value="0">{t('noVino')}</option>
-                          {tope >= 1 ? <option value="1">{t('diaCompleto')}</option> : null}
-                          {tope >= 0.5 ? <option value="0.5">{t('medioDia')}</option> : null}
-                        </select>
-                      )}
-                    </div>
-                    {pasa && w.tipoPago === 'hora' ? (
-                      <p className="text-xs font-medium text-red-700">{t('pasaDe16', { quedan: tope })}</p>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </fieldset>
+            <CuadrillaDelCierre
+              trabajadores={datos.trabajadores}
+              ultimoCierre={datos.ultimoCierre}
+              cuadrilla={cuadrilla}
+              setCuadrilla={setCuadrilla}
+              ofrecerUltimo={!correccion}
+            />
           ) : null}
 
           <fieldset className={`${estilos.tarjeta} flex flex-col gap-3`}>

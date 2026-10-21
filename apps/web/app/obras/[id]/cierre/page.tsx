@@ -84,6 +84,7 @@ export default async function Cierre({ params, searchParams }: PageProps<'/obras
               })),
             })),
             trabajadores: d.trabajadores,
+            ultimoCierre: d.ultimoCierre,
             subs: d.subs.map((s) => ({ ordenId: s.ordenId, sub: s.sub, alcance: s.alcance })),
             motivos: d.motivos,
           }}

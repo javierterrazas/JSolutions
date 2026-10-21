@@ -92,6 +92,46 @@ describe('la pantalla de cerrar el día', () => {
       expect(luis.trabajadores.find((t) => t.id === pedro.id)!.yaLleva).toBe(10);
     }));
 
+  it('la cuadrilla de la obra va primero y el último cierre se puede repetir (D-104)', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      const martes = enAustin('2026-10-06', 18);
+      const d = (await datosParaCierre(tx, { obraId: OBRAS.a1Carlos }, martes))!;
+      // el seed: el lunes 5 trabajó uno de la cuadrilla 8 horas; los demás, nunca en esta obra
+      const [del5] = d.trabajadores.filter((t) => t.reciente);
+      expect(del5).toMatchObject({ reciente: '2026-10-05' });
+      expect(d.trabajadores.filter((t) => !t.reciente).length).toBeGreaterThan(0);
+      expect(d.ultimoCierre).toEqual({
+        dia: '2026-10-05',
+        cuadrilla: [{ trabajadorId: del5!.id, cantidad: 8 }],
+      });
+
+      // se cierra el martes con otro: el miércoles, el último cierre es el del martes y los dos son de la obra
+      const otro = d.trabajadores.find((t) => !t.reciente && t.tipoPago === 'dia')!;
+      await cerrarDia(
+        tx,
+        {
+          obraId: OBRAS.a1Carlos,
+          partidas: [d.espacios[0]!.partidas[0]!.id],
+          cuadrilla: [{ trabajadorId: otro.id, cantidad: 1 }],
+          fotosPorSubir: 1,
+        },
+        martes,
+      );
+      const mie = (await datosParaCierre(tx, { obraId: OBRAS.a1Carlos }, enAustin('2026-10-07', 18)))!;
+      expect(mie.ultimoCierre).toEqual({
+        dia: '2026-10-06',
+        cuadrilla: [{ trabajadorId: otro.id, cantidad: 1 }],
+      });
+      expect(
+        Object.fromEntries(mie.trabajadores.filter((t) => t.reciente).map((t) => [t.id, t.reciente])),
+      ).toEqual({ [del5!.id]: '2026-10-05', [otro.id]: '2026-10-06' });
+
+      // el del mismo día no cuenta (es el que se está cerrando o corrigiendo): el martes sigue viendo el del lunes
+      expect(
+        (await datosParaCierre(tx, { obraId: OBRAS.a1Carlos, dia: '2026-10-06' }, martes))!.ultimoCierre?.dia,
+      ).toBe('2026-10-05');
+    }));
+
   it('la obra de otro PM no se abre', () =>
     probarComo(USUARIOS.luis, async (tx) => {
       expect(await datosParaCierre(tx, { obraId: OBRAS.a1Carlos }, enAustin('2026-10-08'))).toBeNull();

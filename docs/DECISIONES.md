@@ -1765,3 +1765,20 @@ dueño la emitía aparte, volviendo a escribir todo y sin que el PM supiera.
   (motivo, descripción, días, condición y precio). Si el dueño la editó mientras tanto, la respuesta no entra
   (`orden_cambiada`), la página se recarga con la nueva versión y el cliente vuelve a responder. Se revisa después de
   responder, con la orden ya bloqueada, y el error deshace todo. Sin migración.
+
+## D-104 · La cuadrilla del cierre: la de la obra primero, igual que el último cierre y un buscador
+
+**Lo pidió el dueño:** en el cierre salía toda la cuadrilla de la empresa, por nombre, en cada obra; con muchos
+trabajadores el PM tenía que recorrer la lista buscando a los suyos.
+- **La cuadrilla de la obra:** solo se muestran los que trabajaron en los últimos 10 cierres con cuadrilla de esa obra
+  (antes del día que se cierra), el más reciente arriba. Por cierres y no por fechas: una obra parada unas semanas no
+  pierde a su gente.
+- **"Igual que el último cierre (lun 19 oct)":** llena de un toque lo que se puso en el último cierre con cuadrilla
+  (horas o día completo / medio día, recortado a lo que le queda si ya lleva algo en otra obra, D-093), y el PM
+  corrige al que cambió. No se llena solo: si alguien faltó y el PM no lo nota, se pagaría un día no trabajado. No se
+  ofrece al corregir un cierre, que ya viene con lo suyo.
+- **"Agregar a alguien más":** busca por nombre o puesto, sin acentos ni mayúsculas, entre los que no se muestran; y
+  "Ver a toda la cuadrilla" para quien prefiera la lista completa. En una obra nueva, la primera vez se agregan con el
+  buscador.
+- **Sin señal:** la copia del teléfono trae la cuadrilla de la obra y el último cierre. Una copia de antes de este
+  cambio no los trae y muestra a todos, como antes.

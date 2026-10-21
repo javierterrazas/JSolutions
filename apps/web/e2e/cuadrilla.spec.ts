@@ -16,6 +16,9 @@ async function enElCierre(browser: import('@playwright/test').Browser): Promise<
     const p = await pm.newPage();
     await entrar(p, 'pmIngles');
     await p.goto(`/obras/${OBRAS.luis}/cierre`);
+    // a toda la cuadrilla, no solo a los que ya trabajaron en la obra (D-104)
+    const ver = p.getByRole('button', { name: /^See the whole crew/ });
+    if (await ver.count()) await ver.click();
     return await p.locator('fieldset').filter({ hasText: en.cierre.cuadrilla }).innerText();
   } finally {
     await pm.close();
