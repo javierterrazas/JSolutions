@@ -395,7 +395,8 @@
     "cambioHecho": "✓ Done on {dia}",
     "subsPorLlegar": "Subs coming",
     "subsPorLlegarAyuda": "Call them to confirm they're coming. In your daily close you mark whether they showed up.",
-    "subLlega": "{sub} · {dia} ({obra})"
+    "subLlega": "{sub} · {dia} ({obra})",
+    "bitacora": "Job log"
   },
   "cierre": {
     "titulo": "Close the day",
@@ -1769,5 +1770,22 @@
     "garantiaHasta": "Warranty until",
     "pendiente": "Pending",
     "fotosDe": "{dia} · {registro}"
+  },
+  "bitacora": {
+    "titulo": "Job log",
+    "volver": "Back",
+    "ninguno": "No closed days on this job yet.",
+    "folioTardio": "{folio} · late",
+    "sinTrabajo": "No work: {motivo}",
+    "partida": "{espacio}: {partida}",
+    "partidaTerminada": "{espacio}: {partida} ✓ finished",
+    "cuadrilla": "Crew:",
+    "horas": "{n} h",
+    "llego": "{sub} showed up",
+    "noLlego": "{sub} did not show up",
+    "fotoDel": "Photo from {dia}",
+    "corregir": "Correct this close",
+    "recientes": "More recent",
+    "anteriores": "Earlier days"
   }
 }

@@ -1782,3 +1782,16 @@ trabajadores el PM tenía que recorrer la lista buscando a los suyos.
   buscador.
 - **Sin señal:** la copia del teléfono trae la cuadrilla de la obra y el último cierre. Una copia de antes de este
   cambio no los trae y muestra a todos, como antes.
+
+## D-105 · La bitácora de la obra para el PM
+
+**Lo preguntó el dueño:** el PM cerraba el día y ya no lo volvía a ver; el día a día solo estaba en el seguimiento del
+dueño, con dinero.
+- **"Bitácora"** en cada obra del inicio del PM (`/obras/[id]/bitacora`, `bitacoraDeObra`): los días cerrados, del más
+  nuevo al más viejo, de 15 en 15. De cada uno, las partidas trabajadas y las terminadas, la cuadrilla con sus horas o
+  días, los subs que llegaron o no, las notas, las fotos, y si fue tardío o sin trabajo con su motivo. Sin dinero:
+  ni tarifas, ni costos, ni gastos.
+- El cierre que el PM todavía puede corregir (suyo, 48 horas, D-044) trae "Corregir este cierre".
+- **El nombre del sub** sale de la vista `bitacora_subs_pm` (migración 20261102000100): el PM no lee las órdenes de
+  trabajo ya pagadas ni la tabla de subcontratistas, y sin ella el sub de un día viejo se quedaba sin nombre. Solo da
+  el nombre y si llegó, de las obras del PM.

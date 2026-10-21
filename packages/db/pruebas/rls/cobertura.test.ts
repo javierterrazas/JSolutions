@@ -11,6 +11,7 @@ afterAll(() => cliente.end());
 
 // Las vistas del PM (D-013). Cada vista nueva se revisa a mano y se agrega aquí con su prueba en muralla.test.ts.
 const VISTAS_APROBADAS = [
+  'bitacora_subs_pm',
   'configuracion_pm',
   'empresa_actual_datos',
   'entregas_pm',

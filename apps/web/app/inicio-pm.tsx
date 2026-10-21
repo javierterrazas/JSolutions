@@ -136,6 +136,7 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                   ['gasto', 'gastoNuevo', 'gasto'],
                   ['aviso', 'avisoNuevo', 'aviso'],
                   ['calidad', 'calidad', 'calidad'],
+                  ['bitacora', 'bitacora', 'bitacora'],
                   ['entrega', 'entregaYMedidas', 'entrega'],
                   ['album', 'album', 'fotos'],
                 ] as const

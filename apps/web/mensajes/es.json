@@ -395,7 +395,8 @@
     "cambioHecho": "✓ Hecha el {dia}",
     "subsPorLlegar": "Subs por llegar",
     "subsPorLlegarAyuda": "Llámales para confirmar que vienen. En tu cierre del día marcas si llegaron.",
-    "subLlega": "{sub} · {dia} ({obra})"
+    "subLlega": "{sub} · {dia} ({obra})",
+    "bitacora": "Bitácora"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -1769,5 +1770,22 @@
     "garantiaHasta": "Garantía hasta",
     "pendiente": "Pendiente",
     "fotosDe": "{dia} · {registro}"
+  },
+  "bitacora": {
+    "titulo": "Bitácora de la obra",
+    "volver": "Volver",
+    "ninguno": "Todavía no hay días cerrados en esta obra.",
+    "folioTardio": "{folio} · tardío",
+    "sinTrabajo": "Sin trabajo: {motivo}",
+    "partida": "{espacio}: {partida}",
+    "partidaTerminada": "{espacio}: {partida} ✓ terminada",
+    "cuadrilla": "Cuadrilla:",
+    "horas": "{n} h",
+    "llego": "{sub} llegó",
+    "noLlego": "{sub} no llegó",
+    "fotoDel": "Foto del {dia}",
+    "corregir": "Corregir este cierre",
+    "recientes": "Más recientes",
+    "anteriores": "Días anteriores"
   }
 }
