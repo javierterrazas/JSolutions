@@ -32,6 +32,47 @@ export interface GrupoHistorico {
   readonly costo: number;
   readonly cobrado: number;
   readonly noCalidad: number;
+  /** Lo que dejaron por día que duraron (D-107): la ganancia de todas entre sus días, no el promedio de cada una. */
+  readonly gananciaDia: number | null;
+}
+
+/**
+ * La ganancia por día de una obra (D-107): contrato final menos costo real, entre los días que duró. Dice qué obras
+ * convienen: un margen alto en una obra larga puede dejar menos que uno menor en una corta. Null si no duró días.
+ */
+export const gananciaPorDia = (o: { contrato: number; costo: number; dias: number }): number | null =>
+  o.dias > 0 ? (o.contrato - o.costo) / o.dias : null;
+
+export const CRITERIOS_HISTORICO = ['ganancia_dia', 'margen', 'ganancia', 'dias', 'atraso'] as const;
+export type CriterioHistorico = (typeof CRITERIOS_HISTORICO)[number];
+
+/**
+ * Las obras cerradas de la mejor a la peor según el criterio (D-107): más ganancia por día, más margen, más ganancia;
+ * menos días, menos atraso. Las que no tienen el dato van al final.
+ */
+export function ordenarObrasCerradas<
+  T extends { contrato: number; costo: number; dias: number; margen: number | null; atraso?: number | null },
+>(obras: readonly T[], criterio: CriterioHistorico): T[] {
+  const valor = (o: T): number | null => {
+    switch (criterio) {
+      case 'ganancia_dia':
+        return gananciaPorDia(o);
+      case 'margen':
+        return o.margen;
+      case 'ganancia':
+        return o.contrato - o.costo;
+      case 'dias':
+        return -o.dias;
+      case 'atraso':
+        return o.atraso === null || o.atraso === undefined ? null : -o.atraso;
+    }
+  };
+  return [...obras].sort((a, b) => {
+    const x = valor(a);
+    const y = valor(b);
+    if (x === null || y === null) return x === null ? (y === null ? 0 : 1) : -1;
+    return y - x;
+  });
 }
 
 const promedio = (xs: readonly (number | null)[]): number | null => {
@@ -52,6 +93,11 @@ function agrupar(obras: readonly ObraCerrada[], clave: string): GrupoHistorico {
     costo: obras.reduce((a, o) => a + o.costo, 0),
     cobrado: obras.reduce((a, o) => a + o.cobrado, 0),
     noCalidad: obras.reduce((a, o) => a + o.noCalidad, 0),
+    gananciaDia: gananciaPorDia({
+      contrato: obras.reduce((a, o) => a + o.contrato, 0),
+      costo: obras.reduce((a, o) => a + o.costo, 0),
+      dias: obras.reduce((a, o) => a + o.dias, 0),
+    }),
   };
 }
 

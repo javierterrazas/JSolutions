@@ -1,7 +1,8 @@
 // El histórico de las obras cerradas, para el dueño (D-087; legacy: el histórico del tablero): cómo le ha ido, la
 // tendencia de sus últimas obras, los promedios por tipo de obra y por mes, lo que cuesta cada etapa según el tamaño y
 // lo que más mueve el precio (D-095; de ahí sale el costo sugerido al cotizar), las garantías y cada obra cerrada.
-// Lleva dinero: solo el dueño.
+// Lleva dinero: solo el dueño. D-107: la ganancia por día y el ranking de las obras cerradas, cada una con su análisis.
+import { CRITERIOS_HISTORICO, type CriterioHistorico, ordenarObrasCerradas } from '@ijm/core';
 import { historicoDeObras } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
@@ -30,7 +31,9 @@ function Cifra({ titulo, valor, nota }: { titulo: string; valor: string; nota?: 
   );
 }
 
-export default async function Historico() {
+export default async function Historico({ searchParams }: PageProps<'/historico'>) {
+  const { orden: pedido } = await searchParams;
+  const orden: CriterioHistorico = CRITERIOS_HISTORICO.find((c) => c === pedido) ?? 'ganancia_dia';
   const acceso = await exigirDueno();
   const r = await comoMiembro((tx) => historicoDeObras(tx), acceso);
   const [t, idioma, formato] = await Promise.all([getTranslations('historico'), getLocale(), getFormatter()]);
@@ -52,8 +55,6 @@ export default async function Historico() {
     .filter((c) => c.ajuste && c.ajuste.parteDelTamano >= 0.3)
     .sort((a, b) => b.ajuste!.por10 - a.ajuste!.por10)
     .slice(0, 6);
-  // un día de negocio a mediodía, para que ninguna zona horaria lo mueva de día
-  const dia = (d: string) => formato.dateTime(new Date(`${d}T12:00:00`), { dateStyle: 'medium' });
   const mes = (m: string) =>
     formato.dateTime(new Date(`${m}-15T12:00:00`), { month: 'long', year: 'numeric' });
   /** La tendencia, con su color: si subir es bueno (margen) o malo (desviación, días). */
@@ -102,12 +103,64 @@ export default async function Historico() {
           )}
         />
         <Cifra
+          titulo={t('gananciaDia')}
+          valor={total.gananciaDia === null ? '—' : t('porDia', { monto: dinero(total.gananciaDia) })}
+          nota={t('gananciaTotal', { monto: dinero(total.contrato - total.costo) })}
+        />
+        <Cifra
           titulo={t('ventaPie')}
           valor={porPie(total.ventaPie)}
           nota={t('costoPieNota', { costo: porPie(total.costoPie) })}
         />
       </div>
       {tend.margen !== null ? <p className="text-xs text-slate-600">{t('tendenciaAyuda')}</p> : null}
+
+      <Seccion titulo={t('ranking')}>
+        <p className="text-sm text-slate-700">{t('rankingAyuda')}</p>
+        <nav aria-label={t('ordenarPor')} className="flex flex-wrap gap-2">
+          {CRITERIOS_HISTORICO.map((c) => (
+            <Link
+              key={c}
+              href={c === 'ganancia_dia' ? '/historico' : `/historico?orden=${c}`}
+              aria-current={c === orden ? 'page' : undefined}
+              className={`flex min-h-10 items-center rounded-full border-2 px-3 text-sm font-semibold ${c === orden ? 'border-marca bg-marca text-white' : 'border-marca/30 bg-white text-marca'}`}
+            >
+              {t(`criterios.${c}`)}
+            </Link>
+          ))}
+        </nav>
+        <ol className="flex flex-col gap-2">
+          {ordenarObrasCerradas(h.obras, orden).map((o, i) => (
+            <li key={o.obraId}>
+              <Link
+                href={`/historico/${o.obraId}`}
+                className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}
+              >
+                <span className="flex justify-between gap-2 font-semibold">
+                  <span>
+                    {t('lugar', { n: i + 1 })} {t('obraEncabezado', { folio: o.folio, cliente: o.cliente })}
+                  </span>
+                  <span>{o.gananciaDia === null ? '—' : t('porDia', { monto: dinero(o.gananciaDia) })}</span>
+                </span>
+                <span className="text-slate-700">
+                  {t('lineaRanking', {
+                    margen: pct(o.margen),
+                    ganancia: dinero(o.ganancia),
+                    dias: dias(o.dias),
+                  })}
+                </span>
+                <span className={o.atraso > 0 ? 'text-red-700' : 'text-emerald-800'}>
+                  {o.atraso > 0
+                    ? t('entregadaTarde', { n: o.atraso })
+                    : t('entregadaATiempo', { n: -o.atraso })}
+                  {t('separador')}
+                  {o.tipo || t('sinTipo')}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </Seccion>
 
       <Seccion titulo={t('porTipo')}>
         <ul className="flex flex-col gap-2">
@@ -122,6 +175,11 @@ export default async function Historico() {
                   margen: pct(g.margen),
                   desviacion: pct(g.desviacion),
                   dias: dias(g.dias),
+                })}
+              </span>
+              <span className="font-medium text-slate-800">
+                {t('gananciaDiaGrupo', {
+                  monto: g.gananciaDia === null ? '—' : dinero(g.gananciaDia),
                 })}
               </span>
               <span className="text-slate-600">
@@ -250,47 +308,6 @@ export default async function Historico() {
             entregas: h.garantias.entregas,
           })}
         </p>
-      </Seccion>
-
-      <Seccion titulo={t('cerradas')}>
-        <ul className="flex flex-col gap-2">
-          {h.obras.map((o) => (
-            <li key={o.obraId}>
-              <Link
-                href={`/obras/${o.obraId}/cerrar`}
-                className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}
-              >
-                <span className="flex justify-between gap-2 font-semibold">
-                  <span>{t('obraEncabezado', { folio: o.folio, cliente: o.cliente })}</span>
-                  <span>{pct(o.margen)}</span>
-                </span>
-                <span className="text-slate-700">
-                  {t('lineaObra', {
-                    tipo: o.tipo || t('sinTipo'),
-                    entrega: dia(o.entrega),
-                    dias: dias(o.dias),
-                  })}
-                </span>
-                <span className="text-slate-600">
-                  {t('lineaObraDinero', {
-                    contrato: dinero(o.contrato),
-                    costo: dinero(o.costo),
-                    desviacion: pct(o.desviacion),
-                  })}
-                </span>
-                {o.reclamos || o.resena ? (
-                  <span className="text-slate-600">
-                    {t('lineaObraGarantia', {
-                      reclamos: o.reclamos,
-                      costo: dinero(o.costoGarantia),
-                      resena: o.resena ? 'si' : 'no',
-                    })}
-                  </span>
-                ) : null}
-              </Link>
-            </li>
-          ))}
-        </ul>
       </Seccion>
     </Marco>
   );
