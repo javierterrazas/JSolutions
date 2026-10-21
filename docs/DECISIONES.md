@@ -1795,3 +1795,21 @@ dueño, con dinero.
 - **El nombre del sub** sale de la vista `bitacora_subs_pm` (migración 20261102000100): el PM no lee las órdenes de
   trabajo ya pagadas ni la tabla de subcontratistas, y sin ella el sub de un día viejo se quedaba sin nombre. Solo da
   el nombre y si llegó, de las obras del PM.
+
+## D-106 · El desempeño de cada manager
+
+**Lo pidió el dueño:** datos para analizar a sus managers. En "Managers", cada PM tiene "Ver su desempeño"
+(`/equipo/[id]`, `desempenoDeUnManager`; el cálculo, `desempeno` en core): diez números en cuatro grupos, de los
+últimos 30 días, 90 o un año, cada uno con su meta y el de toda la empresa, y la lista de sus obras.
+- **Disciplina:** días cerrados a tiempo (de cada día laborable con la obra en marcha: a tiempo, tarde o sin cerrar;
+  meta la del indicador de cierre), tiempo para cerrar el día (la mediana de `segundos_captura`, D-101; meta 60 s) y
+  gastos con foto del recibo.
+- **Plazos:** atraso promedio de sus obras en curso (el adelanto de una no compensa el atraso de otra) y cumplimiento
+  del plan semanal (lo congelado cada lunes que se terminó esa semana, solo semanas ya terminadas).
+- **Dinero:** obras en curso con el semáforo del presupuesto en rojo.
+- **Calidad:** inspecciones aprobadas a la primera (la primera de cada punto en cada espacio; meta 90%), punch list
+  cerrado para su compromiso, pruebas de agua con fuga, y retrabajos y garantías con su costo.
+- **Justo:** se mide por día, por obra o por registro, no en totales; con pocos datos (menos de 10 días, 5 cierres, 3
+  gastos, 5 partidas planeadas, 3 inspecciones o 3 detalles del punch) el número se muestra sin semáforo. Las obras se
+  le cuentan al PM que las lleva hoy (en curso, o entregadas en el periodo).
+- Margen real por PM, rendimiento de la cuadrilla y reseñas necesitan obras cerradas: quedan para después.

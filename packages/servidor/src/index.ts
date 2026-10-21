@@ -12,6 +12,7 @@ export * from './inicio-pm';
 export * from './pantalla-cierre';
 export * from './calidad';
 export * from './cuadrilla';
+export * from './desempeno';
 export * from './seguimiento';
 export * from './gastos';
 export * from './avisos';

@@ -84,7 +84,8 @@
     "reactivar": "Turn access back on",
     "celularEjemplo": "(512) 555-0101",
     "celularAyuda": "They sign in to the app with their cell number. No message is sent to it: you send them the link on WhatsApp.",
-    "correoOpcional": "Email (optional)"
+    "correoOpcional": "Email (optional)",
+    "verDesempeno": "See their performance"
   },
   "errores": {
     "desconocido": "Something went wrong. Try again.",
@@ -1787,5 +1788,60 @@
     "corregir": "Correct this close",
     "recientes": "More recent",
     "anteriores": "Earlier days"
+  },
+  "desempeno": {
+    "titulo": "Performance",
+    "volver": "Back to Managers",
+    "periodo": "Period",
+    "periodos": {
+      "30": "30 days",
+      "90": "90 days",
+      "365": "One year"
+    },
+    "ayuda": "Each number with its target and the whole company’s. With little data it is not rated yet.",
+    "grupos": {
+      "disciplina": "Discipline",
+      "plazos": "Schedule",
+      "dinero": "Money",
+      "calidad": "Quality"
+    },
+    "nombres": {
+      "cierre_a_tiempo": "Days closed on time",
+      "segundos_cierre": "Time to close the day",
+      "gastos_con_recibo": "Expenses with a receipt photo",
+      "atraso": "Average delay of their jobs",
+      "cumplimiento_semanal": "Weekly plan completion",
+      "presupuesto_en_rojo": "Jobs with the budget in red",
+      "inspecciones_a_la_primera": "Inspections passed the first time",
+      "punch_a_tiempo": "Punch list closed on time",
+      "pruebas_con_fuga": "Flood tests with a leak",
+      "retrabajos": "Rework and warranty"
+    },
+    "valores": {
+      "segundos_cierre": "{n} s",
+      "atraso": "{n, plural, one {# day} other {# days}}",
+      "pruebas_con_fuga": "{n}",
+      "retrabajos": "{n}"
+    },
+    "detalles": {
+      "cierre_a_tiempo": "{aTiempo} of {esperados} days on time · {tardios} late · {olvidados} not closed",
+      "segundos_cierre": "Half of their {cierres} closes took less than this.",
+      "gastos_con_recibo": "{gastos} expenses · {sinRecibo} without a receipt",
+      "atraso": "{tarde} of {obras} jobs are late",
+      "cumplimiento_semanal": "{hechas} of {plan} planned items finished in their week",
+      "presupuesto_en_rojo": "{enRojo} of {obras} jobs",
+      "inspecciones_a_la_primera": "{aprobadas} of {inspecciones} passed the first time",
+      "punch_a_tiempo": "{aTiempo} of {cerrados} closed on time · {vencidos} open and overdue",
+      "pruebas_con_fuga": "Out of {pruebas} tests",
+      "retrabajos": "Cost {costo}"
+    },
+    "metaYEmpresa": "Target {meta} · Company {empresa}",
+    "sinDatos": "No data in this period.",
+    "pocosDatos": "Little data so far: not rated.",
+    "susObras": "Their jobs ({n})",
+    "sinObras": "No jobs in progress or delivered in this period.",
+    "avance": "{pct}% done",
+    "tarde": "{n, plural, one {# day late} other {# days late}}",
+    "presupuestoRojo": "budget in red"
   }
 }
