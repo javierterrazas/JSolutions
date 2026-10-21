@@ -7,7 +7,7 @@ describe('los feriados de Estados Unidos (D-108)', () => {
       ['2026-01-01', 'Año Nuevo'],
       ['2026-05-25', 'Memorial Day'],
       // el 4 de julio cae en sábado: se descansa el viernes 3
-      ['2026-07-03', 'Día de la Independencia (se descansa)'],
+      ['2026-07-03', 'Día de la Independencia (se recorre)'],
       ['2026-09-07', 'Labor Day'],
       ['2026-11-26', 'Día de Acción de Gracias'],
       ['2026-11-27', 'Día después de Acción de Gracias'],
@@ -29,8 +29,8 @@ describe('los feriados de Estados Unidos (D-108)', () => {
       '2027-12-24',
       '2027-12-31',
     ]);
-    expect(f.find((x) => x.dia === '2027-12-24')).toMatchObject({ es: 'Navidad (se descansa)' });
-    expect(f.find((x) => x.dia === '2027-12-31')).toMatchObject({ es: 'Año Nuevo (se descansa)' });
+    expect(f.find((x) => x.dia === '2027-12-24')).toMatchObject({ es: 'Navidad (se recorre)' });
+    expect(f.find((x) => x.dia === '2027-12-31')).toMatchObject({ es: 'Año Nuevo (se recorre)' });
     // y 2028 no repite su Año Nuevo: ya se descansó en 2027
     expect(feriadosDeEstadosUnidos(2028).some((x) => x.es.startsWith('Año Nuevo'))).toBe(false);
   });

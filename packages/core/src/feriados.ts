@@ -36,7 +36,7 @@ export function feriadosDeEstadosUnidos(anio: number): FeriadoSugerido[] {
   const fijo = (d: Dia, es: string, en: string): FeriadoSugerido[] => {
     const o = observado(d);
     return [
-      o.movido ? { dia: o.dia, es: `${es} (se descansa)`, en: `${en} (observed)` } : { dia: o.dia, es, en },
+      o.movido ? { dia: o.dia, es: `${es} (se recorre)`, en: `${en} (observed)` } : { dia: o.dia, es, en },
     ];
   };
   const accion = nEsimo(anio, 11, 4, 4);

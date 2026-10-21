@@ -57,7 +57,7 @@ export default async function Feriados() {
                       aria-label={t(f.seTrabaja ? 'cambiarADescanso' : 'cambiarATrabajo', {
                         nombre: f.nombre,
                       })}
-                      className={`min-h-11 shrink-0 rounded-full px-3 text-sm font-semibold ${f.seTrabaja ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}`}
+                      className={`min-h-11 shrink-0 rounded-full px-3 text-sm font-semibold whitespace-nowrap ${f.seTrabaja ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}`}
                     >
                       {t(f.seTrabaja ? 'seTrabaja' : 'seDescansa')}
                     </button>
