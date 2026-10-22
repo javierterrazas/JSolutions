@@ -242,7 +242,8 @@
     "sin_entrega": "Esta obra todavía no se entrega.",
     "falta_celular": "Este dueño entra con su celular: no puede quedarse sin él.",
     "faltan_datos": "Faltan el nombre de la empresa o el del dueño.",
-    "orden_cambiada": "La orden cambió mientras la veías: revisa la nueva versión y vuelve a responder."
+    "orden_cambiada": "La orden cambió mientras la veías: revisa la nueva versión y vuelve a responder.",
+    "feriado_repetido": "Ya hay un feriado ese día."
   },
   "obras": {
     "titulo": "Obras",
@@ -1384,7 +1385,8 @@
     "guardar": "Guardar",
     "guardando": "Guardando…",
     "guardado": "Guardado.",
-    "instalarAyuda": "Si alguien ya instaló la app, para ver el ícono nuevo: en iPhone, quítala de la pantalla de inicio y vuelve a agregarla; en Android se actualiza sola, aunque puede tardar."
+    "instalarAyuda": "Si alguien ya instaló la app, para ver el ícono nuevo: en iPhone, quítala de la pantalla de inicio y vuelve a agregarla; en Android se actualiza sola, aunque puede tardar.",
+    "feriados": "Feriados"
   },
   "suscripcion": {
     "prueba": "Estás en el periodo de prueba hasta el {dia}.",
@@ -1896,5 +1898,24 @@
     "tarde": "{n, plural, one {# día tarde} other {# días tarde}}",
     "aTiempo": "{n, plural, =0 {A tiempo} one {# día antes} other {# días antes}}",
     "verCierre": "Ver el cierre y la posventa"
+  },
+  "feriados": {
+    "titulo": "Feriados",
+    "volver": "Volver a Mi empresa",
+    "ayuda": "Los días que no se trabaja. Cuentan para el cronograma de las obras, los días que el PM tiene que cerrar y los indicadores. Toca el estado para cambiarlo.",
+    "deEstadosUnidos": "Agregar los de EE. UU. de {anio}",
+    "agregados": "{n, plural, =0 {Ya estaban todos.} one {Se agregó #.} other {Se agregaron #.}}",
+    "ninguno": "Todavía no hay feriados.",
+    "seDescansa": "Se descansa",
+    "seTrabaja": "Se trabaja",
+    "cambiarADescanso": "{nombre}: se trabaja. Tocar para que se descanse.",
+    "cambiarATrabajo": "{nombre}: se descansa. Tocar para que se trabaje.",
+    "agregar": "Agregar un feriado",
+    "fecha": "Fecha",
+    "nombre": "Nombre",
+    "nombreEjemplo": "Día de la Madre",
+    "nombreEn": "Nombre en inglés (opcional)",
+    "agregado": "Feriado agregado.",
+    "guardar": "Agregar"
   }
 }

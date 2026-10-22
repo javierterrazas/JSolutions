@@ -242,7 +242,8 @@
     "sin_entrega": "This job hasn't been delivered yet.",
     "falta_celular": "This owner signs in with their cell: it cannot be left empty.",
     "faltan_datos": "The company or owner name is missing.",
-    "orden_cambiada": "The order changed while you were viewing it: review the new version and answer again."
+    "orden_cambiada": "The order changed while you were viewing it: review the new version and answer again.",
+    "feriado_repetido": "There is already a holiday on that day."
   },
   "obras": {
     "titulo": "Jobs",
@@ -1384,7 +1385,8 @@
     "guardar": "Save",
     "guardando": "Saving…",
     "guardado": "Saved.",
-    "instalarAyuda": "If someone already installed the app, to see the new icon: on iPhone, remove it from the home screen and add it again; on Android it updates by itself, though it can take a while."
+    "instalarAyuda": "If someone already installed the app, to see the new icon: on iPhone, remove it from the home screen and add it again; on Android it updates by itself, though it can take a while.",
+    "feriados": "Holidays"
   },
   "suscripcion": {
     "prueba": "You're on the trial until {dia}.",
@@ -1896,5 +1898,24 @@
     "tarde": "{n, plural, one {# day late} other {# days late}}",
     "aTiempo": "{n, plural, =0 {On time} one {# day early} other {# days early}}",
     "verCierre": "See the close-out and after-delivery"
+  },
+  "feriados": {
+    "titulo": "Holidays",
+    "volver": "Back to My company",
+    "ayuda": "The days off. They count for the job schedules, the days the PM has to close, and the indicators. Tap the status to change it.",
+    "deEstadosUnidos": "Add the US holidays of {anio}",
+    "agregados": "{n, plural, =0 {They were all there already.} one {# added.} other {# added.}}",
+    "ninguno": "No holidays yet.",
+    "seDescansa": "Day off",
+    "seTrabaja": "Workday",
+    "cambiarADescanso": "{nombre}: workday. Tap to make it a day off.",
+    "cambiarATrabajo": "{nombre}: day off. Tap to make it a workday.",
+    "agregar": "Add a holiday",
+    "fecha": "Date",
+    "nombre": "Name",
+    "nombreEjemplo": "Mother's Day",
+    "nombreEn": "Name in English (optional)",
+    "agregado": "Holiday added.",
+    "guardar": "Add"
   }
 }

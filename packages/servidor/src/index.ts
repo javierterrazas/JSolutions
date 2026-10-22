@@ -13,6 +13,7 @@ export * from './pantalla-cierre';
 export * from './calidad';
 export * from './cuadrilla';
 export * from './desempeno';
+export * from './feriados';
 export * from './seguimiento';
 export * from './gastos';
 export * from './avisos';

@@ -79,8 +79,8 @@ quien administra la plataforma. Arriba a la derecha cambias el idioma (ES / EN).
      etapa conviene cobrarla fija por espacio, por pie² o por pie lineal (se cambia en el catálogo).
 2. **Desempeño de cada manager en un año:** para la evaluación anual.
 3. **Cuadrilla:** actualiza salarios con **"Desde"** (lo trabajado antes se queda con el salario de entonces).
-4. **Feriados del año siguiente:** todavía no tienen pantalla; pásale la lista a quien administra la plataforma para
-   que los cargue (cuentan para los días laborables, el cronograma y los cierres).
+4. **Feriados del año siguiente:** Mi empresa → **Feriados** → "Agregar los de EE. UU. de …" y marca los que sí se
+   trabajan (cuentan para el cronograma, los cierres del PM y los indicadores).
 5. **Catálogo:** partidas nuevas, etapas, puntos de control y cómo se cotiza cada etapa.
 6. **Subcontratistas:** renovación de seguros y licencias; da de baja a los que ya no trabajan contigo (su historial
    se queda).
@@ -119,3 +119,4 @@ quien administra la plataforma. Arriba a la derecha cambias el idioma (ES / EN).
 - **El cliente perdió su enlace:** se vuelve a copiar del seguimiento. Si se creó uno nuevo, el anterior deja de
   servir.
 - **Tu logo y tu color en la app:** Mi empresa.
+- **Un feriado propio o uno que sí se trabaja:** Mi empresa → Feriados.

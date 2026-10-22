@@ -3,6 +3,7 @@
 
 export * from './errores';
 export * from './fechas';
+export * from './feriados';
 export * from './cronograma';
 export * from './semana';
 export * from './avance';
