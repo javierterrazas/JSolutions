@@ -91,7 +91,7 @@ export default async function SemanaCuadrilla({ searchParams }: PageProps<'/cuad
               <dd className="font-bold">{dinero(costoTotal)}</dd>
             </div>
           </dl>
-          <p className="text-sm text-slate-600">{t('ayuda')}</p>
+          <p className="text-sm text-slate-600 lg:hidden">{t('ayuda')}</p>
           <div className={`${estilos.tarjeta} hidden overflow-x-auto p-0 lg:block`}>
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200 text-slate-600">

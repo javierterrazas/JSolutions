@@ -117,7 +117,7 @@ export function ListaObras({ obras, hoy }: { obras: readonly ObraConResumen[]; h
           aria-label={t('buscar')}
           className={estilos.campo}
         />
-        <div className={`grid gap-2 ${pms.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <div className={`grid gap-2 ${pms.length > 1 ? 'grid-cols-2 lg:grid-cols-1' : 'grid-cols-1'}`}>
           <select
             value={periodo}
             onChange={(e) => cambiar({ periodo: e.target.value as (typeof PERIODOS)[number] })}
