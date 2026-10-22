@@ -50,7 +50,7 @@ export default async function Inicio() {
     acceso,
   );
   return (
-    <Marco titulo={t('hola', { nombre: yo.nombre })}>
+    <Marco titulo={t('hola', { nombre: yo.nombre })} ancho={yo.rol !== 'pm'}>
       {cuenta.ok && cuenta.datos.suscripcion ? (
         <AvisoSuscripcion suscripcion={cuenta.datos.suscripcion} esPm={yo.rol === 'pm'} />
       ) : null}
@@ -67,7 +67,8 @@ export default async function Inicio() {
         </Link>
       ) : null}
       {yo.rol !== 'pm' ? (
-        <>
+        // en la computadora, los botones del dueño en tres columnas (D-109)
+        <div className="contents lg:grid lg:grid-cols-3 lg:gap-3">
           {avisos.length ? (
             <Link
               href="/avisos"
@@ -119,7 +120,7 @@ export default async function Inicio() {
           <Link href="/empresa" className={`${estilos.botonSecundario} flex items-center justify-center`}>
             {t('miEmpresa')}
           </Link>
-        </>
+        </div>
       ) : null}
       {cuenta.ok && cuenta.datos.plataforma ? (
         <Link href="/plataforma" className={`${estilos.botonSecundario} flex items-center justify-center`}>

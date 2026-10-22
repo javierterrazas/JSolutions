@@ -55,86 +55,93 @@ export default async function AnalisisDeObra({ params }: PageProps<'/historico/[
       titulo={t('titulo')}
       subtitulo={t('encabezado', { folio: o.folio, cliente: o.cliente })}
       volver={{ href: '/historico', texto: t('volver') }}
+      ancho
     >
       <p className="text-sm text-slate-700">
         {t('contexto', { tipo: o.tipo || '—', pm: o.pm ?? '—', entrega: dia(o.entrega) })}
       </p>
 
-      <section className={`${estilos.tarjeta} flex flex-col divide-y divide-slate-100`}>
-        <h2 className="pb-2 font-semibold text-marca">{t('loQueDejo')}</h2>
-        <Renglon
-          titulo={t('gananciaDia')}
-          valor={o.gananciaDia === null ? '—' : t('porDia', { monto: dinero(o.gananciaDia) })}
-        />
-        <Renglon titulo={t('ganancia')} valor={dinero(o.ganancia)} />
-        <Renglon titulo={t('margen')} valor={pct(o.margen)} />
-        <Renglon
-          titulo={t('contratoFinal')}
-          valor={dinero(o.contrato)}
-          nota={t('contratoNota', {
-            original: dinero(a.contratoOriginal),
-            n: a.ordenesCambio.n,
-            monto: dinero(a.ordenesCambio.monto),
-          })}
-        />
-      </section>
+      {/* en la computadora, en dos columnas (D-109) */}
+      <div className="contents lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+        <section className={`${estilos.tarjeta} flex flex-col divide-y divide-slate-100`}>
+          <h2 className="pb-2 font-semibold text-marca">{t('loQueDejo')}</h2>
+          <Renglon
+            titulo={t('gananciaDia')}
+            valor={o.gananciaDia === null ? '—' : t('porDia', { monto: dinero(o.gananciaDia) })}
+          />
+          <Renglon titulo={t('ganancia')} valor={dinero(o.ganancia)} />
+          <Renglon titulo={t('margen')} valor={pct(o.margen)} />
+          <Renglon
+            titulo={t('contratoFinal')}
+            valor={dinero(o.contrato)}
+            nota={t('contratoNota', {
+              original: dinero(a.contratoOriginal),
+              n: a.ordenesCambio.n,
+              monto: dinero(a.ordenesCambio.monto),
+            })}
+          />
+        </section>
 
-      <section className={`${estilos.tarjeta} flex flex-col divide-y divide-slate-100`}>
-        <h2 className="pb-2 font-semibold text-marca">{t('costo')}</h2>
-        <Renglon
-          titulo={t('costoReal')}
-          valor={dinero(o.costo)}
-          nota={diferencia(o.costo, a.presupuestado)}
-        />
-        <Renglon titulo={t('presupuestado')} valor={dinero(a.presupuestado)} />
-        <Renglon titulo={t('materiales')} valor={dinero(a.materiales)} />
-        <Renglon titulo={t('cuadrilla')} valor={dinero(a.cuadrilla)} />
-        <Renglon titulo={t('subcontratos')} valor={dinero(a.subcontratos)} />
-        <Renglon
-          titulo={t('noCalidad')}
-          valor={dinero(a.noCalidad.costo)}
-          nota={t('noCalidadNota', { retrabajos: a.noCalidad.retrabajos, garantias: a.noCalidad.garantias })}
-        />
-      </section>
+        <section className={`${estilos.tarjeta} flex flex-col divide-y divide-slate-100`}>
+          <h2 className="pb-2 font-semibold text-marca">{t('costo')}</h2>
+          <Renglon
+            titulo={t('costoReal')}
+            valor={dinero(o.costo)}
+            nota={diferencia(o.costo, a.presupuestado)}
+          />
+          <Renglon titulo={t('presupuestado')} valor={dinero(a.presupuestado)} />
+          <Renglon titulo={t('materiales')} valor={dinero(a.materiales)} />
+          <Renglon titulo={t('cuadrilla')} valor={dinero(a.cuadrilla)} />
+          <Renglon titulo={t('subcontratos')} valor={dinero(a.subcontratos)} />
+          <Renglon
+            titulo={t('noCalidad')}
+            valor={dinero(a.noCalidad.costo)}
+            nota={t('noCalidadNota', {
+              retrabajos: a.noCalidad.retrabajos,
+              garantias: a.noCalidad.garantias,
+            })}
+          />
+        </section>
 
-      <section className={`${estilos.tarjeta} flex flex-col gap-1`}>
-        <h2 className="font-semibold text-marca">{t('etapas')}</h2>
-        <p className="text-sm text-slate-600">
-          {pasadas.length ? t('etapasAyuda', { n: pasadas.length }) : t('ningunaSePaso')}
-        </p>
-        <ul className="flex flex-col divide-y divide-slate-100">
-          {a.etapas.map((e, i) => (
-            <li key={i}>
-              <Renglon
-                titulo={t('espacioEtapa', {
-                  espacio: e.espacio,
-                  etapa: e.etapa ? nombre(e.etapa) : t('otras'),
-                })}
-                nota={t('realContraPlan', { real: dinero(e.real), plan: dinero(e.presupuestado) })}
-                valor={diferencia(e.real, e.presupuestado)}
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
+        <section className={`${estilos.tarjeta} flex flex-col gap-1`}>
+          <h2 className="font-semibold text-marca">{t('etapas')}</h2>
+          <p className="text-sm text-slate-600">
+            {pasadas.length ? t('etapasAyuda', { n: pasadas.length }) : t('ningunaSePaso')}
+          </p>
+          <ul className="flex flex-col divide-y divide-slate-100">
+            {a.etapas.map((e, i) => (
+              <li key={i}>
+                <Renglon
+                  titulo={t('espacioEtapa', {
+                    espacio: e.espacio,
+                    etapa: e.etapa ? nombre(e.etapa) : t('otras'),
+                  })}
+                  nota={t('realContraPlan', { real: dinero(e.real), plan: dinero(e.presupuestado) })}
+                  valor={diferencia(e.real, e.presupuestado)}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
 
-      <section className={`${estilos.tarjeta} flex flex-col divide-y divide-slate-100`}>
-        <h2 className="pb-2 font-semibold text-marca">{t('tiempo')}</h2>
-        <Renglon titulo={t('diasReales')} valor={t('dias', { n: o.dias })} />
-        <Renglon
-          titulo={t('diasPlaneados')}
-          valor={t('dias', { n: a.diasPlaneados })}
-          nota={t('comprometida', { dia: dia(o.comprometida) })}
-        />
-        <Renglon
-          titulo={t('entrega')}
-          valor={
-            <span className={o.atraso > 0 ? 'text-red-700' : 'text-emerald-700'}>
-              {o.atraso > 0 ? t('tarde', { n: o.atraso }) : t('aTiempo', { n: -o.atraso })}
-            </span>
-          }
-        />
-      </section>
+        <section className={`${estilos.tarjeta} flex flex-col divide-y divide-slate-100`}>
+          <h2 className="pb-2 font-semibold text-marca">{t('tiempo')}</h2>
+          <Renglon titulo={t('diasReales')} valor={t('dias', { n: o.dias })} />
+          <Renglon
+            titulo={t('diasPlaneados')}
+            valor={t('dias', { n: a.diasPlaneados })}
+            nota={t('comprometida', { dia: dia(o.comprometida) })}
+          />
+          <Renglon
+            titulo={t('entrega')}
+            valor={
+              <span className={o.atraso > 0 ? 'text-red-700' : 'text-emerald-700'}>
+                {o.atraso > 0 ? t('tarde', { n: o.atraso }) : t('aTiempo', { n: -o.atraso })}
+              </span>
+            }
+          />
+        </section>
+      </div>
 
       <Link
         href={`/obras/${o.obraId}/cerrar`}

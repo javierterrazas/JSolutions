@@ -1,5 +1,7 @@
 // La semana de la cuadrilla, para el dueño (D-094): cuántas horas (o días) trabajó cada uno de lunes a domingo y lo que
 // cuesta, para la nómina; al tocar su nombre, en qué obras y qué días. Con ?semana=AAAA-MM-DD, la semana de ese día.
+// En la computadora, una tabla de trabajador contra día de la semana (D-109).
+import { sumarDias } from '@ijm/core';
 import { semanaDeLaCuadrilla } from '@ijm/servidor';
 import type { DateTimeFormatOptions } from 'next-intl';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
@@ -35,6 +37,13 @@ export default async function SemanaCuadrilla({ searchParams }: PageProps<'/cuad
   const costoTotal = s.trabajadores.reduce((a, x) => a + (x.costo ?? 0), 0);
   const horasTotal = s.trabajadores.filter((x) => x.tipoPago === 'hora').reduce((a, x) => a + x.total, 0);
   const diasTotal = s.trabajadores.filter((x) => x.tipoPago === 'dia').reduce((a, x) => a + x.total, 0);
+  // de lunes a domingo, y lo de cada trabajador cada día (sumando sus obras)
+  const semanaDias = Array.from({ length: 7 }, (_, i) => sumarDias(s.inicio, i));
+  const delDia = (x: (typeof s.trabajadores)[number], d: string) =>
+    x.obras
+      .flatMap((o) => o.dias)
+      .filter((y) => y.dia === d)
+      .reduce((a, y) => a + y.cantidad, 0);
 
   return (
     <Marco
@@ -44,8 +53,9 @@ export default async function SemanaCuadrilla({ searchParams }: PageProps<'/cuad
         fin: dia(s.fin, { day: 'numeric', month: 'short', year: 'numeric' }),
       })}
       volver={volver}
+      ancho
     >
-      <nav className="grid grid-cols-2 gap-2">
+      <nav className="grid grid-cols-2 gap-2 lg:max-w-md">
         <Link
           href={`/cuadrilla/semana?semana=${s.anterior}`}
           className={`${estilos.botonSecundario} flex items-center justify-center`}
@@ -64,7 +74,7 @@ export default async function SemanaCuadrilla({ searchParams }: PageProps<'/cuad
 
       {s.trabajadores.length ? (
         <>
-          <dl className={`${estilos.tarjeta} grid grid-cols-2 gap-2 text-center`}>
+          <dl className={`${estilos.tarjeta} grid grid-cols-2 gap-2 text-center lg:max-w-md`}>
             <div>
               <dt className="text-sm text-slate-600">{t('totalCuadrilla')}</dt>
               <dd className="font-bold">
@@ -82,7 +92,45 @@ export default async function SemanaCuadrilla({ searchParams }: PageProps<'/cuad
             </div>
           </dl>
           <p className="text-sm text-slate-600">{t('ayuda')}</p>
-          <ul className="flex flex-col gap-2">
+          <div className={`${estilos.tarjeta} hidden overflow-x-auto p-0 lg:block`}>
+            <table className="w-full text-sm">
+              <thead className="border-b border-slate-200 text-slate-600">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium">{t('tabla.trabajador')}</th>
+                  {semanaDias.map((d) => (
+                    <th key={d} className="px-2 py-2 text-right font-medium first-letter:uppercase">
+                      {dia(d, { weekday: 'short', day: 'numeric' })}
+                    </th>
+                  ))}
+                  <th className="px-3 py-2 text-right font-medium">{t('tabla.total')}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t('costo')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {s.trabajadores.map((x) => (
+                  <tr key={x.id}>
+                    <td className="px-3 py-2">
+                      <span className="block font-semibold">{x.nombre}</span>
+                      {x.puesto ? <span className="text-xs text-slate-500">{x.puesto}</span> : null}
+                    </td>
+                    {semanaDias.map((d) => {
+                      const n = delDia(x, d);
+                      return (
+                        <td key={d} className={`px-2 py-2 text-right ${n ? '' : 'text-slate-300'}`}>
+                          {n ? cantidad(n, x.tipoPago) : '—'}
+                        </td>
+                      );
+                    })}
+                    <td className="px-3 py-2 text-right font-bold">{cantidad(x.total, x.tipoPago)}</td>
+                    <td className="px-3 py-2 text-right">
+                      {x.costo === null ? t('sinTarifa') : dinero(x.costo)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <ul className="flex flex-col gap-2 lg:hidden">
             {s.trabajadores.map((x) => (
               <li key={x.id}>
                 <details className={`${estilos.tarjeta} group`}>

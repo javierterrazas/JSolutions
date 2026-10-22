@@ -12,6 +12,18 @@ import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
 
+/** Las columnas de la tabla que ordenan, con su título (D-109). */
+const COLUMNAS: readonly (readonly [
+  CriterioHistorico,
+  'gananciaDia' | 'margen' | 'ganancia' | 'dias' | 'entrega',
+])[] = [
+  ['ganancia_dia', 'gananciaDia'],
+  ['margen', 'margen'],
+  ['ganancia', 'ganancia'],
+  ['dias', 'dias'],
+  ['atraso', 'entrega'],
+];
+
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
@@ -74,11 +86,12 @@ export default async function Historico({ searchParams }: PageProps<'/historico'
     );
 
   const total = h.resumen.total;
+  const ordenadas = ordenarObrasCerradas(h.obras, orden);
   const tend = h.resumen.tendencia;
   return (
-    <Marco titulo={t('titulo')} volver={volver}>
+    <Marco titulo={t('titulo')} volver={volver} ancho>
       <p className="text-sm text-slate-700">{t('contexto', { n: total.n })}</p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
         <Cifra
           titulo={t('margen')}
           valor={pct(total.margen)}
@@ -129,8 +142,8 @@ export default async function Historico({ searchParams }: PageProps<'/historico'
             </Link>
           ))}
         </nav>
-        <ol className="flex flex-col gap-2">
-          {ordenarObrasCerradas(h.obras, orden).map((o, i) => (
+        <ol className="flex flex-col gap-2 lg:hidden">
+          {ordenadas.map((o, i) => (
             <li key={o.obraId}>
               <Link
                 href={`/historico/${o.obraId}`}
@@ -160,155 +173,208 @@ export default async function Historico({ searchParams }: PageProps<'/historico'
             </li>
           ))}
         </ol>
+        {/* en la computadora, una tabla con todas las columnas; el encabezado ordena (D-109) */}
+        <div className={`${estilos.tarjeta} hidden overflow-x-auto p-0 lg:block`}>
+          <table className="w-full text-sm">
+            <thead className="border-b border-slate-200 text-left text-slate-600">
+              <tr>
+                <th className="px-3 py-2 font-medium">{t('tabla.lugar')}</th>
+                <th className="px-3 py-2 font-medium">{t('tabla.obra')}</th>
+                <th className="px-3 py-2 font-medium">{t('tabla.tipo')}</th>
+                <th className="px-3 py-2 font-medium">{t('tabla.pm')}</th>
+                {COLUMNAS.map(([c, titulo]) => (
+                  <th key={c} className="px-3 py-2 text-right font-medium">
+                    <Link
+                      href={c === 'ganancia_dia' ? '/historico' : `/historico?orden=${c}`}
+                      aria-current={c === orden ? 'true' : undefined}
+                      className={c === orden ? 'font-bold text-marca' : 'underline'}
+                    >
+                      {t(`tabla.${titulo}`)}
+                      {c === orden ? ' ▾' : ''}
+                    </Link>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {ordenadas.map((o, i) => (
+                <tr key={o.obraId} className="hover:bg-slate-50">
+                  <td className="px-3 py-2 text-slate-500">{i + 1}</td>
+                  <td className="px-3 py-2">
+                    <Link href={`/historico/${o.obraId}`} className="font-semibold text-marca underline">
+                      {t('obraEncabezado', { folio: o.folio, cliente: o.cliente })}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2">{o.tipo || t('sinTipo')}</td>
+                  <td className="px-3 py-2">{o.pm ?? '—'}</td>
+                  <td className="px-3 py-2 text-right font-semibold">
+                    {o.gananciaDia === null ? '—' : t('porDia', { monto: dinero(o.gananciaDia) })}
+                  </td>
+                  <td className="px-3 py-2 text-right">{pct(o.margen)}</td>
+                  <td className="px-3 py-2 text-right">{dinero(o.ganancia)}</td>
+                  <td className="px-3 py-2 text-right">{o.dias}</td>
+                  <td
+                    className={`px-3 py-2 text-right ${o.atraso > 0 ? 'text-red-700' : 'text-emerald-800'}`}
+                  >
+                    {o.atraso > 0 ? t('tabla.tarde', { n: o.atraso }) : t('tabla.aTiempo', { n: -o.atraso })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Seccion>
 
-      <Seccion titulo={t('porTipo')}>
-        <ul className="flex flex-col gap-2">
-          {h.resumen.porTipo.map((g) => (
-            <li key={g.clave} className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}>
-              <span className="flex justify-between gap-2 font-semibold">
-                <span>{g.clave || t('sinTipo')}</span>
-                <span>{t('obras', { n: g.n })}</span>
-              </span>
-              <span className="text-slate-700">
-                {t('lineaGrupo', {
-                  margen: pct(g.margen),
-                  desviacion: pct(g.desviacion),
-                  dias: dias(g.dias),
-                })}
-              </span>
-              <span className="font-medium text-slate-800">
-                {t('gananciaDiaGrupo', {
-                  monto: g.gananciaDia === null ? '—' : dinero(g.gananciaDia),
-                })}
-              </span>
-              <span className="text-slate-600">
-                {t('lineaPie', { venta: porPie(g.ventaPie), costo: porPie(g.costoPie) })}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </Seccion>
-
-      <Seccion titulo={t('masMueven')}>
-        <p className="text-sm text-slate-600">{t('masMuevenAyuda')}</p>
-        {mueven.length ? (
+      {/* en la computadora, lo demás en dos columnas (D-109) */}
+      <div className="contents lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+        <Seccion titulo={t('porTipo')}>
           <ul className="flex flex-col gap-2">
-            {mueven.map((c) => (
-              <li
-                key={`${c.tipoEspacioId}-${c.etapaId}`}
-                className={`${estilos.tarjeta} flex justify-between gap-2 text-sm`}
-              >
-                <span className="font-semibold">
-                  {t('tipoEtapa', {
-                    tipo: nombre(c.tipoEspacio),
-                    etapa: c.etapa ? nombre(c.etapa) : t('otras'),
+            {h.resumen.porTipo.map((g) => (
+              <li key={g.clave} className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}>
+                <span className="flex justify-between gap-2 font-semibold">
+                  <span>{g.clave || t('sinTipo')}</span>
+                  <span>{t('obras', { n: g.n })}</span>
+                </span>
+                <span className="text-slate-700">
+                  {t('lineaGrupo', {
+                    margen: pct(g.margen),
+                    desviacion: pct(g.desviacion),
+                    dias: dias(g.dias),
                   })}
                 </span>
-                <span className="text-right">
-                  {t('mueve', {
-                    monto: dinero(c.ajuste!.por10),
-                    unidad: t(`unidadCorta.${c.ajuste!.medida}`),
+                <span className="font-medium text-slate-800">
+                  {t('gananciaDiaGrupo', {
+                    monto: g.gananciaDia === null ? '—' : dinero(g.gananciaDia),
                   })}
+                </span>
+                <span className="text-slate-600">
+                  {t('lineaPie', { venta: porPie(g.ventaPie), costo: porPie(g.costoPie) })}
                 </span>
               </li>
             ))}
           </ul>
-        ) : (
-          <p className="text-sm text-slate-600">{t('sinMueven')}</p>
-        )}
-      </Seccion>
+        </Seccion>
 
-      <Seccion titulo={t('porUnidad')}>
-        <p className="text-sm text-slate-600">{t('porUnidadAyuda')}</p>
-        {h.costos.length ? (
-          <ul className="flex flex-col gap-2">
-            {h.costos.map((c) => (
-              <li
-                key={`${c.tipoEspacioId}-${c.etapaId}`}
-                className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}
-              >
-                <span className="flex justify-between gap-2 font-semibold">
-                  <span>
+        <Seccion titulo={t('masMueven')}>
+          <p className="text-sm text-slate-600">{t('masMuevenAyuda')}</p>
+          {mueven.length ? (
+            <ul className="flex flex-col gap-2">
+              {mueven.map((c) => (
+                <li
+                  key={`${c.tipoEspacioId}-${c.etapaId}`}
+                  className={`${estilos.tarjeta} flex justify-between gap-2 text-sm`}
+                >
+                  <span className="font-semibold">
                     {t('tipoEtapa', {
                       tipo: nombre(c.tipoEspacio),
                       etapa: c.etapa ? nombre(c.etapa) : t('otras'),
                     })}
                   </span>
                   <span className="text-right">
-                    {c.unidad === 'fijo' || c.porUnidad === null
-                      ? t('porEspacio', { monto: dinero(c.costoTipico) })
-                      : t(c.unidad === 'pie_lineal' ? 'porPieLineal' : 'porPie2', {
-                          monto: dinero(c.porUnidad),
-                        })}
+                    {t('mueve', {
+                      monto: dinero(c.ajuste!.por10),
+                      unidad: t(`unidadCorta.${c.ajuste!.medida}`),
+                    })}
                   </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-600">{t('sinMueven')}</p>
+          )}
+        </Seccion>
+
+        <Seccion titulo={t('porUnidad')}>
+          <p className="text-sm text-slate-600">{t('porUnidadAyuda')}</p>
+          {h.costos.length ? (
+            <ul className="flex flex-col gap-2">
+              {h.costos.map((c) => (
+                <li
+                  key={`${c.tipoEspacioId}-${c.etapaId}`}
+                  className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}
+                >
+                  <span className="flex justify-between gap-2 font-semibold">
+                    <span>
+                      {t('tipoEtapa', {
+                        tipo: nombre(c.tipoEspacio),
+                        etapa: c.etapa ? nombre(c.etapa) : t('otras'),
+                      })}
+                    </span>
+                    <span className="text-right">
+                      {c.unidad === 'fijo' || c.porUnidad === null
+                        ? t('porEspacio', { monto: dinero(c.costoTipico) })
+                        : t(c.unidad === 'pie_lineal' ? 'porPieLineal' : 'porPie2', {
+                            monto: dinero(c.porUnidad),
+                          })}
+                    </span>
+                  </span>
+                  {c.ajuste ? (
+                    <span className="text-slate-700">
+                      {[
+                        t('ajuste', {
+                          base: dinero(Math.max(0, c.ajuste.base)),
+                          tarifa: dinero(c.ajuste.tarifa),
+                          unidad: t(`unidadCorta.${c.ajuste.medida}`),
+                        }),
+                        c.ajuste.parteDelTamano < 0.3
+                          ? t('casiFija')
+                          : t('parteTamano', { pct: pct(c.ajuste.parteDelTamano) }),
+                      ].join(t('separador'))}
+                    </span>
+                  ) : (
+                    <span className="text-slate-600">{t('faltanObras', { n: c.n })}</span>
+                  )}
+                  {c.sugerida ? (
+                    <span className="font-medium text-amber-800">
+                      {t(
+                        c.sugerida === 'fijo'
+                          ? 'sugerirFijo'
+                          : c.sugerida === 'pie_lineal'
+                            ? 'sugerirLineal'
+                            : 'sugerirPie2',
+                      )}
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-600">{t('sinUnidad')}</p>
+          )}
+        </Seccion>
+
+        <Seccion titulo={t('porMes')}>
+          <ul className="flex flex-col gap-2">
+            {h.resumen.porMes.map((g) => (
+              <li key={g.clave} className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}>
+                <span className="flex justify-between gap-2 font-semibold">
+                  <span className="first-letter:uppercase">{mes(g.clave)}</span>
+                  <span>{t('obras', { n: g.n })}</span>
                 </span>
-                {c.ajuste ? (
-                  <span className="text-slate-700">
-                    {[
-                      t('ajuste', {
-                        base: dinero(Math.max(0, c.ajuste.base)),
-                        tarifa: dinero(c.ajuste.tarifa),
-                        unidad: t(`unidadCorta.${c.ajuste.medida}`),
-                      }),
-                      c.ajuste.parteDelTamano < 0.3
-                        ? t('casiFija')
-                        : t('parteTamano', { pct: pct(c.ajuste.parteDelTamano) }),
-                    ].join(t('separador'))}
-                  </span>
-                ) : (
-                  <span className="text-slate-600">{t('faltanObras', { n: c.n })}</span>
-                )}
-                {c.sugerida ? (
-                  <span className="font-medium text-amber-800">
-                    {t(
-                      c.sugerida === 'fijo'
-                        ? 'sugerirFijo'
-                        : c.sugerida === 'pie_lineal'
-                          ? 'sugerirLineal'
-                          : 'sugerirPie2',
-                    )}
-                  </span>
-                ) : null}
+                <span className="text-slate-700">
+                  {t('lineaMes', {
+                    contrato: dinero(g.contrato),
+                    costo: dinero(g.costo),
+                    margen: pct(g.margen),
+                  })}
+                </span>
               </li>
             ))}
           </ul>
-        ) : (
-          <p className="text-sm text-slate-600">{t('sinUnidad')}</p>
-        )}
-      </Seccion>
+        </Seccion>
 
-      <Seccion titulo={t('porMes')}>
-        <ul className="flex flex-col gap-2">
-          {h.resumen.porMes.map((g) => (
-            <li key={g.clave} className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}>
-              <span className="flex justify-between gap-2 font-semibold">
-                <span className="first-letter:uppercase">{mes(g.clave)}</span>
-                <span>{t('obras', { n: g.n })}</span>
-              </span>
-              <span className="text-slate-700">
-                {t('lineaMes', {
-                  contrato: dinero(g.contrato),
-                  costo: dinero(g.costo),
-                  margen: pct(g.margen),
-                })}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </Seccion>
-
-      <Seccion titulo={t('garantias')}>
-        <p className={`${estilos.tarjeta} text-sm`}>
-          {t('lineaGarantias', {
-            reclamos: h.garantias.reclamos,
-            costo: dinero(h.garantias.costo),
-            abiertos: h.garantias.abiertos,
-            resenas: h.garantias.resenas,
-            entregas: h.garantias.entregas,
-          })}
-        </p>
-      </Seccion>
+        <Seccion titulo={t('garantias')}>
+          <p className={`${estilos.tarjeta} text-sm`}>
+            {t('lineaGarantias', {
+              reclamos: h.garantias.reclamos,
+              costo: dinero(h.garantias.costo),
+              abiertos: h.garantias.abiertos,
+              resenas: h.garantias.resenas,
+              entregas: h.garantias.entregas,
+            })}
+          </p>
+        </Seccion>
+      </div>
     </Marco>
   );
 }

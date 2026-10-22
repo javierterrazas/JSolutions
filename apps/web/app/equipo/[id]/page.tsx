@@ -44,7 +44,12 @@ export default async function DesempenoDelManager({ params, searchParams }: Page
   };
 
   return (
-    <Marco titulo={d.manager.nombre} subtitulo={t('titulo')} volver={{ href: '/equipo', texto: t('volver') }}>
+    <Marco
+      titulo={d.manager.nombre}
+      subtitulo={t('titulo')}
+      volver={{ href: '/equipo', texto: t('volver') }}
+      ancho
+    >
       <nav aria-label={t('periodo')} className="grid grid-cols-3 gap-2">
         {PERIODOS_DESEMPENO.map((p) => (
           <Link
@@ -59,47 +64,50 @@ export default async function DesempenoDelManager({ params, searchParams }: Page
       </nav>
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
 
-      {(Object.entries(GRUPOS_PM) as [keyof typeof GRUPOS_PM, readonly MetricaPM[]][]).map(
-        ([grupo, claves]) => (
-          <section key={grupo} className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold text-marca">{t(`grupos.${grupo}`)}</h2>
-            {claves.map((k) => {
-              const m = d.manager.metricas.find((x) => x.clave === k)!;
-              const e = empresa.get(k)!;
-              return (
-                <article
-                  key={k}
-                  className={`flex flex-col gap-1 rounded-2xl border p-4 ${COLOR[m.semaforo]}`}
-                >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h3 className="font-medium">{t(`nombres.${k}`)}</h3>
-                    <span className="shrink-0 text-2xl font-bold">{valor(m, m.valor)}</span>
-                  </div>
-                  <p className="text-sm opacity-80">
-                    {t('metaYEmpresa', { meta: valor(m, m.meta), empresa: valor(e, e.valor) })}
-                  </p>
-                  {m.valor !== null ? (
+      {/* en la computadora, los cuatro grupos en dos columnas (D-109) */}
+      <div className="contents lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+        {(Object.entries(GRUPOS_PM) as [keyof typeof GRUPOS_PM, readonly MetricaPM[]][]).map(
+          ([grupo, claves]) => (
+            <section key={grupo} className="flex flex-col gap-2">
+              <h2 className="text-lg font-semibold text-marca">{t(`grupos.${grupo}`)}</h2>
+              {claves.map((k) => {
+                const m = d.manager.metricas.find((x) => x.clave === k)!;
+                const e = empresa.get(k)!;
+                return (
+                  <article
+                    key={k}
+                    className={`flex flex-col gap-1 rounded-2xl border p-4 ${COLOR[m.semaforo]}`}
+                  >
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h3 className="font-medium">{t(`nombres.${k}`)}</h3>
+                      <span className="shrink-0 text-2xl font-bold">{valor(m, m.valor)}</span>
+                    </div>
                     <p className="text-sm opacity-80">
-                      {tm(`detalles.${k}`, {
-                        ...m.datos,
-                        ...(k === 'retrabajos' ? { costo: dinero(m.datos.costo ?? 0) } : {}),
-                      })}
+                      {t('metaYEmpresa', { meta: valor(m, m.meta), empresa: valor(e, e.valor) })}
                     </p>
-                  ) : (
-                    <p className="text-sm opacity-80">{t('sinDatos')}</p>
-                  )}
-                  {m.pocosDatos ? <p className="text-sm font-medium">{t('pocosDatos')}</p> : null}
-                </article>
-              );
-            })}
-          </section>
-        ),
-      )}
+                    {m.valor !== null ? (
+                      <p className="text-sm opacity-80">
+                        {tm(`detalles.${k}`, {
+                          ...m.datos,
+                          ...(k === 'retrabajos' ? { costo: dinero(m.datos.costo ?? 0) } : {}),
+                        })}
+                      </p>
+                    ) : (
+                      <p className="text-sm opacity-80">{t('sinDatos')}</p>
+                    )}
+                    {m.pocosDatos ? <p className="text-sm font-medium">{t('pocosDatos')}</p> : null}
+                  </article>
+                );
+              })}
+            </section>
+          ),
+        )}
+      </div>
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-marca">{t('susObras', { n: d.manager.obras.length })}</h2>
         {d.manager.obras.length === 0 ? <p className={estilos.tarjeta}>{t('sinObras')}</p> : null}
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2">
           {d.manager.obras.map((o) => (
             <li key={o.id}>
               <Link

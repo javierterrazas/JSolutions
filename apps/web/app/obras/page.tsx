@@ -16,7 +16,7 @@ export default async function Obras() {
   const resumen = await comoMiembro((tx) => resumenDeObras(tx), acceso);
   const [t, ti] = await Promise.all([getTranslations('obras'), getTranslations('inicio')]);
   return (
-    <Marco titulo={t('titulo')} volver={{ href: '/', texto: ti('hola', { nombre: acceso.yo.nombre }) }}>
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: ti('hola', { nombre: acceso.yo.nombre }) }} ancho>
       <Link href="/obras/nueva" className={`${estilos.boton} flex items-center justify-center`}>
         {t('nueva')}
       </Link>

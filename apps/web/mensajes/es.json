@@ -1604,7 +1604,20 @@
     "lineaRanking": "Margen {margen} · Ganancia {ganancia} · {dias}",
     "entregadaTarde": "{n, plural, one {Entregada # día tarde} other {Entregada # días tarde}}",
     "entregadaATiempo": "{n, plural, =0 {Entregada a tiempo} one {Entregada # día antes} other {Entregada # días antes}}",
-    "gananciaDiaGrupo": "Ganancia por día {monto}"
+    "gananciaDiaGrupo": "Ganancia por día {monto}",
+    "tabla": {
+      "lugar": "#",
+      "obra": "Obra",
+      "tipo": "Tipo",
+      "pm": "PM",
+      "gananciaDia": "Ganancia por día",
+      "margen": "Margen",
+      "ganancia": "Ganancia",
+      "dias": "Días",
+      "entrega": "Entrega",
+      "tarde": "{n, plural, one {# día tarde} other {# días tarde}}",
+      "aTiempo": "{n, plural, =0 {A tiempo} one {# día antes} other {# días antes}}"
+    }
   },
   "retrabajos": {
     "titulo": "Retrabajos y garantías",
@@ -1682,7 +1695,11 @@
     "sinTarifa": "Sin salario",
     "obra": "{folio} · {cliente}",
     "diaCantidad": "{dia}: {cantidad}",
-    "nadie": "Nadie de la cuadrilla tiene horas anotadas esta semana."
+    "nadie": "Nadie de la cuadrilla tiene horas anotadas esta semana.",
+    "tabla": {
+      "trabajador": "Trabajador",
+      "total": "Total"
+    }
   },
   "uso": {
     "titulo": "Uso de la app",

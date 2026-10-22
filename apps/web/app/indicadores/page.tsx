@@ -105,13 +105,13 @@ export default async function Indicadores() {
   const principales = d.indicadores.filter((i) => i.principal);
 
   return (
-    <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
+    <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }} ancho>
       <p className="text-sm text-slate-700">
         {t('contexto', { enCurso: d.obrasEnCurso, entregadas: d.obrasEntregadas })}
       </p>
 
       <Seccion titulo={t('principales')}>
-        <ul className="grid grid-cols-2 gap-2">
+        <ul className="grid grid-cols-2 gap-2 lg:grid-cols-3">
           {principales.map((i) => {
             const cara = (
               <>
@@ -171,39 +171,42 @@ export default async function Indicadores() {
         </ul>
       </Seccion>
 
-      {PROCESOS.map((p) => (
-        <Seccion key={p} titulo={t(`procesos.${p}`)}>
-          <ul className="flex flex-col gap-2">
-            {d.indicadores
-              .filter((i) => i.proceso === p)
-              .map((i) => (
-                <li key={i.clave} className={`${estilos.tarjeta} flex flex-col gap-1`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="flex items-start gap-2 font-semibold">
-                      <span
-                        aria-hidden="true"
-                        className={`mt-1.5 size-3 shrink-0 rounded-full ${COLOR[i.semaforo].punto}`}
-                      />
-                      {nombre(i)}
-                    </span>
-                    <span className={`shrink-0 text-lg font-bold ${COLOR[i.semaforo].texto}`}>
-                      {i.sinDatos ? t('sinDatos') : valor(i, i.valor)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-700">{t(`explicaciones.${i.clave}` as never)}</p>
-                  <p className="flex flex-wrap gap-x-3 text-xs text-slate-600">
-                    {meta(i) ? <span>{meta(i)}</span> : null}
-                    <span>{t(`semaforos.${i.semaforo}`)}</span>
-                    {extra(i) ? <span>{extra(i)}</span> : null}
-                  </p>
-                  {i.clave === 'cumplimiento_semanal' && plan.ok ? (
-                    <DetalleDelPlan plan={plan.datos} dia={dia} idioma={idioma} t={t} />
-                  ) : null}
-                </li>
-              ))}
-          </ul>
-        </Seccion>
-      ))}
+      {/* en la computadora, los procesos en dos columnas (D-109) */}
+      <div className="contents lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+        {PROCESOS.map((p) => (
+          <Seccion key={p} titulo={t(`procesos.${p}`)}>
+            <ul className="flex flex-col gap-2">
+              {d.indicadores
+                .filter((i) => i.proceso === p)
+                .map((i) => (
+                  <li key={i.clave} className={`${estilos.tarjeta} flex flex-col gap-1`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="flex items-start gap-2 font-semibold">
+                        <span
+                          aria-hidden="true"
+                          className={`mt-1.5 size-3 shrink-0 rounded-full ${COLOR[i.semaforo].punto}`}
+                        />
+                        {nombre(i)}
+                      </span>
+                      <span className={`shrink-0 text-lg font-bold ${COLOR[i.semaforo].texto}`}>
+                        {i.sinDatos ? t('sinDatos') : valor(i, i.valor)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-700">{t(`explicaciones.${i.clave}` as never)}</p>
+                    <p className="flex flex-wrap gap-x-3 text-xs text-slate-600">
+                      {meta(i) ? <span>{meta(i)}</span> : null}
+                      <span>{t(`semaforos.${i.semaforo}`)}</span>
+                      {extra(i) ? <span>{extra(i)}</span> : null}
+                    </p>
+                    {i.clave === 'cumplimiento_semanal' && plan.ok ? (
+                      <DetalleDelPlan plan={plan.datos} dia={dia} idioma={idioma} t={t} />
+                    ) : null}
+                  </li>
+                ))}
+            </ul>
+          </Seccion>
+        ))}
+      </div>
     </Marco>
   );
 }

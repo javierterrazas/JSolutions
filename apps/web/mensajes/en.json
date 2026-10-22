@@ -1604,7 +1604,20 @@
     "lineaRanking": "Margin {margen} · Earnings {ganancia} · {dias}",
     "entregadaTarde": "{n, plural, one {Delivered # day late} other {Delivered # days late}}",
     "entregadaATiempo": "{n, plural, =0 {Delivered on time} one {Delivered # day early} other {Delivered # days early}}",
-    "gananciaDiaGrupo": "Earnings per day {monto}"
+    "gananciaDiaGrupo": "Earnings per day {monto}",
+    "tabla": {
+      "lugar": "#",
+      "obra": "Job",
+      "tipo": "Type",
+      "pm": "PM",
+      "gananciaDia": "Earnings per day",
+      "margen": "Margin",
+      "ganancia": "Earnings",
+      "dias": "Days",
+      "entrega": "Delivery",
+      "tarde": "{n, plural, one {# day late} other {# days late}}",
+      "aTiempo": "{n, plural, =0 {On time} one {# day early} other {# days early}}"
+    }
   },
   "retrabajos": {
     "titulo": "Rework and warranty",
@@ -1682,7 +1695,11 @@
     "sinTarifa": "No wage",
     "obra": "{folio} · {cliente}",
     "diaCantidad": "{dia}: {cantidad}",
-    "nadie": "No one on the crew has hours logged this week."
+    "nadie": "No one on the crew has hours logged this week.",
+    "tabla": {
+      "trabajador": "Worker",
+      "total": "Total"
+    }
   },
   "uso": {
     "titulo": "App usage",
