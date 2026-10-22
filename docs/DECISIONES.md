@@ -1839,3 +1839,16 @@ lo cambia); **"Agregar los de EE. UU."** de este año o el siguiente (`feriadosD
 Memorial Day, Independencia, Labor Day, Acción de Gracias y el día después, Nochebuena y Navidad; si cae en sábado se
 descansa el viernes y en domingo el lunes; los días que ya tenían uno no cambian), y agregar uno propio. Nada se
 borra: un feriado que ya no aplica se marca "Se trabaja" (D-028). Sin migración.
+
+## D-109 · Las pantallas del dueño en la computadora
+
+**Lo pidió el dueño:** analizar los datos en una pantalla grande. La app es la misma; en una pantalla de computadora
+(1024 px o más) las pantallas del dueño usan todo el ancho (`Marco` con `ancho`): el inicio en tres columnas; las obras
+con los filtros al costado y las tarjetas en dos columnas; el seguimiento con los datos y lo que se hace a la izquierda y
+cómo va a la derecha; los indicadores y el desempeño en columnas; el histórico con el ranking como tabla ordenable desde
+el encabezado; el análisis de una obra en dos columnas; las horas de la semana como tabla de trabajador contra día.
+- **En el teléfono no cambia nada:** los contenedores nuevos son `contents` hasta `lg` (no cuentan para el acomodo) y las
+  tablas están ocultas; se comprobó con capturas de las ocho pantallas antes y después, iguales píxel por píxel (salvo
+  la hora de creación del enlace del cliente, que cambia con cada carga de datos).
+- La computadora se da de alta como un celular más: Managers → tu nombre → "Nueva invitación", abrirla en el
+  navegador y elegir el PIN. Las pantallas del PM no cambian.

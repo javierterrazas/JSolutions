@@ -1,5 +1,6 @@
 // El marco de cada pantalla en el teléfono: el botón para volver, el idioma (arriba a la derecha, D-070), el nombre
-// de la empresa y el título (con la obra debajo, si es de una).
+// de la empresa y el título (con la obra debajo, si es de una). Con `ancho`, en una pantalla de computadora (lg) la
+// pantalla usa todo el ancho para sus columnas (D-109); en el teléfono se ve igual.
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { empresaDeLaPeticion } from '@/lib/empresa-de-la-peticion';
@@ -15,6 +16,7 @@ export function Marco({
   titulo,
   subtitulo,
   volver,
+  ancho = false,
   children,
 }: {
   titulo: string;
@@ -22,11 +24,15 @@ export function Marco({
   subtitulo?: string;
   /** A dónde regresa el botón de arriba; sin él, la pantalla no lo lleva (el inicio, el PIN). */
   volver?: Volver;
+  /** Las pantallas del dueño para analizar: en la computadora, a lo ancho (D-109). */
+  ancho?: boolean;
   children: ReactNode;
 }) {
   const empresa = empresaDeLaPeticion();
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))]">
+    <main
+      className={`mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] ${ancho ? 'lg:max-w-6xl lg:px-8' : ''}`}
+    >
       <header className="relative flex flex-col gap-3">
         <div className="absolute top-0 right-0">
           <SelectorDeIdioma />

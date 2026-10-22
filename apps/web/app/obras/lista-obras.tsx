@@ -91,57 +91,61 @@ export function ListaObras({ obras, hoy }: { obras: readonly ObraConResumen[]; h
     `min-h-11 shrink-0 rounded-full border px-3 text-sm font-semibold ${activo ? 'border-marca bg-marca text-white' : 'border-slate-300 bg-white text-slate-700'}`;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div role="tablist" aria-label={t('filtroEstado')} className="grid grid-cols-3 gap-1">
-        {ESTADOS.map((e) => (
-          <button
-            key={e}
-            type="button"
-            role="tab"
-            aria-selected={estado === e}
-            onClick={() => cambiar({ estado: e })}
-            className={`${boton(estado === e)} rounded-xl px-1`}
-          >
-            {t(`filtros.${e}`, { n: cuantas(e) })}
-          </button>
-        ))}
-      </div>
-      <input
-        type="search"
-        value={q}
-        onChange={(e) => cambiar({ q: e.target.value })}
-        placeholder={t('buscar')}
-        aria-label={t('buscar')}
-        className={estilos.campo}
-      />
-      <div className={`grid gap-2 ${pms.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        <select
-          value={periodo}
-          onChange={(e) => cambiar({ periodo: e.target.value as (typeof PERIODOS)[number] })}
-          aria-label={t('filtroPeriodo')}
-          className={estilos.campo}
-        >
-          {PERIODOS.map((p) => (
-            <option key={p} value={p}>
-              {t(`periodos.${p}`)}
-            </option>
+    // en la computadora, los filtros en una columna al costado y las obras en dos columnas (D-109); en el teléfono
+    // los contenedores no cuentan y todo va uno debajo del otro, como siempre
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <div className="contents lg:flex lg:flex-col lg:gap-3">
+        <div role="tablist" aria-label={t('filtroEstado')} className="grid grid-cols-3 gap-1">
+          {ESTADOS.map((e) => (
+            <button
+              key={e}
+              type="button"
+              role="tab"
+              aria-selected={estado === e}
+              onClick={() => cambiar({ estado: e })}
+              className={`${boton(estado === e)} rounded-xl px-1`}
+            >
+              {t(`filtros.${e}`, { n: cuantas(e) })}
+            </button>
           ))}
-        </select>
-        {pms.length > 1 ? (
+        </div>
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => cambiar({ q: e.target.value })}
+          placeholder={t('buscar')}
+          aria-label={t('buscar')}
+          className={estilos.campo}
+        />
+        <div className={`grid gap-2 ${pms.length > 1 ? 'grid-cols-2 lg:grid-cols-1' : 'grid-cols-1'}`}>
           <select
-            value={pm}
-            onChange={(e) => cambiar({ pm: e.target.value })}
-            aria-label={t('filtroPm')}
+            value={periodo}
+            onChange={(e) => cambiar({ periodo: e.target.value as (typeof PERIODOS)[number] })}
+            aria-label={t('filtroPeriodo')}
             className={estilos.campo}
           >
-            <option value="">{t('todosLosPm')}</option>
-            {pms.map(([id, nombre]) => (
-              <option key={id} value={id}>
-                {nombre}
+            {PERIODOS.map((p) => (
+              <option key={p} value={p}>
+                {t(`periodos.${p}`)}
               </option>
             ))}
           </select>
-        ) : null}
+          {pms.length > 1 ? (
+            <select
+              value={pm}
+              onChange={(e) => cambiar({ pm: e.target.value })}
+              aria-label={t('filtroPm')}
+              className={estilos.campo}
+            >
+              <option value="">{t('todosLosPm')}</option>
+              {pms.map(([id, nombre]) => (
+                <option key={id} value={id}>
+                  {nombre}
+                </option>
+              ))}
+            </select>
+          ) : null}
+        </div>
       </div>
 
       {obras.length === 0 ? (
@@ -149,7 +153,7 @@ export function ListaObras({ obras, hoy }: { obras: readonly ObraConResumen[]; h
       ) : lista.length === 0 ? (
         <p className="text-slate-600">{t('ningunaConFiltros')}</p>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
           {lista.map((o) => {
             const x = o.resumen;
             return (

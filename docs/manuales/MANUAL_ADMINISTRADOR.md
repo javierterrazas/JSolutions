@@ -7,6 +7,11 @@ cliente en su portal.
 **Entrar:** con tu celular y tu PIN de 6 dígitos. Si cambias de celular u olvidas el PIN, pide una invitación nueva a
 quien administra la plataforma. Arriba a la derecha cambias el idioma (ES / EN).
 
+**En la computadora:** para analizar con pantalla grande, abre https://j-solutions-nine.vercel.app en Chrome o Edge.
+La primera vez: en tu celular, Managers → tu nombre → **"Nueva invitación"**; abre ese enlace en la computadora y elige tu
+PIN. Las pantallas se acomodan a lo ancho (el histórico y las horas de la semana salen como tablas). El celular sigue
+igual.
+
 **Tu inicio** te dice qué necesita atención. Lo que sale en amarillo o rojo arriba de los botones es lo pendiente.
 
 ---
