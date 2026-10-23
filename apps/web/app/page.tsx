@@ -56,7 +56,7 @@ export default async function Inicio() {
       ) : null}
       {copia?.ok && copia.datos ? <GuardarCopia copia={copia.datos} /> : null}
       {yo.rol === 'pm' ? <EstadoCola /> : null}
-      {pm?.ok ? <InicioDelPm datos={pm.datos} /> : null}
+      {pm?.ok ? <InicioDelPm datos={pm.datos} modulos={yo.modulos} /> : null}
       {pm && !pm.ok ? <MensajeError problema={pm} /> : null}
       {terminadas?.ok && terminadas.datos.length ? (
         <Link
@@ -85,7 +85,7 @@ export default async function Inicio() {
               {t('gastosPorRevisar', { n: porRevisar })}
             </Link>
           ) : null}
-          {porAtender ? (
+          {porAtender && yo.modulos.includes('posventa') ? (
             <Link
               href="/posventa"
               className={`flex min-h-12 items-center justify-center rounded-xl px-4 font-semibold ${despues?.ok && despues.datos.garantias.length ? 'bg-red-100 text-red-900' : 'bg-amber-100 text-amber-900'}`}
@@ -96,24 +96,33 @@ export default async function Inicio() {
           <Link href="/obras" className={`${estilos.boton} flex items-center justify-center`}>
             {t('obras')}
           </Link>
-          <Link href="/indicadores" className={`${estilos.botonSecundario} flex items-center justify-center`}>
-            {t('indicadores')}
-          </Link>
-          <Link href="/historico" className={`${estilos.botonSecundario} flex items-center justify-center`}>
-            {t('historico')}
-          </Link>
+          {yo.modulos.includes('indicadores') ? (
+            <Link
+              href="/indicadores"
+              className={`${estilos.botonSecundario} flex items-center justify-center`}
+            >
+              {t('indicadores')}
+            </Link>
+          ) : null}
+          {yo.modulos.includes('historico') ? (
+            <Link href="/historico" className={`${estilos.botonSecundario} flex items-center justify-center`}>
+              {t('historico')}
+            </Link>
+          ) : null}
           <Link href="/equipo" className={`${estilos.botonSecundario} flex items-center justify-center`}>
             {t('equipo')}
           </Link>
           <Link href="/cuadrilla" className={`${estilos.botonSecundario} flex items-center justify-center`}>
             {t('cuadrilla')}
           </Link>
-          <Link
-            href="/subcontratistas"
-            className={`${estilos.botonSecundario} flex items-center justify-center`}
-          >
-            {t('subcontratistas')}
-          </Link>
+          {yo.modulos.includes('subcontratistas') ? (
+            <Link
+              href="/subcontratistas"
+              className={`${estilos.botonSecundario} flex items-center justify-center`}
+            >
+              {t('subcontratistas')}
+            </Link>
+          ) : null}
           <Link href="/catalogo" className={`${estilos.botonSecundario} flex items-center justify-center`}>
             {t('catalogo')}
           </Link>

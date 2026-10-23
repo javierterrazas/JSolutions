@@ -3,7 +3,7 @@ import { formatoCelular } from '@ijm/core';
 import { equipo } from '@ijm/servidor';
 import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, conModulo, exigirDueno } from '@/lib/acceso';
 import { cambiarActivo, quitarCelular } from '../acciones/equipo';
 import { Marco, estilos } from '../componentes/marco';
 import { BotonNuevaInvitacion } from './boton-nueva-invitacion';
@@ -26,7 +26,7 @@ export default async function Equipo() {
               <p className="font-semibold">{m.nombre}</p>
               <p className="text-sm text-slate-600">{m.activo ? t(`rol.${m.rol}`) : t('dadoDeBaja')}</p>
             </div>
-            {m.rol === 'pm' ? (
+            {m.rol === 'pm' && conModulo(acceso, 'desempeno') ? (
               <Link href={`/equipo/${m.id}`} className="self-start font-semibold text-marca underline">
                 {t('verDesempeno')}
               </Link>

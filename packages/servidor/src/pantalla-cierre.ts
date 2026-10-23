@@ -131,7 +131,11 @@ export async function datosParaCierre(
           nombre: { es: p.es, en: p.en },
           estado: estado as PartidaParaCierre['estado'],
           hito: p.hito_id ? (claves.get(p.hito_id) ?? null) : null,
-          faltaInspeccion: !!p.hito_id && ultima.get(`${p.espacio_id}|${p.hito_id}`) !== 'aprobado',
+          // sin el módulo de calidad no se pide la inspección (D-110)
+          faltaInspeccion:
+            s.modulos.includes('calidad') &&
+            !!p.hito_id &&
+            ultima.get(`${p.espacio_id}|${p.hito_id}`) !== 'aprobado',
         })),
     }))
     .filter((esp) => esp.partidas.length);
@@ -210,7 +214,8 @@ export async function datosParaCierre(
       reciente: reciente.get(t.id) ?? null,
     })),
     ultimoCierre: ultimoCierre?.cuadrilla.length ? ultimoCierre : null,
-    subs: subs.map((x) => ({
+    // sin el módulo de subcontratistas el cierre no pregunta por ellos (D-110)
+    subs: (s.modulos.includes('subcontratistas') ? subs : []).map((x) => ({
       ordenId: x.id,
       folio: x.folio,
       sub: x.sub,

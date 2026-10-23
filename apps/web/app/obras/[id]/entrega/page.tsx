@@ -4,7 +4,7 @@
 import { datosParaEntrega } from '@ijm/servidor';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
-import { comoMiembro, exigirAcceso } from '@/lib/acceso';
+import { comoMiembro, conModulo, exigirAcceso } from '@/lib/acceso';
 import { Marco, estilos } from '../../../componentes/marco';
 import { BotonCorregido, FormularioMedida } from './botones';
 import { FormularioPunch } from './formulario-punch';
@@ -12,6 +12,8 @@ import { FormularioPunch } from './formulario-punch';
 export default async function Entrega({ params }: PageProps<'/obras/[id]/entrega'>) {
   const { id } = await params;
   const acceso = await exigirAcceso();
+  // el punch list es del módulo de calidad (D-110); las medidas, de la base
+  const conPunch = conModulo(acceso, 'calidad');
   if (acceso.yo.rol !== 'pm') redirect('/');
   const r = await comoMiembro((tx) => datosParaEntrega(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();
@@ -28,10 +30,10 @@ export default async function Entrega({ params }: PageProps<'/obras/[id]/entrega
       volver={{ href: '/', texto: t('volver') }}
     >
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
-      {vencidos ? <p className={estilos.error}>{t('vencidos', { n: vencidos })}</p> : null}
-      <FormularioPunch obraId={d.obra.id} />
+      {conPunch && vencidos ? <p className={estilos.error}>{t('vencidos', { n: vencidos })}</p> : null}
+      {conPunch ? <FormularioPunch obraId={d.obra.id} /> : null}
 
-      {d.abiertos.length ? (
+      {conPunch && d.abiertos.length ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-bold text-marca">{t('pendientes', { n: d.abiertos.length })}</h2>
           <ul className="flex flex-col gap-3">
@@ -56,7 +58,7 @@ export default async function Entrega({ params }: PageProps<'/obras/[id]/entrega
         </section>
       ) : null}
 
-      {d.cerrados.length ? (
+      {conPunch && d.cerrados.length ? (
         <section className="flex flex-col gap-2">
           <h2 className="text-lg font-bold text-marca">{t('corregidos', { n: d.cerrados.length })}</h2>
           <ul className={`${estilos.tarjeta} flex flex-col divide-y divide-slate-100 p-0`}>

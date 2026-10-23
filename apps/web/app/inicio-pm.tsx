@@ -1,6 +1,7 @@
 // El inicio del PM (fase 2, paso 3): lo primero que ve al abrir la app en la obra. Arriba lo urgente (los días que
 // le faltó cerrar), luego sus obras, su semana y lo pendiente. Solo muestra; no hay nada que calcular aquí: todo
 // viene de inicioDelPm (packages/servidor), con las reglas de @ijm/core.
+import type { Modulo } from '@ijm/core';
 import type { InicioPm } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
@@ -27,7 +28,9 @@ function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) 
   );
 }
 
-export async function InicioDelPm({ datos }: { datos: InicioPm }) {
+export async function InicioDelPm({ datos, modulos }: { datos: InicioPm; modulos: readonly Modulo[] }) {
+  // lo de cada módulo, solo si la empresa lo tiene (D-110)
+  const con = (m: Modulo) => modulos.includes(m);
   const [t, formato, idioma] = await Promise.all([getTranslations('inicioPm'), getFormatter(), getLocale()]);
   // un día de negocio a mediodía, para que ninguna zona horaria lo mueva de día
   const dia = (d: string, como: keyof typeof FORMATOS = 'corto') =>
@@ -113,7 +116,7 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                 {t('cerrarDia')}
               </Link>
             ) : null}
-            {o.inspeccionesPendientes.length ? (
+            {con('calidad') && o.inspeccionesPendientes.length ? (
               <div className="text-sm text-slate-700">
                 <p className="font-medium">{t('inspecciones')}</p>
                 <ul className="list-disc pl-5">
@@ -135,7 +138,7 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
                 [
                   ['gasto', 'gastoNuevo', 'gasto'],
                   ['aviso', 'avisoNuevo', 'aviso'],
-                  ['calidad', 'calidad', 'calidad'],
+                  ...(con('calidad') ? ([['calidad', 'calidad', 'calidad']] as const) : []),
                   ['bitacora', 'bitacora', 'bitacora'],
                   ['entrega', 'entregaYMedidas', 'entrega'],
                   ['album', 'album', 'fotos'],
@@ -184,7 +187,7 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
         </Seccion>
       ) : null}
 
-      {datos.subsPorLlegar.length ? (
+      {con('subcontratistas') && datos.subsPorLlegar.length ? (
         <Seccion titulo={t('subsPorLlegar')}>
           <p className="text-sm text-slate-600">{t('subsPorLlegarAyuda')}</p>
           <ul className="flex flex-col gap-2">
@@ -205,7 +208,7 @@ export async function InicioDelPm({ datos }: { datos: InicioPm }) {
         </Seccion>
       ) : null}
 
-      {datos.cambios.length ? (
+      {con('cambios') && datos.cambios.length ? (
         <Seccion titulo={t('cambios')}>
           <ul className="flex flex-col gap-2">
             {datos.cambios.map((c) => (

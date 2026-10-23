@@ -4,7 +4,7 @@
 import { avisosAbiertos } from '@ijm/servidor';
 import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, conModulo, exigirDueno } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { ResponderAviso } from './responder-aviso';
 
@@ -61,12 +61,14 @@ export default async function AvisosAbiertos() {
                 ))}
               </ul>
             ) : null}
-            <Link
-              href={`/obras/${a.obra.id}/cambios?aviso=${a.id}`}
-              className={`${estilos.botonSecundario} flex items-center justify-center`}
-            >
-              {t('hacerOrden')}
-            </Link>
+            {conModulo(acceso, 'cambios') ? (
+              <Link
+                href={`/obras/${a.obra.id}/cambios?aviso=${a.id}`}
+                className={`${estilos.botonSecundario} flex items-center justify-center`}
+              >
+                {t('hacerOrden')}
+              </Link>
+            ) : null}
             <ResponderAviso avisoId={a.id} />
           </li>
         ))}

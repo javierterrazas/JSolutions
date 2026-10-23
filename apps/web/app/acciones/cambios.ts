@@ -9,7 +9,7 @@ import {
   type ResultadoOrdenDeCambio,
 } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon, type Resultado } from '@/lib/acceso';
 
 const texto = (f: FormData, campo: string) => String(f.get(campo) ?? '').trim() || null;
 /** "1,250" o "$1250.50" → 1250.5; vacío → null. */
@@ -42,7 +42,7 @@ export async function emitirCambio(
         avisoId: texto(f, 'avisoId'),
         respuestaAviso: texto(f, 'respuestaAviso'),
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('cambios'),
   );
   if (r.ok && r.datos.ok) {
     revalidatePath(`/obras/${obraId}/cambios`);
@@ -59,7 +59,7 @@ export async function editarCambio(
 ): Promise<Resultado<ResultadoOrdenDeCambio>> {
   const r = await comoMiembro(
     (tx) => editarOrdenCambio(tx, { ordenId, ...deLaOrden(f) }),
-    await exigirDueno(),
+    await exigirDuenoCon('cambios'),
   );
   if (r.ok && r.datos.ok) revalidatePath(`/obras/${obraId}/cambios`);
   return r;
@@ -79,7 +79,7 @@ export async function registrarRespuesta(
         nombre: texto(f, 'nombre'),
         comentario: texto(f, 'comentario'),
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('cambios'),
   );
   if (r.ok) {
     revalidatePath(`/obras/${obraId}/cambios`);

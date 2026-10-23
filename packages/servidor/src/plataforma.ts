@@ -4,12 +4,15 @@
 // obras, sus clientes ni su dinero. Aquí también, lo que cada empresa ve de su propia suscripción.
 import {
   type Ciclo,
+  conLoQueNecesitan,
   DIAS_INVITACION,
   type Dia,
   ErrorDeNegocio,
   type EstadoSuscripcion,
   finDeGracia,
   hoyEn,
+  type Modulo,
+  MODULOS,
 } from '@ijm/core';
 import postgres from 'postgres';
 import { z } from 'zod';
@@ -151,7 +154,7 @@ export interface PagoPlataforma {
 export async function empresaDeLaPlataforma(
   tx: Tx,
   entrada: { empresaId: string },
-): Promise<{ empresa: EmpresaDeLaPlataforma; pagos: PagoPlataforma[] } | null> {
+): Promise<{ empresa: EmpresaDeLaPlataforma; pagos: PagoPlataforma[]; modulos: Modulo[] } | null> {
   const { empresaId } = validarEntrada(z.object({ empresaId: uuid }), entrada);
   const empresa = (await empresasDeLaPlataforma(tx)).find((e) => e.id === empresaId);
   if (!empresa) return null;
@@ -169,8 +172,10 @@ export async function empresaDeLaPlataforma(
     select id, monto, to_char(pagado_el, 'YYYY-MM-DD') as pagado_el, metodo, referencia,
            to_char(vencia_el, 'YYYY-MM-DD') as vencia_el, to_char(vence_el, 'YYYY-MM-DD') as vence_el
     from public.plataforma_pagos(${empresaId})`;
+  const [m] = await tx<{ modulos: Modulo[] }[]>`select public.plataforma_modulos(${empresaId}) as modulos`;
   return {
     empresa,
+    modulos: m?.modulos ?? [],
     pagos: pagos.map((p) => ({
       id: p.id,
       monto: Number(p.monto),
@@ -383,3 +388,17 @@ export async function miEmpresaSuspendida(tx: Tx): Promise<string | null> {
  */
 export const esSuscripcionVencida = (e: unknown): boolean =>
   e instanceof postgres.PostgresError && e.code === 'P0001' && e.message === 'suscripcion_vencida';
+
+/**
+ * Los módulos de una empresa (D-110): los que se piden, con lo que necesitan. Solo quien administra. Error:
+ * `empresa_no_encontrada`.
+ */
+export async function guardarModulos(
+  tx: Tx,
+  entrada: { empresaId: string; modulos: readonly string[] },
+): Promise<Modulo[]> {
+  const e = validarEntrada(z.object({ empresaId: uuid, modulos: z.array(z.enum(MODULOS)) }), entrada);
+  const modulos = conLoQueNecesitan(e.modulos);
+  await deLaBase(() => tx`select public.plataforma_guardar_modulos(${e.empresaId}, ${modulos})`);
+  return modulos;
+}

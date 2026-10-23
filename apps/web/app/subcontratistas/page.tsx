@@ -3,14 +3,14 @@
 // órdenes, sin papeles ni dinero.
 import { subcontratistas } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
 import { AgregarSub } from './agregar-sub';
 import { TarjetaSub } from './tarjeta-sub';
 
 export default async function Subcontratistas() {
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('subcontratistas');
   const r = await comoMiembro((tx) => subcontratistas(tx), acceso);
   const t = await getTranslations('subcontratistas');
   const lista = r.ok ? r.datos.subcontratistas : [];

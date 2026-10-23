@@ -14,7 +14,7 @@ import {
   subcontratosDeObra,
 } from '@ijm/servidor';
 import { notFound } from 'next/navigation';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { rutasDeMarca } from '../../../marca/datos';
 import { Expediente } from './expediente';
 
@@ -23,7 +23,7 @@ const PAGINAS_DE_FOTOS = 15;
 
 export default async function ExpedienteDeObra({ params }: PageProps<'/obras/[id]/expediente'>) {
   const { id } = await params;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('posventa');
   const r = await comoMiembro(async (tx) => {
     const seguimiento = await seguimientoDeObra(tx, { obraId: id, todos: true });
     if (!seguimiento) return null;

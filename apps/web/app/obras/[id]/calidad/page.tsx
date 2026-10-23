@@ -4,13 +4,13 @@ import { datosParaCalidad } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { comoMiembro, exigirAcceso } from '@/lib/acceso';
+import { comoMiembro, exigirAccesoCon } from '@/lib/acceso';
 import { Marco, estilos } from '../../../componentes/marco';
 import { PruebaAgua } from './prueba-agua';
 
 export default async function Calidad({ params }: PageProps<'/obras/[id]/calidad'>) {
   const { id } = await params;
-  const acceso = await exigirAcceso();
+  const acceso = await exigirAccesoCon('calidad');
   if (acceso.yo.rol !== 'pm') redirect('/');
   const r = await comoMiembro((tx) => datosParaCalidad(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();

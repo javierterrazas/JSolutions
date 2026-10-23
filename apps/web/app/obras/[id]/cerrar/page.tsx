@@ -5,7 +5,7 @@ import { posventaDeObra, revisionDeCierre } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../../componentes/marco';
 import { FormularioCierreObra } from './formulario-cierre-obra';
@@ -19,7 +19,7 @@ const COLOR = {
 
 export default async function CerrarObra({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('posventa');
   const r = await comoMiembro((tx) => revisionDeCierre(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();
   const c = r.datos;

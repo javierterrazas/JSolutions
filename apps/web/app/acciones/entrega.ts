@@ -3,7 +3,7 @@
 // su foto van en una sola transacción.
 import { agregarPunch, cerrarPunch, registrarFoto, rutaParaFoto, verificarMedida } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirAcceso, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirAcceso, exigirAccesoCon, type Resultado } from '@/lib/acceso';
 import { clienteSupabase } from '@/lib/supabase';
 
 /** Las fotos llegan comprimidas por el teléfono; esto es un tope por si no. */
@@ -42,7 +42,7 @@ export async function anotarPunch(
         await registrarFoto(tx, { refTipo: 'punch', refId: p.punchId, indice: 1, ruta });
       }
     },
-    await exigirAcceso(),
+    await exigirAccesoCon('calidad'),
   );
   if (!r.ok) return r;
   revalidatePath(`/obras/${obraId}/entrega`);

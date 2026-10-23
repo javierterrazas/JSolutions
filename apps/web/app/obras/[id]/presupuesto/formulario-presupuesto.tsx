@@ -46,11 +46,14 @@ export function FormularioPresupuesto({
   espacios,
   margenObjetivo,
   contrato: contratoInicial,
+  conSugerido = true,
 }: {
   obraId: string;
   espacios: readonly Espacio[];
   margenObjetivo: number;
   contrato: number | null;
+  /** El costo sugerido sale del histórico (D-110). */
+  conSugerido?: boolean;
 }) {
   const t = useTranslations('presupuesto');
   const idioma = useLocale();
@@ -210,12 +213,13 @@ export function FormularioPresupuesto({
                   <p className="text-right text-sm">{t('precio', { precio: dinero(precioDe(k)) })}</p>
                   {/* lo que ha costado en obras cerradas, según el tamaño (D-095) */}
                   {(() => {
-                    const s = x.historia
-                      ? costoSugerido(x.historia, {
-                          pies2: e.pies2,
-                          piesLineales: numero(lineales[e.id] ?? ''),
-                        })
-                      : null;
+                    const s =
+                      conSugerido && x.historia
+                        ? costoSugerido(x.historia, {
+                            pies2: e.pies2,
+                            piesLineales: numero(lineales[e.id] ?? ''),
+                          })
+                        : null;
                     if (s === null || !x.historia) return null;
                     return (
                       <p className="flex items-center justify-end gap-2 text-xs text-slate-600">

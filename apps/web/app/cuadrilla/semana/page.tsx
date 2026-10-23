@@ -6,7 +6,7 @@ import { semanaDeLaCuadrilla } from '@ijm/servidor';
 import type { DateTimeFormatOptions } from 'next-intl';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../componentes/marco';
 import { MensajeError } from '../../componentes/mensaje-error';
@@ -14,7 +14,7 @@ import { MensajeError } from '../../componentes/mensaje-error';
 export default async function SemanaCuadrilla({ searchParams }: PageProps<'/cuadrilla/semana'>) {
   const consulta = await searchParams;
   const semana = typeof consulta.semana === 'string' ? consulta.semana : null;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('nomina');
   const r = await comoMiembro((tx) => semanaDeLaCuadrilla(tx, { semana }), acceso);
   const [t, idioma, formato] = await Promise.all([
     getTranslations('semanaCuadrilla'),

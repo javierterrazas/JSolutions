@@ -2,7 +2,7 @@
 // llave del celular (su cookie) dice que es SU celular verificado, y el PIN dice que lo abrió hoy. La base revisa
 // las tres en una sola transacción (estado_dispositivo), y también que el miembro y su empresa sigan activos.
 import 'server-only';
-import { esErrorDeNegocio } from '@ijm/core';
+import { esErrorDeNegocio, type Modulo } from '@ijm/core';
 import {
   enNombreDe,
   esSuscripcionVencida,
@@ -121,4 +121,21 @@ export async function comoMiembro<T>(
     if (esSuscripcionVencida(e)) return { ok: false, codigo: 'suscripcion_vencida' };
     throw e;
   }
+}
+
+/** Si la empresa del miembro tiene el módulo (D-110). */
+export const conModulo = (a: Acceso, m: Modulo): boolean => a.yo.modulos.includes(m);
+
+/** Exige un miembro (cualquiera) de una empresa con el módulo; sin él, al inicio (D-110). */
+export async function exigirAccesoCon(m: Modulo): Promise<Acceso> {
+  const a = await exigirAcceso();
+  if (!conModulo(a, m)) redirect('/');
+  return a;
+}
+
+/** Exige al dueño o administrador de una empresa con el módulo; sin él, al inicio (D-110). */
+export async function exigirDuenoCon(m: Modulo): Promise<Acceso> {
+  const a = await exigirDueno();
+  if (!conModulo(a, m)) redirect('/');
+  return a;
 }

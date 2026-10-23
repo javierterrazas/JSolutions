@@ -4,7 +4,7 @@
 import type { AvisoPapeles } from '@ijm/core';
 import { cambiarActivoSub, guardarSubcontratista } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon, type Resultado } from '@/lib/acceso';
 
 const texto = (f: FormData, campo: string) => String(f.get(campo) ?? '').trim() || null;
 
@@ -27,7 +27,7 @@ export async function guardarSub(
         licenciaVence: texto(f, 'licenciaVence'),
         w9: f.get('w9') === 'on',
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('subcontratistas'),
   );
   if (!r.ok) return r;
   revalidatePath('/subcontratistas');
@@ -39,7 +39,10 @@ export async function alternarSub(
   activo: boolean,
   _previo: Resultado<{ abiertas: number }> | null,
 ): Promise<Resultado<{ abiertas: number }>> {
-  const r = await comoMiembro((tx) => cambiarActivoSub(tx, { subId, activo }), await exigirDueno());
+  const r = await comoMiembro(
+    (tx) => cambiarActivoSub(tx, { subId, activo }),
+    await exigirDuenoCon('subcontratistas'),
+  );
   if (r.ok) revalidatePath('/subcontratistas');
   return r;
 }

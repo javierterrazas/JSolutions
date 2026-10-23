@@ -4,14 +4,14 @@
 import { datosParaCompra } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { Marco, estilos } from '../../../componentes/marco';
 import { GastoCapturado } from '../gasto/gasto-capturado';
 import { FormularioCompra } from './formulario-compra';
 
 export default async function Compra({ params }: PageProps<'/obras/[id]/compra'>) {
   const { id } = await params;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('dinero');
   const r = await comoMiembro((tx) => datosParaCompra(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();
   const d = r.datos;

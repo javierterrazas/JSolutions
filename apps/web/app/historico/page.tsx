@@ -7,7 +7,7 @@ import { historicoDeObras } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
@@ -46,7 +46,7 @@ function Cifra({ titulo, valor, nota }: { titulo: string; valor: string; nota?: 
 export default async function Historico({ searchParams }: PageProps<'/historico'>) {
   const { orden: pedido } = await searchParams;
   const orden: CriterioHistorico = CRITERIOS_HISTORICO.find((c) => c === pedido) ?? 'ganancia_dia';
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('historico');
   const r = await comoMiembro((tx) => historicoDeObras(tx), acceso);
   const [t, idioma, formato] = await Promise.all([getTranslations('historico'), getLocale(), getFormatter()]);
   const volver = { href: '/', texto: t('volver') };

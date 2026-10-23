@@ -1852,3 +1852,24 @@ el encabezado; el análisis de una obra en dos columnas; las horas de la semana 
   la hora de creación del enlace del cliente, que cambia con cada carga de datos).
 - La computadora se da de alta como un celular más: Managers → tu nombre → "Nueva invitación", abrirla en el
   navegador y elegir el PIN. Las pantallas del PM no cambian.
+
+## D-110 · Los módulos por empresa
+
+**Lo pidió el dueño:** entregar la app con funciones sencillas e ir agregando partes "con un botón". Quien administra
+la plataforma, en Plataforma → la empresa → **Módulos**, le prende o apaga a cada empresa partes de la app, una por
+una o con el plan de un toque (Básico: solo la base; Pro: dinero, portal, órdenes de cambio, subcontratistas, calidad y
+nómina; Empresa: todo).
+- **La base siempre está:** obras, cierre del día (con su cuadrilla y salarios), gastos, avisos, fotos, bitácora,
+  managers y feriados. **Los módulos:** presupuesto y dinero; portal del cliente; órdenes de cambio; subcontratistas;
+  calidad; nómina (las horas de la semana y lo que cuesta la cuadrilla); indicadores; histórico y análisis; desempeño
+  de managers; cierre, posventa y garantías; marca propia.
+- **Lo que necesitan** (`REQUIERE` en core): órdenes de cambio, el portal y el dinero; subcontratistas, histórico y
+  posventa, el dinero. Prender uno prende lo que necesita; apagar uno apaga lo que depende de él.
+- **Apagar no borra nada:** sus pantallas se esconden y se cierran (sin el módulo, la pantalla manda al inicio y la
+  acción no corre: `exigirDuenoCon` / `exigirAccesoCon`), y sus datos se quedan para cuando se prenda otra vez.
+- **Reglas entre módulos:** sin calidad, una partida se termina sin pedir su inspección y no hay punch list; sin
+  subcontratistas, el cierre no pregunta si llegó el sub; sin portal, el enlace del cliente no abre nada; sin órdenes
+  de cambio, el portal no las muestra; sin marca, la app usa su logo y color (lo que subió la empresa se queda).
+- **Dónde vive:** `empresas.modulos` (migración 20261103000100), que la sesión lee de `empresa_actual_datos`. Solo
+  quien administra la plataforma la cambia (`plataforma_guardar_modulos`); un disparador impide que el dueño se prenda
+  módulos solo. Las empresas que ya existían quedaron con todo prendido.

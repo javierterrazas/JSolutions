@@ -243,7 +243,8 @@
     "falta_celular": "This owner signs in with their cell: it cannot be left empty.",
     "faltan_datos": "The company or owner name is missing.",
     "orden_cambiada": "The order changed while you were viewing it: review the new version and answer again.",
-    "feriado_repetido": "There is already a holiday on that day."
+    "feriado_repetido": "There is already a holiday on that day.",
+    "modulo_no_incluido": "Your plan does not include this part of the app."
   },
   "obras": {
     "titulo": "Jobs",
@@ -941,7 +942,9 @@
     "cerrarObra": "Close the job",
     "verCierre": "See the job closing",
     "retrabajos": "Rework and warranty",
-    "expediente": "Job file (PDF)"
+    "expediente": "Job file (PDF)",
+    "cuadrillaTotalSinCosto": "{horas, plural, one {# hour} other {# hours}} and {dias, plural, one {# day} other {# days}}",
+    "trabajoSinCosto": "{nombre} {cantidad}"
   },
   "datosObra": {
     "titulo": "Job details",
@@ -1934,5 +1937,44 @@
     "nombreEn": "Name in English (optional)",
     "agregado": "Holiday added.",
     "guardar": "Add"
+  },
+  "modulos": {
+    "titulo": "Modules",
+    "ayuda": "What the company sees of the app. Turning one off deletes nothing: its data stays and comes back if you turn it on.",
+    "base": "Always included: jobs, daily close, crew in the close, expenses, alerts, photos, job log, managers and holidays.",
+    "planes": {
+      "basico": "Basic plan",
+      "pro": "Pro plan",
+      "empresa": "Business plan (all)"
+    },
+    "necesita": "Needs: {modulos}",
+    "guardar": "Save modules",
+    "guardados": "Modules saved.",
+    "nombres": {
+      "dinero": "Budget and money",
+      "portal": "Client portal",
+      "cambios": "Change orders",
+      "subcontratistas": "Subcontractors",
+      "calidad": "Quality",
+      "nomina": "Payroll",
+      "indicadores": "Indicators",
+      "historico": "History and analysis",
+      "desempeno": "Manager performance",
+      "posventa": "Close-out, after-delivery and warranty",
+      "marca": "Own branding"
+    },
+    "descripciones": {
+      "dinero": "Budget by stage with margin, office purchases, payments and money in the job view.",
+      "portal": "The client link to see their job, their photos and their payments.",
+      "cambios": "Change orders signed by the client, also from the PM alerts.",
+      "subcontratistas": "Their papers, work orders, payments and settling; the close asks if they showed up.",
+      "calidad": "Inspections, flood test and punch list; without it, items finish without inspection.",
+      "nomina": "The crew hours of the week and what they cost.",
+      "indicadores": "The 19 indicators and the six for Monday.",
+      "historico": "Which jobs pay off, where the margin went and the suggested cost when quoting.",
+      "desempeno": "Each manager’s performance.",
+      "posventa": "Closing the job, rework, warranty, reviews and the PDF job file.",
+      "marca": "The company logo and color in the app and in the portal."
+    }
   }
 }

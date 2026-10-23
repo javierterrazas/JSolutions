@@ -2,7 +2,7 @@
 // La marca de la empresa (D-078): el dueño sube su logo, elige su color y el fondo del ícono.
 import { guardarMarca, LOGO_MAXIMO } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon, type Resultado } from '@/lib/acceso';
 
 export async function guardarMarcaEmpresa(
   _previo: Resultado<{ version: number }> | null,
@@ -21,7 +21,7 @@ export async function guardarMarcaEmpresa(
         color: String(f.get('color') ?? ''),
         logo,
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('marca'),
   );
   // el logo y el nombre salen en todas las pantallas
   if (r.ok) revalidatePath('/', 'layout');

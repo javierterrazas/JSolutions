@@ -6,7 +6,7 @@ import { albumDeObra, albumEnGarantia, type RegistroDelAlbum, TIPOS_FOTO_CLIENTE
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { comoMiembro, exigirAcceso } from '@/lib/acceso';
+import { comoMiembro, conModulo, exigirAcceso } from '@/lib/acceso';
 import { marcarFoto } from '../../../acciones/portal';
 import { Marco, estilos } from '../../../componentes/marco';
 
@@ -85,7 +85,7 @@ export default async function Album({ params, searchParams }: PageProps<'/obras/
                         className="aspect-square w-full rounded-lg bg-slate-100 object-cover"
                       />
                     </a>
-                    {!terminada && TIPOS_FOTO_CLIENTE.includes(reg.tipo) ? (
+                    {!terminada && conModulo(acceso, 'portal') && TIPOS_FOTO_CLIENTE.includes(reg.tipo) ? (
                       <form action={marcarFoto.bind(null, a.obra.id, f, !reg.paraCliente.includes(f))}>
                         <button
                           type="submit"

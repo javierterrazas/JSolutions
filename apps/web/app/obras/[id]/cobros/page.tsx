@@ -4,7 +4,7 @@
 import { cobrosDeObra } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../../componentes/marco';
 import { CobroRegistrado } from './cobro-registrado';
@@ -12,7 +12,7 @@ import { FormularioCobro } from './formulario-cobro';
 
 export default async function Cobros({ params }: PageProps<'/obras/[id]/cobros'>) {
   const { id } = await params;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('dinero');
   const r = await comoMiembro((tx) => cobrosDeObra(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();
   const c = r.datos;

@@ -10,6 +10,7 @@ import { exigirPlataforma } from '@/lib/plataforma';
 import { Marco, estilos } from '../../componentes/marco';
 import { MensajeError } from '../../componentes/mensaje-error';
 import { COLOR_ESTADO } from '../estados';
+import { ModulosDeLaEmpresa } from './modulos';
 import {
   FormularioEmpresa,
   FormularioPago,
@@ -92,6 +93,8 @@ export default async function CuentaDeEmpresa({ params }: { params: Promise<{ em
         valores={{ plan: e.plan, precio: e.precio, ciclo: e.ciclo, enPrueba: e.enPrueba, venceEl: e.venceEl }}
         notas={e.notas ?? ''}
       />
+
+      <ModulosDeLaEmpresa empresaId={e.id} modulos={r.datos.modulos} />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-xl font-bold text-marca">{t('pagos')}</h2>
