@@ -42,7 +42,24 @@
     "invalidaTitulo": "Esta invitación ya no sirve",
     "invalidaTexto": "Pudo usarse ya, vencer (duran 7 días) o anularse. Pide una nueva al administrador.",
     "yaTieneDueno": "Este celular ya tiene acceso como {nombre}. Un celular es de una sola persona: si continúas, {nombre} ya no podrá entrar aquí y necesitará una invitación nueva. Si es otra persona, ábrela en su propio celular.",
-    "botonReemplazar": "Continuar de todos modos"
+    "botonReemplazar": "Continuar de todos modos",
+    "dondeAbrir": "Ábrela en el navegador donde vas a usar la app (Safari o Chrome), no dentro de WhatsApp: toca los tres puntos y elige \"Abrir en el navegador\". Si ya instalaste la app en la pantalla de inicio del iPhone, ábrela y pega ahí este enlace.",
+    "verificando": "Verificando…",
+    "probarEntrar": "Entrar a la app",
+    "motivos": {
+      "usada": {
+        "titulo": "Esta invitación ya se usó",
+        "texto": "Ya se abrió en otro lado. Lo más común: se abrió primero dentro de WhatsApp y luego en Safari, Chrome o la app instalada; cada uno guarda su acceso aparte.\nEntra desde donde la abriste la primera vez, o pide una invitación nueva al administrador."
+      },
+      "anulada": {
+        "titulo": "Hay una invitación más nueva",
+        "texto": "Después de esta te mandaron otra, y la anterior dejó de servir. Abre el último enlace que te llegó."
+      },
+      "vencida": {
+        "titulo": "Esta invitación venció",
+        "texto": "Las invitaciones duran 7 días. Pide una nueva al administrador."
+      }
+    }
   },
   "pin": {
     "nuevoTitulo": "Elige tu PIN",

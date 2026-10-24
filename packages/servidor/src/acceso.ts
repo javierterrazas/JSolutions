@@ -167,6 +167,25 @@ export interface Llave {
 }
 const EntradaLlave = z.object({ dispositivoId: uuid, secreto: z.string().min(20).max(200) });
 
+/**
+ * Por qué una invitación no se canjeó (D-115): `tuya` si ya se canjeó justo con esta llave (este navegador: se entra
+ * a la app), `usada` si se canjeó en otro lado, `anulada` si hay una más nueva, `vencida`, `invalida`; `vigente` si
+ * todavía se puede canjear. Sin sesión, como el canje.
+ */
+export type EstadoInvitacion = 'tuya' | 'usada' | 'anulada' | 'vencida' | 'invalida' | 'vigente';
+
+export async function estadoDeInvitacion(
+  tx: Tx,
+  entrada: { token: string; llave: Llave | null },
+): Promise<EstadoInvitacion> {
+  const { token } = validarEntrada(EntradaCanje.pick({ token: true }), { token: entrada.token });
+  // una cookie que no es una llave cuenta como ninguna
+  const llave = EntradaLlave.safeParse(entrada.llave).data ?? null;
+  const [r] = await tx<{ estado: EstadoInvitacion }[]>`
+    select public.estado_invitacion(${token}, ${llave?.dispositivoId ?? null}, ${llave?.secreto ?? null}) as estado`;
+  return r!.estado;
+}
+
 /** Anota la sesión de Auth que se abrió en el celular, para cerrarla si se revoca. Ya con la identidad del miembro. */
 export async function fijarSesionDispositivo(tx: Tx, entrada: Llave & { sesionId: string }): Promise<void> {
   const { dispositivoId, secreto, sesionId } = validarEntrada(

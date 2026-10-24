@@ -39,6 +39,17 @@ test('el dueño da de alta a un manager con su celular y el manager entra con su
   await expect(
     telefono.getByRole('heading', { name: es.inicio.hola.replace('{nombre}', 'Mario Pérez') }),
   ).toBeVisible();
+  // volver a abrir el enlace en el mismo navegador lleva a la app; en otro (dentro de WhatsApp y luego Safari), dice que
+  // ya se usó y por qué (D-115)
+  await telefono.goto(enlace);
+  await expect(
+    telefono.getByRole('heading', { name: es.inicio.hola.replace('{nombre}', 'Mario Pérez') }),
+  ).toBeVisible();
+  const otroNavegador = await (await otroCelular(browser)).newPage();
+  await otroNavegador.goto(enlace);
+  await expect(
+    otroNavegador.getByRole('heading', { name: es.invitacion.motivos.usada.titulo }),
+  ).toBeVisible();
   await suyo.close();
 });
 
