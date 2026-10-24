@@ -250,7 +250,9 @@
     "orden_cambiada": "La orden cambió mientras la veías: revisa la nueva versión y vuelve a responder.",
     "feriado_repetido": "Ya hay un feriado ese día.",
     "modulo_no_incluido": "Tu plan no incluye esta parte de la app.",
-    "solo_el_dueno": "Eso solo lo puede hacer el dueño de la empresa."
+    "solo_el_dueno": "Eso solo lo puede hacer el dueño de la empresa.",
+    "demasiadas_llaves": "Ya tienes 10 llaves: quita alguna antes de crear otra.",
+    "llave_invalida": "Esa llave ya no existe."
   },
   "obras": {
     "titulo": "Obras",
@@ -1401,7 +1403,8 @@
     "guardando": "Guardando…",
     "guardado": "Guardado.",
     "instalarAyuda": "Si alguien ya instaló la app, para ver el ícono nuevo: en iPhone, quítala de la pantalla de inicio y vuelve a agregarla; en Android se actualiza sola, aunque puede tardar.",
-    "feriados": "Feriados"
+    "feriados": "Feriados",
+    "asistente": "Conectar un asistente (IA)"
   },
   "suscripcion": {
     "prueba": "Estás en el periodo de prueba hasta el {dia}.",
@@ -1975,7 +1978,8 @@
       "historico": "Histórico y análisis",
       "desempeno": "Desempeño de managers",
       "posventa": "Cierre, posventa y garantías",
-      "marca": "Marca propia"
+      "marca": "Marca propia",
+      "asistente": "Asistente de IA"
     },
     "descripciones": {
       "dinero": "Presupuesto por etapa con margen, compras de la oficina, cobros y el dinero en el seguimiento.",
@@ -1988,7 +1992,49 @@
       "historico": "Qué obras convienen, dónde se fue el margen y el costo sugerido al cotizar.",
       "desempeno": "El desempeño de cada manager.",
       "posventa": "Cerrar la obra, retrabajos, garantías, reseñas y el expediente en PDF.",
-      "marca": "El logo y el color de la empresa en la app y en el portal."
+      "marca": "El logo y el color de la empresa en la app y en el portal.",
+      "asistente": "El dueño conecta su asistente (como Claude) para analizar los datos de la empresa. Solo lectura."
     }
+  },
+  "asistente": {
+    "titulo": "Conectar un asistente",
+    "volver": "Volver a Mi empresa",
+    "ayuda": "Conecta tu asistente de inteligencia artificial (como Claude) a los datos de tu empresa y pregúntale lo que quieras: en qué meses vendes más, en qué etapa te pasas del presupuesto, qué PM se atrasa más. Solo puede consultar: no cambia nada.",
+    "comoTitulo": "Cómo conectarlo a Claude",
+    "paso1": "Crea una llave aquí abajo y copia el enlace.",
+    "paso2": "En Claude (claude.ai o la app de la computadora): Configuración → Conectores → Agregar conector personalizado.",
+    "paso3": "Ponle de nombre J Solutions, pega el enlace y guarda.",
+    "paso4": "En una conversación, prende el conector J Solutions y pregunta. En el celular también aparece.",
+    "seguridad": "Quien tenga el enlace puede consultar los datos de tu empresa (nunca cambiarlos). No lo compartas; si se pierde, quita la llave y crea otra.",
+    "nueva": "Llave nueva",
+    "nombre": "Nombre",
+    "nombreAyuda": "Para reconocerla, por ejemplo: Claude de la oficina.",
+    "crear": "Crear llave",
+    "enlaceTitulo": "El enlace de «{nombre}»",
+    "enlaceUnaVez": "Cópialo ahora: por seguridad no se vuelve a mostrar.",
+    "copiar": "Copiar enlace",
+    "copiado": "Copiado",
+    "llaves": "Tus llaves",
+    "sinLlaves": "Todavía no hay llaves.",
+    "creada": "Creada el {fecha}",
+    "usada": "último uso {fecha}",
+    "sinUso": "sin usar todavía",
+    "consultas": "{n, plural, =0 {Sin consultas} one {# consulta} other {# consultas}}",
+    "quitar": "Quitar llave",
+    "quitadas": "Quitadas: {nombres}",
+    "ultimasConsultas": "Últimas consultas",
+    "herramientas": {
+      "empresa": "La empresa",
+      "obras": "Obras",
+      "etapas_de_obras": "Etapas de las obras",
+      "seguimiento_de_obra": "Seguimiento de una obra",
+      "analisis_de_obra_cerrada": "Análisis de una obra cerrada",
+      "historico": "Histórico",
+      "indicadores": "Indicadores",
+      "desempeno_de_managers": "Desempeño de managers",
+      "horas_de_la_cuadrilla": "Horas de la cuadrilla",
+      "pendientes": "Pendientes"
+    },
+    "inicioLlave": "{inicio}…"
   }
 }

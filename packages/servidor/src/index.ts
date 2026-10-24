@@ -44,3 +44,5 @@ export * from './importar/xlsx';
 export * from './importar/libro';
 export * from './importar/plantilla';
 export * from './importar/escribir-xlsx';
+export * from './asistente';
+export * from './asistente-mcp';

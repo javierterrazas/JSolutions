@@ -14,6 +14,8 @@ export const MODULOS = [
   'desempeno',
   'posventa',
   'marca',
+  // el asistente de IA del dueño, por MCP (D-114)
+  'asistente',
 ] as const;
 export type Modulo = (typeof MODULOS)[number];
 
@@ -26,6 +28,8 @@ export const REQUIERE: Readonly<Partial<Record<Modulo, readonly Modulo[]>>> = {
   // el histórico y el cierre de la obra comparan el costo real con el presupuesto
   historico: ['dinero'],
   posventa: ['dinero'],
+  // lo que el asistente analiza es sobre todo dinero: ventas, costos y márgenes
+  asistente: ['dinero'],
 };
 
 /** Los planes de la plataforma (D-080) y lo que prenden de un toque. */

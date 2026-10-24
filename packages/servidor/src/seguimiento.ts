@@ -733,6 +733,43 @@ export async function resumenDeObras(tx: Tx, ahora = new Date()): Promise<Map<st
   );
 }
 
+export interface NumerosDeObra {
+  readonly id: string;
+  readonly avance: number;
+  readonly entregaComprometida: Dia;
+  readonly entregaPrevista: Dia | null;
+  readonly atraso: number;
+  readonly presupuesto: Omit<SeguimientoObra['presupuesto'], 'porEtapa'> & {
+    readonly porEtapa: readonly (EtapaDelSeguimiento & { readonly espacioId: string })[];
+  };
+}
+
+/**
+ * Los números de cada obra de la empresa, con las mismas reglas que el seguimiento: avance, plazo y presupuesto
+ * contra lo gastado por etapa. Para el asistente (D-114), que los cruza entre obras. Solo el dueño o el administrador.
+ */
+export async function numerosDeLasObras(tx: Tx, ahora = new Date()): Promise<NumerosDeObra[]> {
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
+  const ids = (await tx<{ id: string }[]>`select id from obras order by creado_en`).map((o) => o.id);
+  if (!ids.length) return [];
+  const l = await leerObras(tx, s, ids);
+  return ids.map((id) => {
+    const c = calcular(l, id);
+    return {
+      id,
+      avance: c.av.pct,
+      entregaComprometida: c.entregaComprometida,
+      entregaPrevista: c.entregaPrevista,
+      atraso: c.atraso,
+      presupuesto: {
+        ...c.presupuesto,
+        porEtapa: c.presupuesto.porEtapa.map((x, i) => ({ ...x, espacioId: c.costos[i]!.espacioId })),
+      },
+    };
+  });
+}
+
 /**
  * Lo que el cierre de una obra (D-085) necesita del seguimiento: lo leído de la base y sus costos por etapa, con las
  * mismas reglas. Solo el dueño o el administrador.

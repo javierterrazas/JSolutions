@@ -132,3 +132,5 @@ igual.
   servir.
 - **Tu logo y tu color en la app:** Mi empresa.
 - **Un feriado propio o uno que sí se trabaja:** Mi empresa → Feriados.
+- **Preguntarle a tu asistente de IA (Claude) por tus datos** (si tu plan lo incluye; solo el dueño): Mi empresa →
+  **Conectar un asistente**, crea una llave y sigue los pasos. Ver la guía `GUIA_ASISTENTE.md`.
