@@ -4,13 +4,17 @@ import { equipo } from '@ijm/servidor';
 import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { comoMiembro, conModulo, exigirDueno } from '@/lib/acceso';
-import { cambiarActivo, quitarCelular } from '../acciones/equipo';
+import { cambiarActivo, cambiarElRol, quitarCelular } from '../acciones/equipo';
 import { Marco, estilos } from '../componentes/marco';
 import { BotonNuevaInvitacion } from './boton-nueva-invitacion';
 import { FormularioInvitar } from './formulario-invitar';
 
 export default async function Equipo() {
   const acceso = await exigirDueno();
+  // el dueño invita administradores y cambia roles; un administrador maneja a los PMs (D-112)
+  const esDueno = acceso.yo.rol === 'dueno';
+  const loManeja = (m: { rol: string; id: string }) =>
+    esDueno || m.rol === 'pm' || m.id === acceso.yo.miembroId;
   const r = await comoMiembro((tx) => equipo(tx), acceso);
   const miembros = r.ok ? r.datos : [];
   const [t, formato] = await Promise.all([getTranslations('equipo'), getFormatter()]);
@@ -18,7 +22,7 @@ export default async function Equipo() {
 
   return (
     <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
-      <FormularioInvitar />
+      <FormularioInvitar conAdministrador={esDueno} />
       <ul className="flex flex-col gap-3">
         {miembros.map((m) => (
           <li key={m.id} className={`${estilos.tarjeta} flex flex-col gap-2 ${m.activo ? '' : 'opacity-60'}`}>
@@ -47,7 +51,7 @@ export default async function Equipo() {
                         ? t('celular', { nombre: d.nombre, fecha: fecha(d.ultimoUso) })
                         : t('celularSinUso', { nombre: d.nombre, fecha: fecha(d.verificadoEn) })}
                     </span>
-                    {d.id !== acceso.llave.dispositivoId ? (
+                    {d.id !== acceso.llave.dispositivoId && loManeja(m) ? (
                       <form action={quitarCelular.bind(null, d.id)}>
                         <button type="submit" className="min-h-11 px-2 font-medium text-red-700">
                           {t('quitar')}
@@ -63,8 +67,17 @@ export default async function Equipo() {
                 {t('pendiente', { fecha: fecha(m.invitacion.expira) })}
               </p>
             ) : null}
-            {m.activo ? <BotonNuevaInvitacion miembro={{ id: m.id, nombre: m.nombre }} /> : null}
-            {m.rol !== 'dueno' && m.id !== acceso.yo.miembroId ? (
+            {m.activo && loManeja(m) ? (
+              <BotonNuevaInvitacion miembro={{ id: m.id, nombre: m.nombre }} />
+            ) : null}
+            {esDueno && m.activo && m.rol !== 'dueno' ? (
+              <form action={cambiarElRol.bind(null, m.id, m.rol === 'pm' ? 'admin' : 'pm')}>
+                <button type="submit" className={`${estilos.botonSecundario} w-full`}>
+                  {t(m.rol === 'pm' ? 'hacerAdministrador' : 'hacerPm')}
+                </button>
+              </form>
+            ) : null}
+            {m.rol !== 'dueno' && m.id !== acceso.yo.miembroId && loManeja(m) ? (
               <form action={cambiarActivo.bind(null, m.id, !m.activo)}>
                 <button type="submit" className={`${estilos.botonSecundario} w-full`}>
                   {m.activo ? t('darDeBaja') : t('reactivar')}

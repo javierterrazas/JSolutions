@@ -41,3 +41,29 @@ test('el dueño da de alta a un manager con su celular y el manager entra con su
   ).toBeVisible();
   await suyo.close();
 });
+
+test('el dueño invita a un administrador y cambia a un PM a administrador y de regreso (D-112)', async ({
+  page,
+}) => {
+  const digitos = `556${String(Date.now()).slice(-7)}`;
+  await entrar(page, 'dueno');
+  await page.goto('/equipo');
+  await expect(page.getByRole('heading', { level: 2, name: es.equipo.invitarAlguien })).toBeVisible();
+  await page.getByLabel(es.equipo.nombre).fill('Ana Oficina');
+  await page.getByLabel(es.equipo.celular).fill(digitos);
+  await page.getByRole('combobox', { name: es.equipo.rolInvitar }).selectOption('admin');
+  await page.getByRole('button', { name: es.equipo.invitar }).click();
+  await expect(page.getByRole('textbox', { name: es.equipo.copiar })).toBeVisible();
+
+  await page.reload();
+  const ana = page.getByRole('listitem').filter({ hasText: 'Ana Oficina' });
+  await expect(ana).toContainText(es.equipo.rol.admin);
+
+  // Luis, de PM a administrador y de regreso
+  // la tarjeta de Luis, no la de su celular (su nombre también sale ahí)
+  const luis = page.getByRole('listitem').filter({ has: page.getByText('Luis Ramírez', { exact: true }) });
+  await luis.getByRole('button', { name: es.equipo.hacerAdministrador }).click();
+  await expect(luis).toContainText(es.equipo.rol.admin);
+  await luis.getByRole('button', { name: es.equipo.hacerPm }).click();
+  await expect(luis).toContainText(es.equipo.rol.pm);
+});

@@ -33,6 +33,7 @@ const DE_LA_BASE = new Set([
   'dispositivo_invalido',
   'pin_ya_fijado',
   'pin_invalido',
+  'solo_el_dueno',
 ]);
 
 async function enLaBase<T>(fn: () => Promise<T>): Promise<T> {
@@ -60,6 +61,8 @@ const EntradaInvitar = z.object({
   /** Opcional: para avisos. No es con lo que entra. */
   correo: z.union([z.literal(''), z.string().trim().toLowerCase().pipe(z.email())]).nullish(),
   idioma: z.enum(['es', 'en']).default('es'),
+  /** PM, o administrador (solo lo invita el dueño, D-112). */
+  rol: z.enum(['pm', 'admin']).default('pm'),
 });
 export type EntradaInvitar = z.input<typeof EntradaInvitar>;
 
@@ -74,8 +77,9 @@ export function cuentaDeCelular(texto: string): { celular: string; correo: strin
 }
 
 /**
- * El dueño da de alta a un PM con su celular y lo invita (D-083). Un celular que ya es de un miembro, de cualquier
- * empresa, no se invita: `celular_ya_registrado`.
+ * El dueño da de alta a un PM con su celular y lo invita (D-083); también a un administrador (D-112), y eso solo el
+ * dueño: `solo_el_dueno`. Un celular que ya es de un miembro, de cualquier empresa, no se invita:
+ * `celular_ya_registrado`.
  */
 export async function invitarPm(
   tx: Tx,
@@ -83,8 +87,11 @@ export async function invitarPm(
   usuarioDeCorreo: UsuarioDeCorreo,
   ahora = new Date(),
 ): Promise<Invitacion> {
-  exigirDueno(await leerSesion(tx, ahora));
+  const s = await leerSesion(tx, ahora);
+  exigirDueno(s);
   const e = validarEntrada(EntradaInvitar, entrada);
+  // antes de crear el usuario de Auth: un administrador no invita administradores
+  if (e.rol === 'admin' && s.rol !== 'dueno') throw new ErrorDeNegocio('solo_el_dueno');
   const cuenta = cuentaDeCelular(e.celular);
   const userId = await usuarioDeCorreo(cuenta.correo);
   const token = nuevoSecreto();
@@ -92,8 +99,8 @@ export async function invitarPm(
   try {
     const [r] = await enLaBase(
       () => tx<{ id: string }[]>`
-        select public.invitar_pm(${userId}, ${e.nombre}, ${e.idioma}, ${token}, ${expira}, ${cuenta.celular},
-                                 ${e.correo || null}) as id`,
+        select public.invitar_miembro(${userId}, ${e.nombre}, ${e.idioma}, ${token}, ${expira}, ${cuenta.celular},
+                                      ${e.correo || null}, ${e.rol}) as id`,
     );
     return { miembroId: r!.id, token, expira };
   } catch (err) {
@@ -223,7 +230,7 @@ export async function cerrarDispositivo(tx: Tx, entrada: Llave): Promise<void> {
   await tx`select public.cerrar_dispositivo(${dispositivoId}, ${secreto})`;
 }
 
-/** Quitar un celular: el dueño, cualquiera de su empresa; cada miembro, los suyos. */
+/** Quitar un celular: cada miembro, los suyos; el dueño, cualquiera; un administrador, los de los PMs (D-112). */
 export async function revocarDispositivo(tx: Tx, entrada: { dispositivoId: string }): Promise<void> {
   const { dispositivoId } = validarEntrada(z.object({ dispositivoId: uuid }), entrada);
   await enLaBase(() => tx`select public.revocar_dispositivo(${dispositivoId})`);
@@ -238,6 +245,21 @@ export async function cambiarActivo(
   exigirDueno(await leerSesion(tx, ahora));
   const { miembroId, activo } = validarEntrada(z.object({ miembroId: uuid, activo: z.boolean() }), entrada);
   await enLaBase(() => tx`select public.cambiar_activo(${miembroId}, ${activo})`);
+}
+
+/**
+ * Cambiar a alguien de PM a administrador o al revés (D-112). Solo el dueño; nunca a sí mismo. Errores:
+ * `solo_el_dueno`, `miembro_invalido`.
+ */
+export async function cambiarRol(
+  tx: Tx,
+  entrada: { miembroId: string; rol: 'pm' | 'admin' },
+  ahora = new Date(),
+): Promise<void> {
+  const s = await leerSesion(tx, ahora);
+  const e = validarEntrada(z.object({ miembroId: uuid, rol: z.enum(['pm', 'admin']) }), entrada);
+  if (s.rol !== 'dueno') throw new ErrorDeNegocio('solo_el_dueno');
+  await enLaBase(() => tx`select public.cambiar_rol(${e.miembroId}, ${e.rol})`);
 }
 
 /** El idioma del miembro de la sesión: lo sigue en cualquier celular. */

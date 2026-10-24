@@ -112,7 +112,11 @@ igual.
 5. **"Expediente en PDF"** si quieres guardar todo lo de la obra.
 
 **Gente**
-- **PM nuevo:** Managers → **Invitar a un PM** (nombre, celular, idioma) → Compartir por WhatsApp. Vale 7 días.
+- **PM nuevo:** Managers → **Invitar a alguien** (nombre, celular, idioma; rol PM) → Compartir por WhatsApp. Vale 7
+  días.
+- **Administrador nuevo** (alguien de la oficina que hace todo lo tuyo: obras, presupuestos, dinero): solo el dueño;
+  Managers → **Invitar a alguien** con rol **Administrador**, o en la tarjeta de un PM, **"Hacerlo administrador"**.
+  Un administrador no puede invitar administradores, cambiar roles ni quitarle el acceso al dueño.
 - **PM cambió de celular, olvidó o bloqueó su PIN:** Managers → **Nueva invitación**.
 - **PM que se va:** Managers → **Dar de baja**. Antes, cambia el PM de sus obras (seguimiento → corregir datos).
 - **Trabajador nuevo:** Cuadrilla → **Agregar trabajador**, con su salario.

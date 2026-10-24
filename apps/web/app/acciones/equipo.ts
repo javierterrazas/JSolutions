@@ -2,6 +2,7 @@
 // El equipo del dueño: invitar a un PM, una invitación nueva, quitar un celular, dar de baja y reactivar.
 import {
   cambiarActivo as cambiarActivoEnLaBase,
+  cambiarRol,
   invitarPm,
   reinvitar,
   revocarDispositivo,
@@ -30,6 +31,7 @@ export async function invitar(
     celular: String(formulario.get('celular') ?? ''),
     correo: String(formulario.get('correo') ?? ''),
     idioma: String(formulario.get('idioma') ?? 'es') as 'es' | 'en',
+    rol: (formulario.get('rol') === 'admin' ? 'admin' : 'pm') as 'pm' | 'admin',
   };
   const r = await comoMiembro((tx) => invitarPm(tx, entrada, auth().usuarioDeCorreo), await exigirDueno());
   if (!r.ok) return r;
@@ -54,5 +56,11 @@ export async function quitarCelular(dispositivoId: string): Promise<void> {
 
 export async function cambiarActivo(miembroId: string, activo: boolean): Promise<void> {
   await comoMiembro((tx) => cambiarActivoEnLaBase(tx, { miembroId, activo }), await exigirDueno());
+  revalidatePath('/equipo');
+}
+
+/** Cambiar a alguien de PM a administrador o al revés (D-112): solo el dueño. */
+export async function cambiarElRol(miembroId: string, rol: 'pm' | 'admin'): Promise<void> {
+  await comoMiembro((tx) => cambiarRol(tx, { miembroId, rol }), await exigirDueno());
   revalidatePath('/equipo');
 }

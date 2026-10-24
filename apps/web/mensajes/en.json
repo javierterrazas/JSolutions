@@ -85,7 +85,12 @@
     "celularEjemplo": "(512) 555-0101",
     "celularAyuda": "They sign in to the app with their cell number. No message is sent to it: you send them the link on WhatsApp.",
     "correoOpcional": "Email (optional)",
-    "verDesempeno": "See their performance"
+    "verDesempeno": "See their performance",
+    "invitarAlguien": "Invite someone",
+    "rolInvitar": "Role",
+    "rolAyuda": "An administrator can do everything you do (jobs, budgets, money), except invite administrators and change roles.",
+    "hacerAdministrador": "Make administrator",
+    "hacerPm": "Change to PM"
   },
   "errores": {
     "desconocido": "Something went wrong. Try again.",
@@ -244,7 +249,8 @@
     "faltan_datos": "The company or owner name is missing.",
     "orden_cambiada": "The order changed while you were viewing it: review the new version and answer again.",
     "feriado_repetido": "There is already a holiday on that day.",
-    "modulo_no_incluido": "Your plan does not include this part of the app."
+    "modulo_no_incluido": "Your plan does not include this part of the app.",
+    "solo_el_dueno": "Only the company owner can do that."
   },
   "obras": {
     "titulo": "Jobs",

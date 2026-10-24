@@ -1881,3 +1881,16 @@ cerrado en total y cuántas en el periodo elegido (7, 30 o 90 días, por la fech
 su **ticket promedio**: el contrato final (con órdenes de cambio) de sus obras cerradas y el contrato de las que van en
 curso. Sale de `plataforma_obras_de_empresas` (migración 20261104000100), que solo devuelve conteos y promedios y solo
 a quien administra la plataforma.
+
+## D-112 · Los administradores de la empresa
+
+**Lo preguntó el dueño:** cómo agregar a alguien que dé de alta obras y todo lo demás. El rol de administrador ya
+existía (todo lo del dueño, por `es_dueno_o_admin`), pero solo se invitaban PMs.
+- **En Managers**, el dueño invita a alguien eligiendo su **rol** (PM o administrador; `invitar_miembro`) y, en la
+  tarjeta de cada uno, lo cambia de PM a administrador o al revés (`cambiar_rol`). Lo ya capturado no cambia. El
+  administrador entra con PIN de 6 dígitos, como el dueño.
+- **Solo el dueño:** invitar administradores, cambiar roles, dar de baja a un administrador, quitarle el celular al
+  dueño o a un administrador (antes un administrador podía) y reinvitarlos (ya era así, 20261013000200). Así un
+  administrador no le quita el control al dueño ni se da de alta a otros. Un administrador invita y maneja PMs.
+- Migración 20261105000100 (`invitar_miembro`, `cambiar_rol`, y `cambiar_activo` / `revocar_dispositivo` con esas
+  reglas). `invitar_pm` se queda por ahora (la versión publicada la usa); se quitará después.

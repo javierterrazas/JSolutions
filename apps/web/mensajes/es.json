@@ -85,7 +85,12 @@
     "celularEjemplo": "(512) 555-0101",
     "celularAyuda": "Con su celular entra a la app. No le llega ningún mensaje: tú le mandas el enlace por WhatsApp.",
     "correoOpcional": "Correo (opcional)",
-    "verDesempeno": "Ver su desempeño"
+    "verDesempeno": "Ver su desempeño",
+    "invitarAlguien": "Invitar a alguien",
+    "rolInvitar": "Rol",
+    "rolAyuda": "El administrador puede todo lo que haces tú (obras, presupuestos, dinero), menos invitar administradores y cambiar roles.",
+    "hacerAdministrador": "Hacerlo administrador",
+    "hacerPm": "Cambiarlo a PM"
   },
   "errores": {
     "desconocido": "Algo falló. Intenta de nuevo.",
@@ -244,7 +249,8 @@
     "faltan_datos": "Faltan el nombre de la empresa o el del dueño.",
     "orden_cambiada": "La orden cambió mientras la veías: revisa la nueva versión y vuelve a responder.",
     "feriado_repetido": "Ya hay un feriado ese día.",
-    "modulo_no_incluido": "Tu plan no incluye esta parte de la app."
+    "modulo_no_incluido": "Tu plan no incluye esta parte de la app.",
+    "solo_el_dueno": "Eso solo lo puede hacer el dueño de la empresa."
   },
   "obras": {
     "titulo": "Obras",
