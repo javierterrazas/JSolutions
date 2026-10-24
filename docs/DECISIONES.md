@@ -1873,3 +1873,11 @@ nómina; Empresa: todo).
 - **Dónde vive:** `empresas.modulos` (migración 20261103000100), que la sesión lee de `empresa_actual_datos`. Solo
   quien administra la plataforma la cambia (`plataforma_guardar_modulos`); un disparador impide que el dueño se prenda
   módulos solo. Las empresas que ya existían quedaron con todo prendido.
+
+## D-111 · Las obras y el ticket promedio de cada empresa en el uso de la app
+
+**Lo pidió el dueño de la plataforma.** En Plataforma → "Uso de la app", debajo de cada empresa: cuántas obras ha
+cerrado en total y cuántas en el periodo elegido (7, 30 o 90 días, por la fecha de entrega), cuántas lleva en curso, y
+su **ticket promedio**: el contrato final (con órdenes de cambio) de sus obras cerradas y el contrato de las que van en
+curso. Sale de `plataforma_obras_de_empresas` (migración 20261104000100), que solo devuelve conteos y promedios y solo
+a quien administra la plataforma.

@@ -1,10 +1,12 @@
 // El uso de la app (D-101): solo para quien administra la plataforma. Por empresa y por persona, en los últimos 7, 30
 // o 90 días: los días que la abrió, el tiempo, las veces que entró, la última vez, lo que capturó y cuánto tarda cada
-// PM en cerrar el día (la meta del piloto: menos de 60 segundos).
+// PM en cerrar el día (la meta del piloto: menos de 60 segundos). Y de cada empresa, sus obras cerradas y en curso y
+// su ticket promedio (D-111).
 import { usoDeLaPlataforma } from '@ijm/servidor';
-import { getFormatter, getTranslations } from 'next-intl/server';
+import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { comoMiembro } from '@/lib/acceso';
+import { formatoDinero } from '@/lib/dinero';
 import { exigirPlataforma } from '@/lib/plataforma';
 import { Marco, estilos } from '../../componentes/marco';
 import { MensajeError } from '../../componentes/mensaje-error';
@@ -16,7 +18,8 @@ export default async function UsoDeLaApp({ searchParams }: PageProps<'/plataform
   const dias = PERIODOS.find((p) => String(p) === consulta.dias) ?? 7;
   const acceso = await exigirPlataforma();
   const r = await comoMiembro((tx) => usoDeLaPlataforma(tx, { dias }), acceso);
-  const [t, formato] = await Promise.all([getTranslations('uso'), getFormatter()]);
+  const [t, formato, idioma] = await Promise.all([getTranslations('uso'), getFormatter(), getLocale()]);
+  const dinero = (n: number) => formatoDinero(idioma).format(n);
   const volver = { href: '/plataforma', texto: t('volver') };
   if (!r.ok)
     return (
@@ -47,6 +50,19 @@ export default async function UsoDeLaApp({ searchParams }: PageProps<'/plataform
           <h2 className="text-xl font-bold text-marca">{e.nombre}</h2>
           <p className="text-sm text-slate-700">
             {t('resumenEmpresa', { tiempo: tiempo(e.minutos), activas: e.activas, total: e.personas.length })}
+          </p>
+          <p className="text-sm font-medium text-slate-800">
+            {t('obrasEmpresa', {
+              cerradas: e.obras.cerradas,
+              periodo: e.obras.cerradasPeriodo,
+              enCurso: e.obras.enCurso,
+            })}
+          </p>
+          <p className="text-sm text-slate-700">
+            {t('ticketEmpresa', {
+              cerradas: e.obras.ticketCerradas === null ? '—' : dinero(e.obras.ticketCerradas),
+              enCurso: e.obras.ticketEnCurso === null ? '—' : dinero(e.obras.ticketEnCurso),
+            })}
           </p>
           <ul className="flex flex-col gap-2">
             {e.personas.map((p) => (

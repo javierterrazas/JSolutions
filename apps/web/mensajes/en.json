@@ -1723,7 +1723,9 @@
     "acciones": "{cierres} closes · {gastos} expenses · {avisos} alerts · {fotos} photos · {cobros} payments",
     "cierreTarda": "Closes the day in {s} s on average",
     "minutos": "{n} min",
-    "horasMinutos": "{h} h {m} min"
+    "horasMinutos": "{h} h {m} min",
+    "obrasEmpresa": "{cerradas, plural, one {# job closed} other {# jobs closed}} in total ({periodo} in this period) · {enCurso} in progress",
+    "ticketEmpresa": "Average ticket: {cerradas} on closed jobs · {enCurso} on jobs in progress"
   },
   "expediente": {
     "volver": "Back to the job",

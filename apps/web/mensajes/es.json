@@ -1723,7 +1723,9 @@
     "acciones": "{cierres} cierres · {gastos} gastos · {avisos} avisos · {fotos} fotos · {cobros} cobros",
     "cierreTarda": "Cierra el día en {s} s en promedio",
     "minutos": "{n} min",
-    "horasMinutos": "{h} h {m} min"
+    "horasMinutos": "{h} h {m} min",
+    "obrasEmpresa": "{cerradas, plural, one {# obra cerrada} other {# obras cerradas}} en total ({periodo} en estos días) · {enCurso} en curso",
+    "ticketEmpresa": "Ticket promedio: {cerradas} en las cerradas · {enCurso} en las que van en curso"
   },
   "expediente": {
     "volver": "Volver al seguimiento",

@@ -54,6 +54,22 @@ describe('el uso de la app', () => {
       expect(empresas.length).toBeGreaterThan(1);
     }));
 
+  it('de cada empresa, sus obras cerradas y en curso y su ticket promedio (D-111)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      // el seed: IJM cerró OB-003 el 28 de agosto ($25,000 de contrato final) y lleva OB-001 en obra ($24,000)
+      const { empresas } = await usoDeLaPlataforma(tx, { dias: 90 }, LUNES);
+      const ijm = empresas.find((e) => e.nombre === 'IJM Construction')!;
+      expect(ijm.obras).toEqual({
+        cerradas: 1,
+        cerradasPeriodo: 1,
+        enCurso: 1,
+        ticketCerradas: 25000,
+        ticketEnCurso: 24000,
+      });
+      const semana = (await usoDeLaPlataforma(tx, { dias: 7 }, LUNES)).empresas.find((e) => e.id === ijm.id)!;
+      expect(semana.obras.cerradasPeriodo).toBe(0);
+    }));
+
   it('solo quien administra la plataforma lo ve', () =>
     probarComo(USUARIOS.carlos, async (tx) => {
       expect(await codigo(tx, () => usoDeLaPlataforma(tx, {}, LUNES))).toBe('solo_plataforma');
