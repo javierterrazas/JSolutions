@@ -49,6 +49,9 @@ igual.
    - avance real y fecha de entrega comprometida;
    - gastado contra presupuesto y margen proyectado (el semáforo del presupuesto en rojo es alerta);
    - el día a día: lo que cerró el PM, la cuadrilla, los subs y las compras.
+
+   Abajo, "En qué va cada espacio", "Presupuesto por etapa", "Cuadrilla" y "Día a día" son botones: cada uno dice
+   cómo va (en rojo o amarillo si hay algo que ver) y se abre al tocarlo.
 3. **Cuadrilla → "Horas de la semana":** las horas de cada trabajador ya sumadas, con su costo; toca el nombre para
    ver en qué obras y qué días. Es tu base para la nómina.
 4. **Subcontratos de cada obra:** "Liquidar" a los subs que ya terminaron (el PM marca en su cierre cuándo llegaron y

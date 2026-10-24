@@ -950,7 +950,13 @@
     "retrabajos": "Rework and warranty",
     "expediente": "Job file (PDF)",
     "cuadrillaTotalSinCosto": "{horas, plural, one {# hour} other {# hours}} and {dias, plural, one {# day} other {# days}}",
-    "trabajoSinCosto": "{nombre} {cantidad}"
+    "trabajoSinCosto": "{nombre} {cantidad}",
+    "resumenEspacios": "{terminados} of {total} finished",
+    "etapasPasadas": "{n, plural, one {# stage over cost} other {# stages over cost}}",
+    "etapasSinPresupuesto": "{n, plural, one {# with spending and no budget} other {# with spending and no budget}}",
+    "etapasDentro": "All within cost",
+    "sinGastos": "No spending yet",
+    "resumenDias": "{n, plural, =0 {Every day closed} one {# day not closed} other {# days not closed}}"
   },
   "datosObra": {
     "titulo": "Job details",

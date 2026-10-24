@@ -1,6 +1,7 @@
 // El seguimiento de una obra, para el dueño (D-062): cómo va (avance, etapa de cada espacio, plazo), el presupuesto
 // contra lo gastado por etapa, las horas de la cuadrilla y el día a día de lo que capturó el PM (?pagina=, de 14 en
-// 14 días). Lleva dinero: solo el dueño o el administrador.
+// 14 días). Esas cuatro secciones van cerradas, cada una como un botón con su resumen, y se abren al tocarlas (D-113).
+// Lleva dinero: solo el dueño o el administrador.
 import { enlaceClienteDeObra, type Semaforo, seguimientoDeObra } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
@@ -17,12 +18,42 @@ const COLOR: Record<Semaforo, string> = {
   rojo: 'bg-red-50 text-red-900',
 };
 
-function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
+/** Una sección que se abre al tocarla (D-113): el botón dice qué hay adentro y, en `resumen`, cómo va. */
+function Seccion({
+  id,
+  titulo,
+  resumen,
+  alerta,
+  abierta = false,
+  children,
+}: {
+  id: string;
+  titulo: string;
+  resumen?: string;
+  /** el color del resumen cuando hay algo que ver */
+  alerta?: string;
+  abierta?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="text-lg font-bold text-marca">{titulo}</h2>
-      {children}
-    </section>
+    <details id={id} open={abierta} className="group/seccion scroll-mt-4">
+      <summary
+        className={`${estilos.tarjeta} flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden`}
+      >
+        <span className="flex min-w-0 flex-col">
+          <h2 className="text-lg font-bold text-marca">{titulo}</h2>
+          {resumen ? <span className={`text-sm ${alerta ?? 'text-slate-600'}`}>{resumen}</span> : null}
+        </span>
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          className="size-5 shrink-0 fill-none stroke-marca stroke-[2.5] transition-transform group-open/seccion:rotate-180"
+        >
+          <path d="M5 9l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </summary>
+      <div className="mt-2 flex flex-col gap-2">{children}</div>
+    </details>
   );
 }
 
@@ -65,6 +96,28 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
     );
   const cantidad = (tipo: 'hora' | 'dia', n: number) => t(tipo === 'hora' ? 'horas' : 'dias', { n });
   const p = s.presupuesto;
+  // lo que dice el botón de cada sección
+  const espacios = s.espacios.filter((e) => !e.generales || e.estado !== 'sin_iniciar');
+  const etapasPasadas = p.porEtapa.filter((x) => x.desvio !== null && x.desvio > 0).length;
+  const etapasSinPresupuesto = p.porEtapa.filter((x) => x.desvio === null && x.total > 0).length;
+  const resumenEtapas = !p.porEtapa.length
+    ? t('sinGastos')
+    : etapasPasadas || etapasSinPresupuesto
+      ? [
+          etapasPasadas ? t('etapasPasadas', { n: etapasPasadas }) : null,
+          etapasSinPresupuesto ? t('etapasSinPresupuesto', { n: etapasSinPresupuesto }) : null,
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      : t('etapasDentro');
+  const diasSinCierre = s.dias.filter((d) => !d.folio).length;
+  const totalCuadrilla = con('nomina')
+    ? t('cuadrillaTotal', {
+        horas: s.cuadrilla.horas,
+        dias: s.cuadrilla.dias,
+        costo: dinero(s.cuadrilla.costo),
+      })
+    : t('cuadrillaTotalSinCosto', { horas: s.cuadrilla.horas, dias: s.cuadrilla.dias });
 
   return (
     <Marco
@@ -276,35 +329,51 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
             ) : null}
           </div>
 
-          <Seccion titulo={t('espacios')}>
+          <Seccion
+            id="espacios"
+            titulo={t('espacios')}
+            resumen={t('resumenEspacios', {
+              terminados: espacios.filter((e) => e.estado === 'terminado').length,
+              total: espacios.length,
+            })}
+          >
             <ul className="flex flex-col gap-2">
-              {s.espacios
-                .filter((e) => !e.generales || e.estado !== 'sin_iniciar')
-                .map((e) => (
-                  <li key={e.id} className={`${estilos.tarjeta} flex flex-col gap-1`}>
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-semibold">{e.nombre}</span>
-                      <span className="text-sm text-slate-600">{pct(e.pct)}</span>
-                    </div>
-                    <p className="text-sm text-slate-700">
-                      {e.estado === 'terminado'
-                        ? t('terminado')
-                        : e.enCurso.length
-                          ? t('enCurso', { partidas: e.enCurso.map(nombre).join(', ') })
-                          : e.etapa
-                            ? t(e.estado === 'sin_iniciar' ? 'empieza' : 'sigue', { etapa: nombre(e.etapa) })
-                            : t('sinIniciar')}
-                    </p>
-                    {e.enCurso.length && e.etapa ? (
-                      <p className="text-xs text-slate-500">{t('etapa', { etapa: nombre(e.etapa) })}</p>
-                    ) : null}
-                  </li>
-                ))}
+              {espacios.map((e) => (
+                <li key={e.id} className={`${estilos.tarjeta} flex flex-col gap-1`}>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-semibold">{e.nombre}</span>
+                    <span className="text-sm text-slate-600">{pct(e.pct)}</span>
+                  </div>
+                  <p className="text-sm text-slate-700">
+                    {e.estado === 'terminado'
+                      ? t('terminado')
+                      : e.enCurso.length
+                        ? t('enCurso', { partidas: e.enCurso.map(nombre).join(', ') })
+                        : e.etapa
+                          ? t(e.estado === 'sin_iniciar' ? 'empieza' : 'sigue', { etapa: nombre(e.etapa) })
+                          : t('sinIniciar')}
+                  </p>
+                  {e.enCurso.length && e.etapa ? (
+                    <p className="text-xs text-slate-500">{t('etapa', { etapa: nombre(e.etapa) })}</p>
+                  ) : null}
+                </li>
+              ))}
             </ul>
           </Seccion>
 
           {con('dinero') ? (
-            <Seccion titulo={t('porEtapa')}>
+            <Seccion
+              id="presupuesto-por-etapa"
+              titulo={t('porEtapa')}
+              resumen={resumenEtapas}
+              alerta={
+                etapasPasadas
+                  ? 'font-semibold text-red-700'
+                  : etapasSinPresupuesto
+                    ? 'font-semibold text-amber-800'
+                    : undefined
+              }
+            >
               <ul className="flex flex-col gap-2">
                 {p.porEtapa.map((x, i) => (
                   <li key={i} className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}>
@@ -349,17 +418,8 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
             </Seccion>
           ) : null}
 
-          <Seccion titulo={t('cuadrilla')}>
+          <Seccion id="cuadrilla" titulo={t('cuadrilla')} resumen={totalCuadrilla}>
             <div className={`${estilos.tarjeta} flex flex-col gap-2 text-sm`}>
-              <p className="font-semibold">
-                {con('nomina')
-                  ? t('cuadrillaTotal', {
-                      horas: s.cuadrilla.horas,
-                      dias: s.cuadrilla.dias,
-                      costo: dinero(s.cuadrilla.costo),
-                    })
-                  : t('cuadrillaTotalSinCosto', { horas: s.cuadrilla.horas, dias: s.cuadrilla.dias })}
-              </p>
               {s.cuadrilla.porTrabajador.length === 0 ? (
                 <p className="text-slate-600">{t('sinCuadrilla')}</p>
               ) : (
@@ -402,7 +462,14 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
             </div>
           </Seccion>
 
-          <Seccion titulo={t('diaADia')}>
+          {/* al pasar de página, el día a día sigue abierto y la pantalla baja hasta él */}
+          <Seccion
+            id="dia-a-dia"
+            titulo={t('diaADia')}
+            resumen={s.dias.length ? t('resumenDias', { n: diasSinCierre }) : t('sinDias')}
+            alerta={diasSinCierre ? 'font-semibold text-amber-800' : undefined}
+            abierta={'pagina' in consulta}
+          >
             {s.dias.length === 0 ? <p className={estilos.tarjeta}>{t('sinDias')}</p> : null}
             <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2">
               {s.dias.map((d) => (
@@ -472,7 +539,7 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
             <div className="flex gap-2">
               {pagina > 0 ? (
                 <Link
-                  href={`/obras/${s.obra.id}/seguimiento${pagina > 1 ? `?pagina=${pagina - 1}` : ''}`}
+                  href={`/obras/${s.obra.id}/seguimiento?pagina=${pagina - 1}#dia-a-dia`}
                   className={`${estilos.botonSecundario} flex flex-1 items-center justify-center`}
                 >
                   {t('recientes')}
@@ -480,7 +547,7 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
               ) : null}
               {s.hayMasDias ? (
                 <Link
-                  href={`/obras/${s.obra.id}/seguimiento?pagina=${pagina + 1}`}
+                  href={`/obras/${s.obra.id}/seguimiento?pagina=${pagina + 1}#dia-a-dia`}
                   className={`${estilos.botonSecundario} flex flex-1 items-center justify-center`}
                 >
                   {t('anteriores')}
