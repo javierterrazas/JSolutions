@@ -7,13 +7,26 @@ import { estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
 import { EnlaceInvitacion } from './enlace-invitacion';
 
-export function FormularioInvitar() {
+/** `conAdministrador`: el dueño también invita administradores (D-112). */
+export function FormularioInvitar({ conAdministrador = false }: { conAdministrador?: boolean }) {
   const t = useTranslations();
   const [resultado, accion, enviando] = useActionState(invitar, null);
   if (resultado?.ok) return <EnlaceInvitacion invitacion={resultado.datos} />;
   return (
     <form onSubmit={enviarSinVaciar(accion)} className={`${estilos.tarjeta} flex flex-col gap-3`}>
-      <h2 className="font-semibold text-marca">{t('equipo.invitarTitulo')}</h2>
+      <h2 className="font-semibold text-marca">
+        {t(conAdministrador ? 'equipo.invitarAlguien' : 'equipo.invitarTitulo')}
+      </h2>
+      {conAdministrador ? (
+        <label className={estilos.etiqueta}>
+          {t('equipo.rolInvitar')}
+          <select name="rol" defaultValue="pm" className={estilos.campo}>
+            <option value="pm">{t('equipo.rol.pm')}</option>
+            <option value="admin">{t('equipo.rol.admin')}</option>
+          </select>
+          <span className="text-sm font-normal text-slate-600">{t('equipo.rolAyuda')}</span>
+        </label>
+      ) : null}
       <label className={estilos.etiqueta}>
         {t('equipo.nombre')}
         <input name="nombre" required maxLength={80} autoComplete="off" className={estilos.campo} />
