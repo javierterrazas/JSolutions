@@ -1382,7 +1382,7 @@
     "vistaPrevia": "Así se ve el ícono de la app",
     "vistaPreviaAyuda": "Así se verá el ícono en el celular de tu equipo.",
     "logo": "Logo (PNG o JPG, hasta 1 MB)",
-    "logoAyuda": "Usa una imagen cuadrada: llena todo el ícono, sin margen (si no es cuadrada, se recorta al centro). PNG o JPG de hasta 1 MB. Sin logo, el ícono lleva las iniciales de la empresa.",
+    "logoAyuda": "Usa una imagen cuadrada de 512 × 512 píxeles o más (por ejemplo, 1024 × 1024): llena todo el ícono, sin margen. Si no es cuadrada, se recorta al centro. Deja lo importante del logo lejos de las orillas: algunos celulares redondean las esquinas del ícono. PNG o JPG de hasta 1 MB. Sin logo, el ícono lleva las iniciales de la empresa.",
     "quitarLogo": "Quitar el logo",
     "color": "Color de la empresa",
     "guardar": "Guardar",
