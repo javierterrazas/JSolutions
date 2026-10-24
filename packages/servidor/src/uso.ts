@@ -40,6 +40,17 @@ export interface UsoDeEmpresa {
   /** Cuántas personas abrieron la app en el periodo. */
   readonly activas: number;
   readonly personas: readonly UsoDePersona[];
+  /**
+   * Sus obras (D-111): las cerradas en total y en el periodo, las que van en curso, y el ticket promedio (el contrato
+   * final de las cerradas; el contrato de las que van en curso). Null sin obras.
+   */
+  readonly obras: {
+    readonly cerradas: number;
+    readonly cerradasPeriodo: number;
+    readonly enCurso: number;
+    readonly ticketCerradas: number | null;
+    readonly ticketEnCurso: number | null;
+  };
 }
 
 /** El uso de cada empresa y de cada persona en los últimos `dias` (7, 30 o 90). Solo quien administra. */
@@ -78,6 +89,30 @@ export async function usoDeLaPlataforma(
       throw new ErrorDeNegocio('solo_plataforma');
     throw e;
   });
+  const obras = new Map(
+    (
+      await tx<
+        {
+          empresa_id: string;
+          cerradas: number;
+          cerradas_periodo: number;
+          en_curso: number;
+          ticket_cerradas: string | null;
+          ticket_en_curso: string | null;
+        }[]
+      >`
+        select * from public.plataforma_obras_de_empresas(${desde})`
+    ).map((o) => [
+      o.empresa_id,
+      {
+        cerradas: o.cerradas,
+        cerradasPeriodo: o.cerradas_periodo,
+        enCurso: o.en_curso,
+        ticketCerradas: o.ticket_cerradas === null ? null : Number(o.ticket_cerradas),
+        ticketEnCurso: o.ticket_en_curso === null ? null : Number(o.ticket_en_curso),
+      },
+    ]),
+  );
   const empresas = new Map<string, { id: string; nombre: string; personas: UsoDePersona[] }>();
   for (const f of filas) {
     const e = empresas.get(f.empresa_id) ?? { id: f.empresa_id, nombre: f.empresa, personas: [] };
@@ -109,6 +144,13 @@ export async function usoDeLaPlataforma(
         ...e,
         minutos: e.personas.reduce((a, p) => a + p.minutos, 0),
         activas: e.personas.filter((p) => p.minutos > 0).length,
+        obras: obras.get(e.id) ?? {
+          cerradas: 0,
+          cerradasPeriodo: 0,
+          enCurso: 0,
+          ticketCerradas: null,
+          ticketEnCurso: null,
+        },
       }))
       .sort((a, b) => b.minutos - a.minutos || a.nombre.localeCompare(b.nombre)),
   };
