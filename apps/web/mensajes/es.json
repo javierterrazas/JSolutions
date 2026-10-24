@@ -950,7 +950,13 @@
     "retrabajos": "Retrabajos y garantías",
     "expediente": "Expediente en PDF",
     "cuadrillaTotalSinCosto": "{horas, plural, one {# hora} other {# horas}} y {dias, plural, one {# día} other {# días}}",
-    "trabajoSinCosto": "{nombre} {cantidad}"
+    "trabajoSinCosto": "{nombre} {cantidad}",
+    "resumenEspacios": "{terminados} de {total} terminados",
+    "etapasPasadas": "{n, plural, one {# etapa se pasó del costo} other {# etapas se pasaron del costo}}",
+    "etapasSinPresupuesto": "{n, plural, one {# con gasto sin presupuesto} other {# con gasto sin presupuesto}}",
+    "etapasDentro": "Todas dentro del costo",
+    "sinGastos": "Todavía sin gastos",
+    "resumenDias": "{n, plural, =0 {Todos los días con cierre} one {# día sin cierre} other {# días sin cierre}}"
   },
   "datosObra": {
     "titulo": "Datos de la obra",

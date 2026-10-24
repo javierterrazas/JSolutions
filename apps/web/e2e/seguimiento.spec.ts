@@ -31,17 +31,24 @@ test('el dueño ve cómo va la obra: avance, etapa, presupuesto por etapa, cuadr
     page.getByText(/^Originalmente .+30 de octubre; se movió por órdenes de cambio\.$/),
   ).toBeVisible();
 
-  for (const seccion of ['espacios', 'porEtapa', 'cuadrilla', 'diaADia'] as const)
-    await expect(page.getByRole('heading', { level: 2, name: es.seguimiento[seccion] })).toBeVisible();
-  await expect(
-    page.getByText(t.es('seguimiento.etapaDe', { espacio: 'Baño principal', etapa: 'Demolición' }), {
-      exact: true,
-    }),
-  ).toBeVisible();
+  // cada sección es un botón con su resumen, cerrada hasta tocarla (D-113)
+  const seccion = (s: 'espacios' | 'porEtapa' | 'cuadrilla' | 'diaADia') =>
+    page.locator('summary').filter({ hasText: es.seguimiento[s] });
+  await expect(seccion('espacios')).toContainText(/^.+\d+ de \d+ terminados$/);
+  await expect(seccion('porEtapa')).toContainText(/\d+ con gasto sin presupuesto$/);
+  await expect(seccion('cuadrilla')).toContainText(/\d+ horas? y \d+ días?/);
+  await expect(seccion('diaADia')).toBeVisible();
+  const demolicion = page.getByText(
+    t.es('seguimiento.etapaDe', { espacio: 'Baño principal', etapa: 'Demolición' }),
+    { exact: true },
+  );
+  await expect(demolicion).toBeHidden();
+  for (const s of ['espacios', 'porEtapa', 'cuadrilla', 'diaADia'] as const) await seccion(s).click();
+  await expect(demolicion).toBeVisible();
   await expect(page.getByText(/^Pedro · \d+ horas$/)).toBeVisible();
   // con un toque, sus horas por etapa (D-077)
   await page.getByText(/^Pedro · \d+ horas$/).click();
-  await expect(page.locator('details[open]').filter({ hasText: 'Pedro' })).toContainText(
+  await expect(page.locator('#cuadrilla details[open]').filter({ hasText: 'Pedro' })).toContainText(
     /Demolición\s*≈ \d+(\.\d)? horas?/,
   );
 
@@ -49,8 +56,9 @@ test('el dueño ve cómo va la obra: avance, etapa, presupuesto por etapa, cuadr
   // (cada página se espera antes de buscar la siguiente: si no, se le pica al enlace de la que se está yendo)
   for (let n = 1; await page.getByRole('link', { name: es.seguimiento.anteriores }).isVisible(); n++) {
     await page.getByRole('link', { name: es.seguimiento.anteriores }).click();
-    await expect(page).toHaveURL(new RegExp(`\\?pagina=${n}$`));
+    await expect(page).toHaveURL(new RegExp(`\\?pagina=${n}#dia-a-dia$`));
   }
+  // al pasar de página, el día a día sigue abierto
   const primerDia = page.locator('li').filter({ hasText: 'BIT-0001' });
   await expect(primerDia).toContainText(
     t.es('seguimiento.partidaTerminada', {

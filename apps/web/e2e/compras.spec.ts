@@ -32,6 +32,7 @@ test('el dueño registra una compra con su recibo, y aparece en el día a día d
 
   await page.getByRole('link', { name: es.compra.volver }).click();
   await expect(page).toHaveURL(new RegExp(`/obras/${OBRAS.luis}/seguimiento$`));
+  await page.locator('summary').filter({ hasText: es.seguimiento.diaADia }).click();
   await expect(
     page.getByText(t.es('seguimiento.gastoOficina', { proveedor: 'Floor & Decor', monto: '$1,340.25' })),
   ).toBeVisible();

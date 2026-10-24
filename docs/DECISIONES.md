@@ -1894,3 +1894,18 @@ existía (todo lo del dueño, por `es_dueno_o_admin`), pero solo se invitaban PM
   administrador no le quita el control al dueño ni se da de alta a otros. Un administrador invita y maneja PMs.
 - Migración 20261105000100 (`invitar_miembro`, `cambiar_rol`, y `cambiar_activo` / `revocar_dispositivo` con esas
   reglas). `invitar_pm` se queda por ahora (la versión publicada la usa); se quitará después.
+
+## D-113 · Las secciones del seguimiento se abren al tocarlas
+
+**Lo pidió el dueño:** en el seguimiento de una obra había que bajar mucho para pasar "En qué va cada espacio",
+"Presupuesto por etapa", "Cuadrilla" y "Día a día", todo desplegado. Ahora cada una es un botón cerrado
+(`<details>`, sin JavaScript) que dice cómo va y se abre al tocarlo:
+- **Espacios:** cuántos van terminados de cuántos.
+- **Presupuesto por etapa:** cuántas etapas se pasaron del costo (rojo) y cuántas tienen gasto sin presupuesto
+  (ámbar); si no, "Todas dentro del costo".
+- **Cuadrilla:** horas, días y su costo (sin costo si la empresa no tiene salarios).
+- **Día a día:** cuántos días de la página no tienen cierre (ámbar).
+
+Los datos de la obra, los botones y "cómo va" (avance, entrega, gastado y margen) siguen a la vista. Al pasar de
+página en el día a día (`?pagina=…#dia-a-dia`), la sección llega abierta y la pantalla baja hasta ella. En la
+computadora es igual.
