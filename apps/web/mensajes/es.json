@@ -243,7 +243,8 @@
     "falta_celular": "Este dueño entra con su celular: no puede quedarse sin él.",
     "faltan_datos": "Faltan el nombre de la empresa o el del dueño.",
     "orden_cambiada": "La orden cambió mientras la veías: revisa la nueva versión y vuelve a responder.",
-    "feriado_repetido": "Ya hay un feriado ese día."
+    "feriado_repetido": "Ya hay un feriado ese día.",
+    "modulo_no_incluido": "Tu plan no incluye esta parte de la app."
   },
   "obras": {
     "titulo": "Obras",
@@ -941,7 +942,9 @@
     "cerrarObra": "Cerrar la obra",
     "verCierre": "Ver el cierre de la obra",
     "retrabajos": "Retrabajos y garantías",
-    "expediente": "Expediente en PDF"
+    "expediente": "Expediente en PDF",
+    "cuadrillaTotalSinCosto": "{horas, plural, one {# hora} other {# horas}} y {dias, plural, one {# día} other {# días}}",
+    "trabajoSinCosto": "{nombre} {cantidad}"
   },
   "datosObra": {
     "titulo": "Datos de la obra",
@@ -1934,5 +1937,44 @@
     "nombreEn": "Nombre en inglés (opcional)",
     "agregado": "Feriado agregado.",
     "guardar": "Agregar"
+  },
+  "modulos": {
+    "titulo": "Módulos",
+    "ayuda": "Lo que la empresa ve de la app. Apagar uno no borra nada: sus datos se quedan y vuelven si lo prendes.",
+    "base": "Siempre incluido: obras, cierre del día, cuadrilla en el cierre, gastos, avisos, fotos, bitácora, managers y feriados.",
+    "planes": {
+      "basico": "Plan Básico",
+      "pro": "Plan Pro",
+      "empresa": "Plan Empresa (todo)"
+    },
+    "necesita": "Necesita: {modulos}",
+    "guardar": "Guardar módulos",
+    "guardados": "Módulos guardados.",
+    "nombres": {
+      "dinero": "Presupuesto y dinero",
+      "portal": "Portal del cliente",
+      "cambios": "Órdenes de cambio",
+      "subcontratistas": "Subcontratistas",
+      "calidad": "Calidad",
+      "nomina": "Nómina",
+      "indicadores": "Indicadores",
+      "historico": "Histórico y análisis",
+      "desempeno": "Desempeño de managers",
+      "posventa": "Cierre, posventa y garantías",
+      "marca": "Marca propia"
+    },
+    "descripciones": {
+      "dinero": "Presupuesto por etapa con margen, compras de la oficina, cobros y el dinero en el seguimiento.",
+      "portal": "El enlace del cliente para ver su obra, sus fotos y sus pagos.",
+      "cambios": "Órdenes de cambio firmadas por el cliente, también desde los avisos del PM.",
+      "subcontratistas": "Sus papeles, órdenes de trabajo, pagos y liquidar; el cierre pregunta si llegaron.",
+      "calidad": "Inspecciones, prueba de agua y punch list; sin él, las partidas se terminan sin inspección.",
+      "nomina": "Las horas de la semana de la cuadrilla y lo que cuesta.",
+      "indicadores": "Los 19 indicadores y los seis del lunes.",
+      "historico": "Qué obras convienen, dónde se fue el margen y el costo sugerido al cotizar.",
+      "desempeno": "El desempeño de cada manager.",
+      "posventa": "Cerrar la obra, retrabajos, garantías, reseñas y el expediente en PDF.",
+      "marca": "El logo y el color de la empresa en la app y en el portal."
+    }
   }
 }

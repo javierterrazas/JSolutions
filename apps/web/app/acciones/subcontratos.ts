@@ -11,7 +11,7 @@ import {
   type ResultadoPagoSub,
 } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon, type Resultado } from '@/lib/acceso';
 
 const texto = (f: FormData, campo: string) => String(f.get(campo) ?? '').trim() || null;
 /** "1,250" o "$1250.50" → 1250.5; vacío → null. */
@@ -54,7 +54,7 @@ export async function emitirOrden(
         partidas,
         confirmado: confirmado(f),
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('subcontratistas'),
   );
   if (r.ok && r.datos.ok) refrescar(obraId);
   return r;
@@ -65,7 +65,10 @@ export async function cancelarOrden(
   ordenId: string,
   _previo: Resultado<void> | null,
 ): Promise<Resultado<void>> {
-  const r = await comoMiembro((tx) => cancelarOrdenTrabajo(tx, { ordenId }), await exigirDueno());
+  const r = await comoMiembro(
+    (tx) => cancelarOrdenTrabajo(tx, { ordenId }),
+    await exigirDuenoCon('subcontratistas'),
+  );
   if (r.ok) refrescar(obraId);
   return r;
 }
@@ -87,7 +90,7 @@ export async function pagarSub(
         referencia: texto(f, 'referencia'),
         confirmado: confirmado(f),
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('subcontratistas'),
   );
   if (r.ok && r.datos.ok) refrescar(obraId);
   return r;
@@ -108,7 +111,7 @@ export async function reprogramarOrden(
         fin: texto(f, 'fin'),
         motivo: texto(f, 'motivo'),
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('subcontratistas'),
   );
   if (r.ok) refrescar(obraId);
   return r;
@@ -122,7 +125,7 @@ export async function anularPagoSub(
 ): Promise<Resultado<void>> {
   const r = await comoMiembro(
     (tx) => anular(tx, { tabla: 'pagos_sub', registroId: pagoId, motivo: String(f.get('motivo') ?? '') }),
-    await exigirDueno(),
+    await exigirDuenoCon('subcontratistas'),
   );
   if (!r.ok) return r;
   refrescar(obraId);

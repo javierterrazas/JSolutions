@@ -2,7 +2,14 @@
 // D-038). Lo delicado (la llave del celular, el PIN y sus intentos) lo guardan y revisan funciones de la base
 // (20261007000100_acceso.sql); aquí se validan las entradas y las reglas de @ijm/core, y se traducen los rechazos.
 import { randomBytes } from 'node:crypto';
-import { correoDeCelular, DIAS_INVITACION, ErrorDeNegocio, normalizarCelular, validarPin } from '@ijm/core';
+import {
+  correoDeCelular,
+  DIAS_INVITACION,
+  ErrorDeNegocio,
+  type Modulo,
+  normalizarCelular,
+  validarPin,
+} from '@ijm/core';
 import postgres from 'postgres';
 import { z } from 'zod';
 import type { Tx } from './conexion';
@@ -249,6 +256,8 @@ export interface Yo {
   readonly empresaId: string;
   /** La marca de su empresa (D-078): su color, si tiene logo y la versión, para el ícono y el encabezado. */
   readonly marca: { color: string; conLogo: boolean; version: number };
+  /** Los módulos que tiene su empresa (D-110). */
+  readonly modulos: readonly Modulo[];
 }
 
 /** Quién es el usuario de la sesión. Sin miembro activo: `sin_acceso`. */
@@ -257,13 +266,20 @@ export async function quienSoy(tx: Tx): Promise<Yo> {
     (Omit<Yo, 'marca'> & { color: string | null; logo: boolean; version: number | null })[]
   >`
     select m.id as "miembroId", m.nombre, m.rol, m.idioma, e.nombre as empresa, e.id as "empresaId",
-           ma.color, ma.logo is not null as logo, ma.version
+           ma.color, ma.logo is not null as logo, ma.version, e.modulos
     from public.miembros m join public.empresa_actual_datos e on e.id = m.empresa_id
     left join public.marcas_empresa ma on ma.empresa_id = e.id
     where m.id = public.miembro_actual()`;
   if (!m) throw new ErrorDeNegocio('sin_acceso');
   const { color, logo, version, ...yo } = m;
-  return { ...yo, marca: { color: color ?? '#1d3557', conLogo: logo, version: version ?? 1 } };
+  // sin el módulo de marca, la de la app (lo que la empresa subió se queda guardado)
+  const conMarca = yo.modulos.includes('marca');
+  return {
+    ...yo,
+    marca: conMarca
+      ? { color: color ?? '#1d3557', conLogo: logo, version: version ?? 1 }
+      : { color: '#1d3557', conLogo: false, version: 1 },
+  };
 }
 
 export interface MiembroDelEquipo {

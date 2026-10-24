@@ -4,7 +4,7 @@
 import { retrabajosDeObra } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../../componentes/marco';
 import { CerrarGarantia } from './cerrar-garantia';
@@ -12,7 +12,7 @@ import { FormularioNoCalidad } from './formulario-no-calidad';
 
 export default async function Retrabajos({ params }: PageProps<'/obras/[id]/retrabajos'>) {
   const { id } = await params;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('posventa');
   const r = await comoMiembro((tx) => retrabajosDeObra(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();
   const d = r.datos;

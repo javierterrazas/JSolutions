@@ -2,7 +2,15 @@
 // ni PIN. Lo que lee el cliente sale de funciones de la base que reciben el token (20261016000100_portal_cliente.sql)
 // y contestan solo lo que él puede ver, sin dinero; el avance se calcula con las mismas reglas del seguimiento del
 // dueño (avanceDeLaObra). El dueño crea y anula el enlace; el PM o el dueño marcan qué fotos ve el cliente.
-import { calendario, type Dia, type DiaSemana, ErrorDeNegocio, hoyEn, type Responsable } from '@ijm/core';
+import {
+  calendario,
+  type Dia,
+  type DiaSemana,
+  ErrorDeNegocio,
+  hoyEn,
+  type Modulo,
+  type Responsable,
+} from '@ijm/core';
 import postgres from 'postgres';
 import { z } from 'zod';
 import { nuevoSecreto } from './acceso';
@@ -93,6 +101,12 @@ function huellaDeCambio(o: {
 
 type CambioDeLaBase = Omit<CambioDelPortal, 'precio' | 'huella'> & { precio: number | string };
 
+/** Si la empresa del enlace tiene el módulo (D-110); un enlace que no sirve, no. */
+async function moduloDelEnlace(tx: Tx, token: string, modulo: Modulo): Promise<boolean> {
+  const [r] = await tx<{ si: boolean }[]>`select public.modulo_del_enlace(${token}, ${modulo}) as si`;
+  return !!r?.si;
+}
+
 async function cambiosDelEnlace(
   tx: Tx,
   token: string,
@@ -148,10 +162,13 @@ export async function portalCliente(
   ahora = new Date(),
 ): Promise<PortalCliente | null> {
   const { token } = validarEntrada(z.object({ token: Token }), entrada);
+  // sin el módulo del portal, el enlace no abre nada (D-110)
+  if (!(await moduloDelEnlace(tx, token, 'portal'))) return null;
   const [r] = await tx<{ d: Datos | null }[]>`select public.portal_cliente(${token}, ${ahora}) as d`;
   const d = r?.d;
   if (!d) return null;
-  const c = await cambiosDelEnlace(tx, token);
+  // las órdenes de cambio, solo con su módulo
+  const c = (await moduloDelEnlace(tx, token, 'cambios')) ? await cambiosDelEnlace(tx, token) : null;
   const [pg] = await tx<
     { p: { folio: string; fecha: Dia; concepto: string; monto: number | string }[] | null }[]
   >`
@@ -245,6 +262,7 @@ export async function responderCambioCliente(
   entrada: z.input<typeof EntradaRespuesta>,
 ): Promise<void> {
   const e = validarEntrada(EntradaRespuesta, entrada);
+  if (!(await moduloDelEnlace(tx, e.token, 'cambios'))) throw new ErrorDeNegocio('enlace_invalido');
   await deLaBase(
     () => tx`
       select public.responder_cambio_cliente(${e.token}, ${e.ordenId}, ${e.decision}, ${e.nombre},

@@ -5,7 +5,7 @@ import { obrasDeLaEmpresa, resumenDeObras } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, conModulo, exigirDueno } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
 import { ListaObras } from './lista-obras';
@@ -26,6 +26,7 @@ export default async function Obras() {
       {r.ok ? (
         <Suspense>
           <ListaObras
+            conDinero={conModulo(acceso, 'dinero')}
             hoy={r.datos.hoy}
             obras={r.datos.obras.map((o) => ({
               ...o,

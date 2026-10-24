@@ -8,7 +8,7 @@ import {
   type ValorPaso,
 } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon, type Resultado } from '@/lib/acceso';
 
 const texto = (f: FormData, campo: string) => String(f.get(campo) ?? '').trim() || null;
 /** "1,250" o "$1250.50" → 1250.5; vacío → 0; basura → NaN (lo rechaza el servidor). */
@@ -41,7 +41,7 @@ export async function registrarRetrabajo(
         diasPerdidos: numero(f, 'dias'),
         descripcion: String(f.get('descripcion') ?? ''),
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('posventa'),
   );
   if (!r.ok) return r;
   refrescar(obraId);
@@ -55,7 +55,7 @@ export async function cerrarLaGarantia(
 ): Promise<Resultado<void>> {
   const r = await comoMiembro(
     (tx) => cerrarGarantia(tx, { noCalidadId: ids.noCalidadId, costo: numero(f, 'costo') }),
-    await exigirDueno(),
+    await exigirDuenoCon('posventa'),
   );
   if (!r.ok) return r;
   refrescar(ids.obraId);
@@ -67,7 +67,10 @@ export async function marcarPasoPosventa(
   paso: PasoPosventa,
   valor: ValorPaso,
 ): Promise<Resultado<void>> {
-  const r = await comoMiembro((tx) => marcarPosventa(tx, { obraId, paso, valor }), await exigirDueno());
+  const r = await comoMiembro(
+    (tx) => marcarPosventa(tx, { obraId, paso, valor }),
+    await exigirDuenoCon('posventa'),
+  );
   if (!r.ok) return r;
   refrescar(obraId);
   return { ok: true, datos: undefined };

@@ -5,7 +5,7 @@
 import { avisoParaOrden, cambiosDeObra } from '@ijm/servidor';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../../componentes/marco';
 import { AvisoDeLaOrden } from './aviso-de-la-orden';
@@ -22,7 +22,7 @@ const COLOR_ESTADO: Record<string, string> = {
 export default async function Cambios({ params, searchParams }: PageProps<'/obras/[id]/cambios'>) {
   const { id } = await params;
   const { aviso: avisoId } = await searchParams;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('cambios');
   const r = await comoMiembro(
     async (tx) => ({
       c: await cambiosDeObra(tx, { obraId: id }),

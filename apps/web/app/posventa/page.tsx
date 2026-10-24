@@ -4,7 +4,7 @@ import { pendientesDePosventa } from '@ijm/servidor';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
 
@@ -29,7 +29,7 @@ function Fila({ href, titulo, detalle }: { href: string; titulo: string; detalle
 }
 
 export default async function Posventa() {
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('posventa');
   const r = await comoMiembro((tx) => pendientesDePosventa(tx), acceso);
   const [t, formato] = await Promise.all([getTranslations('posventa'), getFormatter()]);
   const volver = { href: '/', texto: t('volver') };

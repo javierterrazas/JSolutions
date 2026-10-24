@@ -1,5 +1,13 @@
 // Quién es el usuario de la operación y en qué calendario trabaja su empresa.
-import { type Calendario, calendario, type Dia, type DiaSemana, ErrorDeNegocio, hoyEn } from '@ijm/core';
+import {
+  type Calendario,
+  calendario,
+  type Dia,
+  type DiaSemana,
+  ErrorDeNegocio,
+  hoyEn,
+  type Modulo,
+} from '@ijm/core';
 import type { Tx } from './conexion';
 
 export interface Sesion {
@@ -11,6 +19,8 @@ export interface Sesion {
   readonly calendario: Calendario;
   readonly ahora: Date;
   readonly hoy: Dia;
+  /** Los módulos que tiene su empresa (D-110). */
+  readonly modulos: readonly Modulo[];
 }
 
 /**
@@ -21,7 +31,8 @@ export async function leerSesion(tx: Tx, ahora = new Date()): Promise<Sesion> {
   const [s] = await tx<{ miembro: string | null; empresa: string | null; rol: Sesion['rol'] | null }[]>`
     select public.miembro_actual() as miembro, public.empresa_actual() as empresa, public.rol_actual() as rol`;
   if (!s?.miembro || !s.empresa || !s.rol) throw new ErrorDeNegocio('sin_acceso');
-  const [e] = await tx<{ zona: string }[]>`select zona_horaria as zona from public.empresa_actual_datos`;
+  const [e] = await tx<{ zona: string; modulos: Modulo[] }[]>`
+    select zona_horaria as zona, modulos from public.empresa_actual_datos`;
   const [c] = await tx<{ dias: number[] }[]>`select dias_laborables as dias from public.configuracion_pm`;
   const feriados = await tx<{ dia: Dia }[]>`
     select to_char(dia, 'YYYY-MM-DD') as dia from public.feriados where not se_trabaja`;
@@ -38,7 +49,13 @@ export async function leerSesion(tx: Tx, ahora = new Date()): Promise<Sesion> {
     ),
     ahora,
     hoy: hoyEn(ahora, zona),
+    modulos: e?.modulos ?? [],
   };
+}
+
+/** Solo si la empresa tiene el módulo (D-110). Error: `modulo_no_incluido`. */
+export function exigirModulo(s: Sesion, m: Modulo): void {
+  if (!s.modulos.includes(m)) throw new ErrorDeNegocio('modulo_no_incluido', { modulo: m });
 }
 
 /** Solo dueño o administrador. */

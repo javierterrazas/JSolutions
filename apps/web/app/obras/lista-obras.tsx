@@ -28,7 +28,16 @@ const elegido = <T extends string>(valor: string | null, opciones: readonly T[],
   (opciones as readonly string[]).includes(valor ?? '') ? (valor as T) : porOmision;
 const comparable = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
-export function ListaObras({ obras, hoy }: { obras: readonly ObraConResumen[]; hoy: string }) {
+export function ListaObras({
+  obras,
+  hoy,
+  conDinero = true,
+}: {
+  /** Sin el módulo de dinero no se muestra el presupuesto usado (D-110). */
+  conDinero?: boolean;
+  obras: readonly ObraConResumen[];
+  hoy: string;
+}) {
   const t = useTranslations('obras');
   const formato = useFormatter();
   const ruta = usePathname();
@@ -177,7 +186,7 @@ export function ListaObras({ obras, hoy }: { obras: readonly ObraConResumen[]; h
                   {x ? (
                     <span className="flex flex-wrap gap-x-3 text-sm font-medium">
                       <span className={x.semaforo ? COLOR[x.semaforo] : 'text-slate-700'}>
-                        {x.usado === null
+                        {x.usado === null || !conDinero
                           ? t('resumenSinPresupuesto', { avance: pct(x.avance) })
                           : t('resumen', { avance: pct(x.avance), usado: pct(x.usado) })}
                       </span>

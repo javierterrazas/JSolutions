@@ -3,7 +3,7 @@
 import { datosParaInspeccion } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
-import { comoMiembro, exigirAcceso } from '@/lib/acceso';
+import { comoMiembro, exigirAccesoCon } from '@/lib/acceso';
 import { Marco } from '../../../../componentes/marco';
 import { PruebaAgua } from '../prueba-agua';
 import { FormularioInspeccion } from './formulario-inspeccion';
@@ -16,7 +16,7 @@ export default async function Inspeccion({
   const consulta = await searchParams;
   const espacio = typeof consulta.espacio === 'string' ? consulta.espacio : '';
   const hito = typeof consulta.hito === 'string' ? consulta.hito : '';
-  const acceso = await exigirAcceso();
+  const acceso = await exigirAccesoCon('calidad');
   if (acceso.yo.rol !== 'pm') redirect('/');
   const r = await comoMiembro(
     (tx) => datosParaInspeccion(tx, { obraId: id, espacioId: espacio, hitoId: hito }),

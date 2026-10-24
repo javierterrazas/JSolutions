@@ -4,7 +4,7 @@
 import { cuadrilla } from '@ijm/servidor';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, conModulo, exigirDueno } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
 import { AgregarTrabajador } from './agregar-trabajador';
@@ -25,9 +25,11 @@ export default async function Cuadrilla() {
     <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
       <p className="text-sm text-slate-600">{t('ayuda')}</p>
       {/* las horas de cada uno en la semana, para la nómina (D-094) */}
-      <Link href="/cuadrilla/semana" className={`${estilos.boton} flex items-center justify-center`}>
-        {t('semana')}
-      </Link>
+      {conModulo(acceso, 'nomina') ? (
+        <Link href="/cuadrilla/semana" className={`${estilos.boton} flex items-center justify-center`}>
+          {t('semana')}
+        </Link>
+      ) : null}
       {!r.ok ? <MensajeError problema={r} /> : null}
       <datalist id="puestos">
         {puestos.map((p) => (

@@ -151,23 +151,25 @@ export async function cerrarDia(
   const terminadas = e.sinTrabajo ? [] : e.terminadas;
   const cuadrilla = e.sinTrabajo ? [] : e.cuadrilla;
 
-  const inspecciones = await tx<
-    { espacio_id: string; hito_id: string; resultado: 'aprobado' | 'con_defectos'; en: string }[]
-  >`
-    select espacio_id, hito_id, resultado, realizada_en::text as en from inspecciones where obra_id = ${e.obraId}`;
-  exigirInspecciones(
-    terminadas.map((t) => ({
-      partidaId: t,
-      espacioId: partida.get(t)!.espacio_id,
-      hitoId: partida.get(t)!.hito_id,
-    })),
-    inspecciones.map((i) => ({
-      espacioId: i.espacio_id,
-      hitoId: i.hito_id,
-      resultado: i.resultado,
-      realizadaEn: i.en,
-    })),
-  );
+  // sin el módulo de calidad no hay inspecciones que pedir (D-110)
+  const inspecciones = !s.modulos.includes('calidad')
+    ? null
+    : await tx<{ espacio_id: string; hito_id: string; resultado: 'aprobado' | 'con_defectos'; en: string }[]>`
+        select espacio_id, hito_id, resultado, realizada_en::text as en from inspecciones where obra_id = ${e.obraId}`;
+  if (inspecciones)
+    exigirInspecciones(
+      terminadas.map((t) => ({
+        partidaId: t,
+        espacioId: partida.get(t)!.espacio_id,
+        hitoId: partida.get(t)!.hito_id,
+      })),
+      inspecciones.map((i) => ({
+        espacioId: i.espacio_id,
+        hitoId: i.hito_id,
+        resultado: i.resultado,
+        realizadaEn: i.en,
+      })),
+    );
 
   const trabajadores = await tx<
     { id: string; tipo_pago: 'hora' | 'dia' }[]

@@ -6,7 +6,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, conModulo, exigirDueno } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../../componentes/marco';
 import { EnlaceCliente } from './enlace-cliente';
@@ -40,6 +40,8 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
   const consulta = await searchParams;
   const pagina = Math.max(0, Math.min(1000, Number(consulta.pagina) || 0));
   const acceso = await exigirDueno();
+  // lo de cada módulo, solo si la empresa lo tiene (D-110)
+  const con = (m: Parameters<typeof conModulo>[1]) => conModulo(acceso, m);
   const r = await comoMiembro((tx) => seguimientoDeObra(tx, { obraId: id, pagina }), acceso);
   if (!r.ok || !r.datos) notFound();
   const s = r.datos;
@@ -120,55 +122,67 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
               </p>
             ) : null}
           </section>
-          <Link
-            href={`/obras/${s.obra.id}/compra`}
-            className={`${estilos.boton} flex items-center justify-center`}
-          >
-            {t('registrarCompra')}
-          </Link>
-          <div className="grid grid-cols-2 gap-2">
+          {con('dinero') ? (
             <Link
-              href={`/obras/${s.obra.id}/presupuesto`}
-              className={`${estilos.botonSecundario} flex items-center justify-center`}
+              href={`/obras/${s.obra.id}/compra`}
+              className={`${estilos.boton} flex items-center justify-center`}
             >
-              {to('presupuesto')}
+              {t('registrarCompra')}
             </Link>
+          ) : null}
+          <div className="grid grid-cols-2 gap-2">
+            {con('dinero') ? (
+              <Link
+                href={`/obras/${s.obra.id}/presupuesto`}
+                className={`${estilos.botonSecundario} flex items-center justify-center`}
+              >
+                {to('presupuesto')}
+              </Link>
+            ) : null}
             <Link
               href={`/obras/${s.obra.id}/album`}
-              className={`${estilos.botonSecundario} flex items-center justify-center`}
+              className={`${estilos.botonSecundario} flex items-center justify-center ${con('dinero') ? '' : 'col-span-2'}`}
             >
               {to('album')}
             </Link>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Link
-              href={`/obras/${s.obra.id}/cambios`}
-              className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
-            >
-              {t('cambios')}
-            </Link>
-            <Link
-              href={`/obras/${s.obra.id}/cobros`}
-              className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
-            >
-              {t('cobros')}
-            </Link>
-            <Link
-              href={`/obras/${s.obra.id}/subcontratos`}
-              className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
-            >
-              {t('subcontratos')}
-            </Link>
+            {con('cambios') ? (
+              <Link
+                href={`/obras/${s.obra.id}/cambios`}
+                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
+              >
+                {t('cambios')}
+              </Link>
+            ) : null}
+            {con('dinero') ? (
+              <Link
+                href={`/obras/${s.obra.id}/cobros`}
+                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
+              >
+                {t('cobros')}
+              </Link>
+            ) : null}
+            {con('subcontratistas') ? (
+              <Link
+                href={`/obras/${s.obra.id}/subcontratos`}
+                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
+              >
+                {t('subcontratos')}
+              </Link>
+            ) : null}
             {/* los errores propios que se pagan y los reclamos de garantía (D-090) */}
-            <Link
-              href={`/obras/${s.obra.id}/retrabajos`}
-              className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
-            >
-              {t('retrabajos')}
-            </Link>
+            {con('posventa') ? (
+              <Link
+                href={`/obras/${s.obra.id}/retrabajos`}
+                className={`${estilos.botonSecundario} flex items-center justify-center px-2 text-center`}
+              >
+                {t('retrabajos')}
+              </Link>
+            ) : null}
             {/* cerrar la obra al entregarla, o ver su cierre (D-085) */}
-            {['en_obra', 'entregada'].includes(s.obra.estado) ? (
+            {con('posventa') && ['en_obra', 'entregada'].includes(s.obra.estado) ? (
               <Link
                 href={`/obras/${s.obra.id}/cerrar`}
                 className={`${estilos.botonSecundario} col-span-2 flex items-center justify-center px-2 text-center`}
@@ -177,25 +191,29 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
               </Link>
             ) : null}
             {/* todo lo de la obra en un documento para guardar como PDF (D-102) */}
-            <Link
-              href={`/obras/${s.obra.id}/expediente`}
-              className={`${estilos.botonSecundario} col-span-2 flex items-center justify-center px-2 text-center`}
-            >
-              {t('expediente')}
-            </Link>
+            {con('posventa') ? (
+              <Link
+                href={`/obras/${s.obra.id}/expediente`}
+                className={`${estilos.botonSecundario} col-span-2 flex items-center justify-center px-2 text-center`}
+              >
+                {t('expediente')}
+              </Link>
+            ) : null}
           </div>
-          <EnlaceCliente
-            obraId={s.obra.id}
-            enlace={
-              enlace
-                ? {
-                    creado: enlace.creado.toISOString(),
-                    accesos: enlace.accesos,
-                    ultimoAcceso: enlace.ultimoAcceso?.toISOString() ?? null,
-                  }
-                : null
-            }
-          />
+          {con('portal') ? (
+            <EnlaceCliente
+              obraId={s.obra.id}
+              enlace={
+                enlace
+                  ? {
+                      creado: enlace.creado.toISOString(),
+                      accesos: enlace.accesos,
+                      ultimoAcceso: enlace.ultimoAcceso?.toISOString() ?? null,
+                    }
+                  : null
+              }
+            />
+          ) : null}
         </div>
 
         <div className="contents lg:flex lg:flex-col lg:gap-4">
@@ -224,23 +242,25 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
                 {s.obra.atraso ? t('tarde', { n: s.obra.atraso }) : t('aTiempo')}
               </span>
             </p>
-            <div
-              className={`rounded-xl p-3 text-sm ${p.semaforo ? COLOR[p.semaforo] : 'bg-slate-50 text-slate-700'}`}
-            >
-              <p className="font-semibold">
-                {p.total
-                  ? t('gastado', {
-                      gastado: dinero(p.gastado),
-                      total: dinero(p.total),
-                      pct: pct(p.usado ?? 0),
-                    })
-                  : t('sinPresupuesto', { gastado: dinero(p.gastado) })}
-              </p>
-              {p.semaforo ? <p>{t(`semaforo.${p.semaforo}`)}</p> : null}
-            </div>
+            {con('dinero') ? (
+              <div
+                className={`rounded-xl p-3 text-sm ${p.semaforo ? COLOR[p.semaforo] : 'bg-slate-50 text-slate-700'}`}
+              >
+                <p className="font-semibold">
+                  {p.total
+                    ? t('gastado', {
+                        gastado: dinero(p.gastado),
+                        total: dinero(p.total),
+                        pct: pct(p.usado ?? 0),
+                      })
+                    : t('sinPresupuesto', { gastado: dinero(p.gastado) })}
+                </p>
+                {p.semaforo ? <p>{t(`semaforo.${p.semaforo}`)}</p> : null}
+              </div>
+            ) : null}
             {/* el margen de la obra (D-084): el que deja el contrato y el que quedaría si lo que falta sale como se
             presupuestó */}
-            {p.margenEsperado !== null && p.margenProyectado !== null ? (
+            {con('dinero') && p.margenEsperado !== null && p.margenProyectado !== null ? (
               <p className="flex flex-wrap gap-x-3 text-sm text-slate-700">
                 <span>{t('margenEsperado', { pct: pct(p.margenEsperado) })}</span>
                 <span
@@ -283,58 +303,62 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
             </ul>
           </Seccion>
 
-          <Seccion titulo={t('porEtapa')}>
-            <ul className="flex flex-col gap-2">
-              {p.porEtapa.map((x, i) => (
-                <li key={i} className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-semibold">
-                      {t('etapaDe', { espacio: x.espacio, etapa: x.etapa ? nombre(x.etapa) : t('otras') })}
-                    </span>
-                    <span
-                      className={
-                        x.desvio !== null && x.desvio > 0
-                          ? 'font-semibold text-red-700'
-                          : x.desvio !== null
-                            ? 'text-emerald-700'
-                            : 'text-slate-500'
-                      }
-                    >
-                      {x.desvio === null
-                        ? t('sinPresupuestoEtapa')
-                        : x.desvio > 0
-                          ? t('pasado', { monto: dinero(x.total - x.presupuesto) })
-                          : t('queda', { monto: dinero(x.presupuesto - x.total) })}
-                    </span>
-                  </div>
-                  <p className="text-slate-700">
-                    {x.presupuesto
-                      ? t('etapaGastado', { total: dinero(x.total), presupuesto: dinero(x.presupuesto) })
-                      : t('etapaSoloGastado', { total: dinero(x.total) })}
-                  </p>
-                  {x.precio ? (
-                    <p className="text-slate-700">{t('etapaPrecio', { precio: dinero(x.precio) })}</p>
-                  ) : null}
-                  <p className="text-xs text-slate-500">
-                    {t('desglose', {
-                      material: dinero(x.material),
-                      cuadrilla: dinero(x.cuadrilla),
-                      sub: dinero(x.sub),
-                    })}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </Seccion>
+          {con('dinero') ? (
+            <Seccion titulo={t('porEtapa')}>
+              <ul className="flex flex-col gap-2">
+                {p.porEtapa.map((x, i) => (
+                  <li key={i} className={`${estilos.tarjeta} flex flex-col gap-1 text-sm`}>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-semibold">
+                        {t('etapaDe', { espacio: x.espacio, etapa: x.etapa ? nombre(x.etapa) : t('otras') })}
+                      </span>
+                      <span
+                        className={
+                          x.desvio !== null && x.desvio > 0
+                            ? 'font-semibold text-red-700'
+                            : x.desvio !== null
+                              ? 'text-emerald-700'
+                              : 'text-slate-500'
+                        }
+                      >
+                        {x.desvio === null
+                          ? t('sinPresupuestoEtapa')
+                          : x.desvio > 0
+                            ? t('pasado', { monto: dinero(x.total - x.presupuesto) })
+                            : t('queda', { monto: dinero(x.presupuesto - x.total) })}
+                      </span>
+                    </div>
+                    <p className="text-slate-700">
+                      {x.presupuesto
+                        ? t('etapaGastado', { total: dinero(x.total), presupuesto: dinero(x.presupuesto) })
+                        : t('etapaSoloGastado', { total: dinero(x.total) })}
+                    </p>
+                    {x.precio ? (
+                      <p className="text-slate-700">{t('etapaPrecio', { precio: dinero(x.precio) })}</p>
+                    ) : null}
+                    <p className="text-xs text-slate-500">
+                      {t('desglose', {
+                        material: dinero(x.material),
+                        cuadrilla: dinero(x.cuadrilla),
+                        sub: dinero(x.sub),
+                      })}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </Seccion>
+          ) : null}
 
           <Seccion titulo={t('cuadrilla')}>
             <div className={`${estilos.tarjeta} flex flex-col gap-2 text-sm`}>
               <p className="font-semibold">
-                {t('cuadrillaTotal', {
-                  horas: s.cuadrilla.horas,
-                  dias: s.cuadrilla.dias,
-                  costo: dinero(s.cuadrilla.costo),
-                })}
+                {con('nomina')
+                  ? t('cuadrillaTotal', {
+                      horas: s.cuadrilla.horas,
+                      dias: s.cuadrilla.dias,
+                      costo: dinero(s.cuadrilla.costo),
+                    })
+                  : t('cuadrillaTotalSinCosto', { horas: s.cuadrilla.horas, dias: s.cuadrilla.dias })}
               </p>
               {s.cuadrilla.porTrabajador.length === 0 ? (
                 <p className="text-slate-600">{t('sinCuadrilla')}</p>
@@ -357,7 +381,7 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
                           </svg>
                           {t('trabajador', { nombre: w.nombre, cantidad: cantidad(w.tipoPago, w.cantidad) })}
                         </span>
-                        <span>{dinero(w.costo)}</span>
+                        {con('nomina') ? <span>{dinero(w.costo)}</span> : null}
                       </summary>
                       <ul className="mb-2 ml-6 flex flex-col gap-1 border-l-2 border-slate-200 pl-3 text-slate-700">
                         {w.porEtapa.map((x, i) => (
@@ -409,11 +433,16 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
                     <p className="text-slate-700">
                       {d.cuadrilla
                         .map((w) =>
-                          t('trabajo', {
-                            nombre: w.nombre,
-                            cantidad: cantidad(w.tipoPago, w.cantidad),
-                            costo: dinero(w.costo),
-                          }),
+                          con('nomina')
+                            ? t('trabajo', {
+                                nombre: w.nombre,
+                                cantidad: cantidad(w.tipoPago, w.cantidad),
+                                costo: dinero(w.costo),
+                              })
+                            : t('trabajoSinCosto', {
+                                nombre: w.nombre,
+                                cantidad: cantidad(w.tipoPago, w.cantidad),
+                              }),
                         )
                         .join(' · ')}
                     </p>

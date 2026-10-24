@@ -12,7 +12,7 @@ import {
   type Tx,
 } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirAcceso, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirAccesoCon, type Resultado } from '@/lib/acceso';
 import { clienteSupabase } from '@/lib/supabase';
 
 /** Las fotos llegan comprimidas por el teléfono; esto es un tope por si no. */
@@ -66,7 +66,7 @@ export async function guardarInspeccion(
       await subirFotos(tx, 'inspeccion', i.inspeccionId, fotos);
       return { resultado: i.resultado, defectos: i.defectos };
     },
-    await exigirAcceso(),
+    await exigirAccesoCon('calidad'),
   );
   if (r.ok) revalidatePath(`/obras/${ids.obraId}`, 'layout');
   return r;
@@ -85,7 +85,7 @@ export async function arrancarPrueba(
       const { pruebaId } = await iniciarPruebaAgua(tx, { ...ids, fotos: fotos.length });
       await subirFotos(tx, 'prueba_agua', pruebaId, fotos.slice(0, 1));
     },
-    await exigirAcceso(),
+    await exigirAccesoCon('calidad'),
   );
   if (r.ok) revalidatePath(`/obras/${ids.obraId}`, 'layout');
   return r.ok ? { ok: true, datos: undefined } : r;
@@ -105,7 +105,7 @@ export async function cerrarPrueba(
       await terminarPruebaAgua(tx, { pruebaId: ids.pruebaId, hayFuga, fotos: fotos.length });
       await subirFotos(tx, 'prueba_agua', ids.pruebaId, fotos.slice(0, 1), 2);
     },
-    await exigirAcceso(),
+    await exigirAccesoCon('calidad'),
   );
   if (r.ok) revalidatePath(`/obras/${ids.obraId}`, 'layout');
   return r.ok ? { ok: true, datos: undefined } : r;

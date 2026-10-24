@@ -6,7 +6,7 @@ import { desempenoDeUnManager, PERIODOS_DESEMPENO } from '@ijm/servidor';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../componentes/marco';
 
@@ -21,7 +21,7 @@ export default async function DesempenoDelManager({ params, searchParams }: Page
   const { id } = await params;
   const consulta = await searchParams;
   const dias = PERIODOS_DESEMPENO.find((d) => String(d) === consulta.dias) ?? 90;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('desempeno');
   const r = await comoMiembro((tx) => desempenoDeUnManager(tx, { miembroId: id, dias }), acceso);
   if (!r.ok || !r.datos) notFound();
   const d = r.datos;

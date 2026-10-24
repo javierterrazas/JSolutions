@@ -2,7 +2,7 @@
 // Los cobros al cliente de una obra (D-071): el dueño registra cada pago, y lo corrige o anula con su motivo.
 import { anular, corregir, registrarCobro } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon, type Resultado } from '@/lib/acceso';
 
 const texto = (f: FormData, campo: string) => String(f.get(campo) ?? '').trim() || null;
 /** "1,250" o "$1250.50" → 1250.5; vacío → null; basura → NaN (lo rechaza el servidor). */
@@ -32,7 +32,7 @@ export async function registrarPago(
         referencia: texto(f, 'referencia'),
         ordenCambioId: texto(f, 'ordenCambio'),
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('dinero'),
   );
   if (!r.ok) return r;
   refrescar(obraId);
@@ -55,7 +55,7 @@ export async function corregirPago(
         cambios: { monto, concepto: texto(f, 'concepto'), referencia: texto(f, 'referencia') },
         motivo: String(f.get('motivo') ?? ''),
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('dinero'),
   );
   if (!r.ok) return r;
   refrescar(ids.obraId);
@@ -69,7 +69,7 @@ export async function anularPago(
 ): Promise<Resultado<void>> {
   const r = await comoMiembro(
     (tx) => anular(tx, { tabla: 'cobros', registroId: ids.cobroId, motivo: String(f.get('motivo') ?? '') }),
-    await exigirDueno(),
+    await exigirDuenoCon('dinero'),
   );
   if (!r.ok) return r;
   refrescar(ids.obraId);

@@ -6,10 +6,12 @@ import {
   altaDeEmpresa,
   cambiarActivaEmpresa,
   editarEmpresa,
+  guardarModulos,
   guardarSuscripcion,
   registrarPagoPlataforma,
   reinvitarDueno,
 } from '@ijm/servidor';
+import type { Modulo } from '@ijm/core';
 import { revalidatePath } from 'next/cache';
 import { comoMiembro, type Resultado } from '@/lib/acceso';
 import { enlaceDeInvitacion } from '@/lib/enlace';
@@ -146,4 +148,16 @@ export async function reinvitarAlDueno(
   const r = await comoMiembro((tx) => reinvitarDueno(tx, { empresaId }), await exigirPlataforma());
   if (!r.ok) return r;
   return { ok: true, datos: { nombre: r.datos.dueno, enlace: await enlaceDeInvitacion(r.datos.token) } };
+}
+
+/** Los módulos de una empresa (D-110): los palomeados, con lo que necesitan. */
+export async function guardarLosModulos(
+  empresaId: string,
+  _previo: Resultado<Modulo[]> | null,
+  f: FormData,
+): Promise<Resultado<Modulo[]>> {
+  const modulos = f.getAll('modulo').map(String);
+  const r = await comoMiembro((tx) => guardarModulos(tx, { empresaId, modulos }), await exigirPlataforma());
+  if (r.ok) revalidatePath(`/plataforma/${empresaId}`);
+  return r;
 }

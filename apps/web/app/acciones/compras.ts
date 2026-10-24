@@ -3,7 +3,7 @@
 // A diferencia del PM, la oficina tiene señal: va directo, sin la cola del teléfono.
 import { type MetodoPago, registrarCompraOficina, registrarFoto, rutaParaFoto } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon, type Resultado } from '@/lib/acceso';
 import { clienteSupabase } from '@/lib/supabase';
 
 /** Las fotos llegan comprimidas por el teléfono; esto es un tope por si no. */
@@ -46,7 +46,7 @@ export async function registrarCompra(
       }
       return { folio: g.folio };
     },
-    await exigirDueno(),
+    await exigirDuenoCon('dinero'),
   );
   if (r.ok) revalidatePath(`/obras/${obraId}/seguimiento`);
   return r;

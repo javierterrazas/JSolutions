@@ -2,7 +2,7 @@
 // Cerrar una obra al entregarla (D-085): con algo grave pendiente, primero se confirma.
 import { cerrarObra, type ResultadoCierreObra } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon, type Resultado } from '@/lib/acceso';
 
 export async function cerrarLaObra(
   obraId: string,
@@ -17,7 +17,7 @@ export async function cerrarLaObra(
         garantiaMeses: Number(f.get('garantiaMeses') ?? 12),
         forzar: f.get('forzar') === 'si',
       }),
-    await exigirDueno(),
+    await exigirDuenoCon('posventa'),
   );
   if (r.ok && r.datos.ok) {
     revalidatePath('/obras');

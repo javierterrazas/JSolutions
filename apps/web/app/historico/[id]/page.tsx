@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../componentes/marco';
 
@@ -24,7 +24,7 @@ function Renglon({ titulo, valor, nota }: { titulo: ReactNode; valor: ReactNode;
 
 export default async function AnalisisDeObra({ params }: PageProps<'/historico/[id]'>) {
   const { id } = await params;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('historico');
   const r = await comoMiembro((tx) => analisisDeObraCerrada(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();
   const a = r.datos;

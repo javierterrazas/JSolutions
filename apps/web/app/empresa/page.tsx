@@ -3,7 +3,7 @@
 import { marcaDeMiEmpresa } from '@ijm/servidor';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, conModulo, exigirDueno } from '@/lib/acceso';
 import { Marco, estilos } from '../componentes/marco';
 import { MensajeError } from '../componentes/mensaje-error';
 import { FormularioMarca } from './formulario-marca';
@@ -15,7 +15,11 @@ export default async function MiEmpresa() {
   return (
     <Marco titulo={t('titulo')} volver={{ href: '/', texto: t('volver') }}>
       <p className="text-sm text-slate-700">{t('ayuda')}</p>
-      {r.ok ? <FormularioMarca marca={r.datos} /> : <MensajeError problema={r} />}
+      {!conModulo(acceso, 'marca') ? null : r.ok ? (
+        <FormularioMarca marca={r.datos} />
+      ) : (
+        <MensajeError problema={r} />
+      )}
       <Link
         href="/empresa/feriados"
         className={`${estilos.botonSecundario} flex items-center justify-center`}

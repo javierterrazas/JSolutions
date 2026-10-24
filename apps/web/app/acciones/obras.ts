@@ -10,7 +10,7 @@ import {
 } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { comoMiembro, exigirDueno, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirDueno, exigirDuenoCon, type Resultado } from '@/lib/acceso';
 
 /**
  * Crea la obra y manda a capturar su presupuesto. Si el mismo cliente ya tiene una obra activa en esa dirección,
@@ -36,7 +36,7 @@ export async function guardarPresupuestoObra(
     medidas: { espacioId: string; piesLineales: number }[];
   },
 ): Promise<Resultado<ResultadoPresupuesto>> {
-  const r = await comoMiembro((tx) => guardarPresupuesto(tx, entrada), await exigirDueno());
+  const r = await comoMiembro((tx) => guardarPresupuesto(tx, entrada), await exigirDuenoCon('dinero'));
   if (r.ok) revalidatePath('/obras');
   return r;
 }

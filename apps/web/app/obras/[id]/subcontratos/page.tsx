@@ -4,7 +4,7 @@
 import { subcontratosDeObra } from '@ijm/servidor';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { comoMiembro, exigirDueno } from '@/lib/acceso';
+import { comoMiembro, exigirDuenoCon } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { Marco, estilos } from '../../../componentes/marco';
 import { FormularioOrden } from './formulario-orden';
@@ -12,7 +12,7 @@ import { TarjetaOrden } from './tarjeta-orden';
 
 export default async function Subcontratos({ params }: PageProps<'/obras/[id]/subcontratos'>) {
   const { id } = await params;
-  const acceso = await exigirDueno();
+  const acceso = await exigirDuenoCon('subcontratistas');
   const r = await comoMiembro((tx) => subcontratosDeObra(tx, { obraId: id }), acceso);
   if (!r.ok || !r.datos) notFound();
   const d = r.datos;

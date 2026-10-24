@@ -143,6 +143,22 @@ export const empresas = pgTable(
     activa: boolean().default(true).notNull(),
     creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
     actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    modulos: text()
+      .array()
+      .default([
+        'dinero',
+        'portal',
+        'cambios',
+        'subcontratistas',
+        'calidad',
+        'nomina',
+        'indicadores',
+        'historico',
+        'desempeno',
+        'posventa',
+        'marca',
+      ])
+      .notNull(),
   },
   (table) => [
     pgPolicy('dueno edita su empresa', {

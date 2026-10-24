@@ -4,7 +4,7 @@
 // el portal del cliente.
 import { marcarCambioHecho, registrarFoto, rutaParaFoto } from '@ijm/servidor';
 import { revalidatePath } from 'next/cache';
-import { comoMiembro, exigirAcceso, type Resultado } from '@/lib/acceso';
+import { comoMiembro, exigirAccesoCon, type Resultado } from '@/lib/acceso';
 import { clienteSupabase } from '@/lib/supabase';
 
 /** Las fotos llegan comprimidas por el teléfono; esto es un tope por si no. */
@@ -31,7 +31,7 @@ export async function marcarHecho(
         await registrarFoto(tx, { refTipo: 'cambio_hecho', refId: h.cambioHechoId, indice: i + 1, ruta });
       }
     },
-    await exigirAcceso(),
+    await exigirAccesoCon('cambios'),
   );
   if (!r.ok) return r;
   revalidatePath('/');
