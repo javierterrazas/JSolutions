@@ -1382,7 +1382,7 @@
     "vistaPrevia": "This is the app icon",
     "vistaPreviaAyuda": "This is how the icon will look on your team's phone.",
     "logo": "Logo (PNG or JPG, up to 1 MB)",
-    "logoAyuda": "Use a square image: it fills the whole icon, with no margin (if it isn't square, it's cropped to the center). PNG or JPG up to 1 MB. Without a logo, the icon shows the company's initials.",
+    "logoAyuda": "Use a square image of 512 × 512 pixels or more (for example, 1024 × 1024): it fills the whole icon, with no margin. If it isn’t square, it’s cropped to the center. Keep the important part of the logo away from the edges: some phones round the icon’s corners. PNG or JPG up to 1 MB. Without a logo, the icon shows the company’s initials.",
     "quitarLogo": "Remove the logo",
     "color": "Company color",
     "guardar": "Save",
