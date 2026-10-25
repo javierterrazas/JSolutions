@@ -43,7 +43,7 @@
     "invalidaTexto": "It may have been used, expired (they last 7 days) or been canceled. Ask the administrator for a new one.",
     "yaTieneDueno": "This phone already has access as {nombre}. A phone belongs to one person only: if you continue, {nombre} will no longer be able to sign in here and will need a new invitation. If this is someone else, open it on their own phone.",
     "botonReemplazar": "Continue anyway",
-    "dondeAbrir": "Open it in the browser where you will use the app (Safari or Chrome), not inside WhatsApp: tap the three dots and choose \"Open in browser\". If you already installed the app on your iPhone home screen, open it and paste this link there.",
+    "dondeAbrir": "Open it in the browser where you will use the app (Safari or Chrome), not inside WhatsApp, Instagram or Facebook: tap the three dots and choose \"Open in browser\". If you already installed the app on your iPhone home screen, open it and paste this link there.",
     "verificando": "Verifying…",
     "probarEntrar": "Go to the app",
     "motivos": {
@@ -59,6 +59,14 @@
         "titulo": "This invitation expired",
         "texto": "Invitations last 7 days. Ask the administrator for a new one."
       }
+    },
+    "interno": {
+      "titulo": "You are inside {app}",
+      "texto": "If you verify here, your access stays inside {app}: you will not be able to sign in from Safari, Chrome or the installed app. Open it in your browser first.",
+      "pasos": "Tap the three dots (⋯) at the top right and choose “Open in browser”. Or copy the link and paste it in Safari.",
+      "abrirChrome": "Open in Chrome",
+      "copiar": "Copy the link",
+      "copiado": "Copied: paste it in your browser"
     }
   },
   "pin": {
