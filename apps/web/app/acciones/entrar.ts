@@ -4,6 +4,7 @@ import { esErrorDeNegocio } from '@ijm/core';
 import {
   canjearInvitacion,
   cerrarDispositivo,
+  estadoDeInvitacion,
   entrarConPin as entrarConPinEnLaBase,
   fijarPin,
   fijarSesionDispositivo,
@@ -15,7 +16,7 @@ import {
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { COOKIE_IDIOMA } from '@/i18n/idioma';
-import { conLlave, guardarLlave, type Resultado } from '@/lib/acceso';
+import { conLlave, guardarLlave, leerLlave, type Resultado } from '@/lib/acceso';
 import { nombreDelDispositivo, sesionDelToken } from '@/lib/dispositivo';
 import { auth, servidor } from '@/lib/servidor';
 import { clienteSupabase, OPCIONES_COOKIE } from '@/lib/supabase';
@@ -44,8 +45,13 @@ export async function canjear(token: string): Promise<void> {
       return nueva;
     });
   } catch (e) {
-    if (esErrorDeNegocio(e)) redirect('/invitacion/invalida');
-    throw e;
+    if (!esErrorDeNegocio(e)) throw e;
+    // por qué no se pudo (D-115): si ya se canjeó justo en este navegador (tocó dos veces, o volvió a abrir el
+    // enlace), se entra a la app; si no, se dice qué pasó
+    const actual = await leerLlave();
+    const estado = await sinUsuario(servidor(), (tx) => estadoDeInvitacion(tx, { token, llave: actual }));
+    if (estado === 'tuya') redirect('/');
+    redirect(`/invitacion/invalida?motivo=${estado}`);
   }
   await guardarLlave(llave);
   redirect('/pin/nuevo');
