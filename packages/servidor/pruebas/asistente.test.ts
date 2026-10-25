@@ -47,14 +47,9 @@ describe('las llaves del asistente', () => {
       const { id, llave } = await crearLlaveAsistente(tx, { nombre: 'Claude del celular' });
       expect(llave).toMatch(/^jsa_[\w-]{32}$/);
       const { llaves } = await llavesDelAsistente(tx);
-      expect(llaves).toEqual([
-        expect.objectContaining({
-          id,
-          nombre: 'Claude del celular',
-          inicio: llave.slice(0, 8),
-          quitada: null,
-        }),
-      ]);
+      // la nueva primero; la quitada del seed, al final
+      expect(llaves.map((l) => l.nombre)).toEqual(['Claude del celular', 'Claude anterior']);
+      expect(llaves[0]).toMatchObject({ id, inicio: llave.slice(0, 8), quitada: null });
       // la llave misma no se guarda
       expect(JSON.stringify(llaves)).not.toContain(llave);
 
@@ -64,7 +59,7 @@ describe('las llaves del asistente', () => {
 
       await quitarLlaveAsistente(tx, { llaveId: id });
       expect(await sinSesion(tx, () => quienConsultaConLlave(tx, llave))).toBeNull();
-      expect((await llavesDelAsistente(tx)).llaves[0]!.quitada).not.toBeNull();
+      expect((await llavesDelAsistente(tx)).llaves.find((l) => l.id === id)!.quitada).not.toBeNull();
     }));
 
   it('un administrador o un PM no crean llaves; si el dueño apaga el módulo, la llave deja de servir', () =>

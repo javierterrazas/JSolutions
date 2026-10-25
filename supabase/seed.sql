@@ -325,6 +325,21 @@ insert into public.feriados (empresa_id, dia, nombre_es, nombre_en, se_trabaja) 
   ('e000000a-0000-4000-8000-000000000000', '2026-12-24', 'Nochebuena', 'Christmas Eve', true),
   ('e000000b-0000-4000-8000-000000000000', '2026-11-26', 'Día de Acción de Gracias', 'Thanksgiving', false);
 
+-- El asistente (D-114): una llave ya quitada en cada empresa, con una consulta. El módulo sigue apagado.
+insert into public.llaves_asistente (id, empresa_id, miembro_id, nombre, llave_hash, inicio, creada_en, ultimo_uso,
+                                     quitada_en) values
+  ('a7000000-0000-4000-8000-000000000001', 'e000000a-0000-4000-8000-000000000000',
+   'a1000000-0000-4000-8000-000000000001', 'Claude anterior', public.hash_secreto('jsa_semilla_de_la_empresa_a'),
+   'jsa_semi', '2026-10-01 09:00-05', '2026-10-01 09:05-05', '2026-10-02 09:00-05'),
+  ('b7000000-0000-4000-8000-000000000001', 'e000000b-0000-4000-8000-000000000000',
+   'b1000000-0000-4000-8000-000000000001', 'Claude anterior', public.hash_secreto('jsa_semilla_de_la_empresa_b'),
+   'jsa_semi', '2026-10-01 09:00-05', '2026-10-01 09:05-05', '2026-10-02 09:00-05');
+insert into public.consultas_asistente (empresa_id, llave_id, herramienta, argumentos, ok, milisegundos, en) values
+  ('e000000a-0000-4000-8000-000000000000', 'a7000000-0000-4000-8000-000000000001', 'empresa', '{}', true, 40,
+   '2026-10-01 09:05-05'),
+  ('e000000b-0000-4000-8000-000000000000', 'b7000000-0000-4000-8000-000000000001', 'empresa', '{}', true, 40,
+   '2026-10-01 09:05-05');
+
 -- ------------------------------------------------------------------ el usuario de base del servidor
 -- SOLO LOCAL: la contraseña con la que el servidor (y sus pruebas) se conectan como ijm_servidor (D-027). En
 -- producción la pone quien despliega y vive en las variables de entorno, nunca en el repositorio.
