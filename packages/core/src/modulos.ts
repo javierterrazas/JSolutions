@@ -16,6 +16,8 @@ export const MODULOS = [
   'marca',
   // el asistente de IA del dueño, por MCP (D-114)
   'asistente',
+  // la checada de los trabajadores con GPS y selfie; reemplaza la cuadrilla del cierre (D-117)
+  'checada',
 ] as const;
 export type Modulo = (typeof MODULOS)[number];
 

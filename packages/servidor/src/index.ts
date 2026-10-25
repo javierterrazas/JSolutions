@@ -46,3 +46,4 @@ export * from './importar/plantilla';
 export * from './importar/escribir-xlsx';
 export * from './asistente';
 export * from './asistente-mcp';
+export * from './checada';

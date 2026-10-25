@@ -5,12 +5,14 @@
 import {
   type Cambio,
   cambiosAplicables,
+  type Dia,
   ErrorDeNegocio,
   type TablaCorregible,
   validarCorreccion,
   validarHoras,
 } from '@ijm/core';
 import { z } from 'zod';
+import { ligarChecadasAlCierre } from './checada';
 import type { Tx } from './conexion';
 import { motivo, textoLargo, uuid, validarEntrada } from './entrada';
 import { leerSesion, type Sesion } from './sesion';
@@ -229,6 +231,10 @@ export async function anularCierre(
 ): Promise<{ registros: number }> {
   const e = validarEntrada(z.object({ bitacoraId: uuid, motivo: z.string() }), entrada);
   await anular(tx, { tabla: 'bitacora', registroId: e.bitacoraId, motivo: e.motivo }, ahora);
+  // las horas checadas no son del cierre: se desligan antes de anular su cuadrilla y se quedan (D-117)
+  const [b] = await tx<{ obra_id: string; dia: Dia }[]>`
+    select obra_id, to_char(dia, 'YYYY-MM-DD') as dia from bitacora where id = ${e.bitacoraId}`;
+  if (b) await ligarChecadasAlCierre(tx, b.obra_id, b.dia, null);
   let n = 1;
   for (const tabla of ['mano_obra', 'avance'] as const) {
     const col = COLUMNA_ESTADO[tabla];

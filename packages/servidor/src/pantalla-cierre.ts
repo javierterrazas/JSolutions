@@ -2,6 +2,7 @@
 // de construirDatos_). Solo lee, con la identidad del PM; las reglas del cierre las aplica cerrarDia al guardar.
 import { type Dia, diasSinCierre, estadoDePartida, MOTIVOS_SIN_TRABAJO } from '@ijm/core';
 import { z } from 'zod';
+import { type ChecadaDelDia, checadasDeLaObra } from './checada';
 import type { Tx } from './conexion';
 import type { Nombre } from './consultas-obra';
 import { dia as esquemaDia, uuid, validarEntrada } from './entrada';
@@ -60,6 +61,11 @@ export interface DatosCierre {
     inicio: Dia | null;
   }[];
   readonly motivos: readonly string[];
+  /**
+   * Con la checada (D-117), la cuadrilla no se captura: son las checadas de la obra ese día (quién entró, a qué hora,
+   * si ya salió y lo que se le contó). Null sin el módulo.
+   */
+  readonly checadas: readonly ChecadaDelDia[] | null;
 }
 
 /**
@@ -224,5 +230,8 @@ export async function datosParaCierre(
       inicio: x.inicio,
     })),
     motivos: MOTIVOS_SIN_TRABAJO,
+    checadas: s.modulos.includes('checada')
+      ? await checadasDeLaObra(tx, { obraId: obra.id, dia: elDia }, ahora)
+      : null,
   };
 }
