@@ -4,6 +4,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   canjearInvitacion,
+  estadoDeInvitacion,
   cambiarActivo,
   cerrarDispositivo,
   conectarServidor,
@@ -156,6 +157,45 @@ describe('canjear la invitación', () => {
 
       await cambiarActivo(tx, { miembroId: MIEMBROS.luis, activo: false });
       expect(await canjear(segunda.token)).toBe('invitacion_invalida');
+    }));
+
+  it('dice por qué no se canjeó: ya es suya en este navegador, usada en otro, anulada, vencida o inválida (D-115)', () =>
+    probarComo(USUARIOS.duenoA, async (tx) => {
+      const estado = async (
+        token: string,
+        llave: { dispositivoId: string; secreto: string } | null = null,
+      ) => {
+        await sinIdentidad(tx);
+        const r = await estadoDeInvitacion(tx, { token, llave });
+        await como(tx, USUARIOS.duenoA);
+        return r;
+      };
+      expect(await estado('x'.repeat(43))).toBe('invalida');
+
+      const vieja = await reinvitar(
+        tx,
+        { miembroId: MIEMBROS.luis },
+        new Date(Date.now() - 8 * 24 * 3600 * 1000),
+      );
+      expect(await estado(vieja.token)).toBe('vencida');
+      const primera = await reinvitar(tx, { miembroId: MIEMBROS.luis });
+      const segunda = await reinvitar(tx, { miembroId: MIEMBROS.luis });
+      expect(await estado(primera.token)).toBe('anulada');
+      expect(await estado(segunda.token)).toBe('vigente');
+
+      await sinIdentidad(tx);
+      const c = await canjearInvitacion(tx, { token: segunda.token, nombreDispositivo: 'iPhone de Luis' });
+      await como(tx, USUARIOS.duenoA);
+      // con la llave del navegador que la canjeó, es suya; en otro (sin llave, o con otra), ya se usó
+      expect(await estado(segunda.token, { dispositivoId: c.dispositivoId, secreto: c.secreto })).toBe(
+        'tuya',
+      );
+      expect(await estado(segunda.token)).toBe('usada');
+      expect(await estado(segunda.token, { dispositivoId: c.dispositivoId, secreto: 'y'.repeat(43) })).toBe(
+        'usada',
+      );
+      // una cookie que no es una llave no rompe nada
+      expect(await estado(segunda.token, { dispositivoId: 'no-es-uuid', secreto: 'z' })).toBe('usada');
     }));
 
   it('al dueño y a los administradores solo los reinvita el dueño; cada quien se reinvita a sí mismo (D-055)', async () => {

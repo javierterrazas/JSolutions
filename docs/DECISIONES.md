@@ -1938,3 +1938,18 @@ Supabase para clientes: entra como administrador de la base, se salta RLS y ve t
   `@ijm/servidor` (probado con Vitest y con una conexión real en e2e).
 - Migración 20261107000100 (`llaves_asistente`, `consultas_asistente`, funciones y el módulo en el check de
   `empresas.modulos`).
+
+## D-115 · La invitación dice por qué no sirve, y no falla si ya es tuya
+
+**Lo reportó el dueño:** al mandar un enlace, el invitado tocaba "Verificar este celular" y salía "Esta invitación ya
+no sirve: pudo usarse ya…", aunque nadie la había usado. En la nube se veía lo que pasaba: la invitación SÍ se canjeaba
+(y el invitado quedaba con dos celulares registrados). Cada navegador guarda su acceso aparte: dentro de WhatsApp (en
+el iPhone tiene su propio navegador), Safari, Chrome y la app instalada (D-057). Se abría primero en uno, se canjeaba
+ahí, y al abrirla en otro ya estaba usada. También pasaba con dos toques seguidos al botón.
+- **`estado_invitacion`** (migración 20261106000100) dice por qué: `tuya` (ya se canjeó con la llave de este mismo
+  navegador), `usada`, `anulada` (hay una más nueva), `vencida`, `invalida`, o `vigente`.
+- **Al abrir el enlace** ya se revisa: si es tuya, a la app; si no se puede canjear, la pantalla dice por qué y qué
+  hacer (abrir donde se abrió primero, el último enlace, o pedir otra). Lo mismo si falla al canjear.
+- **El botón** no se puede tocar dos veces mientras se canjea.
+- **La invitación** pide abrirla en el navegador donde se va a usar la app, no dentro de WhatsApp; y en el iPhone con
+  la app instalada, pegar ahí el enlace.

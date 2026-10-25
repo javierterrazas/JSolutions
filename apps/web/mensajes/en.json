@@ -42,7 +42,24 @@
     "invalidaTitulo": "This invitation no longer works",
     "invalidaTexto": "It may have been used, expired (they last 7 days) or been canceled. Ask the administrator for a new one.",
     "yaTieneDueno": "This phone already has access as {nombre}. A phone belongs to one person only: if you continue, {nombre} will no longer be able to sign in here and will need a new invitation. If this is someone else, open it on their own phone.",
-    "botonReemplazar": "Continue anyway"
+    "botonReemplazar": "Continue anyway",
+    "dondeAbrir": "Open it in the browser where you will use the app (Safari or Chrome), not inside WhatsApp: tap the three dots and choose \"Open in browser\". If you already installed the app on your iPhone home screen, open it and paste this link there.",
+    "verificando": "Verifying…",
+    "probarEntrar": "Go to the app",
+    "motivos": {
+      "usada": {
+        "titulo": "This invitation was already used",
+        "texto": "It was opened somewhere else. Most often: it was opened first inside WhatsApp and then in Safari, Chrome or the installed app; each keeps its own access.\nOpen the app where you opened the link the first time, or ask the administrator for a new invitation."
+      },
+      "anulada": {
+        "titulo": "There is a newer invitation",
+        "texto": "Another invitation was sent after this one, and this one stopped working. Open the latest link you received."
+      },
+      "vencida": {
+        "titulo": "This invitation expired",
+        "texto": "Invitations last 7 days. Ask the administrator for a new one."
+      }
+    }
   },
   "pin": {
     "nuevoTitulo": "Choose your PIN",
