@@ -106,7 +106,7 @@ test('abierta dentro de Instagram, la invitaci√≥n avisa que el acceso se quedar√
   await p2.goto(`/invitacion/${token}`);
   await expect(p2.getByRole('link', { name: es.invitacion.interno.abrirChrome })).toHaveAttribute(
     'href',
-    new RegExp(`^intent://[^/]+/invitacion/${token}#Intent;scheme=http;package=com\.android\.chrome;end$`),
+    new RegExp(`^intent://[^/]+/invitacion/${token}#Intent;scheme=http;package=com\\.android\\.chrome;end$`),
   );
   await android.close();
 });
