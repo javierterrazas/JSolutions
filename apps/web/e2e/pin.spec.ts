@@ -80,3 +80,33 @@ test('en la app instalada del iPhone, que no comparte las cookies de Safari, la 
   await page.getByRole('button', { name: es.invitacion.boton }).click();
   await expect(page).toHaveURL(/\/pin\/nuevo$/);
 });
+
+test('abierta dentro de Instagram, la invitación avisa que el acceso se quedaría ahí; en Android la abre en Chrome (D-116)', async ({
+  browser,
+}) => {
+  const token = await invitacion('pm');
+  const iphone = await browser.newContext({
+    userAgent:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 330.0.3.12.235',
+  });
+  const p1 = await iphone.newPage();
+  await p1.goto(`/invitacion/${token}`);
+  const aviso = p1
+    .getByRole('alert')
+    .filter({ hasText: es.invitacion.interno.titulo.replace('{app}', 'Instagram') });
+  await expect(aviso).toContainText(es.invitacion.interno.pasos);
+  await expect(aviso.getByRole('link', { name: es.invitacion.interno.abrirChrome })).toHaveCount(0);
+  await iphone.close();
+
+  const android = await browser.newContext({
+    userAgent:
+      'Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36 Chrome/125.0 Mobile Safari/537.36 Instagram 330.0.0.40.92 Android',
+  });
+  const p2 = await android.newPage();
+  await p2.goto(`/invitacion/${token}`);
+  await expect(p2.getByRole('link', { name: es.invitacion.interno.abrirChrome })).toHaveAttribute(
+    'href',
+    new RegExp(`^intent://[^/]+/invitacion/${token}#Intent;scheme=http;package=com\.android\.chrome;end$`),
+  );
+  await android.close();
+});
