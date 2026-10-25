@@ -43,7 +43,7 @@
     "invalidaTexto": "Pudo usarse ya, vencer (duran 7 días) o anularse. Pide una nueva al administrador.",
     "yaTieneDueno": "Este celular ya tiene acceso como {nombre}. Un celular es de una sola persona: si continúas, {nombre} ya no podrá entrar aquí y necesitará una invitación nueva. Si es otra persona, ábrela en su propio celular.",
     "botonReemplazar": "Continuar de todos modos",
-    "dondeAbrir": "Ábrela en el navegador donde vas a usar la app (Safari o Chrome), no dentro de WhatsApp: toca los tres puntos y elige \"Abrir en el navegador\". Si ya instalaste la app en la pantalla de inicio del iPhone, ábrela y pega ahí este enlace.",
+    "dondeAbrir": "Ábrela en el navegador donde vas a usar la app (Safari o Chrome), no dentro de WhatsApp, Instagram o Facebook: toca los tres puntos y elige \"Abrir en el navegador\". Si ya instalaste la app en la pantalla de inicio del iPhone, ábrela y pega ahí este enlace.",
     "verificando": "Verificando…",
     "probarEntrar": "Entrar a la app",
     "motivos": {
@@ -59,6 +59,14 @@
         "titulo": "Esta invitación venció",
         "texto": "Las invitaciones duran 7 días. Pide una nueva al administrador."
       }
+    },
+    "interno": {
+      "titulo": "Estás dentro de {app}",
+      "texto": "Si verificas aquí, tu acceso se queda dentro de {app}: no vas a poder entrar desde Safari, Chrome ni desde la app instalada. Ábrela primero en el navegador.",
+      "pasos": "Toca los tres puntos (⋯) arriba a la derecha y elige «Abrir en el navegador». O copia el enlace y pégalo en Safari.",
+      "abrirChrome": "Abrir en Chrome",
+      "copiar": "Copiar el enlace",
+      "copiado": "Copiado: pégalo en tu navegador"
     }
   },
   "pin": {

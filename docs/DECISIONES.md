@@ -1924,3 +1924,12 @@ ahí, y al abrirla en otro ya estaba usada. También pasaba con dos toques segui
 - **El botón** no se puede tocar dos veces mientras se canjea.
 - **La invitación** pide abrirla en el navegador donde se va a usar la app, no dentro de WhatsApp; y en el iPhone con
   la app instalada, pegar ahí el enlace.
+
+## D-116 · Aviso cuando la invitación se abre dentro de Instagram o Facebook
+
+**Lo preguntó el dueño:** ¿funciona si la invitación se manda por Instagram? Sí, pero Instagram (como Facebook,
+Messenger, TikTok…) abre los enlaces en su navegador interno, y si se canjea ahí el acceso se queda dentro de esa app
+(D-115). La invitación reconoce esos navegadores por su user-agent (`lib/navegador.ts`) y muestra un aviso grande:
+cómo abrirla en el navegador (los tres puntos → "Abrir en el navegador"), un botón para copiar el enlace y, en
+Android, uno que la abre directo en Chrome (`intent://…`). El navegador de WhatsApp en el iPhone no se distingue de
+Safari: para ese queda el aviso general.
