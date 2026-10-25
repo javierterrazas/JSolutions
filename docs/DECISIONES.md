@@ -1936,5 +1936,5 @@ Supabase para clientes: entra como administrador de la base, se salta RLS y ve t
 - **Protocolo:** MCP por HTTP sin estado (`app/mcp/[llave]/route.ts`): JSON-RPC por POST, contestado en JSON;
   `initialize`, `ping`, `tools/list`, `tools/call`; GET 405. Sin paquete externo: `atenderMcp` en
   `@ijm/servidor` (probado con Vitest y con una conexión real en e2e).
-- Migración 20261106000100 (`llaves_asistente`, `consultas_asistente`, funciones y el módulo en el check de
+- Migración 20261107000100 (`llaves_asistente`, `consultas_asistente`, funciones y el módulo en el check de
   `empresas.modulos`).
