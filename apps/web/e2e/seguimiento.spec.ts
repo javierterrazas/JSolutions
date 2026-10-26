@@ -45,9 +45,10 @@ test('el dueño ve cómo va la obra: avance, etapa, presupuesto por etapa, cuadr
   await expect(demolicion).toBeHidden();
   for (const s of ['espacios', 'porEtapa', 'cuadrilla', 'diaADia'] as const) await seccion(s).click();
   await expect(demolicion).toBeVisible();
-  await expect(page.getByText(/^Pedro · \d+ horas$/)).toBeVisible();
+  // horas enteras, o con cuartos si la checada de otra prueba le sumó (D-117)
+  await expect(page.getByText(/^Pedro · \d+([.,]\d+)? horas$/)).toBeVisible();
   // con un toque, sus horas por etapa (D-077)
-  await page.getByText(/^Pedro · \d+ horas$/).click();
+  await page.getByText(/^Pedro · \d+([.,]\d+)? horas$/).click();
   await expect(page.locator('#cuadrilla details[open]').filter({ hasText: 'Pedro' })).toContainText(
     /Demolición\s*≈ \d+(\.\d)? horas?/,
   );
