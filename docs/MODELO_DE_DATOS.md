@@ -147,6 +147,8 @@ aquí se deduce.
 | `obras_cerradas` 💲 | Obras_Cerradas | la foto fija del cierre: fechas, días de ciclo, contrato, órdenes de cambio, presupuesto, materiales, cuadrilla, subcontratos, costo total, margen, desvío, cobrado, no calidad, días reportados, pies² | lee | — |
 | `historico_etapas` 💲 | (nueva) | al cerrar (D-085): por espacio y etapa, presupuestado, costo real, pies², pies lineales, costo por pie², y la unidad de la etapa con su costo por ella (D-086; la fija, por espacio, D-095) | lee | — |
 | `uso_app` | (nueva) | por miembro y día (D-101): `minutos` con la app abierta y a la vista, `sesiones`, `primer_en`, `ultimo_en`; la escribe `registrar_uso` y solo la lee la plataforma (`plataforma_uso`) | — | — |
+| `llaves_asistente` | (nueva) | las llaves con que el dueño conecta su asistente de IA por MCP (D-114): `nombre`, `llave_hash` (la llave no se guarda), `inicio` para reconocerla, `ultimo_uso`, `quitada_en`; solo con funciones (`crear_llave_asistente`, `usuario_de_llave_asistente`…) | — | — |
+| `consultas_asistente` | (nueva) | cada herramienta que usó el asistente (D-114): `herramienta`, `argumentos`, `ok`, `milisegundos`, `en`; la escribe `anotar_consulta_asistente` y el dueño ve las últimas | — | — |
 | `historico_duraciones` | (nueva) | al cerrar: días planeados y reales de cada partida | lee | — |
 
 ### Sistema

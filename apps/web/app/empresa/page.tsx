@@ -1,5 +1,6 @@
 // "Mi empresa", para el dueño (D-078): el logo (llena todo el ícono, D-082) y el color con que su equipo instala la
-// app, y el logo que sale arriba de cada pantalla y en el portal del cliente. De aquí, los feriados (D-108).
+// app, y el logo que sale arriba de cada pantalla y en el portal del cliente. De aquí, los feriados (D-108) y conectar
+// el asistente (D-114).
 import { marcaDeMiEmpresa } from '@ijm/servidor';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
@@ -26,6 +27,15 @@ export default async function MiEmpresa() {
       >
         {t('feriados')}
       </Link>
+      {/* el asistente de IA, solo el dueño (D-114) */}
+      {conModulo(acceso, 'asistente') && acceso.yo.rol === 'dueno' ? (
+        <Link
+          href="/empresa/asistente"
+          className={`${estilos.botonSecundario} flex items-center justify-center`}
+        >
+          {t('asistente')}
+        </Link>
+      ) : null}
     </Marco>
   );
 }

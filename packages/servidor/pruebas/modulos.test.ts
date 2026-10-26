@@ -24,8 +24,10 @@ const LUNES = enAustin('2026-10-12', 9);
 describe('los módulos de una empresa', () => {
   it('empiezan todos prendidos; quien administra los cambia con lo que necesitan', () =>
     probarComo(USUARIOS.duenoA, async (tx) => {
-      expect((await leerSesion(tx)).modulos).toEqual([...MODULOS]);
-      expect((await empresaDeLaPlataforma(tx, { empresaId: EMPRESA_B }))!.modulos).toEqual([...MODULOS]);
+      // todos menos el asistente, que nace apagado (D-114)
+      const todos = MODULOS.filter((m) => m !== 'asistente');
+      expect((await leerSesion(tx)).modulos).toEqual(todos);
+      expect((await empresaDeLaPlataforma(tx, { empresaId: EMPRESA_B }))!.modulos).toEqual(todos);
       // pedir órdenes de cambio prende el portal y el dinero
       expect(await guardarModulos(tx, { empresaId: EMPRESA_B, modulos: ['cambios'] })).toEqual([
         'dinero',

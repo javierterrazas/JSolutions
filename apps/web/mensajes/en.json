@@ -275,7 +275,9 @@
     "orden_cambiada": "The order changed while you were viewing it: review the new version and answer again.",
     "feriado_repetido": "There is already a holiday on that day.",
     "modulo_no_incluido": "Your plan does not include this part of the app.",
-    "solo_el_dueno": "Only the company owner can do that."
+    "solo_el_dueno": "Only the company owner can do that.",
+    "demasiadas_llaves": "You already have 10 keys: remove one before creating another.",
+    "llave_invalida": "That key no longer exists."
   },
   "obras": {
     "titulo": "Jobs",
@@ -1426,7 +1428,8 @@
     "guardando": "Saving…",
     "guardado": "Saved.",
     "instalarAyuda": "If someone already installed the app, to see the new icon: on iPhone, remove it from the home screen and add it again; on Android it updates by itself, though it can take a while.",
-    "feriados": "Holidays"
+    "feriados": "Holidays",
+    "asistente": "Connect an assistant (AI)"
   },
   "suscripcion": {
     "prueba": "You're on the trial until {dia}.",
@@ -2000,7 +2003,8 @@
       "historico": "History and analysis",
       "desempeno": "Manager performance",
       "posventa": "Close-out, after-delivery and warranty",
-      "marca": "Own branding"
+      "marca": "Own branding",
+      "asistente": "AI assistant"
     },
     "descripciones": {
       "dinero": "Budget by stage with margin, office purchases, payments and money in the job view.",
@@ -2013,7 +2017,49 @@
       "historico": "Which jobs pay off, where the margin went and the suggested cost when quoting.",
       "desempeno": "Each manager’s performance.",
       "posventa": "Closing the job, rework, warranty, reviews and the PDF job file.",
-      "marca": "The company logo and color in the app and in the portal."
+      "marca": "The company logo and color in the app and in the portal.",
+      "asistente": "The owner connects their assistant (like Claude) to analyze the company data. Read only."
     }
+  },
+  "asistente": {
+    "titulo": "Connect an assistant",
+    "volver": "Back to My company",
+    "ayuda": "Connect your AI assistant (like Claude) to your company data and ask it anything: which months you sell the most, which stage goes over budget, which PM runs late. It can only look: it changes nothing.",
+    "comoTitulo": "How to connect it to Claude",
+    "paso1": "Create a key below and copy the link.",
+    "paso2": "In Claude (claude.ai or the desktop app): Settings → Connectors → Add custom connector.",
+    "paso3": "Name it J Solutions, paste the link and save.",
+    "paso4": "In a conversation, turn on the J Solutions connector and ask. It shows up on your phone too.",
+    "seguridad": "Anyone with the link can look at your company data (never change it). Do not share it; if it is lost, remove the key and create another.",
+    "nueva": "New key",
+    "nombre": "Name",
+    "nombreAyuda": "To recognize it, for example: Office Claude.",
+    "crear": "Create key",
+    "enlaceTitulo": "The link for “{nombre}”",
+    "enlaceUnaVez": "Copy it now: for security it is not shown again.",
+    "copiar": "Copy link",
+    "copiado": "Copied",
+    "llaves": "Your keys",
+    "sinLlaves": "No keys yet.",
+    "creada": "Created {fecha}",
+    "usada": "last used {fecha}",
+    "sinUso": "not used yet",
+    "consultas": "{n, plural, =0 {No queries} one {# query} other {# queries}}",
+    "quitar": "Remove key",
+    "quitadas": "Removed: {nombres}",
+    "ultimasConsultas": "Latest queries",
+    "herramientas": {
+      "empresa": "The company",
+      "obras": "Jobs",
+      "etapas_de_obras": "Job stages",
+      "seguimiento_de_obra": "Job tracking",
+      "analisis_de_obra_cerrada": "Closed job analysis",
+      "historico": "History",
+      "indicadores": "Indicators",
+      "desempeno_de_managers": "Manager performance",
+      "horas_de_la_cuadrilla": "Crew hours",
+      "pendientes": "Pending items"
+    },
+    "inicioLlave": "{inicio}…"
   }
 }

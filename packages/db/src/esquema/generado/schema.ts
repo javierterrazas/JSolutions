@@ -22,6 +22,8 @@ import {
   primaryKey,
   pgView,
   pgEnum,
+  bigint,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -2953,5 +2955,67 @@ export const uso_app = pgTable(
     primaryKey({ columns: [table.miembro_id, table.dia], name: 'uso_app_pkey' }),
     check('uso_app_minutos_check', sql`minutos >= 0`),
     check('uso_app_sesiones_check', sql`sesiones >= 0`),
+  ],
+);
+
+export const llaves_asistente = pgTable(
+  'llaves_asistente',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    miembro_id: uuid().notNull(),
+    nombre: text().notNull(),
+    llave_hash: text().notNull(),
+    inicio: text().notNull(),
+    creada_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    ultimo_uso: timestamp({ withTimezone: true, mode: 'string' }),
+    quitada_en: timestamp({ withTimezone: true, mode: 'string' }),
+  },
+  (table) => [
+    index('llaves_asistente_empresa_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.miembro_id],
+      foreignColumns: [miembros.id, miembros.empresa_id],
+      name: 'llaves_asistente_empresa_id_miembro_id_fkey',
+    }),
+    unique('llaves_asistente_llave_hash_key').on(table.llave_hash),
+    check(
+      'llaves_asistente_nombre_check',
+      sql`(length(btrim(nombre)) >= 1) AND (length(btrim(nombre)) <= 60)`,
+    ),
+  ],
+);
+
+export const consultas_asistente = pgTable(
+  'consultas_asistente',
+  {
+    id: bigint({ mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    empresa_id: uuid().notNull(),
+    llave_id: uuid().notNull(),
+    herramienta: text().notNull(),
+    argumentos: jsonb().default({}).notNull(),
+    ok: boolean().notNull(),
+    milisegundos: integer().default(0).notNull(),
+    en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('consultas_asistente_llave_id_en_idx').using(
+      'btree',
+      table.llave_id.asc().nullsLast().op('uuid_ops'),
+      table.en.desc().nullsFirst().op('timestamptz_ops'),
+    ),
+    index('consultas_asistente_empresa_id_en_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.en.desc().nullsFirst().op('timestamptz_ops'),
+    ),
+    foreignKey({
+      columns: [table.llave_id],
+      foreignColumns: [llaves_asistente.id],
+      name: 'consultas_asistente_llave_id_fkey',
+    }),
   ],
 );

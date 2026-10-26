@@ -1910,6 +1910,35 @@ Los datos de la obra, los botones y "cómo va" (avance, entrega, gastado y marge
 página en el día a día (`?pagina=…#dia-a-dia`), la sección llega abierta y la pantalla baja hasta ella. En la
 computadora es igual.
 
+## D-114 · El asistente del dueño (MCP de J Solutions)
+
+**Lo pidió el dueño de la plataforma:** que el dueño de cada empresa conecte su asistente de IA (Claude) a sus datos
+para analizarlos: "¿en qué meses vendemos más?", "¿en qué etapa nos pasamos del presupuesto?". Se descartó el MCP de
+Supabase para clientes: entra como administrador de la base, se salta RLS y ve todas las empresas.
+- **Un módulo nuevo, `asistente`** (necesita `dinero`), apagado hasta que quien administra la plataforma lo prende. Va
+  en el plan Empresa.
+- **Llaves, solo el dueño** (no el administrador): Mi empresa → "Conectar un asistente". La app da un enlace
+  `…/mcp/jsa_…` con la llave adentro para pegarlo en Claude como conector personalizado; se ve una sola vez (la base
+  guarda su `hash_secreto`). Hasta 10 vigentes; se quitan cuando quiera y dejan de servir al instante. También dejan
+  de servir si quien la creó ya no es el dueño activo o la empresa ya no tiene el módulo. Llave en la dirección y no
+  OAuth: sirve igual en Claude del celular, de la computadora y del navegador; "Iniciar sesión con J Solutions"
+  (OAuth) queda para después.
+- **Solo lectura, con la identidad del dueño:** cada herramienta corre en una transacción a su nombre (`enNombreDe`)
+  con las mismas funciones de la app, así que ve exactamente lo que él ve (RLS, solo su empresa). Las herramientas de
+  un módulo apagado no aparecen. No se le pasa el teléfono ni la dirección del cliente, ni las fotos.
+- **Herramientas:** `empresa` (hoy, módulos, gente), `obras` y `etapas_de_obras` (las dos para analizar: cada obra en
+  un renglón con fechas, tipo, pies², PM, contrato, órdenes de cambio, cobros, costos, márgenes, atraso, retrabajos y
+  garantías; cada etapa de cada obra con presupuestado contra gastado y su desglose), `seguimiento_de_obra`,
+  `analisis_de_obra_cerrada`, `historico`, `indicadores`, `desempeno_de_managers`, `horas_de_la_cuadrilla`,
+  `pendientes`. "Alta" de la obra = día de la venta.
+- **Registro y límite:** cada llamada a una herramienta se anota (herramienta, argumentos, si salió bien, cuánto
+  tardó) y el dueño ve las últimas en la misma pantalla; más de 60 en un minuto por llave: espera (HTTP 429).
+- **Protocolo:** MCP por HTTP sin estado (`app/mcp/[llave]/route.ts`): JSON-RPC por POST, contestado en JSON;
+  `initialize`, `ping`, `tools/list`, `tools/call`; GET 405. Sin paquete externo: `atenderMcp` en
+  `@ijm/servidor` (probado con Vitest y con una conexión real en e2e).
+- Migración 20261107000100 (`llaves_asistente`, `consultas_asistente`, funciones y el módulo en el check de
+  `empresas.modulos`).
+
 ## D-115 · La invitación dice por qué no sirve, y no falla si ya es tuya
 
 **Lo reportó el dueño:** al mandar un enlace, el invitado tocaba "Verificar este celular" y salía "Esta invitación ya
