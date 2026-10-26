@@ -14,6 +14,7 @@ import {
   datosParaCierre,
   estadoDeAccesoTrabajador,
   fijarGeocerca,
+  geocercaDeObra,
   guardarModulos,
   invitarTrabajadorChecada,
   type LlaveTrabajador,
@@ -92,6 +93,17 @@ describe('la llave de checada del trabajador', () => {
         expect(await trabajadorDeLlave(tx, segunda)).toBeNull();
         expect((await checar(tx, segunda, { tipo: 'entrada', ...CERCA })).resultado).toBe('sin_acceso');
       });
+    }));
+});
+
+describe('la geocerca de la obra', () => {
+  it('la fija el PM de la obra (o el dueño); otro PM no', () =>
+    probarComo(USUARIOS.carlos, async (tx) => {
+      await fijarGeocerca(tx, { obraId: OBRAS.a1Carlos, ...OBRA, radio: 250 });
+      expect(await geocercaDeObra(tx, { obraId: OBRAS.a1Carlos })).toMatchObject({ ...OBRA, radio: 250 });
+      await como(tx, USUARIOS.luis);
+      // la base lo rechaza (y la transacción ya no sigue: va al final)
+      await expect(fijarGeocerca(tx, { obraId: OBRAS.a1Carlos, ...OBRA })).rejects.toThrow('solo_dueno');
     }));
 });
 

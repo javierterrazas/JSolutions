@@ -23,9 +23,13 @@ export function FijarUbicacion({ obraId, radio: inicial }: { obraId: string; rad
           setEstado('listo');
           return setProblema(t('impreciso', { metros: Math.round(p.coords.accuracy) }));
         }
-        const r = await fijarUbicacion(obraId, { lat: p.coords.latitude, lng: p.coords.longitude, radio });
-        setEstado(r.ok ? 'guardado' : 'listo');
-        if (!r.ok) setProblema(t('noSeGuardo'));
+        const r = await fijarUbicacion(obraId, {
+          lat: p.coords.latitude,
+          lng: p.coords.longitude,
+          radio,
+        }).catch(() => null);
+        setEstado(r?.ok ? 'guardado' : 'listo');
+        if (!r?.ok) setProblema(t('noSeGuardo'));
       },
       () => {
         setEstado('listo');

@@ -37,6 +37,9 @@ azul de tu inicio dice cuánto falta por enviar; si tarda, toca "Enviar ahora".
    **terminadas**. Una partida con punto de control no se termina hasta que su inspección esté aprobada.
 2. **¿Quién de la cuadrilla estuvo?** Toca **"Igual que el último cierre"** y corrige solo al que cambió. Para alguien
    que no está en la lista, búscalo en "Agregar a alguien más".
+   **Con la checada con GPS** (si tu empresa la tiene) no anotas la cuadrilla: sale de lo que cada trabajador checó en
+   su celular, y ahí ves quién entró, a qué hora y quién sigue dentro. Antes, el primer día en cada obra, estando ahí,
+   toca **"Ubicación para checar"** → **"Fijar la ubicación aquí"**: sin eso nadie puede checar en esa obra.
 3. **¿Llegó el sub?** Llegó o no llegó.
 4. **Fotos del día** (opcionales) y **notas** si pasó algo.
 5. **Cerrar el día.** Si no hubo trabajo, marca "Hoy no hubo trabajo" y el motivo.

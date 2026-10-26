@@ -149,6 +149,8 @@ aquí se deduce.
 | `uso_app` | (nueva) | por miembro y día (D-101): `minutos` con la app abierta y a la vista, `sesiones`, `primer_en`, `ultimo_en`; la escribe `registrar_uso` y solo la lee la plataforma (`plataforma_uso`) | — | — |
 | `llaves_asistente` | (nueva) | las llaves con que el dueño conecta su asistente de IA por MCP (D-114): `nombre`, `llave_hash` (la llave no se guarda), `inicio` para reconocerla, `ultimo_uso`, `quitada_en`; solo con funciones (`crear_llave_asistente`, `usuario_de_llave_asistente`…) | — | — |
 | `consultas_asistente` | (nueva) | cada herramienta que usó el asistente (D-114): `herramienta`, `argumentos`, `ok`, `milisegundos`, `en`; la escribe `anotar_consulta_asistente` y el dueño ve las últimas | — | — |
+| `accesos_trabajador` | (nueva) | la checada de cada trabajador (D-117): la invitación (`token_hash`, `expira_en`, `usado_en`, `anulado_en`) y, al canjearla, la llave de su celular (`secreto_hash`, `dispositivo`, `ultimo_uso`, `revocado_en`); solo con funciones | — | — |
+| `checadas` | (nueva) | cada entrada y salida (D-117): obra, trabajador, `en`, `lat`/`lng`, `precision_m`, `distancia_m`, `foto_path` (la selfie), `origen` (celular o corrección con `motivo`), `entrada_id` en la salida y `mano_obra_id` con sus horas; la leen el dueño y el PM de la obra | — | — |
 | `historico_duraciones` | (nueva) | al cerrar: días planeados y reales de cada partida | lee | — |
 
 ### Sistema

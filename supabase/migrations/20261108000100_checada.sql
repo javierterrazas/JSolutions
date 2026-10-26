@@ -112,8 +112,10 @@ begin
   if not (public.es_dueno_o_admin() or public.es_pm_de(p_obra)) then
     raise exception 'solo_dueno' using errcode = '42501';
   end if;
+  perform set_config('ijm.fijando_geocerca', 'si', true);
   update public.obras set geocerca_lat = p_lat, geocerca_lng = p_lng, geocerca_radio = coalesce(p_radio, 150)
     where id = p_obra and empresa_id = public.empresa_actual();
+  perform set_config('ijm.fijando_geocerca', '', true);
   if not found then
     raise exception 'obra_no_encontrada' using errcode = 'P0001';
   end if;
@@ -419,8 +421,9 @@ begin
     where (id = c.id or entrada_id = c.id) and estado = 'vigente';
 end $$;
 
--- El PM no cambia a qué cierre pertenece una hora de la cuadrilla (limitar_columnas_pm, 20261004000200), salvo
--- cuando la base liga las horas de la checada a su cierre (abajo), que lo marca solo durante esa sentencia.
+-- El PM no cambia a qué cierre pertenece una hora de la cuadrilla ni las columnas de la obra (limitar_columnas_pm,
+-- 20261004000200), salvo cuando la base liga las horas de la checada a su cierre o fija la geocerca (abajo), que lo
+-- marcan solo durante esa sentencia.
 create or replace function public.limitar_columnas_pm() returns trigger
 language plpgsql set search_path = '' as $$
 declare
@@ -434,6 +437,9 @@ begin
   end if;
   if tg_table_name = 'mano_obra' and coalesce(current_setting('ijm.ligando_checadas', true), '') = 'si' then
     permitidas := permitidas || array['bitacora_id'];
+  end if;
+  if tg_table_name = 'obras' and coalesce(current_setting('ijm.fijando_geocerca', true), '') = 'si' then
+    permitidas := permitidas || array['geocerca_lat', 'geocerca_lng', 'geocerca_radio'];
   end if;
   for c in select jsonb_object_keys(despues) loop
     if antes -> c is distinct from despues -> c and not c = any(permitidas) then

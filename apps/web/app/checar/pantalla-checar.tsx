@@ -30,6 +30,8 @@ export function PantallaChecar({ dentro }: { dentro: { obra: string; desde: stri
   const [paso, setPaso] = useState<Paso>('listo');
   const [problema, setProblema] = useState<string | null>(null);
   const [hecho, setHecho] = useState<RespuestaChecada | null>(null);
+  // la foto se toma cuando la cámara ya muestra algo
+  const [camaraLista, setCamaraLista] = useState(false);
   const ubicacion = useRef<Ubicacion | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const flujo = useRef<MediaStream | null>(null);
@@ -40,6 +42,7 @@ export function PantallaChecar({ dentro }: { dentro: { obra: string; desde: stri
   const apagarCamara = () => {
     flujo.current?.getTracks().forEach((x) => x.stop());
     flujo.current = null;
+    setCamaraLista(false);
   };
   useEffect(() => apagarCamara, []);
 
@@ -156,9 +159,10 @@ export function PantallaChecar({ dentro }: { dentro: { obra: string; desde: stri
             ref={video}
             playsInline
             muted
+            onLoadedData={() => setCamaraLista(true)}
             className="aspect-[3/4] w-full -scale-x-100 rounded-2xl bg-slate-900 object-cover"
           />
-          <button type="button" onClick={tomarFoto} className={estilos.boton}>
+          <button type="button" onClick={tomarFoto} disabled={!camaraLista} className={estilos.boton}>
             {t('tomarFoto')}
           </button>
           <button
