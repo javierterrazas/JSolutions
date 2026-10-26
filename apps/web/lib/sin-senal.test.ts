@@ -25,6 +25,7 @@ const obra: ObraDeLaCopia = {
     espacios: [],
     trabajadores: [],
     ultimoCierre: null,
+    checadas: null,
     subs: [
       {
         ordenId: 'o1',

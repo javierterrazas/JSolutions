@@ -1679,6 +1679,9 @@ export const obras = pgTable(
     creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
     creado_por: uuid(),
     actualizado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    geocerca_lat: numeric({ precision: 9, scale: 6 }),
+    geocerca_lng: numeric({ precision: 9, scale: 6 }),
+    geocerca_radio: integer().default(150).notNull(),
   },
   (table) => [
     index('obras_empresa_id_estado_idx').using(
@@ -3017,5 +3020,129 @@ export const consultas_asistente = pgTable(
       foreignColumns: [llaves_asistente.id],
       name: 'consultas_asistente_llave_id_fkey',
     }),
+  ],
+);
+
+export const accesos_trabajador = pgTable(
+  'accesos_trabajador',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    trabajador_id: uuid().notNull(),
+    token_hash: text().notNull(),
+    expira_en: timestamp({ withTimezone: true, mode: 'string' }).notNull(),
+    usado_en: timestamp({ withTimezone: true, mode: 'string' }),
+    anulado_en: timestamp({ withTimezone: true, mode: 'string' }),
+    secreto_hash: text(),
+    dispositivo: text(),
+    ultimo_uso: timestamp({ withTimezone: true, mode: 'string' }),
+    revocado_en: timestamp({ withTimezone: true, mode: 'string' }),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+  },
+  (table) => [
+    index('accesos_trabajador_empresa_id_trabajador_id_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.trabajador_id.asc().nullsLast().op('uuid_ops'),
+    ),
+    foreignKey({
+      columns: [table.empresa_id, table.trabajador_id],
+      foreignColumns: [trabajadores.empresa_id, trabajadores.id],
+      name: 'accesos_trabajador_empresa_id_trabajador_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.empresa_id, miembros.id],
+      name: 'accesos_trabajador_empresa_id_creado_por_fkey',
+    }),
+    unique('accesos_trabajador_token_hash_key').on(table.token_hash),
+  ],
+);
+
+export const checadas = pgTable(
+  'checadas',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    empresa_id: uuid().notNull(),
+    obra_id: uuid().notNull(),
+    trabajador_id: uuid().notNull(),
+    acceso_id: uuid(),
+    tipo: text().notNull(),
+    entrada_id: uuid(),
+    en: timestamp({ withTimezone: true, mode: 'string' }).notNull(),
+    recibida_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    enviada_despues: boolean().default(false).notNull(),
+    lat: numeric({ precision: 9, scale: 6 }),
+    lng: numeric({ precision: 9, scale: 6 }),
+    precision_m: integer(),
+    distancia_m: integer(),
+    foto_path: text(),
+    origen: text().default('celular').notNull(),
+    motivo: text(),
+    mano_obra_id: uuid(),
+    estado: estado_registro().default('vigente').notNull(),
+    creado_en: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    creado_por: uuid(),
+  },
+  (table) => [
+    index('checadas_empresa_id_en_idx').using(
+      'btree',
+      table.empresa_id.asc().nullsLast().op('uuid_ops'),
+      table.en.asc().nullsLast().op('timestamptz_ops'),
+    ),
+    index('checadas_obra_id_en_idx').using(
+      'btree',
+      table.obra_id.asc().nullsLast().op('uuid_ops'),
+      table.en.asc().nullsLast().op('timestamptz_ops'),
+    ),
+    index('checadas_trabajador_id_en_idx').using(
+      'btree',
+      table.trabajador_id.asc().nullsLast().op('uuid_ops'),
+      table.en.desc().nullsFirst().op('timestamptz_ops'),
+    ),
+    foreignKey({
+      columns: [table.acceso_id],
+      foreignColumns: [accesos_trabajador.id],
+      name: 'checadas_acceso_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.entrada_id],
+      foreignColumns: [table.id],
+      name: 'checadas_entrada_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.mano_obra_id],
+      foreignColumns: [mano_obra.id],
+      name: 'checadas_mano_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.obra_id],
+      foreignColumns: [obras.empresa_id, obras.id],
+      name: 'checadas_empresa_id_obra_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.trabajador_id],
+      foreignColumns: [trabajadores.empresa_id, trabajadores.id],
+      name: 'checadas_empresa_id_trabajador_id_fkey',
+    }),
+    foreignKey({
+      columns: [table.empresa_id, table.creado_por],
+      foreignColumns: [miembros.empresa_id, miembros.id],
+      name: 'checadas_empresa_id_creado_por_fkey',
+    }),
+    pgPolicy('dueno lee las checadas', {
+      as: 'permissive',
+      for: 'select',
+      to: ['authenticated'],
+      using: sql`((empresa_id = ( SELECT empresa_actual() AS empresa_actual)) AND ( SELECT es_dueno_o_admin() AS es_dueno_o_admin))`,
+    }),
+    pgPolicy('pm lee las checadas de sus obras', {
+      as: 'permissive',
+      for: 'select',
+      to: ['authenticated'],
+    }),
+    check('checadas_tipo_check', sql`tipo = ANY (ARRAY['entrada'::text, 'salida'::text])`),
+    check('checadas_origen_check', sql`origen = ANY (ARRAY['celular'::text, 'correccion'::text])`),
   ],
 );

@@ -142,6 +142,8 @@ export async function InicioDelPm({ datos, modulos }: { datos: InicioPm; modulos
                   ['bitacora', 'bitacora', 'bitacora'],
                   ['entrega', 'entregaYMedidas', 'entrega'],
                   ['album', 'album', 'fotos'],
+                  // la geocerca de la obra para la checada (D-117)
+                  ...(con('checada') ? ([['ubicacion', 'ubicacion', 'ubicacion']] as const) : []),
                 ] as const
               ).map(([ruta, texto, icono], i, botones) => (
                 <Link

@@ -19,7 +19,8 @@
     "miEmpresa": "Mi empresa",
     "plataforma": "Plataforma",
     "historico": "Histórico",
-    "posventa": "{n, plural, one {# pendiente después de la entrega} other {# pendientes después de la entrega}}"
+    "posventa": "{n, plural, one {# pendiente después de la entrega} other {# pendientes después de la entrega}}",
+    "checadas": "Checadas"
   },
   "idioma": {
     "etiqueta": "Idioma",
@@ -277,7 +278,11 @@
     "modulo_no_incluido": "Tu plan no incluye esta parte de la app.",
     "solo_el_dueno": "Eso solo lo puede hacer el dueño de la empresa.",
     "demasiadas_llaves": "Ya tienes 10 llaves: quita alguna antes de crear otra.",
-    "llave_invalida": "Esa llave ya no existe."
+    "llave_invalida": "Esa llave ya no existe.",
+    "trabajador_invalido": "Ese trabajador no está activo.",
+    "checada_invalida": "Esa checada ya no se puede cambiar.",
+    "hora_invalida": "La hora tiene que ser después de la entrada, no en el futuro, y a lo más 16 horas después.",
+    "motivo_requerido": "Escribe el motivo."
   },
   "obras": {
     "titulo": "Obras",
@@ -432,7 +437,8 @@
     "subsPorLlegar": "Subs por llegar",
     "subsPorLlegarAyuda": "Llámales para confirmar que vienen. En tu cierre del día marcas si llegaron.",
     "subLlega": "{sub} · {dia} ({obra})",
-    "bitacora": "Bitácora"
+    "bitacora": "Bitácora",
+    "ubicacion": "Ubicación para checar"
   },
   "cierre": {
     "titulo": "Cerrar el día",
@@ -501,7 +507,12 @@
     "buscarTrabajador": "Escribe su nombre o su puesto",
     "nadieConEseNombre": "Nadie con ese nombre.",
     "agregar": "Agregar",
-    "verTodos": "Ver a toda la cuadrilla ({n})"
+    "verTodos": "Ver a toda la cuadrilla ({n})",
+    "cuadrillaChecada": "Cuadrilla (de la checada)",
+    "cuadrillaChecadaAyuda": "Las horas salen de lo que cada uno checó. Las de quien sigue dentro se cuentan cuando cheque su salida.",
+    "nadieCheco": "Nadie ha checado hoy en esta obra.",
+    "checadaCompleta": "{entrada} – {salida} · {horas, plural, one {# h} other {# h}}",
+    "checadaDentro": "Dentro desde las {entrada}"
   },
   "cola": {
     "pendientes": "{n, plural, one {# registro por enviar} other {# registros por enviar}} desde este teléfono (cierres, gastos, avisos y sus fotos).",
@@ -983,7 +994,8 @@
     "etapasSinPresupuesto": "{n, plural, one {# con gasto sin presupuesto} other {# con gasto sin presupuesto}}",
     "etapasDentro": "Todas dentro del costo",
     "sinGastos": "Todavía sin gastos",
-    "resumenDias": "{n, plural, =0 {Todos los días con cierre} one {# día sin cierre} other {# días sin cierre}}"
+    "resumenDias": "{n, plural, =0 {Todos los días con cierre} one {# día sin cierre} other {# días sin cierre}}",
+    "ubicacion": "Ubicación para la checada"
   },
   "datosObra": {
     "titulo": "Datos de la obra",
@@ -2004,7 +2016,8 @@
       "desempeno": "Desempeño de managers",
       "posventa": "Cierre, posventa y garantías",
       "marca": "Marca propia",
-      "asistente": "Asistente de IA"
+      "asistente": "Asistente de IA",
+      "checada": "Checada con GPS y selfie"
     },
     "descripciones": {
       "dinero": "Presupuesto por etapa con margen, compras de la oficina, cobros y el dinero en el seguimiento.",
@@ -2018,7 +2031,8 @@
       "desempeno": "El desempeño de cada manager.",
       "posventa": "Cerrar la obra, retrabajos, garantías, reseñas y el expediente en PDF.",
       "marca": "El logo y el color de la empresa en la app y en el portal.",
-      "asistente": "El dueño conecta su asistente (como Claude) para analizar los datos de la empresa. Solo lectura."
+      "asistente": "El dueño conecta su asistente (como Claude) para analizar los datos de la empresa. Solo lectura.",
+      "checada": "Los trabajadores checan entrada y salida en su celular dentro de la obra, con selfie. Reemplaza la cuadrilla del cierre del PM."
     }
   },
   "asistente": {
@@ -2061,5 +2075,94 @@
       "pendientes": "Pendientes"
     },
     "inicioLlave": "{inicio}…"
+  },
+  "checada": {
+    "titulo": "Checada",
+    "hola": "Hola, {nombre}",
+    "sinAcceso": "Este celular no tiene la checada. Pide a tu PM o al administrador el enlace para activarla y ábrelo aquí.",
+    "invitacionTitulo": "Activa tu checada",
+    "invitacionTexto": "Con tu checada marcas tu entrada y tu salida en la obra desde este celular: con tu ubicación y una selfie en ese momento. Ábrela solo en tu propio celular.",
+    "activar": "Activar mi checada",
+    "fueraDeTurno": "No has checado entrada.",
+    "dentro": "Estás dentro: {obra}",
+    "desde": "Desde las {hora}",
+    "checarEntrada": "Checar entrada",
+    "checarSalida": "Checar salida",
+    "ubicando": "Buscando tu ubicación…",
+    "enviando": "Enviando…",
+    "mirate": "Mira a la cámara y toma tu foto.",
+    "tomarFoto": "Tomar la foto",
+    "cancelar": "Cancelar",
+    "listoEntrada": "Entrada registrada en {obra} a las {hora}.",
+    "listoSalida": "Salida registrada en {obra} a las {hora}: {horas, plural, one {# hora} other {# horas}}.",
+    "fuera": "Estás a {metros} m de {obra}: acércate a la obra para checar.",
+    "resultados": {
+      "sin_obras": "Tu empresa no tiene obras con ubicación para checar. Avisa a tu PM.",
+      "gps_impreciso": "Tu ubicación no es precisa. Sal a cielo abierto y vuelve a intentar.",
+      "ya_dentro": "Ya tenías tu entrada checada.",
+      "sin_entrada": "No tienes entrada checada.",
+      "sin_acceso": "Este celular ya no tiene la checada. Pide un enlace nuevo.",
+      "sin_foto": "Falta la foto. Vuelve a intentar.",
+      "ok": "Listo."
+    },
+    "sinGps": "Este celular no da su ubicación.",
+    "gpsNegado": "Permite la ubicación para esta página en los ajustes del navegador y vuelve a intentar.",
+    "gpsNoSale": "No se pudo obtener tu ubicación. Vuelve a intentar.",
+    "sinSenal": "No hay señal: no se registró. Vuelve a intentar cuando tengas señal.",
+    "aviso": "Tu ubicación y tu foto se toman solo al checar; no se te sigue durante el día.",
+    "enSuCelular": "Checada en su celular ({dispositivo}) · último uso {uso}",
+    "pendiente": "Tiene una invitación de checada sin abrir.",
+    "sinChecada": "Todavía no tiene la checada en su celular.",
+    "invitar": "Mandarle la checada",
+    "otroCelular": "Cambió de celular",
+    "quitar": "Quitar su checada",
+    "enlaceTitulo": "El enlace de checada de {nombre}",
+    "copiar": "Copiar enlace",
+    "copiado": "Copiado",
+    "compartir": "Compartir"
+  },
+  "checadas": {
+    "titulo": "Checadas",
+    "volver": "Volver al inicio",
+    "ayuda": "Quién checó cada día, en qué obra, a qué hora y con su selfie. Sus horas ya están en la cuadrilla de cada obra.",
+    "anterior": "Día anterior",
+    "hoy": "Hoy",
+    "siguiente": "Día siguiente",
+    "resumen": "{checaron, plural, =0 {Nadie checó} one {# trabajador checó} other {# trabajadores checaron}} · {dentro, plural, =0 {nadie sin salida} one {# sin salida} other {# sin salida}}",
+    "ninguna": "No hay checadas este día.",
+    "entrada": "Entrada {hora}",
+    "salida": "Salida {hora}",
+    "contado": "{n, plural, one {# hora} other {# horas}}",
+    "distancia": "a {metros} m del punto de la obra",
+    "enviadaDespues": "Se envió después (sin señal): cuenta la hora del celular.",
+    "corregida": "Salida puesta por la oficina: {motivo}",
+    "sinSalida": "Sin salida",
+    "ponerSalida": "Poner su salida",
+    "hora": "Hora de salida",
+    "motivo": "Motivo",
+    "guardarSalida": "Guardar la salida",
+    "anular": "Anular esta checada",
+    "confirmarAnular": "Anular",
+    "sinSalidaAntes": "{n, plural, one {# checada sin salida de días anteriores} other {# checadas sin salida de días anteriores}}",
+    "selfie": "Selfie"
+  },
+  "ubicacion": {
+    "titulo": "Ubicación para la checada",
+    "volverInicio": "Volver al inicio",
+    "volverObra": "Volver a la obra",
+    "ayuda": "Los trabajadores solo pueden checar dentro de este perímetro. Fíjalo estando en la obra, con tu celular.",
+    "fijada": "Ubicación fijada: {metros} m alrededor del punto.",
+    "sinFijar": "Esta obra todavía no tiene ubicación: nadie puede checar aquí.",
+    "verMapa": "Ver el punto en el mapa",
+    "radio": "Perímetro",
+    "radioAyuda": "Qué tan lejos del punto se puede checar. Para una casa, 150 m.",
+    "metros": "{metros} m",
+    "fijarAqui": "Fijar la ubicación aquí",
+    "ubicando": "Buscando tu ubicación…",
+    "guardada": "Ubicación guardada.",
+    "sinGps": "Este celular no da su ubicación.",
+    "impreciso": "Tu ubicación no es precisa (±{metros} m). Sal a cielo abierto y vuelve a intentar.",
+    "gpsNegado": "Permite la ubicación para esta página en los ajustes del navegador y vuelve a intentar.",
+    "noSeGuardo": "No se pudo guardar. Vuelve a intentar."
   }
 }

@@ -37,3 +37,22 @@ export const firmarFoto: FirmarEnlace = async (ruta, segundos) => {
 
 export const SUPABASE_URL = () => variable('NEXT_PUBLIC_SUPABASE_URL');
 export const SUPABASE_LLAVE_PUBLICA = () => variable('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY');
+
+const almacen = () =>
+  createClient(variable('NEXT_PUBLIC_SUPABASE_URL'), variable('SUPABASE_SECRET_KEY'), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  }).storage.from('fotos');
+
+/**
+ * Sube la selfie de una checada (D-117). El trabajador no tiene sesión de Auth: la sube el servidor, después de
+ * revisar la llave de su celular.
+ */
+export async function subirSelfie(ruta: string, archivo: Blob): Promise<void> {
+  const { error } = await almacen().upload(ruta, archivo, { contentType: archivo.type || 'image/jpeg' });
+  if (error) throw new Error(`Storage: ${error.message}`);
+}
+
+/** Borra la selfie de una checada que no se registró (estaba fuera de la obra, por ejemplo). */
+export async function borrarSelfie(ruta: string): Promise<void> {
+  await almacen().remove([ruta]);
+}

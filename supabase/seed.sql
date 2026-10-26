@@ -340,6 +340,29 @@ insert into public.consultas_asistente (empresa_id, llave_id, herramienta, argum
   ('e000000b-0000-4000-8000-000000000000', 'b7000000-0000-4000-8000-000000000001', 'empresa', '{}', true, 40,
    '2026-10-01 09:05-05');
 
+-- La checada (D-117): Pedro tuvo la checada en un celular (ya quitado) y checó un día en la primera obra en curso de su
+-- empresa. El módulo sigue apagado.
+insert into public.accesos_trabajador (empresa_id, trabajador_id, token_hash, expira_en, usado_en, secreto_hash,
+                                       dispositivo, ultimo_uso, revocado_en, creado_en)
+  select t.empresa_id, t.id, public.hash_secreto('semilla-checada-' || t.empresa_id), '2026-10-08 09:00-05',
+         '2026-10-01 09:00-05', public.hash_secreto('semilla-secreto-' || t.empresa_id), 'Android',
+         '2026-10-06 16:00-05', '2026-10-07 09:00-05', '2026-10-01 08:00-05'
+  from public.trabajadores t where t.nombre = 'Pedro';
+with entradas as (
+  insert into public.checadas (empresa_id, obra_id, trabajador_id, acceso_id, tipo, en, lat, lng, precision_m,
+                               distancia_m)
+    select a.empresa_id,
+           (select o.id from public.obras o where o.empresa_id = a.empresa_id and o.estado = 'en_obra'
+            order by o.folio limit 1),
+           a.trabajador_id, a.id, 'entrada', '2026-10-06 08:00-05', 30.2672, -97.7431, 12, 20
+    from public.accesos_trabajador a
+    returning id, empresa_id, obra_id, trabajador_id, acceso_id)
+insert into public.checadas (empresa_id, obra_id, trabajador_id, acceso_id, tipo, entrada_id, en, lat, lng,
+                             precision_m, distancia_m)
+  select e.empresa_id, e.obra_id, e.trabajador_id, e.acceso_id, 'salida', e.id, '2026-10-06 16:00-05', 30.2672,
+         -97.7431, 10, 18
+  from entradas e;
+
 -- ------------------------------------------------------------------ el usuario de base del servidor
 -- SOLO LOCAL: la contraseña con la que el servidor (y sus pruebas) se conectan como ijm_servidor (D-027). En
 -- producción la pone quien despliega y vive en las variables de entorno, nunca en el repositorio.

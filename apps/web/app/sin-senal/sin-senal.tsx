@@ -203,6 +203,13 @@ function ObrasSinSenal({ copia }: { copia: CopiaSinSenal }) {
             ultimoCierre: d.ultimoCierre,
             subs: d.subs.map((s) => ({ ordenId: s.ordenId, sub: s.sub, alcance: s.alcance })),
             motivos: d.motivos,
+            // la copia guarda las checadas de cuando se hizo (D-117); las fechas llegan como texto
+            checadas: d.checadas?.map((c) => ({
+              trabajador: c.trabajador,
+              entrada: new Date(c.entrada.en).toISOString(),
+              salida: c.salida ? new Date(c.salida.en).toISOString() : null,
+              horas: c.horas,
+            })),
           }}
         />
       </>

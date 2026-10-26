@@ -87,6 +87,12 @@ export default async function Cierre({ params, searchParams }: PageProps<'/obras
             ultimoCierre: d.ultimoCierre,
             subs: d.subs.map((s) => ({ ordenId: s.ordenId, sub: s.sub, alcance: s.alcance })),
             motivos: d.motivos,
+            checadas: d.checadas?.map((c) => ({
+              trabajador: c.trabajador,
+              entrada: c.entrada.en.toISOString(),
+              salida: c.salida?.en.toISOString() ?? null,
+              horas: c.horas,
+            })),
           }}
           correccion={corrigiendo ? anterior : null}
         />

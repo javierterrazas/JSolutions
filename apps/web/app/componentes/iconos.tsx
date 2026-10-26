@@ -14,6 +14,10 @@ const TRAZOS = {
   bitacora: ['M4 6h16v14H4z', 'M4 10h16', 'M8 3v5', 'M16 3v5', 'M8 14h3', 'M8 17h6'],
   entrega: ['M3 11l9-7 9 7', 'M5.5 9.5V20h13V9.5', 'M10 20v-5h4v5'],
   fotos: ['M3 8h4l2-3h6l2 3h4v12H3z', 'M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z'],
+  ubicacion: [
+    'M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z',
+    'M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
+  ],
 } as const;
 
 export type NombreIcono = keyof typeof TRAZOS;

@@ -18,6 +18,7 @@ const TABLAS = [
   'no_calidad', 'cobros', 'entregas', 'obras_cerradas', 'historico_etapas', 'historico_duraciones',
   'correcciones', 'enlaces_cliente', 'respuestas_cambio', 'marcas_empresa', 'suscripciones', 'pagos_plataforma',
   'cambios_hechos', 'uso_app', 'llaves_asistente', 'consultas_asistente',
+  'accesos_trabajador', 'checadas',
 ]; // prettier-ignore
 
 // 💲 La muralla financiera: tablas que solo leerán dueño y administrador (D-002).
