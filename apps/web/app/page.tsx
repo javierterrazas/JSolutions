@@ -115,6 +115,12 @@ export default async function Inicio() {
           <Link href="/cuadrilla" className={`${estilos.botonSecundario} flex items-center justify-center`}>
             {t('cuadrilla')}
           </Link>
+          {/* quién checó hoy y quién no tiene salida (D-117) */}
+          {yo.modulos.includes('checada') ? (
+            <Link href="/checadas" className={`${estilos.botonSecundario} flex items-center justify-center`}>
+              {t('checadas')}
+            </Link>
+          ) : null}
           {yo.modulos.includes('subcontratistas') ? (
             <Link
               href="/subcontratistas"

@@ -123,6 +123,11 @@ igual.
 - **PM cambió de celular, olvidó o bloqueó su PIN:** Managers → **Nueva invitación**.
 - **PM que se va:** Managers → **Dar de baja**. Antes, cambia el PM de sus obras (seguimiento → corregir datos).
 - **Trabajador nuevo:** Cuadrilla → **Agregar trabajador**, con su salario.
+- **Checada con GPS** (si tu plan la incluye): en Cuadrilla, en la tarjeta del trabajador, **"Mandarle la checada"** y
+  mándale el enlace por WhatsApp; lo abre en su celular y toca "Activar mi checada". Cada obra necesita su ubicación:
+  el PM (o tú), estando en la obra, **"Ubicación para checar"** → "Fijar la ubicación aquí". Con la checada, el PM ya
+  no anota la cuadrilla: las horas salen de lo que cada uno checó. En el inicio, **Checadas**: quién checó, sus selfies
+  y las salidas olvidadas (pon la hora y el motivo).
 - **Sub nuevo:** Subcontratistas → **Agregar subcontratista**, con seguro, licencia y W-9.
 
 **Otras**

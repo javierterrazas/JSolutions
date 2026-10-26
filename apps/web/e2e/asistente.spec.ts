@@ -12,7 +12,7 @@ test('el dueño conecta un asistente con su llave, el asistente consulta y la ll
 }) => {
   await admin()
     .from('empresas')
-    .update({ modulos: [...MODULOS] })
+    .update({ modulos: MODULOS.filter((m) => m !== 'checada') })
     .eq('id', EMPRESA_A);
   await entrar(page, 'dueno');
   await page.goto('/empresa');

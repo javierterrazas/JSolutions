@@ -16,6 +16,7 @@ import { alCambiar, encolar, enviarPendientes, pendientes, siguienteN } from '@/
 import { comprimirFoto } from '@/lib/comprimir';
 import { estilos } from '../../../componentes/marco';
 import { MensajeError, type Problema } from '../../../componentes/mensaje-error';
+import { type ChecadaDelCierre, CuadrillaChecada } from './cuadrilla-checada';
 import { CuadrillaDelCierre, type TrabajadorDelCierre, type UltimoCierre } from './cuadrilla-del-cierre';
 
 export interface DatosFormularioCierre {
@@ -39,6 +40,8 @@ export interface DatosFormularioCierre {
   readonly ultimoCierre?: UltimoCierre | null;
   readonly subs: readonly { ordenId: string; sub: string; alcance: string }[];
   readonly motivos: readonly string[];
+  /** Con la checada (D-117), la cuadrilla son las checadas del día y no se captura; sin ella, null o nada. */
+  readonly checadas?: readonly ChecadaDelCierre[] | null;
 }
 
 interface Foto {
@@ -161,11 +164,12 @@ export function FormularioCierre({
         incidencia: notas.trim() || null,
         partidas: sinTrabajo ? [] : [...trabajadas],
         terminadas: sinTrabajo ? [] : [...terminadas].filter((p) => trabajadas.has(p)),
-        cuadrilla: sinTrabajo
-          ? []
-          : Object.entries(cuadrilla)
-              .map(([trabajadorId, v]) => ({ trabajadorId, cantidad: Number(v) }))
-              .filter((c) => c.cantidad > 0),
+        cuadrilla:
+          sinTrabajo || datos.checadas
+            ? []
+            : Object.entries(cuadrilla)
+                .map(([trabajadorId, v]) => ({ trabajadorId, cantidad: Number(v) }))
+                .filter((c) => c.cantidad > 0),
         subs: Object.entries(subs).map(([ordenTrabajoId, llego]) => ({ ordenTrabajoId, llego })),
         fotosPorSubir: fotos.length,
         claveEnvio: id,
@@ -353,7 +357,9 @@ export function FormularioCierre({
             ))}
           </fieldset>
 
-          {datos.trabajadores.length ? (
+          {datos.checadas ? (
+            <CuadrillaChecada checadas={datos.checadas} />
+          ) : datos.trabajadores.length ? (
             <CuadrillaDelCierre
               trabajadores={datos.trabajadores}
               ultimoCierre={datos.ultimoCierre}

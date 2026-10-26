@@ -16,6 +16,7 @@ describe('los módulos de una empresa (D-110)', () => {
       'indicadores',
       'desempeno',
       'marca',
+      'checada',
     ]);
     expect(sinElModulo(['dinero', 'portal', 'cambios'], 'portal')).toEqual(['dinero']);
     expect(sinElModulo(['dinero', 'calidad'], 'calidad')).toEqual(['dinero']);

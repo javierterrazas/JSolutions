@@ -243,6 +243,15 @@ export default async function Seguimiento({ params, searchParams }: PageProps<'/
                 {s.obra.estado === 'entregada' ? t('verCierre') : t('cerrarObra')}
               </Link>
             ) : null}
+            {/* la geocerca para la checada (D-117) */}
+            {con('checada') ? (
+              <Link
+                href={`/obras/${s.obra.id}/ubicacion`}
+                className={`${estilos.botonSecundario} col-span-2 flex items-center justify-center px-2 text-center`}
+              >
+                {t('ubicacion')}
+              </Link>
+            ) : null}
             {/* todo lo de la obra en un documento para guardar como PDF (D-102) */}
             {con('posventa') ? (
               <Link

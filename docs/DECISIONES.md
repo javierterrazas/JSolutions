@@ -1962,3 +1962,35 @@ Messenger, TikTok…) abre los enlaces en su navegador interno, y si se canjea a
 cómo abrirla en el navegador (los tres puntos → "Abrir en el navegador"), un botón para copiar el enlace y, en
 Android, uno que la abre directo en Chrome (`intent://…`). El navegador de WhatsApp en el iPhone no se distingue de
 Safari: para ese queda el aviso general.
+
+## D-117 · La checada con GPS y selfie
+
+**Lo pidió el dueño de la plataforma:** que el trabajador marque su entrada desde su celular solo dentro del perímetro
+de la obra, con una selfie en ese momento. Decidió: cada trabajador con su celular, entrada y salida, y que las
+checadas **reemplacen** la cuadrilla del cierre del PM.
+- **Módulo `checada`**, apagado hasta que quien administra la plataforma lo prende (va en el plan Empresa).
+- **El trabajador no es miembro ni tiene sesión.** En Cuadrilla, el dueño o el administrador le manda "la checada":
+  un enlace de un solo uso (7 días). Al abrirlo en su celular queda una llave en una cookie (`checada`), como el portal
+  del cliente; con ella solo puede checar (`/checar`). Un celular por trabajador: activar otro quita el anterior. La
+  invitación avisa por qué no sirve y reconoce Instagram o Facebook igual que la de los miembros (D-115, D-116).
+- **La geocerca de cada obra** (`obras.geocerca_lat/lng/radio`, 150 m de entrada): la fija el PM, el dueño o el
+  administrador estando en la obra, con su ubicación (`/obras/[id]/ubicacion`). Sin geocerca, nadie checa ahí.
+- **Checar** (`checar`, sin sesión): primero el GPS, luego la selfie con la cámara de enfrente en vivo (`getUserMedia`;
+  si el navegador no deja, la cámara del sistema), reducida a 640 px. La entrada va a la obra en curso más cercana
+  cuyo perímetro lo incluye, con un margen de lo que diga la precisión del GPS (hasta 50 m); la salida, a la obra de
+  su entrada y también dentro. GPS de más de 200 m de precisión no se acepta. La hora es la del servidor; si se manda
+  después (sin señal), la del celular, marcada. La selfie la sube el servidor (el trabajador no tiene sesión de
+  Storage) en `empresa/checadas/trabajador/…`; si la checada no se registra, se borra.
+- **Reemplaza la cuadrilla:** cada salida escribe sus horas en `mano_obra` (por hora: en cuartos, de 0.25 a 16; por
+  día: un día, una vez por día y obra), en el espacio de generales de la obra. Al cerrar el día se ligan al cierre y
+  se reparten entre sus partidas (D-077); anular el cierre no se las lleva. Con el módulo, el cierre del PM ya no
+  captura cuadrilla: muestra las checadas del día. Así los costos, la nómina y el desempeño siguen igual.
+- **El dueño o el administrador** ven en "Checadas" (`/checadas`) cada día: quién checó, en qué obra, a qué hora, a
+  qué distancia del punto, sus selfies y lo que se contó; ponen la salida olvidada (hora y motivo) y anulan una
+  checada (se lleva sus horas). El PM ve las de sus obras en su cierre.
+- **Lo que no hace:** no es a prueba de apps que falsean el GPS (la selfie es lo que más desanima); no hay
+  reconocimiento de cara (en Texas pediría el consentimiento por ser dato biométrico); la ubicación solo se toma al
+  checar. Checar sin señal (guardarla en el celular y mandarla después) queda para después: la base ya acepta la hora
+  del celular.
+- Migración 20261108000100 (`accesos_trabajador`, `checadas`, la geocerca y sus funciones).
+

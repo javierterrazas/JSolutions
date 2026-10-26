@@ -25,6 +25,8 @@ export default defineConfig({
     locale: 'es-MX',
     timezoneId: 'America/Chicago',
     trace: 'retain-on-failure',
+    // una cámara de mentiras para la selfie de la checada (D-117), sin pedir permiso
+    launchOptions: { args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] },
   },
   webServer: {
     command: `pnpm --filter @ijm/web exec next start -p ${PUERTO}`,

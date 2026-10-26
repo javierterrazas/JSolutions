@@ -46,10 +46,10 @@ test('apagar un módulo esconde su botón y cierra su pantalla; el plan lo vuelv
     await page.goto('/');
     await expect(page.getByRole('link', { name: es.inicio.indicadores })).toBeVisible();
   } finally {
-    // las pruebas que siguen necesitan a la empresa con todo
+    // las pruebas que siguen necesitan a la empresa con todo, menos la checada, que cambia el cierre del PM (D-117)
     await admin()
       .from('empresas')
-      .update({ modulos: [...MODULOS] })
+      .update({ modulos: MODULOS.filter((m) => m !== 'checada') })
       .eq('id', EMPRESA_A);
   }
 });

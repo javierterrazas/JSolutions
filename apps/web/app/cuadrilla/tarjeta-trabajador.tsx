@@ -3,7 +3,7 @@
 // salario desde una fecha (lo trabajado antes no cambia), o darlo de baja y reactivarlo.
 import type { TrabajadorDeLaCuadrilla } from '@ijm/servidor';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
-import { startTransition, useActionState, useState } from 'react';
+import { type ReactNode, startTransition, useActionState, useState } from 'react';
 import type { Resultado } from '@/lib/acceso';
 import { formatoDinero } from '@/lib/dinero';
 import { cambiarActivo, guardarTrabajador, nuevoSalario } from '../acciones/cuadrilla';
@@ -17,10 +17,13 @@ type Abierto = 'editar' | 'salario' | null;
 export function TarjetaTrabajador({
   trabajador: x,
   hoy,
+  children,
 }: {
   trabajador: TrabajadorDeLaCuadrilla;
   /** Hoy en la zona de la empresa (lo dice el servidor). */
   hoy: string;
+  /** Lo de abajo de la tarjeta: su checada (D-117). */
+  children?: ReactNode;
 }) {
   const t = useTranslations('cuadrilla');
   const formato = useFormatter();
@@ -159,6 +162,7 @@ export function TarjetaTrabajador({
           </button>
         </div>
       ) : null}
+      {children}
     </li>
   );
 }

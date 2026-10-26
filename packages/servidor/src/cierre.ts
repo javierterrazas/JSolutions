@@ -19,6 +19,7 @@ import postgres from 'postgres';
 import { z } from 'zod';
 import type { Tx } from './conexion';
 import { dia, instante, motivo, textoLargo, uuid, validarEntrada } from './entrada';
+import { ligarChecadasAlCierre } from './checada';
 import { anularCierre } from './correcciones';
 import { leerSesion } from './sesion';
 
@@ -149,7 +150,9 @@ export async function cerrarDia(
   const tardio = correccion ? correccion.tardio : !!e.tardio;
   const partidasDelDia = e.sinTrabajo ? [] : e.partidas;
   const terminadas = e.sinTrabajo ? [] : e.terminadas;
-  const cuadrilla = e.sinTrabajo ? [] : e.cuadrilla;
+  // con la checada, la cuadrilla no se captura: sale de las checadas del día (D-117)
+  const conChecada = s.modulos.includes('checada');
+  const cuadrilla = e.sinTrabajo || conChecada ? [] : e.cuadrilla;
 
   // sin el módulo de calidad no hay inspecciones que pedir (D-110)
   const inspecciones = !s.modulos.includes('calidad')
@@ -303,6 +306,8 @@ export async function cerrarDia(
     };
   });
   if (filas.length) await tx`insert into mano_obra ${tx(filas)}`;
+  // las horas checadas de ese día se reparten entre las partidas del cierre (D-077)
+  if (conChecada) await ligarChecadasAlCierre(tx, e.obraId, elDia, bitacoraId);
 
   // la obra arranca con su primer día de trabajo
   if (!e.sinTrabajo && obra.estado === 'lista_para_arranque') {
